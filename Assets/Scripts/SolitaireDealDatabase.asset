@@ -1,0 +1,1015 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4df8e65229ef0a40affea2280761adc, type: 3}
+  m_Name: SolitaireDealDatabase
+  m_EditorClassIdentifier: 
+  dealSets:
+  - name: Klondike_Easy_Draw1
+    gameType: 0
+    difficulty: 0
+    param: 1
+    deals:
+    - tableau:
+      - cards:
+        - suit: 1
+          rank: 10
+          faceUp: 1
+      - cards:
+        - suit: 3
+          rank: 5
+          faceUp: 0
+        - suit: 1
+          rank: 9
+          faceUp: 1
+      - cards:
+        - suit: 2
+          rank: 3
+          faceUp: 0
+        - suit: 2
+          rank: 4
+          faceUp: 0
+        - suit: 1
+          rank: 2
+          faceUp: 1
+      - cards:
+        - suit: 3
+          rank: 7
+          faceUp: 0
+        - suit: 3
+          rank: 2
+          faceUp: 0
+        - suit: 3
+          rank: 13
+          faceUp: 0
+        - suit: 0
+          rank: 8
+          faceUp: 1
+      - cards:
+        - suit: 2
+          rank: 8
+          faceUp: 0
+        - suit: 2
+          rank: 6
+          faceUp: 0
+        - suit: 1
+          rank: 8
+          faceUp: 0
+        - suit: 0
+          rank: 13
+          faceUp: 0
+        - suit: 0
+          rank: 12
+          faceUp: 1
+      - cards:
+        - suit: 2
+          rank: 12
+          faceUp: 0
+        - suit: 1
+          rank: 11
+          faceUp: 0
+        - suit: 3
+          rank: 1
+          faceUp: 0
+        - suit: 1
+          rank: 5
+          faceUp: 0
+        - suit: 3
+          rank: 6
+          faceUp: 0
+        - suit: 2
+          rank: 1
+          faceUp: 1
+      - cards:
+        - suit: 3
+          rank: 3
+          faceUp: 0
+        - suit: 2
+          rank: 13
+          faceUp: 0
+        - suit: 1
+          rank: 13
+          faceUp: 0
+        - suit: 3
+          rank: 4
+          faceUp: 0
+        - suit: 1
+          rank: 3
+          faceUp: 0
+        - suit: 0
+          rank: 9
+          faceUp: 0
+        - suit: 1
+          rank: 4
+          faceUp: 1
+      stock:
+      - suit: 0
+        rank: 10
+        faceUp: 0
+      - suit: 3
+        rank: 11
+        faceUp: 0
+      - suit: 0
+        rank: 3
+        faceUp: 0
+      - suit: 1
+        rank: 6
+        faceUp: 0
+      - suit: 2
+        rank: 10
+        faceUp: 0
+      - suit: 1
+        rank: 1
+        faceUp: 0
+      - suit: 0
+        rank: 5
+        faceUp: 0
+      - suit: 3
+        rank: 9
+        faceUp: 0
+      - suit: 2
+        rank: 2
+        faceUp: 0
+      - suit: 0
+        rank: 1
+        faceUp: 0
+      - suit: 0
+        rank: 4
+        faceUp: 0
+      - suit: 0
+        rank: 7
+        faceUp: 0
+      - suit: 3
+        rank: 8
+        faceUp: 0
+      - suit: 3
+        rank: 10
+        faceUp: 0
+      - suit: 3
+        rank: 12
+        faceUp: 0
+      - suit: 2
+        rank: 9
+        faceUp: 0
+      - suit: 2
+        rank: 5
+        faceUp: 0
+      - suit: 1
+        rank: 7
+        faceUp: 0
+      - suit: 2
+        rank: 7
+        faceUp: 0
+      - suit: 0
+        rank: 11
+        faceUp: 0
+      - suit: 2
+        rank: 11
+        faceUp: 0
+      - suit: 0
+        rank: 6
+        faceUp: 0
+      - suit: 1
+        rank: 12
+        faceUp: 0
+      - suit: 0
+        rank: 2
+        faceUp: 0
+    - tableau:
+      - cards:
+        - suit: 0
+          rank: 1
+          faceUp: 1
+      - cards:
+        - suit: 1
+          rank: 2
+          faceUp: 0
+        - suit: 2
+          rank: 3
+          faceUp: 1
+      - cards:
+        - suit: 3
+          rank: 8
+          faceUp: 0
+        - suit: 3
+          rank: 1
+          faceUp: 0
+        - suit: 0
+          rank: 12
+          faceUp: 1
+      - cards:
+        - suit: 1
+          rank: 4
+          faceUp: 0
+        - suit: 2
+          rank: 13
+          faceUp: 0
+        - suit: 1
+          rank: 6
+          faceUp: 0
+        - suit: 1
+          rank: 3
+          faceUp: 1
+      - cards:
+        - suit: 2
+          rank: 11
+          faceUp: 0
+        - suit: 3
+          rank: 9
+          faceUp: 0
+        - suit: 3
+          rank: 7
+          faceUp: 0
+        - suit: 3
+          rank: 2
+          faceUp: 0
+        - suit: 3
+          rank: 11
+          faceUp: 1
+      - cards:
+        - suit: 2
+          rank: 6
+          faceUp: 0
+        - suit: 1
+          rank: 13
+          faceUp: 0
+        - suit: 3
+          rank: 4
+          faceUp: 0
+        - suit: 0
+          rank: 2
+          faceUp: 0
+        - suit: 0
+          rank: 6
+          faceUp: 0
+        - suit: 2
+          rank: 8
+          faceUp: 1
+      - cards:
+        - suit: 3
+          rank: 13
+          faceUp: 0
+        - suit: 0
+          rank: 5
+          faceUp: 0
+        - suit: 3
+          rank: 6
+          faceUp: 0
+        - suit: 1
+          rank: 10
+          faceUp: 0
+        - suit: 1
+          rank: 12
+          faceUp: 0
+        - suit: 0
+          rank: 8
+          faceUp: 0
+        - suit: 3
+          rank: 12
+          faceUp: 1
+      stock:
+      - suit: 1
+        rank: 7
+        faceUp: 0
+      - suit: 2
+        rank: 10
+        faceUp: 0
+      - suit: 1
+        rank: 9
+        faceUp: 0
+      - suit: 3
+        rank: 3
+        faceUp: 0
+      - suit: 1
+        rank: 8
+        faceUp: 0
+      - suit: 0
+        rank: 9
+        faceUp: 0
+      - suit: 2
+        rank: 1
+        faceUp: 0
+      - suit: 2
+        rank: 5
+        faceUp: 0
+      - suit: 2
+        rank: 9
+        faceUp: 0
+      - suit: 2
+        rank: 12
+        faceUp: 0
+      - suit: 0
+        rank: 4
+        faceUp: 0
+      - suit: 1
+        rank: 1
+        faceUp: 0
+      - suit: 3
+        rank: 5
+        faceUp: 0
+      - suit: 2
+        rank: 2
+        faceUp: 0
+      - suit: 1
+        rank: 5
+        faceUp: 0
+      - suit: 2
+        rank: 4
+        faceUp: 0
+      - suit: 0
+        rank: 3
+        faceUp: 0
+      - suit: 0
+        rank: 7
+        faceUp: 0
+      - suit: 0
+        rank: 11
+        faceUp: 0
+      - suit: 0
+        rank: 10
+        faceUp: 0
+      - suit: 3
+        rank: 10
+        faceUp: 0
+      - suit: 1
+        rank: 11
+        faceUp: 0
+      - suit: 2
+        rank: 7
+        faceUp: 0
+      - suit: 0
+        rank: 13
+        faceUp: 0
+    - tableau:
+      - cards:
+        - suit: 1
+          rank: 10
+          faceUp: 1
+      - cards:
+        - suit: 0
+          rank: 9
+          faceUp: 0
+        - suit: 0
+          rank: 3
+          faceUp: 1
+      - cards:
+        - suit: 1
+          rank: 1
+          faceUp: 0
+        - suit: 1
+          rank: 2
+          faceUp: 0
+        - suit: 1
+          rank: 6
+          faceUp: 1
+      - cards:
+        - suit: 3
+          rank: 5
+          faceUp: 0
+        - suit: 3
+          rank: 8
+          faceUp: 0
+        - suit: 2
+          rank: 6
+          faceUp: 0
+        - suit: 2
+          rank: 3
+          faceUp: 1
+      - cards:
+        - suit: 2
+          rank: 9
+          faceUp: 0
+        - suit: 0
+          rank: 8
+          faceUp: 0
+        - suit: 0
+          rank: 12
+          faceUp: 0
+        - suit: 0
+          rank: 2
+          faceUp: 0
+        - suit: 3
+          rank: 10
+          faceUp: 1
+      - cards:
+        - suit: 3
+          rank: 2
+          faceUp: 0
+        - suit: 0
+          rank: 1
+          faceUp: 0
+        - suit: 2
+          rank: 5
+          faceUp: 0
+        - suit: 0
+          rank: 4
+          faceUp: 0
+        - suit: 3
+          rank: 12
+          faceUp: 0
+        - suit: 3
+          rank: 6
+          faceUp: 1
+      - cards:
+        - suit: 1
+          rank: 13
+          faceUp: 0
+        - suit: 1
+          rank: 8
+          faceUp: 0
+        - suit: 2
+          rank: 10
+          faceUp: 0
+        - suit: 1
+          rank: 7
+          faceUp: 0
+        - suit: 2
+          rank: 12
+          faceUp: 0
+        - suit: 1
+          rank: 9
+          faceUp: 0
+        - suit: 3
+          rank: 9
+          faceUp: 1
+      stock:
+      - suit: 0
+        rank: 11
+        faceUp: 0
+      - suit: 2
+        rank: 2
+        faceUp: 0
+      - suit: 0
+        rank: 13
+        faceUp: 0
+      - suit: 0
+        rank: 10
+        faceUp: 0
+      - suit: 3
+        rank: 13
+        faceUp: 0
+      - suit: 3
+        rank: 1
+        faceUp: 0
+      - suit: 3
+        rank: 3
+        faceUp: 0
+      - suit: 0
+        rank: 6
+        faceUp: 0
+      - suit: 1
+        rank: 11
+        faceUp: 0
+      - suit: 1
+        rank: 12
+        faceUp: 0
+      - suit: 2
+        rank: 8
+        faceUp: 0
+      - suit: 1
+        rank: 5
+        faceUp: 0
+      - suit: 1
+        rank: 3
+        faceUp: 0
+      - suit: 2
+        rank: 4
+        faceUp: 0
+      - suit: 1
+        rank: 4
+        faceUp: 0
+      - suit: 0
+        rank: 5
+        faceUp: 0
+      - suit: 2
+        rank: 13
+        faceUp: 0
+      - suit: 3
+        rank: 7
+        faceUp: 0
+      - suit: 2
+        rank: 7
+        faceUp: 0
+      - suit: 0
+        rank: 7
+        faceUp: 0
+      - suit: 2
+        rank: 1
+        faceUp: 0
+      - suit: 3
+        rank: 11
+        faceUp: 0
+      - suit: 2
+        rank: 11
+        faceUp: 0
+      - suit: 3
+        rank: 4
+        faceUp: 0
+  - name: Klondike_Easy_Draw3
+    gameType: 0
+    difficulty: 0
+    param: 3
+    deals:
+    - tableau:
+      - cards:
+        - suit: 3
+          rank: 6
+          faceUp: 1
+      - cards:
+        - suit: 1
+          rank: 8
+          faceUp: 0
+        - suit: 2
+          rank: 2
+          faceUp: 1
+      - cards:
+        - suit: 0
+          rank: 13
+          faceUp: 0
+        - suit: 3
+          rank: 1
+          faceUp: 0
+        - suit: 0
+          rank: 8
+          faceUp: 1
+      - cards:
+        - suit: 3
+          rank: 3
+          faceUp: 0
+        - suit: 1
+          rank: 1
+          faceUp: 0
+        - suit: 1
+          rank: 13
+          faceUp: 0
+        - suit: 2
+          rank: 13
+          faceUp: 1
+      - cards:
+        - suit: 1
+          rank: 11
+          faceUp: 0
+        - suit: 2
+          rank: 7
+          faceUp: 0
+        - suit: 2
+          rank: 12
+          faceUp: 0
+        - suit: 3
+          rank: 10
+          faceUp: 0
+        - suit: 1
+          rank: 10
+          faceUp: 1
+      - cards:
+        - suit: 0
+          rank: 3
+          faceUp: 0
+        - suit: 0
+          rank: 1
+          faceUp: 0
+        - suit: 1
+          rank: 6
+          faceUp: 0
+        - suit: 2
+          rank: 9
+          faceUp: 0
+        - suit: 0
+          rank: 5
+          faceUp: 0
+        - suit: 2
+          rank: 1
+          faceUp: 1
+      - cards:
+        - suit: 1
+          rank: 7
+          faceUp: 0
+        - suit: 0
+          rank: 7
+          faceUp: 0
+        - suit: 2
+          rank: 8
+          faceUp: 0
+        - suit: 0
+          rank: 12
+          faceUp: 0
+        - suit: 2
+          rank: 3
+          faceUp: 0
+        - suit: 3
+          rank: 2
+          faceUp: 0
+        - suit: 1
+          rank: 9
+          faceUp: 1
+      stock:
+      - suit: 3
+        rank: 5
+        faceUp: 0
+      - suit: 2
+        rank: 11
+        faceUp: 0
+      - suit: 1
+        rank: 12
+        faceUp: 0
+      - suit: 2
+        rank: 5
+        faceUp: 0
+      - suit: 0
+        rank: 6
+        faceUp: 0
+      - suit: 3
+        rank: 7
+        faceUp: 0
+      - suit: 2
+        rank: 4
+        faceUp: 0
+      - suit: 2
+        rank: 6
+        faceUp: 0
+      - suit: 3
+        rank: 12
+        faceUp: 0
+      - suit: 0
+        rank: 9
+        faceUp: 0
+      - suit: 0
+        rank: 10
+        faceUp: 0
+      - suit: 3
+        rank: 8
+        faceUp: 0
+      - suit: 3
+        rank: 4
+        faceUp: 0
+      - suit: 2
+        rank: 10
+        faceUp: 0
+      - suit: 0
+        rank: 2
+        faceUp: 0
+      - suit: 0
+        rank: 11
+        faceUp: 0
+      - suit: 1
+        rank: 4
+        faceUp: 0
+      - suit: 1
+        rank: 5
+        faceUp: 0
+      - suit: 0
+        rank: 4
+        faceUp: 0
+      - suit: 3
+        rank: 9
+        faceUp: 0
+      - suit: 3
+        rank: 11
+        faceUp: 0
+      - suit: 1
+        rank: 3
+        faceUp: 0
+      - suit: 3
+        rank: 13
+        faceUp: 0
+      - suit: 1
+        rank: 2
+        faceUp: 0
+    - tableau:
+      - cards:
+        - suit: 0
+          rank: 2
+          faceUp: 1
+      - cards:
+        - suit: 2
+          rank: 12
+          faceUp: 0
+        - suit: 2
+          rank: 4
+          faceUp: 1
+      - cards:
+        - suit: 3
+          rank: 13
+          faceUp: 0
+        - suit: 0
+          rank: 4
+          faceUp: 0
+        - suit: 3
+          rank: 8
+          faceUp: 1
+      - cards:
+        - suit: 1
+          rank: 3
+          faceUp: 0
+        - suit: 1
+          rank: 8
+          faceUp: 0
+        - suit: 0
+          rank: 5
+          faceUp: 0
+        - suit: 2
+          rank: 7
+          faceUp: 1
+      - cards:
+        - suit: 2
+          rank: 10
+          faceUp: 0
+        - suit: 2
+          rank: 5
+          faceUp: 0
+        - suit: 1
+          rank: 12
+          faceUp: 0
+        - suit: 3
+          rank: 11
+          faceUp: 0
+        - suit: 3
+          rank: 6
+          faceUp: 1
+      - cards:
+        - suit: 2
+          rank: 9
+          faceUp: 0
+        - suit: 1
+          rank: 9
+          faceUp: 0
+        - suit: 0
+          rank: 3
+          faceUp: 0
+        - suit: 3
+          rank: 7
+          faceUp: 0
+        - suit: 3
+          rank: 2
+          faceUp: 0
+        - suit: 1
+          rank: 11
+          faceUp: 1
+      - cards:
+        - suit: 2
+          rank: 3
+          faceUp: 0
+        - suit: 0
+          rank: 8
+          faceUp: 0
+        - suit: 0
+          rank: 12
+          faceUp: 0
+        - suit: 1
+          rank: 7
+          faceUp: 0
+        - suit: 3
+          rank: 10
+          faceUp: 0
+        - suit: 1
+          rank: 13
+          faceUp: 0
+        - suit: 0
+          rank: 1
+          faceUp: 1
+      stock:
+      - suit: 1
+        rank: 5
+        faceUp: 0
+      - suit: 2
+        rank: 13
+        faceUp: 0
+      - suit: 0
+        rank: 7
+        faceUp: 0
+      - suit: 2
+        rank: 1
+        faceUp: 0
+      - suit: 3
+        rank: 1
+        faceUp: 0
+      - suit: 3
+        rank: 12
+        faceUp: 0
+      - suit: 1
+        rank: 4
+        faceUp: 0
+      - suit: 0
+        rank: 13
+        faceUp: 0
+      - suit: 1
+        rank: 1
+        faceUp: 0
+      - suit: 3
+        rank: 9
+        faceUp: 0
+      - suit: 1
+        rank: 6
+        faceUp: 0
+      - suit: 2
+        rank: 6
+        faceUp: 0
+      - suit: 2
+        rank: 8
+        faceUp: 0
+      - suit: 3
+        rank: 5
+        faceUp: 0
+      - suit: 0
+        rank: 11
+        faceUp: 0
+      - suit: 1
+        rank: 2
+        faceUp: 0
+      - suit: 2
+        rank: 2
+        faceUp: 0
+      - suit: 0
+        rank: 9
+        faceUp: 0
+      - suit: 3
+        rank: 3
+        faceUp: 0
+      - suit: 3
+        rank: 4
+        faceUp: 0
+      - suit: 0
+        rank: 6
+        faceUp: 0
+      - suit: 2
+        rank: 11
+        faceUp: 0
+      - suit: 1
+        rank: 10
+        faceUp: 0
+      - suit: 0
+        rank: 10
+        faceUp: 0
+    - tableau:
+      - cards:
+        - suit: 0
+          rank: 13
+          faceUp: 1
+      - cards:
+        - suit: 0
+          rank: 9
+          faceUp: 0
+        - suit: 3
+          rank: 3
+          faceUp: 1
+      - cards:
+        - suit: 2
+          rank: 8
+          faceUp: 0
+        - suit: 1
+          rank: 3
+          faceUp: 0
+        - suit: 0
+          rank: 4
+          faceUp: 1
+      - cards:
+        - suit: 3
+          rank: 13
+          faceUp: 0
+        - suit: 0
+          rank: 1
+          faceUp: 0
+        - suit: 2
+          rank: 7
+          faceUp: 0
+        - suit: 0
+          rank: 5
+          faceUp: 1
+      - cards:
+        - suit: 1
+          rank: 5
+          faceUp: 0
+        - suit: 3
+          rank: 1
+          faceUp: 0
+        - suit: 1
+          rank: 4
+          faceUp: 0
+        - suit: 1
+          rank: 1
+          faceUp: 0
+        - suit: 0
+          rank: 7
+          faceUp: 1
+      - cards:
+        - suit: 3
+          rank: 8
+          faceUp: 0
+        - suit: 1
+          rank: 12
+          faceUp: 0
+        - suit: 1
+          rank: 11
+          faceUp: 0
+        - suit: 3
+          rank: 4
+          faceUp: 0
+        - suit: 2
+          rank: 13
+          faceUp: 0
+        - suit: 1
+          rank: 7
+          faceUp: 1
+      - cards:
+        - suit: 0
+          rank: 3
+          faceUp: 0
+        - suit: 2
+          rank: 12
+          faceUp: 0
+        - suit: 0
+          rank: 11
+          faceUp: 0
+        - suit: 3
+          rank: 6
+          faceUp: 0
+        - suit: 0
+          rank: 6
+          faceUp: 0
+        - suit: 1
+          rank: 2
+          faceUp: 0
+        - suit: 3
+          rank: 10
+          faceUp: 1
+      stock:
+      - suit: 2
+        rank: 10
+        faceUp: 0
+      - suit: 1
+        rank: 8
+        faceUp: 0
+      - suit: 2
+        rank: 1
+        faceUp: 0
+      - suit: 2
+        rank: 11
+        faceUp: 0
+      - suit: 1
+        rank: 9
+        faceUp: 0
+      - suit: 2
+        rank: 4
+        faceUp: 0
+      - suit: 2
+        rank: 5
+        faceUp: 0
+      - suit: 0
+        rank: 12
+        faceUp: 0
+      - suit: 0
+        rank: 10
+        faceUp: 0
+      - suit: 2
+        rank: 9
+        faceUp: 0
+      - suit: 2
+        rank: 2
+        faceUp: 0
+      - suit: 0
+        rank: 8
+        faceUp: 0
+      - suit: 3
+        rank: 9
+        faceUp: 0
+      - suit: 3
+        rank: 7
+        faceUp: 0
+      - suit: 3
+        rank: 2
+        faceUp: 0
+      - suit: 2
+        rank: 3
+        faceUp: 0
+      - suit: 3
+        rank: 11
+        faceUp: 0
+      - suit: 3
+        rank: 5
+        faceUp: 0
+      - suit: 3
+        rank: 12
+        faceUp: 0
+      - suit: 2
+        rank: 6
+        faceUp: 0
+      - suit: 0
+        rank: 2
+        faceUp: 0
+      - suit: 1
+        rank: 10
+        faceUp: 0
+      - suit: 1
+        rank: 6
+        faceUp: 0
+      - suit: 1
+        rank: 13
+        faceUp: 0

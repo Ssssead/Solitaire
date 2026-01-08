@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/SampleScene.unity
+    guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Scenes/MenuScene.unity
+    guid: e91e43f86c12a134ca0868b03e5f302f
+  - enabled: 1
+    path: Assets/Scenes/KlondikeScene.unity
+    guid: 1d44b1e6da6886f42a9d439f3c78ba85
+  - enabled: 1
+    path: Assets/Scenes/SpiderScene.unity
+    guid: c334b20429ab6e34f8453d05cc3646c4
+  - enabled: 1
+    path: Assets/Scenes/FreeCellScene.unity
+    guid: e24e2403372bbe74e9f8d5e4f3426ba5
+  - enabled: 1
+    path: Assets/Scenes/PyramidScene.unity
+    guid: f3de95e3fde63a648987aaf83c2459ae
+  - enabled: 1
+    path: Assets/Scenes/TriPeaksScene.unity
+    guid: d606a029d478d5e40a9771e9c080de23
+  - enabled: 1
+    path: Assets/Scenes/OctagonScene.unity
+    guid: 6277390f162a68e459f6200eaab6cd5a
+  - enabled: 1
+    path: Assets/Scenes/SultanScene.unity
+    guid: 36155ac24d337d246aeffb64ad33678f
+  - enabled: 1
+    path: Assets/Scenes/MulticoloredStarScene.unity
+    guid: 413da8cfdce54654692591d7e1bf7505
+  - enabled: 1
+    path: Assets/Scenes/YukonScene.unity
+    guid: 9fa409adfdd8d854ab125d5dfc958f16
+  - enabled: 1
+    path: Assets/Scenes/MonteCarloScene.unity
+    guid: 37526533d3740854182112de6ff2d70e
+  m_configObjects: {}
