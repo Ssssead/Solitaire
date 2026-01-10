@@ -259,6 +259,10 @@ public class UndoManager : MonoBehaviour
         {
             foreach (var card in cards) foundation.AcceptCard(card);
         }
+        else if (source is FreeCellPile freeCell)
+        {
+            if (cards.Count > 0) freeCell.AcceptCard(cards[0]);
+        }
         if (source is Component comp && !immediate) animationService?.ReorderContainerZ(comp.transform);
     }
 
@@ -279,6 +283,12 @@ public class UndoManager : MonoBehaviour
         {
             // Foundation обычно принимает по 1 карте
             found.ForceRemove(record.cards[0]);
+        }
+        else if (record.targetContainer is FreeCellPile freeCell)
+        {
+            // Так как FreeCellPile содержит карты как детей, undo просто заберет их при перемещении
+            // Но если есть специфическая логика удаления, она должна быть тут.
+            // Обычно для Transform-based контейнеров ничего делать не надо, если DragManager меняет parent.
         }
         else if (record.targetContainer.GetType().Name.Contains("Stock"))
         {

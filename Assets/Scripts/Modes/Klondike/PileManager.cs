@@ -267,16 +267,21 @@ public class PileManager : MonoBehaviour
     /// <summary>
     /// Возвращает все контейнеры как ICardContainer.
     /// </summary>
-    public IEnumerable<ICardContainer> GetAllContainers()
+    public virtual List<ICardContainer> GetAllContainers()
     {
-        var all = new List<ICardContainer>();
-        all.AddRange(tableau);
-        all.AddRange(foundations);
+        List<ICardContainer> list = new List<ICardContainer>();
 
-        if (stockPile != null) all.Add(stockPile);
-        if (wastePile != null) all.Add(wastePile);
+        // Добавляем Tableau (если список не пуст)
+        if (tableau != null) list.AddRange(tableau);
 
-        return all;
+        // Добавляем Foundations (если список не пуст)
+        if (foundations != null) list.AddRange(foundations);
+
+        // Добавляем Stock и Waste (если они существуют)
+        if (stockPile != null) list.Add(stockPile);
+        if (wastePile != null) list.Add(wastePile);
+
+        return list;
     }
 
     /// <summary>

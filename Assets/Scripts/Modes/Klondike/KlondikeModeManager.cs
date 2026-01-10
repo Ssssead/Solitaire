@@ -368,7 +368,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
             StatisticsManager.Instance.StartTimerIfNotStarted();
             // Можно ли считать клик по стоку за "Ход" (Move)? 
             // В классике обычно считаются только перемещения карт, но таймер запустить надо.
-            // Если хотите считать за ход: StatisticsManager.Instance.RegisterMove();
+            StatisticsManager.Instance.RegisterMove();
         }
         // --------------------------
 

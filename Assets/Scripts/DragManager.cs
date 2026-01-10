@@ -88,16 +88,14 @@ public class DragManager : MonoBehaviour
         var sourceInfo = FindCardSourceInfo(card);
         if (!sourceInfo.found) return;
 
-        // 1. Блокировка целевой стопки (куда летят карты - мы это делали ранее)
+        // 1. Блокировка целевой стопки (куда летят карты)
         if (sourceInfo.tableauPile != null && sourceInfo.tableauPile.IsLocked)
         {
             return;
         }
 
-        // 2. --- НОВОЕ: Проверка целостности стопки ---
-        // Если мы пытаемся взять карту (10), но выше нее есть карты (9), 
-        // которые логически в стопке, но физически летят (parent != tableau),
-        // мы запрещаем брать 10-ку. Это предотвращает разрыв цепочки.
+        // 2. Проверка целостности стопки (Tableau)
+        // Предотвращаем разрыв цепочки, если карты выше уже анимируются/летят
         if (sourceInfo.tableauPile != null)
         {
             // Проверяем все карты, начиная от той, которую хватаем, и до верха стопки
@@ -111,10 +109,24 @@ public class DragManager : MonoBehaviour
                 }
             }
         }
-        // ---------------------------------------------
 
-        // Foundation check
-        if (sourceInfo.container is FoundationPile foundation && !foundation.IsCardOnTop(card)) return;
+        // 3. --- ЛОГИКА FOUNDATION (ДОМА) ---
+        if (sourceInfo.container is FoundationPile foundation)
+        {
+            // А. СПЕЦИФИКА FREECELL: Доставать карты из дома ЗАПРЕЩЕНО ПОЛНОСТЬЮ
+            if (mode is FreeCellModeManager)
+            {
+                return; // Просто выходим, не начиная драг
+            }
+
+            // Б. ДЛЯ ВСЕХ ОСТАЛЬНЫХ (Klondike): Разрешаем, но только ВЕРХНЮЮ карту
+            if (!foundation.IsCardOnTop(card))
+            {
+                return; // Если карта не верхняя - нельзя брать
+            }
+        }
+        // ------------------------------------
+
 
         sourceTableau = sourceInfo.tableauPile;
         sourceContainer = sourceInfo.container;
@@ -150,7 +162,6 @@ public class DragManager : MonoBehaviour
 
         // 4. ВАЖНО: Принудительно обновляем Canvas, чтобы Unity пересчитала 
         // мировые координаты (WorldPosition) после сброса AnchoredPosition.
-        // Без этого карта "запомнит" позицию тряски при переносе в DragLayer.
         Canvas.ForceUpdateCanvases();
 
         if (dragLayer == null && canvas != null) dragLayer = canvas.transform as RectTransform;
@@ -216,7 +227,30 @@ public class DragManager : MonoBehaviour
                 }
             }
         }
-
+        if (pileManager is FreeCellPileManager fcManager)
+        {
+            foreach (var fc in fcManager.FreeCells)
+            {
+                // Проверяем, лежит ли карта в этой ячейке
+                if (fc.GetComponentInChildren<CardController>() == card)
+                {
+                    info.found = true;
+                    info.container = fc;
+                    return info;
+                }
+            }
+        }
+        // Или если pileManager - это обычный PileManager, но мы знаем что контейнер может быть FreeCellPile
+        if (card.transform.parent != null)
+        {
+            var fc = card.transform.parent.GetComponent<FreeCellPile>();
+            if (fc != null)
+            {
+                info.found = true;
+                info.container = fc;
+                return info;
+            }
+        }
         return info;
     }
 
@@ -253,7 +287,16 @@ public class DragManager : MonoBehaviour
         {
             sequence.Add(card);
         }
-
+        if (mode is FreeCellModeManager freeCellMode)
+        {
+            int limit = freeCellMode.GetMaxDragSequenceSize();
+            // Если пачка больше лимита, берем только верхнюю карту или запрещаем
+            if (sequence.Count > limit)
+            {
+                // Возвращаем только одну карту (самую верхнюю), либо null чтобы запретить совсем
+                return null;
+            }
+        }
         return sequence;
     }
 
@@ -384,7 +427,7 @@ public class DragManager : MonoBehaviour
             // Нельзя класть в Foundation пачку карт > 1
             if (container is FoundationPile && draggingStack.Count > 1) continue;
             if (container is TableauPile tp && tp.IsLocked) continue;
-
+            if (container is FreeCellPile && draggingStack.Count > 1) continue;
             // --- ЛОГИКА ДЛЯ TABLEAU (СТОЛБЦОВ) ---
             if (container is TableauPile tableau)
             {
@@ -690,163 +733,192 @@ public class DragManager : MonoBehaviour
     /// </summary>
 
     public void OnCardDroppedToContainer(CardController card, ICardContainer container)
+{
+    // 1. Базовые проверки
+    if (draggingStack == null || draggingStack.Count == 0)
     {
-        // 1. Базовые проверки
-        if (draggingStack == null || draggingStack.Count == 0)
+        // Обработка одиночной карты без драг-сессии (на всякий случай)
+        if (card != null && container != null && card.transform.parent != container.Transform)
         {
-            // Обработка одиночной карты без драг-сессии (на всякий случай)
-            if (card != null && container != null && card.transform.parent != container.Transform)
-            {
-                var cardData = card.GetComponent<CardData>();
-                cardData?.SetFaceUp(true);
-                card.rectTransform.SetParent(container.Transform, false);
-                card.rectTransform.anchoredPosition = container.GetDropAnchoredPosition(card);
+            var cardData = card.GetComponent<CardData>();
+            cardData?.SetFaceUp(true);
+            card.rectTransform.SetParent(container.Transform, false);
+            card.rectTransform.anchoredPosition = container.GetDropAnchoredPosition(card);
 
-                if (container is TableauPile tableau) tableau.AddCard(card, true);
-                else if (container is FoundationPile foundation) foundation.AcceptCard(card);
-                else if (container is WastePile waste) waste.AddCard(card, true);
-            }
-            ClearDraggingState();
-            return;
+            if (container is TableauPile tableau) tableau.AddCard(card, true);
+            else if (container is FoundationPile foundation) foundation.AcceptCard(card);
+            else if (container is WastePile waste) waste.AddCard(card, true);
+            else if (container is FreeCellPile fc) fc.AcceptCard(card); // Добавили поддержку FreeCell тут тоже
         }
+        ClearDraggingState();
+        return;
+    }
 
-        if (draggingStack[0] != card)
+    if (draggingStack[0] != card)
+    {
+        OnCardDroppedToBoardEvent(card); 
+        return;
+    }
+
+    // --- КЭШИРУЕМ МЕНЕДЖЕР ОЧКОВ ОДИН РАЗ ---
+    var scoreMgr = FindObjectOfType<FreeCellScoreManager>();
+    // ----------------------------------------
+
+    // 2. ИЗЪЯТИЕ КАРТ И ПРОВЕРКА ПЕРЕВОРОТА В ИСТОЧНИКЕ
+    List<CardController> removedSequence = null;
+    bool sourceFlipped = false;
+    int sourceFlippedIndex = -1;
+
+    if (sourceTableau != null && sourceIndex >= 0)
+    {
+        removedSequence = sourceTableau.RemoveSequenceFrom(sourceIndex);
+        if (sourceTableau.CheckAndFlipTop())
         {
-            // Если сбросили не за ведущую карту - возврат
-            OnCardDroppedToBoardEvent(card); // Используем новый метод с возвратом
-            return;
-        }
-
-        // 2. ИЗЪЯТИЕ КАРТ И ПРОВЕРКА ПЕРЕВОРОТА В ИСТОЧНИКЕ
-        List<CardController> removedSequence = null;
-        bool sourceFlipped = false;
-        int sourceFlippedIndex = -1;
-
-        if (sourceTableau != null && sourceIndex >= 0)
-        {
-            removedSequence = sourceTableau.RemoveSequenceFrom(sourceIndex);
-            if (sourceTableau.CheckAndFlipTop())
-            {
-                sourceFlipped = true;
-                sourceFlippedIndex = sourceTableau.cards.Count - 1;
-            }
-        }
-        else if (sourceContainer is WastePile waste)
-        {
-            waste.PopTop();
-        }
-        else if (sourceContainer is FoundationPile foundation)
-        {
-            var removedCard = foundation.PopTop();
-            if (removedCard != null)
-            {
-                removedSequence = new List<CardController> { removedCard };
-                foundation.ForceRemove(removedCard);
-            }
-        }
-
-        // ==========================================================================================
-        // ЦЕЛЬ: TABLEAU
-        // ==========================================================================================
-        if (container is TableauPile targetTableau)
-        {
-            // 1. СРАЗУ БЛОКИРУЕМ ЦЕЛЕВУЮ СТОПКУ
-            // Это выключит Raycast у 9-ки моментально. Вы не сможете её взять.
-            targetTableau.SetAnimatingCard(true);
-
-            // 2. Записываем ход
-            RecordMoveToUndo(removedSequence ?? draggingStack, container);
-
-            if (mode is SpiderModeManager spiderManager)
-            {
-                spiderManager.OnMoveMade();
-            }
-            if (sourceFlipped && undoManager != null)
-            {
-                undoManager.RecordFlipInSource(sourceFlippedIndex);
-            }
-
-            // 3. СНИМОК: Копируем список карт для полета
-            var cardsToFly = new List<CardController>(draggingStack);
-
-            // 4. ОЧИСТКА: Освобождаем DragManager
-            ClearDraggingState();
-
-            // 5. ПРОВЕРКА СОСТОЯНИЯ
-            mode?.CheckGameState();
-
-            // 6. АНИМАЦИЯ
-            StartCoroutine(AnimateSequenceToTableau(cardsToFly, targetTableau));
-            return;
-        }
-
-        // ==========================================================================================
-        // ЦЕЛЬ: FOUNDATION
-        // ==========================================================================================
-        else if (container is FoundationPile targetFoundation)
-        {
-            var firstCard = draggingStack[0];
-
-            if (sourceContainer is FoundationPile sourceFoundation)
-            {
-                sourceFoundation.ForceRemove(firstCard);
-            }
-
-            // Для Foundation анимация (snap) обрабатывается самой картой или мгновенно
-            firstCard.ForceSnapToContainer(container);
-
-            if (firstCard.canvasGroup != null)
-            {
-                firstCard.canvasGroup.blocksRaycasts = true;
-                firstCard.canvasGroup.interactable = true;
-            }
-
-            // Логический прием
-            if (firstCard.transform.parent == targetFoundation.transform)
-            {
-                targetFoundation.AcceptCard(firstCard);
-            }
-
-            // Если тянули пачку, а Foundation принимает только одну - вернем остальные
-            if (draggingStack.Count > 1)
-            {
-                ReturnExtraCardsToSource(1);
-            }
-
-            // Запись Undo
-            if (undoManager != null)
-            {
-                undoManager.RecordMove(
-                    new List<CardController> { firstCard },
-                    sourceContainer,
-                    targetFoundation,
-                    new List<Transform> { sourceContainer?.Transform },
-                    new List<Vector3> { Vector3.zero },
-                    new List<int> { -1 }
-                );
-            }
-
-            if (sourceFlipped && undoManager != null)
-            {
-                undoManager.RecordFlipInSource(sourceFlippedIndex);
-            }
-
-            var anim = mode?.AnimationService;
-            anim?.ReorderContainerZ(targetFoundation.transform);
-            anim?.ReorderContainerZ(sourceContainer?.Transform);
-
-            mode?.CheckGameState();
-
-            // Для Foundation очищаем в конце, так как здесь нет долгой корутины полета списка
-            ClearDraggingState();
-            return;
-        }
-        else
-        {
-            // Если контейнер не подошел (непредвиденная ветка)
-            OnCardDroppedToBoardEvent(card);
+            sourceFlipped = true;
+            sourceFlippedIndex = sourceTableau.cards.Count - 1;
         }
     }
+    else if (sourceContainer is WastePile waste)
+    {
+        waste.PopTop();
+    }
+    else if (sourceContainer is FoundationPile foundation)
+    {
+        var removedCard = foundation.PopTop();
+        if (removedCard != null)
+        {
+            removedSequence = new List<CardController> { removedCard };
+            foundation.ForceRemove(removedCard);
+        }
+    }
+    // Для FreeCell изъятие происходит автоматически при смене родителя, 
+    // но можно добавить явную логику, если FreeCellPile хранит список.
+    // С текущим скриптом FreeCellPile (OnTransformChildrenChanged) это не обязательно.
+
+    // ==========================================================================================
+    // ЦЕЛЬ: TABLEAU
+    // ==========================================================================================
+    if (container is TableauPile targetTableau)
+    {
+        targetTableau.SetAnimatingCard(true);
+
+        RecordMoveToUndo(removedSequence ?? draggingStack, container);
+
+        if (mode is SpiderModeManager spiderManager) spiderManager.OnMoveMade();
+        if (sourceFlipped && undoManager != null) undoManager.RecordFlipInSource(sourceFlippedIndex);
+
+        // --- ОЧКИ ---
+        if (scoreMgr != null) scoreMgr.OnCardMove(sourceContainer, targetTableau);
+        // ------------
+
+        var cardsToFly = new List<CardController>(draggingStack);
+        ClearDraggingState();
+        mode?.CheckGameState();
+        StartCoroutine(AnimateSequenceToTableau(cardsToFly, targetTableau));
+        return;
+    }
+
+    // ==========================================================================================
+    // ЦЕЛЬ: FOUNDATION
+    // ==========================================================================================
+    else if (container is FoundationPile targetFoundation)
+    {
+        var firstCard = draggingStack[0];
+
+        if (sourceContainer is FoundationPile sourceFoundation) sourceFoundation.ForceRemove(firstCard);
+
+
+
+        firstCard.ForceSnapToContainer(container);
+
+        if (firstCard.canvasGroup != null)
+        {
+            firstCard.canvasGroup.blocksRaycasts = true;
+            firstCard.canvasGroup.interactable = true;
+        }
+
+        if (firstCard.transform.parent == targetFoundation.transform) targetFoundation.AcceptCard(firstCard);
+
+        if (draggingStack.Count > 1) ReturnExtraCardsToSource(1);
+
+        if (undoManager != null)
+        {
+            undoManager.RecordMove(
+                new List<CardController> { firstCard },
+                sourceContainer, targetFoundation,
+                new List<Transform> { sourceContainer?.Transform },
+                new List<Vector3> { Vector3.zero }, new List<int> { -1 }
+            );
+        }
+
+        if (sourceFlipped && undoManager != null) undoManager.RecordFlipInSource(sourceFlippedIndex);
+
+        var anim = mode?.AnimationService;
+        anim?.ReorderContainerZ(targetFoundation.transform);
+        anim?.ReorderContainerZ(sourceContainer?.Transform);
+
+        // --- ОЧКИ (САМОЕ ВАЖНОЕ) ---
+        if (scoreMgr != null) scoreMgr.OnCardMove(sourceContainer, targetFoundation);
+        // ---------------------------
+
+        mode?.CheckGameState();
+        ClearDraggingState();
+        return;
+    }
+
+    // ==========================================================================================
+    // ЦЕЛЬ: FREE CELL (Ваш код)
+    // ==========================================================================================
+    else if (container is FreeCellPile freeCell)
+    {
+        // 1. Проверка: FreeCell принимает только 1 карту
+        if (draggingStack.Count > 1)
+        {
+            OnCardDroppedToBoardEvent(card);
+            return;
+        }
+
+        CardController cardToDrop = draggingStack[0];
+
+        // 2. Моментальная привязка
+        cardToDrop.ForceSnapToContainer(container);
+
+        // Включаем клики обратно
+        if (cardToDrop.canvasGroup != null)
+        {
+            cardToDrop.canvasGroup.blocksRaycasts = true;
+            cardToDrop.canvasGroup.interactable = true;
+        }
+
+        // 3. Сообщаем ячейке о карте
+        freeCell.AcceptCard(cardToDrop);
+
+        // 4. Запись Undo
+        RecordMoveToUndo(draggingStack, container);
+
+        if (sourceFlipped && undoManager != null)
+        {
+            undoManager.RecordFlipInSource(sourceFlippedIndex);
+        }
+
+        // --- ОЧКИ (Штраф за ячейку) ---
+        if (scoreMgr != null) scoreMgr.OnCardMove(sourceContainer, freeCell);
+        // ------------------------------
+
+        // 5. Завершение
+        mode?.CheckGameState();
+        ClearDraggingState();
+        return;
+    }
+
+    // ==========================================================================================
+    // ИНАЧЕ
+    // ==========================================================================================
+    else
+    {
+        OnCardDroppedToBoardEvent(card);
+    }
+}
 
     // Вспомогательный метод для обработки переворота (чтобы не дублировать код)
     private void HandleSourceFlip()

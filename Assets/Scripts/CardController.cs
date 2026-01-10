@@ -66,7 +66,7 @@ public class CardController : MonoBehaviour,
 
     #region Drag & Drop
 
-    public void OnBeginDrag(PointerEventData eventData)
+    public virtual void OnBeginDrag(PointerEventData eventData)
     {
         // 1. Проверка блокировки ввода (Global)
         if (CardmodeManager != null && !CardmodeManager.IsInputAllowed) return;
@@ -108,7 +108,7 @@ public class CardController : MonoBehaviour,
         }
     }
 
-    public void OnEndDrag(PointerEventData eventData)
+    public virtual void OnEndDrag(PointerEventData eventData)
     {
         if (CardmodeManager != null && !CardmodeManager.IsInputAllowed)
         {
@@ -267,6 +267,7 @@ public class CardController : MonoBehaviour,
         }
 
         isAnimating = false;
+       
     }
 
     #endregion

@@ -77,7 +77,10 @@ public class StatisticsUI : MonoBehaviour
                 currentVariantKeys.Add("2Suits"); currentVariantLabels.Add("Suits: 2");
                 currentVariantKeys.Add("4Suits"); currentVariantLabels.Add("Suits: 4");
                 break;
-
+            case GameType.FreeCell:
+                // Ключ "Standard" должен совпадать с тем, что вы передаете в OnGameStarted
+                currentVariantKeys.Add("Standard"); currentVariantLabels.Add("Standard");
+                break;
             default:
                 // Для остальных игр (FreeCell и т.д.) только один стандартный режим
                 currentVariantKeys.Add("Standard"); currentVariantLabels.Add("Standard");

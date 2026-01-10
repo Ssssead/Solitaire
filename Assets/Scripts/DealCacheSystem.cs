@@ -95,9 +95,16 @@ public class DealCacheSystem : MonoBehaviour
 
         cacheRequirements[GameType.Spider] = spiderConfigs;
 
+        List<CacheConfig> freeCellConfigs = new List<CacheConfig>();
+        foreach (Difficulty d in System.Enum.GetValues(typeof(Difficulty)))
+        {
+            freeCellConfigs.Add(new CacheConfig { Diff = d, Param = 0 });
+        }
+        cacheRequirements[GameType.FreeCell] = freeCellConfigs;
+
         // 3. ОСТАЛЬНЫЕ (Пока стандартные Easy/Medium/Hard c Param 0)
         GameType[] otherGames = {
-            GameType.FreeCell, GameType.Pyramid, GameType.TriPeaks,
+            GameType.Pyramid, GameType.TriPeaks,
             GameType.Sultan, GameType.Octagon, GameType.MulticoloredStar,
             GameType.Yukon, GameType.MonteCarlo
         };
