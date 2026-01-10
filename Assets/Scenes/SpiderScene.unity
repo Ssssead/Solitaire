@@ -7176,7 +7176,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 48830003}
         m_TargetAssemblyTypeName: GameUIController, Assembly-CSharp
         m_MethodName: OnMenuClicked
         m_Mode: 1

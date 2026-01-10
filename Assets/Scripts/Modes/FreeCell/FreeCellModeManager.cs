@@ -23,7 +23,7 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     [Header("Rules")]
     public float tableauVerticalGap = 35f;
 
-    // Настройки текущей партии (по умолчанию Medium, но будут обновлены через InitializeMode)
+    // По умолчанию Medium, но будет перезаписано из GameSettings
     private Difficulty currentDifficulty = Difficulty.Medium;
     private int currentSeed = 0;
 
@@ -69,14 +69,12 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         }
     }
 
-    // --- ВАЖНО: ЭТОТ МЕТОД ВЫЗЫВАЕТСЯ ИЗ МЕНЮ ---
+    // Вызывается из Меню принудительно (если используется)
     public void InitializeMode(Difficulty difficulty, int seed)
     {
         currentDifficulty = difficulty;
         currentSeed = seed;
 
-        // Если игра уже была запущена в Start() с дефолтными настройками,
-        // нам нужно перезапустить её с новыми (правильными) настройками.
         if (pileManager != null)
         {
             RestartGame();
@@ -98,7 +96,10 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
             dragManager.RegisterAllContainers(containers);
         }
 
-        // Запуск первой игры (может запуститься с Medium, если InitializeMode еще не вызван)
+        // --- ИСПРАВЛЕНИЕ: Синхронизация с глобальными настройками ---
+        // Это гарантирует, что даже первый запуск берет правильную сложность (Hard/Easy)
+        currentDifficulty = GameSettings.CurrentDifficulty;
+
         StartNewGame();
     }
 
@@ -135,7 +136,7 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         isGameWon = false;
         IsInputAllowed = true;
 
-        // Теперь здесь используется актуальная currentDifficulty
+        // Теперь здесь всегда актуальная сложность
         if (StatisticsManager.Instance != null)
         {
             StatisticsManager.Instance.OnGameStarted("FreeCell", currentDifficulty, "Standard");
@@ -146,7 +147,7 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
 
         if (DealCacheSystem.Instance != null)
         {
-            // Исправлен вызов на GetDeal
+            // Используем GetDeal (который возвращает Deal или null)
             Deal cachedDeal = DealCacheSystem.Instance.GetDeal(GameType.FreeCell, currentDifficulty, currentSeed);
 
             if (cachedDeal != null)
@@ -188,7 +189,6 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         }
     }
 
-    // --- Super Move Logic ---
     public int GetMaxDragSequenceSize()
     {
         int emptyFC = 0;
@@ -207,7 +207,6 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         return Mathf.Min(rawLimit, 13);
     }
 
-    // --- Game Mode Logic ---
     public void CheckGameState()
     {
         if (isGameWon) return;
@@ -319,7 +318,6 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         }
     }
 
-    // IModeManager методы
     public void OnUndoAction()
     {
         isGameWon = false;

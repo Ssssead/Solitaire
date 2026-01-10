@@ -133,6 +133,22 @@ public class UndoManager : MonoBehaviour
         Canvas.ForceUpdateCanvases();
         if (animationService != null && pileManager != null)
             animationService.ReorderAllContainers(pileManager.GetAllContainerTransforms());
+
+        if (pileManager != null && pileManager.Tableau != null)
+        {
+            foreach (var container in pileManager.Tableau)
+            {
+                // Получаем компонент TableauPile (он есть и в FreeCell, и в Klondike)
+                var pileScript = container.GetComponent<TableauPile>();
+
+                if (pileScript != null)
+                {
+                    // Этот метод внутри себя проверяет cards.Count и меняет yOffset
+                    pileScript.StartLayoutAnimationPublic();
+                }
+            }
+        }
+
         inProgress = false;
         UpdateButtons();
         gameMode?.CheckGameState();
