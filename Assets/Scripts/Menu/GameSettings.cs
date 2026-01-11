@@ -12,6 +12,8 @@ public static class GameSettings
 
     // Настройки для будущего Spider (пример)
     public static int SpiderSuitCount = 1;
+
+    public static int RoundsCount = 1;
 }
 
 // Перечисление всех ваших будущих игр

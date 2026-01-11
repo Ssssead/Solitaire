@@ -12,7 +12,7 @@ public class PyramidStockPile : MonoBehaviour
     {
         c.transform.SetParent(transform);
         c.transform.localPosition = Vector3.zero;
-        c.transform.SetAsLastSibling(); // Визуально наверх
+        c.transform.SetAsLastSibling();
 
         cards.Add(c);
         UpdateInteractability();
@@ -30,7 +30,6 @@ public class PyramidStockPile : MonoBehaviour
         UpdateInteractability();
     }
 
-    // --- ИСПРАВЛЕНИЕ 1: Удаление конкретной карты из середины или верха ---
     public void Remove(CardController c)
     {
         if (cards.Contains(c))
@@ -58,7 +57,6 @@ public class PyramidStockPile : MonoBehaviour
     public bool HasCard(CardController c) => cards.Contains(c);
     public void Clear() => cards.Clear();
 
-    // --- ИСПРАВЛЕНИЕ 2: Управление цветом ---
     public void UpdateInteractability()
     {
         for (int i = 0; i < cards.Count; i++)
@@ -68,16 +66,16 @@ public class PyramidStockPile : MonoBehaviour
 
             if (card.canvasGroup != null)
             {
+                // Логическая блокировка кликов остается (только верхняя)
                 card.canvasGroup.interactable = isTop;
                 card.canvasGroup.blocksRaycasts = isTop;
             }
 
-            // Принудительно красим верхнюю в белый, остальные в серый
-            // Это решает проблему затемнения после Recycle
+            // ВИЗУАЛ: Все карты всегда белые (без затемнения)
             var cardData = card.GetComponent<CardData>();
             if (cardData != null && cardData.image != null)
             {
-                cardData.image.color = isTop ? Color.white : new Color(0.6f, 0.6f, 0.6f);
+                cardData.image.color = Color.white;
             }
         }
     }

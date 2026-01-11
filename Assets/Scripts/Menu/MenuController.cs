@@ -16,6 +16,7 @@ public class MenuController : MonoBehaviour
         public bool showDrawModeSlider;
         public bool showSuitSelector;
         public bool showDifficulty;
+        public bool showRoundsSelector; // <--- НОВЫЙ ФЛАГ (для Pyramid/TriPeaks)
     }
 
     [Header("Game Definitions")]
@@ -33,6 +34,7 @@ public class MenuController : MonoBehaviour
     public GameObject drawModeContainer;
     public GameObject difficultyContainer;
     public GameObject suitSelectionContainer;
+    public GameObject roundsSelectionContainer; // <--- НОВЫЙ КОНТЕЙНЕР (перетащить в инспекторе)
 
     [Header("Draw Mode Toggle (Visuals)")]
     public RectTransform toggleHandle;
@@ -46,10 +48,13 @@ public class MenuController : MonoBehaviour
     public Button[] diffButtons; // Порядок: 0-Easy, 1-Medium, 2-Hard
     public Color diffSelectedColor = Color.yellow;
     public Color diffNormalColor = Color.white;
-    public Color diffDisabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f); // Цвет заблокированной кнопки
+    public Color diffDisabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
 
     [Header("Suit Buttons (Spider)")]
     public Button[] suitButtons; // Порядок: 0-[1 масть], 1-[2 масти], 2-[4 масти]
+
+    [Header("Rounds Buttons (Visuals)")] // <--- НОВЫЙ ЗАГОЛОВОК
+    public Button[] roundsButtons; // [0]->1 Round, [1]->2 Rounds, [2]->3 Rounds
 
     private GameDefinition currentGame;
     private bool isDrawThree = false;
@@ -76,6 +81,9 @@ public class MenuController : MonoBehaviour
         currentGame = games[gameIndex];
         GameSettings.CurrentGameType = currentGame.type;
         string gameName = currentGame.type.ToString();
+
+        // Сброс раундов на 1 при выборе новой игры
+        GameSettings.RoundsCount = 1;
 
         // 1. Сначала включаем панель
         mainSelectionPanel.SetActive(false);
@@ -118,25 +126,51 @@ public class MenuController : MonoBehaviour
         if (suitSelectionContainer) suitSelectionContainer.SetActive(currentGame.showSuitSelector);
         if (difficultyContainer) difficultyContainer.SetActive(currentGame.showDifficulty);
 
-        // Сбрасываем сложность на Medium при каждом входе (безопасный вариант)
+        // Включаем контейнер раундов, если флаг установлен
+        if (roundsSelectionContainer)
+            roundsSelectionContainer.SetActive(currentGame.showRoundsSelector);
+
+        // Сбрасываем сложность на Medium при каждом входе
         SetDifficulty((int)Difficulty.Medium);
         SetDrawMode(false);
 
-        // --- ИЗМЕНЕНИЕ: Дефолт для Паука ---
+        // Обновляем визуал раундов (сбросится на 1)
+        UpdateRoundsVisuals();
+
+        // --- Дефолт для Паука ---
         if (currentGame.type == GameType.Spider)
         {
-            // По умолчанию выбираем 1 масть. Это также запустит логику блокировки Hard.
             OnSuitClicked(1);
         }
         else
         {
-            // Для других игр разблокируем все сложности
             foreach (var btn in diffButtons) btn.interactable = true;
             UpdateDifficultyVisuals();
         }
     }
 
-    // --- Обработчики UI настроек ---
+    // --- ЛОГИКА РАУНДОВ (НОВОЕ) ---
+
+    // Назначить на кнопки: 1 Round -> 0, 2 Rounds -> 1, 3 Rounds -> 2
+    public void OnRoundsClicked(int index)
+    {
+        GameSettings.RoundsCount = index + 1;
+        UpdateRoundsVisuals();
+    }
+
+    private void UpdateRoundsVisuals()
+    {
+        if (roundsButtons == null) return;
+
+        int currentIndex = GameSettings.RoundsCount - 1; // 1->0, 2->1 ...
+
+        for (int i = 0; i < roundsButtons.Length; i++)
+        {
+            if (roundsButtons[i] == null) continue;
+            // Используем те же цвета, что и для остальных кнопок
+            roundsButtons[i].image.color = (i == currentIndex) ? diffSelectedColor : diffNormalColor;
+        }
+    }
 
     // --- РЕЖИМ КОСЫНКИ (DRAW 3) ---
     public void OnDrawModeToggleClicked()
@@ -158,16 +192,12 @@ public class MenuController : MonoBehaviour
     public void OnSuitClicked(int suitCount)
     {
         GameSettings.SpiderSuitCount = suitCount;
-
         UpdateSuitVisuals(suitCount);
-
-        // --- ИЗМЕНЕНИЕ: Валидация сложностей ---
         ValidateSpiderConstraints(suitCount);
     }
 
     private void UpdateSuitVisuals(int count)
     {
-        // Индексы кнопок: 0 -> 1 масть, 1 -> 2 масти, 2 -> 4 масти
         int selectedIndex = -1;
         if (count == 1) selectedIndex = 0;
         else if (count == 2) selectedIndex = 1;
@@ -180,18 +210,13 @@ public class MenuController : MonoBehaviour
         }
     }
 
-    // --- ИЗМЕНЕНИЕ: Логика блокировки кнопок ---
     private void ValidateSpiderConstraints(int suitCount)
     {
-        // Сначала разблокируем всё
         foreach (var btn in diffButtons) btn.interactable = true;
 
         if (suitCount == 1)
         {
-            // 1 масть: Блокируем HARD (индекс 2)
             if (diffButtons.Length > 2) diffButtons[2].interactable = false;
-
-            // Если был выбран Hard, переключаем на Medium
             if (GameSettings.CurrentDifficulty == Difficulty.Hard)
             {
                 SetDifficulty((int)Difficulty.Medium);
@@ -199,17 +224,12 @@ public class MenuController : MonoBehaviour
         }
         else if (suitCount == 4)
         {
-            // 4 масти: Блокируем EASY (индекс 0)
             if (diffButtons.Length > 0) diffButtons[0].interactable = false;
-
-            // Если был выбран Easy, переключаем на Medium
             if (GameSettings.CurrentDifficulty == Difficulty.Easy)
             {
                 SetDifficulty((int)Difficulty.Medium);
             }
         }
-
-        // Обновляем цвета кнопок сложности с учетом блокировки
         UpdateDifficultyVisuals();
     }
 
@@ -234,12 +254,10 @@ public class MenuController : MonoBehaviour
 
             if (!diffButtons[i].interactable)
             {
-                // Если кнопка заблокирована - серый цвет
                 diffButtons[i].image.color = diffDisabledColor;
             }
             else
             {
-                // Если доступна - проверяем, выбрана ли она
                 diffButtons[i].image.color = (i == currentIndex) ? diffSelectedColor : diffNormalColor;
             }
         }
