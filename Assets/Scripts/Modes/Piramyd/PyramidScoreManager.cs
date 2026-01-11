@@ -1,18 +1,26 @@
 using UnityEngine;
+using System;
 
 public class PyramidScoreManager : MonoBehaviour
 {
-    public int Score { get; private set; }
+    private int _currentScore;
+
+    // Свойство для GameUIController (Reflection)
+    public int CurrentScore => _currentScore;
+    public int Score => _currentScore; // Дубликат для удобства
+
+    // Событие для обновления UI (если потребуется в будущем)
+    public event Action<int> OnScoreChanged;
+
+    public void AddPoints(int amount)
+    {
+        _currentScore += amount;
+        OnScoreChanged?.Invoke(_currentScore);
+    }
 
     public void ResetScore()
     {
-        Score = 0;
-        // Update UI logic here
-    }
-
-    public void AddPoints(int points)
-    {
-        Score += points;
-        // Update UI logic here
+        _currentScore = 0;
+        OnScoreChanged?.Invoke(_currentScore);
     }
 }

@@ -1,29 +1,33 @@
+using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
 
+// --- ОПРЕДЕЛЕНИЕ СТРУКТУРЫ ХОДА (Для Undo) ---
 public class PyramidMoveRecord
 {
-    public enum MoveType
-    {
-        Deal,
-        RemovePair,
-        RemoveKing,
-        Recycle
-    }
-
+    public enum MoveType { Deal, Recycle, RemovePair, RemoveKing }
     public MoveType Type;
 
+    // Для Deal
     public CardController DealtCard;
-    public List<CardController> RecycledCards = new List<CardController>();
+
+    // Для Recycle
+    public List<CardController> RecycledCards;
+
+    // Для Remove
     public List<RemovedCardInfo> RemovedCards = new List<RemovedCardInfo>();
 
-    public struct RemovedCardInfo
+    // --- НОВОЕ: Для отмены очков ---
+    public int ScoreGained;
+    public List<int> ClearedRows = new List<int>(); // Список рядов, очищенных этим ходом
+
+    public class RemovedCardInfo
     {
         public CardController Card;
         public PyramidTableauSlot SourceSlot;
         public bool WasInStock;
         public bool WasInWaste;
-
-        // Новое поле: запоминаем, в какой фундамент улетела карта
         public bool WentToLeftFoundation;
     }
 }

@@ -23,7 +23,7 @@ public class PyramidAnimationManager : MonoBehaviour
         if (dragLayerRect != null) dragLayerRect.SetAsLastSibling();
     }
 
-    // --- 1. STARTER DEAL ---
+    // --- 1. СТАРТОВАЯ РАЗДАЧА (Для нового PyramidModeManager, если понадобится) ---
     public IEnumerator PlayDealAnimation(List<CardController> tableauCards)
     {
         float delayPerCard = dealTotalDuration / Mathf.Max(1, tableauCards.Count);
@@ -40,37 +40,15 @@ public class PyramidAnimationManager : MonoBehaviour
     private IEnumerator MoveCardToHome(CardController card, float duration)
     {
         if (card == null) yield break;
-
-        // Подготовка
-        card.transform.SetParent(dragLayerRect, true);
-        card.transform.localScale = Vector3.one;
-
-        var data = card.GetComponent<CardData>();
-        if (data)
-        {
-            data.SetFaceUp(true);
-            if (data.image) data.image.color = Color.white;
-        }
+        PrepareCardForFlight(card);
 
         var info = card.GetComponent<CardInfoStorage>();
         Transform targetSlot = info != null ? info.LinkedSlot : deckManager.wasteRoot;
 
-        Vector3 startPos = card.transform.position;
-        Vector3 targetPos = targetSlot.position;
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            float t = elapsed / duration;
-            t = t * t * (3f - 2f * t);
-            card.transform.position = Vector3.Lerp(startPos, targetPos, t);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
+        yield return StartCoroutine(LerpRoutine(card, targetSlot.position, duration));
 
         if (card != null)
         {
-            card.transform.position = targetSlot.position;
             card.transform.SetParent(targetSlot);
             card.transform.localPosition = Vector3.zero;
             card.transform.localScale = Vector3.one;
@@ -78,82 +56,63 @@ public class PyramidAnimationManager : MonoBehaviour
         }
     }
 
-    // --- 2. MOVEMENT (Deal / Undo / Recycle) ---
-    public IEnumerator MoveCardLinear(CardController card, Vector3 targetWorldPos, float duration, System.Action onComplete = null)
+    // --- 2. МЕТОДЫ ДЛЯ СТАРОГО КОДА (MoveCardAnimation) ---
+    // Это тот самый метод, который ищет ваш PyramidModeManager
+    public IEnumerator MoveCardAnimation(CardController card, Vector3 targetWorldPos, float duration)
     {
         if (card == null) yield break;
+        PrepareCardForFlight(card);
 
-        // ВАЖНО: Включаем карту и выносим на DragLayer
-        card.gameObject.SetActive(true);
-        card.transform.SetParent(dragLayerRect, true);
-        card.transform.localScale = Vector3.one;
-        card.transform.localRotation = Quaternion.identity;
-
-        var data = card.GetComponent<CardData>();
-        if (data)
-        {
-            data.SetFaceUp(true);
-            if (data.image) data.image.color = Color.white;
-        }
-
-        Vector3 startPos = card.transform.position;
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            if (card == null) yield break;
-            float t = elapsed / duration;
-            card.transform.position = Vector3.Lerp(startPos, targetWorldPos, t);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
+        yield return StartCoroutine(LerpRoutine(card, targetWorldPos, duration));
 
         if (card != null)
         {
             card.transform.position = targetWorldPos;
             card.transform.localScale = Vector3.one;
         }
+    }
 
+    // --- 3. МЕТОДЫ ДЛЯ СТАРОГО КОДА (AnimateCardBallistic - перегрузка) ---
+    // Старый код вызывает этот метод без onComplete
+    public IEnumerator AnimateCardBallistic(CardController card, Transform foundation, float duration)
+    {
+        yield return StartCoroutine(AnimateRemoveBallistic(card, foundation, null));
+    }
+
+    // --- 4. МЕТОДЫ ДЛЯ НОВОГО КОДА (MoveCardLinear, MoveCardToStockAndDisable) ---
+
+    public IEnumerator MoveCardLinear(CardController card, Vector3 targetWorldPos, float duration, System.Action onComplete = null)
+    {
+        yield return StartCoroutine(MoveCardAnimation(card, targetWorldPos, duration));
         onComplete?.Invoke();
     }
 
     public IEnumerator MoveCardToStockAndDisable(CardController card, Vector3 targetPos, float duration)
     {
-        card.transform.SetParent(dragLayerRect, true);
-        card.transform.localScale = Vector3.one;
+        if (card == null) yield break;
+        PrepareCardForFlight(card);
 
-        var data = card.GetComponent<CardData>();
-        if (data)
+        yield return StartCoroutine(LerpRoutine(card, targetPos, duration));
+
+        if (card != null)
         {
-            data.SetFaceUp(true);
-            if (data.image) data.image.color = Color.white;
-        }
-
-        float elapsed = 0f;
-        Vector3 startPos = card.transform.position;
-
-        while (elapsed < duration)
-        {
-            card.transform.position = Vector3.Lerp(startPos, targetPos, elapsed / duration);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        card.transform.position = targetPos;
-        if (deckManager != null && deckManager.stockRoot != null)
-        {
-            card.transform.SetParent(deckManager.stockRoot);
-            card.transform.localPosition = Vector3.zero;
+            card.transform.position = targetPos;
+            if (deckManager != null && deckManager.stockRoot != null)
+            {
+                card.transform.SetParent(deckManager.stockRoot);
+                card.transform.localPosition = Vector3.zero;
+            }
         }
     }
+
+    // --- 5. CORE LOGIC ---
 
     public IEnumerator AnimateRemoveBallistic(CardController card, Transform target, System.Action onComplete = null)
     {
         if (card == null) yield break;
 
-        card.transform.SetParent(dragLayerRect, true);
+        PrepareCardForFlight(card);
         if (card.canvasGroup) card.canvasGroup.interactable = false;
-        card.transform.localScale = Vector3.one;
 
         Vector3 startPos = card.transform.position;
         Vector3 endPos = target.position;
@@ -172,33 +131,27 @@ public class PyramidAnimationManager : MonoBehaviour
             elapsed += Time.deltaTime;
             yield return null;
         }
+
+        // ВАЖНО: Старый код ожидает, что карта будет скрыта в конце
+        if (card != null)
+        {
+            card.transform.position = endPos;
+            card.transform.SetParent(target);
+            card.gameObject.SetActive(false);
+        }
+
         onComplete?.Invoke();
     }
 
     public IEnumerator ReturnCardFromFoundation(CardController card, Vector3 startPos, Vector3 endPos, Transform finalParent, float duration)
     {
         card.gameObject.SetActive(true);
-        card.transform.SetParent(dragLayerRect, true);
+        PrepareCardForFlight(card);
         card.transform.position = startPos;
-        card.transform.rotation = Quaternion.identity;
-        card.transform.localScale = Vector3.one;
 
-        var data = card.GetComponent<CardData>();
-        if (data && data.image) data.image.color = Color.white;
+        yield return StartCoroutine(LerpRoutine(card, endPos, duration));
 
-        float elapsed = 0f;
-        while (elapsed < duration)
-        {
-            float t = elapsed / duration;
-            t = t * t * (3f - 2f * t);
-            card.transform.position = Vector3.Lerp(startPos, endPos, t);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        card.transform.position = endPos;
-
-        if (finalParent != null)
+        if (card != null && finalParent != null)
         {
             card.transform.SetParent(finalParent);
             card.transform.localPosition = Vector3.zero;
@@ -206,6 +159,36 @@ public class PyramidAnimationManager : MonoBehaviour
                 card.transform.SetAsLastSibling();
             if (card.canvasGroup) card.canvasGroup.interactable = true;
         }
+    }
+
+    // --- Helpers ---
+    private void PrepareCardForFlight(CardController card)
+    {
+        card.transform.SetParent(dragLayerRect, true);
+        card.transform.localScale = Vector3.one;
+        card.transform.localRotation = Quaternion.identity;
+
+        var data = card.GetComponent<CardData>();
+        if (data)
+        {
+            data.SetFaceUp(true);
+            if (data.image) data.image.color = Color.white;
+        }
+    }
+
+    private IEnumerator LerpRoutine(CardController card, Vector3 targetWorldPos, float duration)
+    {
+        Vector3 startPos = card.transform.position;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            if (card == null) yield break;
+            float t = elapsed / duration;
+            card.transform.position = Vector3.Lerp(startPos, targetWorldPos, t);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        if (card != null) card.transform.position = targetWorldPos;
     }
 
     public IEnumerator PlayNewRoundEntry(Transform stockRoot)
