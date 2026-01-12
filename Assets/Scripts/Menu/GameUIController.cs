@@ -1,9 +1,8 @@
-// GameUIController.cs [UPDATED WITH REAL SCORE LOGIC]
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
-using System.Reflection; // Нужно для рефлексии
+using System.Reflection;
 
 public class GameUIController : MonoBehaviour
 {
@@ -13,8 +12,11 @@ public class GameUIController : MonoBehaviour
     public GameObject defeatPanel;
     public GameObject statisticsPanel;
 
+    [Header("Confirmation Panels")] // --- НОВОЕ ---
+    public GameObject exitConfirmationPanel;    // Панель "Выйти в меню?"
+    public GameObject newGameConfirmationPanel; // Панель "Начать новую игру?"
+
     [Header("Win Panel Stats")]
-    // Ссылки на тексты внутри WinPanel (создайте их в Unity)
     public TMP_Text winDifficultyText;
     public TMP_Text winScoreText;
     public TMP_Text winTimeText;
@@ -22,19 +24,17 @@ public class GameUIController : MonoBehaviour
     public TMP_Text winXPText;
 
     public XPProgressBar localLevelBar;
-    public XPProgressBar winLevelBar;   // Бар в панели победы (WinPanel)
+    public XPProgressBar winLevelBar;
 
     [Header("Notifications")]
     public LevelUpNotification globalLevelUpPopup;
 
     [Header("References")]
-    // ВМЕСТО КОНКРЕТНОГО МЕНЕДЖЕРА ИСПОЛЬЗУЕМ ИНТЕРФЕЙС
     private ICardGameMode activeGameMode;
     public UndoManager undoManager;
 
     private void Start()
     {
-        // 1. Ищем любой активный режим игры на сцене
         if (activeGameMode == null)
         {
             foreach (var obj in FindObjectsOfType<MonoBehaviour>())
@@ -49,11 +49,15 @@ public class GameUIController : MonoBehaviour
 
         if (undoManager == null) undoManager = FindObjectOfType<UndoManager>();
 
-        // Скрываем панели
+        // Скрываем все панели при старте
         if (winPanel) winPanel.SetActive(false);
         if (settingsPanel) settingsPanel.SetActive(false);
         if (defeatPanel) defeatPanel.SetActive(false);
         if (statisticsPanel) statisticsPanel.SetActive(false);
+
+        // --- НОВОЕ: Скрываем панели подтверждения ---
+        if (exitConfirmationPanel) exitConfirmationPanel.SetActive(false);
+        if (newGameConfirmationPanel) newGameConfirmationPanel.SetActive(false);
 
         if (StatisticsManager.Instance != null)
         {
@@ -69,7 +73,96 @@ public class GameUIController : MonoBehaviour
         }
     }
 
-    // --- МЕТОДЫ ПОБЕДЫ И ПОРАЖЕНИЯ ---
+    // --- ЛОГИКА ВЫХОДА В МЕНЮ (С ПОДТВЕРЖДЕНИЕМ) ---
+
+    // 1. Вызывается кнопкой "Menu" в интерфейсе (или "Home")
+    public void OnMenuClicked()
+    {
+        // 1. Проверяем, были ли сделаны ходы
+        int moves = 0;
+        if (StatisticsManager.Instance != null)
+        {
+            moves = StatisticsManager.Instance.GetCurrentMoves();
+        }
+
+        // 2. Если ходы БЫЛИ (> 0) и панель назначена -> Спрашиваем
+        if (moves > 0 && exitConfirmationPanel != null)
+        {
+            exitConfirmationPanel.SetActive(true);
+        }
+        else
+        {
+            // 3. Если ходов 0 (или панели нет) -> Выходим сразу
+            OnConfirmExitClicked();
+        }
+    }
+
+    // 2. Вызывается кнопкой "ДА" в панели подтверждения выхода
+    public void OnConfirmExitClicked()
+    {
+        if (DealCacheSystem.Instance != null) DealCacheSystem.Instance.ReturnActiveDealToQueue();
+        SceneManager.LoadScene("MenuScene");
+    }
+
+    // 3. Вызывается кнопкой "НЕТ" в панели подтверждения выхода
+    public void OnCancelExitClicked()
+    {
+        if (exitConfirmationPanel != null) exitConfirmationPanel.SetActive(false);
+    }
+
+    // --- ЛОГИКА НОВОЙ ИГРЫ (С ПОДТВЕРЖДЕНИЕМ) ---
+
+    // 1. Вызывается кнопкой "New Game" (в панели поражения, победы или настроек)
+    public void OnNewGameClicked()
+    {
+        // 1. Проверяем, выиграл ли игрок (открыта ли панель победы)
+        bool isWinState = (winPanel != null && winPanel.activeSelf);
+
+        // 2. Если мы ВЫИГРАЛИ -> Подтверждение НЕ нужно, начинаем сразу
+        if (isWinState)
+        {
+            OnConfirmNewGameClicked();
+            return;
+        }
+
+        // 3. Если мы ПРОИГРАЛИ (DefeatPanel) или нажали из МЕНЮ (Settings) -> Спрашиваем
+        if (newGameConfirmationPanel != null)
+        {
+            newGameConfirmationPanel.SetActive(true);
+        }
+        else
+        {
+            // Если панели подтверждения нет, рестартим сразу
+            OnConfirmNewGameClicked();
+        }
+    }
+
+    // 2. Вызывается кнопкой "ДА" в панели подтверждения новой игры
+    public void OnConfirmNewGameClicked()
+    {
+        // Закрываем панель подтверждения
+        if (newGameConfirmationPanel) newGameConfirmationPanel.SetActive(false);
+
+        // Закрываем остальные панели (Pobeda, Porazhenie, Settings)
+        if (winPanel) winPanel.SetActive(false);
+        if (settingsPanel) settingsPanel.SetActive(false);
+        if (defeatPanel) defeatPanel.SetActive(false);
+
+        // Перезапускаем игру
+        if (activeGameMode != null)
+        {
+            activeGameMode.IsInputAllowed = true;
+            activeGameMode.RestartGame();
+        }
+    }
+
+    // 3. Вызывается кнопкой "НЕТ" в панели подтверждения новой игры
+    public void OnCancelNewGameClicked()
+    {
+        if (newGameConfirmationPanel != null) newGameConfirmationPanel.SetActive(false);
+    }
+
+    // --------------------------------------------------------
 
     public void OnGameWon()
     {
@@ -85,19 +178,16 @@ public class GameUIController : MonoBehaviour
     {
         if (winDifficultyText) winDifficultyText.text = GameSettings.CurrentDifficulty.ToString();
 
-        // --- ОБНОВЛЕНИЕ: ПОЛУЧЕНИЕ СЧЕТА ---
         if (winScoreText && activeGameMode != null)
         {
             int finalScore = 0;
             var modeType = activeGameMode.GetType();
 
-            // 1. Сначала ищем свойство CurrentScore (реализовано в SpiderModeManager)
             var scoreProp = modeType.GetProperty("CurrentScore");
             if (scoreProp != null)
             {
                 finalScore = (int)scoreProp.GetValue(activeGameMode);
             }
-            // 2. Если нет, ищем поле scoreManager (для Klondike, если интерфейс не менялся)
             else
             {
                 var smField = modeType.GetField("scoreManager");
@@ -106,7 +196,6 @@ public class GameUIController : MonoBehaviour
                     var smObj = smField.GetValue(activeGameMode);
                     if (smObj != null)
                     {
-                        // Внутри ScoreManager ищем CurrentScore
                         var innerScoreProp = smObj.GetType().GetProperty("CurrentScore");
                         if (innerScoreProp != null)
                         {
@@ -115,10 +204,8 @@ public class GameUIController : MonoBehaviour
                     }
                 }
             }
-
             winScoreText.text = finalScore.ToString();
         }
-        // -----------------------------------
 
         if (StatisticsManager.Instance != null)
         {
@@ -128,7 +215,6 @@ public class GameUIController : MonoBehaviour
             if (winTimeText) winTimeText.text = FormatTime(duration);
             if (winXPText) winXPText.text = $"+ {StatisticsManager.Instance.LastXPGained} XP";
 
-            // --- УНИВЕРСАЛЬНОЕ ИМЯ ИГРЫ ---
             string gameName = activeGameMode != null ? activeGameMode.GameName : "Unknown";
 
             if (winLevelBar != null)
@@ -141,7 +227,6 @@ public class GameUIController : MonoBehaviour
                 }
             }
 
-            // --- АНИМАЦИЯ БАРА УРОВНЯ ---
             if (winLevelBar != null)
             {
                 StatData data = StatisticsManager.Instance.GetGameGlobalStats(gameName);
@@ -153,12 +238,10 @@ public class GameUIController : MonoBehaviour
                     int targetXP = data.xpForNextLevel > 0 ? data.xpForNextLevel : 500;
                     int xpGained = StatisticsManager.Instance.LastXPGained;
 
-                    // Вычисляем XP до начисления
                     int startXP = currentXP - xpGained;
 
                     if (startXP < 0)
                     {
-                        // Level Up
                         int oldLevel = currentLevel - 1;
                         if (oldLevel < 1) oldLevel = 1;
                         int oldTarget = oldLevel * 500;
@@ -168,7 +251,6 @@ public class GameUIController : MonoBehaviour
                     }
                     else
                     {
-                        // Normal
                         winLevelBar.AnimateBar(currentLevel, startXP, currentXP, targetXP);
                     }
                 }
@@ -191,14 +273,6 @@ public class GameUIController : MonoBehaviour
             defeatPanel.SetActive(true);
             if (activeGameMode != null) activeGameMode.IsInputAllowed = false;
         }
-    }
-
-    // --- ОСТАЛЬНЫЕ МЕТОДЫ (Без изменений) ---
-
-    public void OnMenuClicked()
-    {
-        if (DealCacheSystem.Instance != null) DealCacheSystem.Instance.ReturnActiveDealToQueue();
-        SceneManager.LoadScene("MenuScene");
     }
 
     private void HandleLevelUp(string context, int newLevel)
@@ -228,28 +302,12 @@ public class GameUIController : MonoBehaviour
 
     public void OnStatisticsClicked()
     {
-        if (statisticsPanel != null)
-        {
-            statisticsPanel.SetActive(true);
-        }
+        if (statisticsPanel != null) statisticsPanel.SetActive(true);
     }
 
     public void OnCloseStatisticsClicked()
     {
         if (statisticsPanel != null) statisticsPanel.SetActive(false);
-    }
-
-    public void OnNewGameClicked()
-    {
-        if (winPanel) winPanel.SetActive(false);
-        if (settingsPanel) settingsPanel.SetActive(false);
-        if (defeatPanel) defeatPanel.SetActive(false);
-
-        if (activeGameMode != null)
-        {
-            activeGameMode.IsInputAllowed = true;
-            activeGameMode.RestartGame();
-        }
     }
 
     public void OnUndoOneClicked()

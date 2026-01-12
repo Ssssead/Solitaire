@@ -144,24 +144,29 @@ public class StatData
             time = time,
             moves = moves,
             difficulty = difficultyName,
-            playedAt = DateTime.Now.ToString(), // Можно хранить дату
+            playedAt = DateTime.Now.ToString(),
             gameName = gameName,
             variant = variantName
         };
 
         // 2. Добавляем в список
         history.Add(newEntry);
-        if (history.Count > 10) history.RemoveAt(0); // Храним только последние 10
+        if (history.Count > 10) history.RemoveAt(0);
 
-        // 3. Обновляем общую статистику
+        // 3. Обновляем общую статистику (СЧИТАЕМ ВСЕГДА, НЕЗАВИСИМО ОТ РЕЗУЛЬТАТА)
+        totalTime += time;
+        totalMoves += moves;
+
         if (won)
         {
             gamesWon++;
-            totalTime += time;
-            totalMoves += moves;
+            // totalTime и totalMoves убрали отсюда, они теперь считаются выше
+
             if (score > bestScore) bestScore = score;
+            // Обновляем лучшее время/ходы только при победе
             if (bestTime == 0 || time < bestTime) bestTime = time;
             if (fewestMoves == 0 || moves < fewestMoves) fewestMoves = moves;
+
             currentStreak++;
             if (currentStreak > bestStreak) bestStreak = currentStreak;
         }

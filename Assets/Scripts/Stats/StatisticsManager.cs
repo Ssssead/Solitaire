@@ -157,11 +157,17 @@ public class StatisticsManager : MonoBehaviour
         OnXPGained?.Invoke(xpGained);
 
         SaveStats();
+        currentMoves = 0;
     }
 
     public void OnGameAbandoned()
     {
+        // Если игра даже не началась (не было ходов), не записываем статистику
         if (!hasTimerStarted) return;
+
+        // 1. Рассчитываем реальное время игры
+        float duration = Time.time - gameStartTime;
+        LastGameTime = duration;
 
         string[] keyParts = currentGameKey.Split('_');
         string gameName = keyParts[0];
@@ -171,15 +177,17 @@ public class StatisticsManager : MonoBehaviour
         string gameGlobalKey = $"{gameName}_Global";
         string appGlobalKey = "Global";
 
-        // --- ИСПРАВЛЕНИЕ: ПЕРЕДАЕМ gameName И variantStr ---
-        stats.UpdateData(currentGameKey, false, 0, 0, 0, difficultyStr, gameName, variantStr);
-        stats.UpdateData(gameGlobalKey, false, 0, 0, 0, difficultyStr, gameName, variantStr);
-        stats.UpdateData(appGlobalKey, false, 0, 0, 0, difficultyStr, gameName, variantStr);
-        // --------------------------------------------------
+        // 2. ПЕРЕДАЕМ duration И currentMoves ВМЕСТО 0
+        // (Score при поражении оставляем 0)
+        stats.UpdateData(currentGameKey, false, duration, currentMoves, 0, difficultyStr, gameName, variantStr);
+        stats.UpdateData(gameGlobalKey, false, duration, currentMoves, 0, difficultyStr, gameName, variantStr);
+        stats.UpdateData(appGlobalKey, false, duration, currentMoves, 0, difficultyStr, gameName, variantStr);
 
         SaveStats();
+
         isTimerRunning = false;
         hasTimerStarted = false;
+        currentMoves = 0;
     }
 
     // --- SAVE / LOAD ---
