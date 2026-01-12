@@ -14,7 +14,11 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     public RectTransform dragLayer;
     public TMP_Text moveLimitText;
     public GameUIController gameUI;
+
     private bool isGameWon = false;
+
+    // --- НОВОЕ: Флаг, началась ли игра реально (был ли ход) ---
+    private bool hasGameStarted = false;
 
     [Header("FreeCell Specific")]
     public Transform freeCellSlotsParent;
@@ -96,8 +100,7 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
             dragManager.RegisterAllContainers(containers);
         }
 
-        // --- ИСПРАВЛЕНИЕ: Синхронизация с глобальными настройками ---
-        // Это гарантирует, что даже первый запуск берет правильную сложность (Hard/Easy)
+        // Синхронизация с глобальными настройками
         currentDifficulty = GameSettings.CurrentDifficulty;
 
         StartNewGame();
@@ -109,9 +112,29 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         Initialize();
     }
 
+    // --- ИСПРАВЛЕНИЕ: Обработка выхода со сцены ---
+    private void OnDestroy()
+    {
+        // Если игра была начата (сделан ход), но не выиграна -> Поражение
+        if (hasGameStarted && !isGameWon)
+        {
+            if (StatisticsManager.Instance != null)
+                StatisticsManager.Instance.OnGameAbandoned();
+        }
+    }
+    // ----------------------------------------------
+
     public void RestartGame()
     {
+        // Если рестартим активную игру -> засчитываем поражение предыдущей
+        if (hasGameStarted && !isGameWon)
+        {
+            if (StatisticsManager.Instance != null)
+                StatisticsManager.Instance.OnGameAbandoned();
+        }
+
         isGameWon = false;
+        hasGameStarted = false; // Сброс флага
         IsInputAllowed = true;
 
         pileManager.ClearAllPiles();
@@ -134,20 +157,16 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     private void StartNewGame()
     {
         isGameWon = false;
+        hasGameStarted = false; // Сброс флага
         IsInputAllowed = true;
 
-        // Теперь здесь всегда актуальная сложность
-        if (StatisticsManager.Instance != null)
-        {
-            StatisticsManager.Instance.OnGameStarted("FreeCell", currentDifficulty, "Standard");
-        }
+        // ВАЖНО: Мы НЕ вызываем OnGameStarted здесь. Ждем первого хода.
 
         // --- ИНТЕГРАЦИЯ КЭША ---
         bool dealLoadedFromCache = false;
 
         if (DealCacheSystem.Instance != null)
         {
-            // Используем GetDeal (который возвращает Deal или null)
             Deal cachedDeal = DealCacheSystem.Instance.GetDeal(GameType.FreeCell, currentDifficulty, currentSeed);
 
             if (cachedDeal != null)
@@ -229,62 +248,11 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         if (!HasAnyValidMove())
         {
             Debug.Log("Defeat! No moves left.");
-            isGameWon = true;
-            IsInputAllowed = false;
-            StartCoroutine(DefeatSequence());
+            // Здесь можно вызывать поражение, но в FreeCell часто дают игроку самому нажать Restart/Undo
+            // Если вы хотите авто-поражение:
+            // isGameWon = true; // Блокируем ввод
+            // if (gameUI) gameUI.OnGameLost();
         }
-    }
-
-    private System.Collections.IEnumerator DefeatSequence()
-    {
-        yield return new WaitForSeconds(1.0f);
-        if (gameUI != null) gameUI.OnGameLost();
-        else
-        {
-            var ui = FindObjectOfType<GameUIController>();
-            if (ui) ui.OnGameLost();
-        }
-    }
-
-    private bool HasAnyValidMove()
-    {
-        List<CardController> movableCards = new List<CardController>();
-
-        foreach (var tab in pileManager.Tableau)
-        {
-            if (tab.cards.Count > 0)
-                movableCards.Add(tab.cards[tab.cards.Count - 1]);
-        }
-
-        int emptyFreeCells = 0;
-        foreach (var fc in pileManager.FreeCells)
-        {
-            if (fc.IsEmpty) emptyFreeCells++;
-            else movableCards.Add(fc.GetComponentInChildren<CardController>());
-        }
-
-        foreach (var card in movableCards)
-        {
-            if (card == null) continue;
-
-            foreach (var f in pileManager.Foundations)
-            {
-                if (f.CanAccept(card)) return true;
-            }
-
-            foreach (var t in pileManager.Tableau)
-            {
-                if (card.transform.parent == t.transform) continue;
-                if (t.CanAccept(card)) return true;
-            }
-
-            bool isAlreadyInCell = card.transform.parent.GetComponent<FreeCellPile>() != null;
-            if (!isAlreadyInCell && emptyFreeCells > 0)
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     private System.Collections.IEnumerator VictorySequence()
@@ -306,12 +274,24 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
 
     public void OnCardDroppedToContainer(CardController card, ICardContainer container)
     {
-        OnMoveMade();
+        OnMoveMade(); // Любое перетаскивание - это ход
         CheckGameState();
     }
 
+    // --- ИСПРАВЛЕНИЕ: Логика первого хода ---
     public void OnMoveMade()
     {
+        // Если это первый ход - регистрируем начало игры
+        if (!hasGameStarted)
+        {
+            hasGameStarted = true;
+            if (StatisticsManager.Instance != null)
+            {
+                StatisticsManager.Instance.OnGameStarted("FreeCell", currentDifficulty, "Standard");
+            }
+        }
+
+        // Регистрируем сам ход (счетчик ходов)
         if (StatisticsManager.Instance != null)
         {
             StatisticsManager.Instance.RegisterMove();
@@ -320,20 +300,19 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
 
     public void OnUndoAction()
     {
+        // Undo тоже считается действием
+        OnMoveMade();
+
         isGameWon = false;
         IsInputAllowed = true;
 
         var scoreMgr = GetComponent<FreeCellScoreManager>();
         if (scoreMgr != null) scoreMgr.OnUndo();
 
-        if (StatisticsManager.Instance != null)
-        {
-            StatisticsManager.Instance.RegisterMove();
-        }
-
         UpdateMoveLimitUI();
     }
 
+    // --- Остальные методы ---
     public void OnStockClicked() { }
     public void OnCardDoubleClicked(CardController card) { }
     public void OnCardClicked(CardController card) { }
@@ -414,5 +393,46 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         }
 
         return null;
+    }
+
+    private bool HasAnyValidMove()
+    {
+        List<CardController> movableCards = new List<CardController>();
+
+        foreach (var tab in pileManager.Tableau)
+        {
+            if (tab.cards.Count > 0)
+                movableCards.Add(tab.cards[tab.cards.Count - 1]);
+        }
+
+        int emptyFreeCells = 0;
+        foreach (var fc in pileManager.FreeCells)
+        {
+            if (fc.IsEmpty) emptyFreeCells++;
+            else movableCards.Add(fc.GetComponentInChildren<CardController>());
+        }
+
+        foreach (var card in movableCards)
+        {
+            if (card == null) continue;
+
+            foreach (var f in pileManager.Foundations)
+            {
+                if (f.CanAccept(card)) return true;
+            }
+
+            foreach (var t in pileManager.Tableau)
+            {
+                if (card.transform.parent == t.transform) continue;
+                if (t.CanAccept(card)) return true;
+            }
+
+            bool isAlreadyInCell = card.transform.parent.GetComponent<FreeCellPile>() != null;
+            if (!isAlreadyInCell && emptyFreeCells > 0)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

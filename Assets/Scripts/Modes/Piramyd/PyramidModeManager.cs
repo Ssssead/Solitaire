@@ -39,6 +39,10 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     private int recyclesRemaining;
     private Coroutine defeatRoutine;
 
+    // --- State Flags ---
+    private bool _hasGameStarted = false; // Был ли сделан первый ход?
+    private bool _isGameWon = false;      // Была ли игра выиграна?
+
     public string GameName => "Pyramid";
     public RectTransform DragLayer => animManager ? animManager.dragLayerRect : null;
     public Canvas RootCanvas => null;
@@ -66,11 +70,38 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         recyclesRemaining = maxRecycles;
         if (defeatRoutine != null) StopCoroutine(defeatRoutine);
 
+        // Сброс флагов
+        _hasGameStarted = false;
+        _isGameWon = false;
+
         if (scoreManager) scoreManager.ResetScore();
 
         SetupButtons();
-        StatisticsManager.Instance.OnGameStarted("Pyramid", difficulty, rounds.ToString());
+
+        // ВАЖНО: Мы НЕ вызываем OnGameStarted здесь, чтобы не накручивать счетчик игр без ходов.
+        // Мы сохраняем параметры, но вызовем старт позже.
+
         StartRound(true);
+    }
+
+    // --- НОВЫЙ МЕТОД: Регистрирует начало игры при первом действии ---
+    private void EnsureGameStarted()
+    {
+        if (!_hasGameStarted)
+        {
+            _hasGameStarted = true;
+            StatisticsManager.Instance.OnGameStarted("Pyramid", currentDifficulty, totalRounds.ToString());
+        }
+    }
+
+    // --- НОВЫЙ МЕТОД: Обработка выхода со сцены (меню/закрытие) ---
+    private void OnDestroy()
+    {
+        // Если ходы были сделаны, но игра не выиграна -> Засчитываем поражение
+        if (_hasGameStarted && !_isGameWon)
+        {
+            StatisticsManager.Instance.OnGameAbandoned();
+        }
     }
 
     private void SetupButtons()
@@ -127,6 +158,10 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     {
         if (!IsInputAllowed) return;
         DeselectCard();
+
+        // Регистрируем старт игры перед любым действием
+        EnsureGameStarted();
+
         if (pileManager.Stock.IsEmpty)
         {
             if (pileManager.Waste.GetCards().Count > 0)
@@ -171,6 +206,10 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     {
         if (!IsInputAllowed) return;
         if (!IsInteractable(card)) return;
+
+        // Клик по карте - потенциальное действие
+        EnsureGameStarted();
+
         if (card.cardModel.rank == 13) { StartCoroutine(RemoveSequence(card, null)); return; }
         if (selectedA == null) { SelectCard(card); }
         else if (selectedA == card) { DeselectCard(); }
@@ -186,6 +225,10 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     private IEnumerator RemoveSequence(CardController cardA, CardController cardB)
     {
         IsInputAllowed = false; DeselectCard();
+
+        // Убеждаемся, что старт засчитан (на всякий случай)
+        EnsureGameStarted();
+
         var move = new PyramidMoveRecord { Type = (cardB == null) ? PyramidMoveRecord.MoveType.RemoveKing : PyramidMoveRecord.MoveType.RemovePair };
         Transform targetA = null; Transform targetB = null;
         if (cardB == null) targetA = GetClosestFoundation(cardA);
@@ -222,7 +265,12 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
             if (defeatRoutine != null) StopCoroutine(defeatRoutine);
             yield return new WaitForSeconds(removeAnimDuration);
             if (currentRound < totalRounds) { currentRound++; StartRound(false); }
-            else { StatisticsManager.Instance.OnGameWon(scoreManager ? scoreManager.Score : 0); if (gameUI != null) gameUI.OnGameWon(); }
+            else
+            {
+                _isGameWon = true; // ПОБЕДА
+                StatisticsManager.Instance.OnGameWon(scoreManager ? scoreManager.Score : 0);
+                if (gameUI != null) gameUI.OnGameWon();
+            }
         }
         else
         {
@@ -233,8 +281,22 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         }
     }
 
-    public void OnUndoAction() { if (undoStack.Count == 0 || !IsInputAllowed) return; StartCoroutine(UndoSequence(undoStack.Pop(), false)); }
-    public void OnUndoAllAction() { if (undoStack.Count == 0 || !IsInputAllowed) return; StartCoroutine(UndoAllRoutine()); }
+    public void OnUndoAction()
+    {
+        if (undoStack.Count == 0 || !IsInputAllowed) return;
+
+        // Undo тоже может считаться активностью, если вдруг нажали до первого хода (хотя вряд ли)
+        EnsureGameStarted();
+
+        StartCoroutine(UndoSequence(undoStack.Pop(), false));
+    }
+
+    public void OnUndoAllAction()
+    {
+        if (undoStack.Count == 0 || !IsInputAllowed) return;
+        EnsureGameStarted();
+        StartCoroutine(UndoAllRoutine());
+    }
 
     private IEnumerator UndoAllRoutine()
     {
@@ -282,10 +344,8 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         if (gameUI != null && gameUI.defeatPanel.activeSelf) gameUI.defeatPanel.SetActive(false);
         float dur = immediate ? 0f : 0.3f;
 
-        // --- ИЗМЕНЕНИЕ: ОТМЕНА ХОДА ТЕПЕРЬ СЧИТАЕТСЯ ЗА ХОД ---
         if (!immediate && StatisticsManager.Instance != null)
             StatisticsManager.Instance.RegisterMove();
-        // -----------------------------------------------------
 
         if (move.Type == PyramidMoveRecord.MoveType.Deal)
         {

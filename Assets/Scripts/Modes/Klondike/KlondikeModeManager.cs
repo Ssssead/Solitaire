@@ -1,5 +1,4 @@
-﻿// KlondikeModeManager.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,17 +6,11 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-/// <summary>
-/// Главный менеджер режима игры Косынка (Klondike Solitaire).
-/// Координирует работу всех сервисов и компонентов.
-/// Реализует интерфейс IModeManager для интеграции с системой карточных игр.
-/// </summary>
 public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 {
     [Header("Core References")]
     public CardFactory cardFactory;
     public Canvas rootCanvas;
-    
 
     [Header("UI Slots")]
     public Transform tableauSlotsParent;
@@ -50,18 +43,17 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public Canvas RootCanvas => rootCanvas != null ? rootCanvas : GetComponentInParent<Canvas>();
     public float TableauVerticalGap => tableauVerticalGap;
     public StockDealMode StockDealMode => stockDealMode;
-    public bool IsInputAllowed { get; set; } = true; // По умолчанию true
+    public bool IsInputAllowed { get; set; } = true;
 
     [Header("UI")]
-    public GameUIController gameUI; // Ссылка на новый скрипт
+    public GameUIController gameUI;
 
-    private bool hasWonGame = false; // Флаг, чтобы не вызывать победу много раз
-    public string GameName => "Klondike"; // Имя для статистики
+    private bool hasWonGame = false;
 
+    // --- НОВОЕ: Флаг старта игры ---
+    private bool hasGameStarted = false;
 
-
-
-
+    public string GameName => "Klondike";
 
     [Header("Debug")]
     [SerializeField] private bool showDebugLogs = true;
@@ -73,33 +65,23 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     private void Awake()
     {
         LogDebug("=== Awake Start ===");
-
-        // 1) Находим компоненты если не назначены
         FindMissingComponents();
 
-        // 2) Проверяем критические зависимости
         if (!ValidateCriticalReferences())
         {
             Debug.LogError("[KlondikeModeManager] Critical references missing! Check Inspector.");
             return;
         }
 
-        // 3) Подготавливаем аргументы для Initialize
         object[] initArgs = PrepareInitializationArguments();
-
-        // 4) Инициализируем все сервисы
         InitializeAllServices(initArgs);
 
         isInitialized = true;
         LogDebug("=== Awake Complete ===");
     }
 
-    /// <summary>
-    /// Находит отсутствующие компоненты автоматически.
-    /// </summary>
     private void FindMissingComponents()
     {
-        // Пытаемся найти компоненты локально или в сцене
         pileManager = pileManager ?? GetComponent<PileManager>() ?? FindObjectOfType<PileManager>();
         deckManager = deckManager ?? GetComponent<DeckManager>() ?? FindObjectOfType<DeckManager>();
         dragManager = dragManager ?? GetComponent<DragManager>() ?? FindObjectOfType<DragManager>();
@@ -109,73 +91,22 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         defeatManager = defeatManager ?? GetComponent<DefeatManager>() ?? FindObjectOfType<DefeatManager>();
         scoreManager = scoreManager ?? GetComponent<KlondikeScoreManager>() ?? FindObjectOfType<KlondikeScoreManager>();
 
-        // Canvas
-        if (rootCanvas == null)
-        {
-            rootCanvas = cardFactory?.rootCanvas ?? FindObjectOfType<Canvas>();
-        }
-
-        // DragLayer
-        if (dragLayer == null && rootCanvas != null)
-        {
-            dragLayer = rootCanvas.transform as RectTransform;
-        }
+        if (rootCanvas == null) rootCanvas = cardFactory?.rootCanvas ?? FindObjectOfType<Canvas>();
+        if (dragLayer == null && rootCanvas != null) dragLayer = rootCanvas.transform as RectTransform;
     }
 
-    /// <summary>
-    /// Проверяет наличие критически важных ссылок.
-    /// </summary>
     private bool ValidateCriticalReferences()
     {
         bool valid = true;
-
-        if (cardFactory == null)
-        {
-            Debug.LogError("[KlondikeModeManager] CardFactory is null!");
-            valid = false;
-        }
-
-        if (pileManager == null)
-        {
-            Debug.LogError("[KlondikeModeManager] PileManager is null!");
-            valid = false;
-        }
-
-        if (deckManager == null)
-        {
-            Debug.LogError("[KlondikeModeManager] DeckManager is null!");
-            valid = false;
-        }
-
-        if (dragManager == null)
-        {
-            Debug.LogError("[KlondikeModeManager] DragManager is null!");
-            valid = false;
-        }
-
-        if (rootCanvas == null)
-        {
-            Debug.LogWarning("[KlondikeModeManager] Canvas is null!");
-        }
-
-        if (tableauSlotsParent == null)
-        {
-            Debug.LogError("[KlondikeModeManager] tableauSlotsParent is null!");
-            valid = false;
-        }
-
-        if (foundationSlotsParent == null)
-        {
-            Debug.LogError("[KlondikeModeManager] foundationSlotsParent is null!");
-            valid = false;
-        }
-
+        if (cardFactory == null) { Debug.LogError("[KlondikeModeManager] CardFactory is null!"); valid = false; }
+        if (pileManager == null) { Debug.LogError("[KlondikeModeManager] PileManager is null!"); valid = false; }
+        if (deckManager == null) { Debug.LogError("[KlondikeModeManager] DeckManager is null!"); valid = false; }
+        if (dragManager == null) { Debug.LogError("[KlondikeModeManager] DragManager is null!"); valid = false; }
+        if (tableauSlotsParent == null) { Debug.LogError("[KlondikeModeManager] tableauSlotsParent is null!"); valid = false; }
+        if (foundationSlotsParent == null) { Debug.LogError("[KlondikeModeManager] foundationSlotsParent is null!"); valid = false; }
         return valid;
     }
 
-    /// <summary>
-    /// Подготавливает массив аргументов для инициализации сервисов.
-    /// </summary>
     private object[] PrepareInitializationArguments()
     {
         RectTransform tableauSlotsRect = tableauSlotsParent as RectTransform;
@@ -183,126 +114,63 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         RectTransform stockSlotRect = stockSlot as RectTransform;
         RectTransform wasteSlotRect = wasteSlot as RectTransform;
 
-        // ВАЖНО: не добавляем в массив одинаковые объекты дважды!
-        // Это может привести к тому что SafeInvokeInitialize перепутает аргументы
-
         var args = new List<object>
         {
-            this,                       // KlondikeModeManager
-            cardFactory,
-            pileManager,
-            deckManager,
-            dragManager,
-            undoManager,
-            animationService,
-            autoMoveService,
-            rootCanvas,
-            (object)tableauVerticalGap  // boxing float
+            this, cardFactory, pileManager, deckManager, dragManager, undoManager,
+            animationService, autoMoveService, rootCanvas, (object)tableauVerticalGap
         };
 
-        // Добавляем Transform/RectTransform только если они уникальны
-        // PileManager должен использовать уже назначенные в Inspector ссылки
-
-        // Для других компонентов (не PileManager) добавляем слоты
         if (tableauSlotsParent != null) args.Add(tableauSlotsParent);
         if (foundationSlotsParent != null) args.Add(foundationSlotsParent);
         if (stockSlot != null) args.Add(stockSlot);
         if (wasteSlot != null) args.Add(wasteSlot);
 
-        if (tableauSlotsRect != null && tableauSlotsRect != tableauSlotsParent as object)
-            args.Add(tableauSlotsRect);
-        if (foundationSlotsRect != null && foundationSlotsRect != foundationSlotsParent as object)
-            args.Add(foundationSlotsRect);
-        if (stockSlotRect != null && stockSlotRect != stockSlot as object)
-            args.Add(stockSlotRect);
-        if (wasteSlotRect != null && wasteSlotRect != wasteSlot as object)
-            args.Add(wasteSlotRect);
-        if (dragLayer != null)
-            args.Add(dragLayer);
+        if (tableauSlotsRect != null && tableauSlotsRect != tableauSlotsParent as object) args.Add(tableauSlotsRect);
+        if (foundationSlotsRect != null && foundationSlotsRect != foundationSlotsParent as object) args.Add(foundationSlotsRect);
+        if (stockSlotRect != null && stockSlotRect != stockSlot as object) args.Add(stockSlotRect);
+        if (wasteSlotRect != null && wasteSlotRect != wasteSlot as object) args.Add(wasteSlotRect);
+        if (dragLayer != null) args.Add(dragLayer);
 
         return args.ToArray();
     }
 
-    /// <summary>
-    /// Инициализирует все сервисы используя рефлексию.
-    /// </summary>
     private void InitializeAllServices(object[] availableArgs)
     {
-        // 1. PileManager (особый случай)
         if (pileManager != null)
         {
-            bool hasAllSlots = (pileManager.tableauSlotsParent != null &&
-                               pileManager.foundationSlotsParent != null &&
-                               pileManager.stockSlotTransform != null &&
-                               pileManager.wasteSlotTransform != null);
-
-            if (hasAllSlots)
-            {
-                pileManager.Initialize(this, null, null, null, null, tableauVerticalGap);
-            }
-            else
-            {
-                SafeInvokeInitialize(pileManager, availableArgs, "PileManager");
-            }
+            bool hasAllSlots = (pileManager.tableauSlotsParent != null && pileManager.foundationSlotsParent != null && pileManager.stockSlotTransform != null && pileManager.wasteSlotTransform != null);
+            if (hasAllSlots) pileManager.Initialize(this, null, null, null, null, tableauVerticalGap);
+            else SafeInvokeInitialize(pileManager, availableArgs, "PileManager");
         }
 
-        // 2. DeckManager, UndoManager, AnimationService (можно оставить SafeInvoke, там нет путаницы с RectTransform)
         SafeInvokeInitialize(deckManager, availableArgs, "DeckManager");
         SafeInvokeInitialize(undoManager, availableArgs, "UndoManager");
         SafeInvokeInitialize(animationService, availableArgs, "AnimationService");
 
-        // 3. DragManager - ИНИЦИАЛИЗИРУЕМ ЯВНО!
         if (dragManager != null)
         {
-            // Передаем this, canvas и ЯВНО dragLayer
             dragManager.Initialize(this, rootCanvas, dragLayer, undoManager);
-            LogDebug("DragManager initialized explicitly with DragLayer: " + (dragLayer != null ? dragLayer.name : "null"));
+            LogDebug("DragManager initialized explicitly");
         }
 
-        // 4. AutoMoveService - ИНИЦИАЛИЗИРУЕМ ЯВНО!
         if (autoMoveService != null)
         {
-            // (Manager, PileManager, UndoManager, AnimationService, Canvas, DragLayer, gap)
-            autoMoveService.Initialize(
-                this,
-                pileManager,
-                undoManager,
-                animationService,
-                rootCanvas,
-                dragLayer, // <-- Важно!
-                tableauVerticalGap
-            );
-            LogDebug("AutoMoveService initialized explicitly with DragLayer");
+            autoMoveService.Initialize(this, pileManager, undoManager, animationService, rootCanvas, dragLayer, tableauVerticalGap);
+            LogDebug("AutoMoveService initialized explicitly");
         }
 
-        if (defeatManager != null)
-        {
-            defeatManager.Initialize(pileManager, gameUI);
-        }
+        if (defeatManager != null) defeatManager.Initialize(pileManager, gameUI);
     }
 
     private void Start()
     {
-        if (!isInitialized)
-        {
-            Debug.LogError("[KlondikeModeManager] Not initialized properly!");
-            return;
-        }
-        // --- ИНТЕГРАЦИЯ С МЕНЮ ---
-        // 1. Применяем сложность
-        var deckManager = GetComponent<DeckManager>() ?? FindObjectOfType<DeckManager>();
-        if (deckManager != null)
-        {
-            deckManager.difficulty = GameSettings.CurrentDifficulty;
-        }
+        if (!isInitialized) return;
 
-        // 2. Применяем режим сдачи (конвертируем int в enum)
-        if (GameSettings.KlondikeDrawCount == 3)
-            this.stockDealMode = StockDealMode.Draw3;
-        else
-            this.stockDealMode = StockDealMode.Draw1;
-        // -------------------------
-        // Скрываем кнопку на старте
+        var deck = GetComponent<DeckManager>() ?? FindObjectOfType<DeckManager>();
+        if (deck != null) deck.difficulty = GameSettings.CurrentDifficulty;
+
+        this.stockDealMode = (GameSettings.KlondikeDrawCount == 3) ? StockDealMode.Draw3 : StockDealMode.Draw1;
+
         if (autoWinButton != null)
         {
             autoWinButton.gameObject.SetActive(false);
@@ -313,41 +181,62 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         StartNewGame();
     }
 
-    /// <summary>
-    /// Запускает новую игру.
-    /// </summary>
     public void StartNewGame()
     {
-        // 1. Если предыдущая игра была начата, но не закончена - засчитываем поражение
-        // (Это обновит серию побед и историю)
-        if (StatisticsManager.Instance != null)
-            StatisticsManager.Instance.OnGameAbandoned();
+        // 1. Если предыдущая была начата, но не закончена -> Поражение
+        if (hasGameStarted && !hasWonGame)
+        {
+            if (StatisticsManager.Instance != null)
+                StatisticsManager.Instance.OnGameAbandoned();
+        }
 
         IsInputAllowed = true;
         hasWonGame = false;
+        hasGameStarted = false; // Сброс флага
 
         if (defeatManager != null) defeatManager.ResetManager();
-        if (scoreManager != null) scoreManager.ResetScore(); // <-- СБРОС ОЧКОВ
+        if (scoreManager != null) scoreManager.ResetScore();
 
         LogDebug("Starting new game...");
         pileManager.CreatePiles();
 
-        // ... (ваш код RefreshContainers и DealInitial) ...
         if (dragManager != null) dragManager.RefreshContainers();
         deckManager.DealInitial();
         animationService.ReorderAllContainers(pileManager.GetAllContainerTransforms());
 
-        // 2. Сообщаем статистике, что началась конкретная игра
-        if (StatisticsManager.Instance != null)
-        {
-            Difficulty diff = GameSettings.CurrentDifficulty;
-            // Превращаем enum DrawMode в строку "Draw1" или "Draw3"
-            string variant = (stockDealMode == StockDealMode.Draw3) ? "Draw3" : "Draw1";
+        // ВАЖНО: Мы НЕ вызываем OnGameStarted здесь. Ждем первого хода.
+    }
 
-            // "Klondike" тут жестко задано, так как это KlondikeModeManager
-            StatisticsManager.Instance.OnGameStarted("Klondike", diff, variant);
+    // --- НОВОЕ: Обработка выхода со сцены ---
+    private void OnDestroy()
+    {
+        if (hasGameStarted && !hasWonGame)
+        {
+            if (StatisticsManager.Instance != null)
+                StatisticsManager.Instance.OnGameAbandoned();
         }
     }
+    // ----------------------------------------
+
+    // --- НОВОЕ: Метод регистрации первого хода ---
+    public void RegisterMoveAndStartIfNeeded()
+    {
+        if (!hasGameStarted)
+        {
+            hasGameStarted = true;
+            if (StatisticsManager.Instance != null)
+            {
+                Difficulty diff = GameSettings.CurrentDifficulty;
+                string variant = (stockDealMode == StockDealMode.Draw3) ? "Draw3" : "Draw1";
+                StatisticsManager.Instance.OnGameStarted("Klondike", diff, variant);
+            }
+        }
+
+        // Регистрируем сам ход
+        if (StatisticsManager.Instance != null)
+            StatisticsManager.Instance.RegisterMove();
+    }
+    // ---------------------------------------------
 
     #endregion
 
@@ -357,26 +246,19 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     {
         return dragManager?.FindNearestContainer(card, anchoredPosition, maxDistance);
     }
+
     public void OnStockClicked()
     {
-        // Если ввод запрещен - игнорируем клик
         if (!IsInputAllowed) return;
 
-        // --- СТАТИСТИКА: Таймер ---
-        if (StatisticsManager.Instance != null)
-        {
-            StatisticsManager.Instance.StartTimerIfNotStarted();
-            // Можно ли считать клик по стоку за "Ход" (Move)? 
-            // В классике обычно считаются только перемещения карт, но таймер запустить надо.
-            StatisticsManager.Instance.RegisterMove();
-        }
-        // --------------------------
+        // --- ИСПРАВЛЕНО: Регистрация хода ---
+        RegisterMoveAndStartIfNeeded();
+        // ------------------------------------
+
+        if (StatisticsManager.Instance != null) StatisticsManager.Instance.StartTimerIfNotStarted();
 
         var deckManager = GetComponent<DeckManager>();
-        if (deckManager != null)
-        {
-            deckManager.DrawFromStock();
-        }
+        if (deckManager != null) deckManager.DrawFromStock();
     }
 
     public bool OnDropToBoard(CardController card, Vector2 anchoredPosition)
@@ -386,7 +268,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void OnCardClicked(CardController card)
     {
-        if (!IsInputAllowed) return; // Блокировка
+        if (!IsInputAllowed) return;
         dragManager?.OnCardClicked(card);
     }
 
@@ -394,39 +276,26 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     {
         if (!IsInputAllowed) return;
 
-        // 1. Запоминаем текущий контейнер
         ICardContainer oldContainer = card.CurrentContainer;
-
-        // 2. Запускаем авто-ход
         autoMoveService?.OnCardRightClicked(card);
-
-        // 3. Ждем результата и начисляем очки
         StartCoroutine(CheckAutoMoveResult(card, oldContainer));
     }
 
     private System.Collections.IEnumerator CheckAutoMoveResult(CardController card, ICardContainer oldContainer)
     {
-        // Ждем 0.25 секунды, пока карта летит (в это время у нее нет контейнера)
         yield return new WaitForSeconds(0.25f);
 
-        // Теперь карта приземлилась
         ICardContainer newContainer = card.CurrentContainer;
 
-        // Если контейнер изменился — значит, ход был успешным
         if (newContainer != null && newContainer != oldContainer)
         {
-            // --- СТАТИСТИКА И ОЧКИ ---
+            // --- ИСПРАВЛЕНО: Регистрация хода ---
+            RegisterMoveAndStartIfNeeded(); // Фиксируем старт игры при успешном авто-ходе
+            // ------------------------------------
 
-            // 1. Начисляем очки
             if (scoreManager != null) scoreManager.OnCardMove(newContainer);
-
-            // 2. Статистика ходов
-            if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
-
-            // 3. Сброс пата
             if (deckManager != null) deckManager.OnProductiveMoveMade();
 
-            // 4. Проверка победы
             CheckGameState();
         }
     }
@@ -445,13 +314,11 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
             if (deckManager == null) deckManager = GetComponent<DeckManager>();
             if (deckManager != null) deckManager.OnProductiveMoveMade();
 
-            // --- ДОБАВЛЕНО: СТАТИСТИКА ---
-            // 1. Считаем очки
-            if (scoreManager != null) scoreManager.OnCardMove(container);
+            // --- ИСПРАВЛЕНО: Регистрация хода ---
+            RegisterMoveAndStartIfNeeded();
+            // ------------------------------------
 
-            // 2. Регистрируем +1 ход в статистику
-            if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
-            // -----------------------------
+            if (scoreManager != null) scoreManager.OnCardMove(container);
         }
     }
 
@@ -464,13 +331,9 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     #region Card Event Registration
 
-    /// <summary>
-    /// Регистрирует события для карты (вызывается при создании каждой карты).
-    /// </summary>
     public void RegisterCardEvents(CardController card)
     {
         if (card == null) return;
-
         dragManager?.RegisterCardEvents(card);
         autoMoveService?.RegisterCardForAutoMove(card);
     }
@@ -479,125 +342,75 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     #region Utility Methods
 
-    /// <summary>
-    /// Безопасный вызов метода Initialize через рефлексию.
-    /// Пытается найти подходящую перегрузку Initialize и вызвать её с правильными аргументами.
-    /// </summary>
     private void SafeInvokeInitialize(object component, object[] availableArgs, string componentName)
     {
-        if (component == null)
-        {
-            LogDebug($"Skipping {componentName}: component is null");
-            return;
-        }
+        if (component == null) return;
 
         Type componentType = component.GetType();
-
-        // Получаем все методы Initialize
         var initMethods = componentType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                                        .Where(m => string.Equals(m.Name, "Initialize", StringComparison.OrdinalIgnoreCase))
-                                       .OrderBy(m => m.GetParameters().Length)  // Пробуем короткие перегрузки первыми
+                                       .OrderBy(m => m.GetParameters().Length)
                                        .ToArray();
 
-        if (initMethods.Length == 0)
-        {
-            LogDebug($"No Initialize method found for {componentName}");
-            return;
-        }
+        if (initMethods.Length == 0) return;
 
-        // Пробуем каждую перегрузку
         foreach (var method in initMethods)
         {
             ParameterInfo[] parameters = method.GetParameters();
             object[] args = new object[parameters.Length];
             bool canInvoke = true;
 
-            // Подбираем аргументы для каждого параметра
             for (int i = 0; i < parameters.Length; i++)
             {
                 Type paramType = parameters[i].ParameterType;
                 bool found = false;
 
-                // Ищем подходящий аргумент в availableArgs
                 foreach (var arg in availableArgs)
                 {
                     if (arg == null) continue;
+                    if (paramType.IsAssignableFrom(arg.GetType())) { args[i] = arg; found = true; break; }
 
-                    if (paramType.IsAssignableFrom(arg.GetType()))
-                    {
-                        args[i] = arg;
-                        found = true;
-                        break;
-                    }
-
-                    // Поддержка примитивных типов
                     if (paramType.IsPrimitive || paramType == typeof(float) || paramType == typeof(double))
                     {
-                        try
-                        {
-                            if (arg is IConvertible)
-                            {
-                                args[i] = Convert.ChangeType(arg, paramType);
-                                found = true;
-                                break;
-                            }
-                        }
-                        catch { /* ignore */ }
+                        try { if (arg is IConvertible) { args[i] = Convert.ChangeType(arg, paramType); found = true; break; } } catch { }
                     }
                 }
 
-                if (!found)
-                {
-                    canInvoke = false;
-                    break;
-                }
+                if (!found) { canInvoke = false; break; }
             }
 
             if (!canInvoke) continue;
 
-            // Пытаемся вызвать метод
-            try
-            {
-                method.Invoke(component, args);
-                LogDebug($"✓ Initialized {componentName} using {method.Name}({parameters.Length} params)");
-                return;  // Успешно вызвали - выходим
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[KMM] Failed to invoke Initialize on {componentName}: {ex.Message}");
-            }
+            try { method.Invoke(component, args); return; }
+            catch (Exception ex) { Debug.LogWarning($"[KMM] Failed to invoke Initialize: {ex.Message}"); }
         }
-
-        // Если дошли сюда - ни одна перегрузка не подошла
-        Debug.LogWarning($"[KMM] No suitable Initialize overload found for {componentName}");
     }
 
     private void LogDebug(string message)
     {
-        if (showDebugLogs)
-        {
-            Debug.Log($"[KlondikeModeManager] {message}");
-        }
+        if (showDebugLogs) Debug.Log($"[KlondikeModeManager] {message}");
     }
 
     #endregion
 
     #region Public API
 
-    /// <summary>
-    /// Перезапускает игру.
-    /// </summary>
     public void RestartGame()
     {
-        // Вся логика настройки переехала сюда из UI
         var deck = GetComponent<DeckManager>();
         if (deck != null)
         {
             deck.difficulty = GameSettings.CurrentDifficulty;
-            // Настраиваем режим раздачи
             this.stockDealMode = (GameSettings.KlondikeDrawCount == 3) ? StockDealMode.Draw3 : StockDealMode.Draw1;
 
-            deck.RestartGame();
+            // Если предыдущая игра была начата - поражение
+            if (hasGameStarted && !hasWonGame)
+            {
+                if (StatisticsManager.Instance != null)
+                    StatisticsManager.Instance.OnGameAbandoned();
+            }
+
+            StartNewGame(); // Вместо deck.RestartGame, чтобы обновить флаги здесь
         }
     }
 
@@ -610,105 +423,60 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
             hasWonGame = true;
             Debug.Log("Game Won!");
 
-            // --- ДОБАВЛЕНО: Сохранение победы ---
             if (StatisticsManager.Instance != null)
             {
                 int finalScore = scoreManager != null ? scoreManager.CurrentScore : 0;
-                // Передаем очки в менеджер
                 StatisticsManager.Instance.OnGameWon(finalScore);
             }
-            // ------------------------------------
 
-            if (gameUI != null) gameUI.OnGameWon(); // Показываем UI победы
+            if (gameUI != null) gameUI.OnGameWon();
             return;
         }
 
         bool canAutoWin = CanAutoWin();
+        if (autoWinButton != null && autoWinButton.gameObject.activeSelf != canAutoWin)
+        {
+            autoWinButton.gameObject.SetActive(canAutoWin);
+        }
 
-        if (autoWinButton != null)
-        {
-            // Показываем кнопку только если условие выполнено
-            if (autoWinButton.gameObject.activeSelf != canAutoWin)
-            {
-                autoWinButton.gameObject.SetActive(canAutoWin);
-            }
-        }
-        // 3. НОВОЕ: Проверка поражения
-        // Вызываем только если игра не выиграна и авто-вин не активен (или активен, не важно)
-        if (defeatManager != null)
-        {
-            defeatManager.CheckGameStatus();
-        }
+        if (defeatManager != null) defeatManager.CheckGameStatus();
     }
+
     public void OnUndoAction()
     {
-        // 1. Скрываем кнопку авто-победы
+        // Undo тоже считается активностью
+        RegisterMoveAndStartIfNeeded();
+
         if (autoWinButton != null) autoWinButton.gameObject.SetActive(false);
-
-        // 2. Сообщаем DefeatManager
         if (defeatManager != null) defeatManager.OnUndo();
-
-        // 3. Сброс счетчика пата
         if (deckManager != null) deckManager.ResetStalemate();
-
-        // --- ИСПРАВЛЕНИЕ: Вычитаем очки при отмене ---
-        if (scoreManager != null)
-        {
-            scoreManager.OnUndo();
-        }
-        // ---------------------------------------------
+        if (scoreManager != null) scoreManager.OnUndo();
     }
-
-
 
     private bool CanAutoWin()
     {
-        // 1. Stock должен быть пуст
         if (pileManager.StockPile != null && !pileManager.StockPile.IsEmpty()) return false;
-
-        // 2. Waste должен быть пуст
         if (pileManager.WastePile != null && pileManager.WastePile.Count > 0) return false;
-
-        // 3. В Tableau не должно быть скрытых карт
         if (pileManager.Tableau != null)
         {
-            foreach (var pile in pileManager.Tableau)
-            {
-                if (pile.HasHiddenCards()) return false;
-            }
+            foreach (var pile in pileManager.Tableau) if (pile.HasHiddenCards()) return false;
         }
-
         return true;
     }
 
     private void OnAutoWinClicked()
     {
-        // Скрываем кнопку чтобы не нажали дважды
         if (autoWinButton != null) autoWinButton.gameObject.SetActive(false);
-
-        // Запускаем процесс через AutoMoveService
-        if (autoMoveService != null)
-        {
-            StartCoroutine(autoMoveService.PlayAutoWinAnimation());
-        }
+        if (autoMoveService != null) StartCoroutine(autoMoveService.PlayAutoWinAnimation());
     }
 
-
-    /// <summary>
-    /// Проверяет, выиграна ли игра (все foundations заполнены).
-    /// </summary>
     public bool IsGameWon()
     {
         if (pileManager?.Foundations == null) return false;
-
         foreach (var foundation in pileManager.Foundations)
         {
-            if (foundation == null || !foundation.IsComplete())
-            {
-                return false;
-            }
+            if (foundation == null || !foundation.IsComplete()) return false;
         }
-
         return true;
     }
 
@@ -716,35 +484,22 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
 #if UNITY_EDITOR
     [ContextMenu("Debug: Restart Game")]
-    private void DebugRestartGame()
-    {
-        RestartGame();
-    }
+    private void DebugRestartGame() { RestartGame(); }
 
     [ContextMenu("Debug: Check Win Condition")]
-    private void DebugCheckWin()
-    {
-        bool won = IsGameWon();
-        Debug.Log($"Game is {(won ? "WON" : "NOT won")}");
-    }
+    private void DebugCheckWin() { bool won = IsGameWon(); Debug.Log($"Game is {(won ? "WON" : "NOT won")}"); }
 
     [ContextMenu("Debug: Validate Setup")]
     private void DebugValidateSetup()
     {
         FindMissingComponents();
         bool valid = ValidateCriticalReferences();
-
-        if (valid)
-        {
-            Debug.Log("✓ All critical references are valid!");
-        }
-        else
-        {
-            Debug.LogError("✗ Some critical references are missing!");
-        }
+        if (valid) Debug.Log("✓ All critical references are valid!");
+        else Debug.LogError("✗ Some critical references are missing!");
     }
 #endif
 }
+
 public enum StockDealMode
 {
     Draw1 = 1,

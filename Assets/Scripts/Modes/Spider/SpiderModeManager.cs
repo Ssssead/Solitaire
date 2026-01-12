@@ -23,6 +23,9 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
     private SpiderDefeatManager _defeatManager;
     private SpiderScoreManager _scoreManager;
     private bool _isGameEnded = false;
+    
+    // --- НОВОЕ: Флаг старта игры ---
+    private bool _hasGameStarted = false; 
 
     public int ActiveFoundationAnimations { get; set; } = 0;
 
@@ -40,7 +43,6 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
     // Статистика
     public int CurrentScore => _scoreManager != null ? _scoreManager.CurrentScore : 0;
     public int MoveCount => StatisticsManager.Instance != null ? StatisticsManager.Instance.GetCurrentMoves() : 0;
-    // Время считается внутри StatisticsManager, но для UI можно возвращать 0 или брать из менеджера
     public float GameTime => 0f;
 
     public SpiderScoreManager ScoreManager => _scoreManager;
@@ -53,14 +55,13 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
     public void InitializeGame()
     {
         _isGameEnded = false;
+        _hasGameStarted = false; // Сброс флага
         ActiveFoundationAnimations = 0;
 
-        // --- ИСПРАВЛЕНИЕ: Объявляем переменные В НАЧАЛЕ метода ---
         int suits = GameSettings.SpiderSuitCount;
         if (suits == 0) suits = 1;
 
         Difficulty diff = GameSettings.CurrentDifficulty;
-        // --------------------------------------------------------
 
         if (corePileManager == null)
             corePileManager = GetComponent<PileManager>() ?? gameObject.AddComponent<PileManager>();
@@ -74,15 +75,7 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
         if (_scoreManager == null) _scoreManager = gameObject.AddComponent<SpiderScoreManager>();
         _scoreManager.ResetScore();
 
-        // Статистика
-        if (StatisticsManager.Instance != null)
-        {
-            // Используем уже объявленные переменные suits и diff
-            string variant = $"{suits}Suit" + (suits > 1 ? "s" : "");
-
-            // Передаем правильные данные
-            StatisticsManager.Instance.OnGameStarted("Spider", diff, variant);
-        }
+        // ВАЖНО: Убрали вызов StatisticsManager.OnGameStarted отсюда.
 
         if (dragManager != null)
         {
@@ -92,48 +85,78 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
 
         if (undoManager != null) undoManager.Initialize(this);
 
-        // --- ТЕПЕРЬ ПЕРЕМЕННЫЕ ВИДНЫ И ЗДЕСЬ ---
         deckManager.CreateAndDeal(suits, diff);
         UpdateTableauLayouts();
     }
 
-    // ... (Методы OnMoveMade, OnStockClicked, OnUndoAction, OnRowCompleted, CheckGameState - ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ) ...
+    // --- МЕТОД РЕГИСТРАЦИИ ХОДА (Вызывать при действиях) ---
     public void OnMoveMade()
     {
+        // 1. Регистрируем старт игры при первом ходе
+        if (!_hasGameStarted)
+        {
+            _hasGameStarted = true;
+            
+            if (StatisticsManager.Instance != null)
+            {
+                int suits = GameSettings.SpiderSuitCount;
+                if (suits == 0) suits = 1;
+                Difficulty diff = GameSettings.CurrentDifficulty;
+                string variant = $"{suits}Suit" + (suits > 1 ? "s" : "");
+
+                StatisticsManager.Instance.OnGameStarted("Spider", diff, variant);
+            }
+        }
+
+        // 2. Регистрируем сам ход
         if (_scoreManager) _scoreManager.ApplyPenalty();
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
     }
 
     public void OnStockClicked()
     {
+        // Клик по стоку - это ход
+        OnMoveMade();
         if (_scoreManager) _scoreManager.ApplyPenalty();
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
     }
 
     public void OnUndoAction()
     {
+        // Undo тоже считается активностью
+        if (!_hasGameStarted)
+        {
+             // Если вдруг нажали Undo до первого хода (теоретически невозможно, но для надежности)
+             OnMoveMade(); 
+        }
+        else
+        {
+             // Просто регистрируем +1 ход
+             if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
+        }
+
         _isGameEnded = false;
         IsInputAllowed = true;
+        
         if (_defeatManager != null) _defeatManager.OnUndo();
         if (_scoreManager) _scoreManager.ApplyPenalty();
-        if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
-       UpdateTableauLayouts();
+        
+        UpdateTableauLayouts();
     }
 
     public void OnRowCompleted()
     {
         if (_scoreManager) _scoreManager.AddRowBonus();
+        CheckGameState(); // Проверяем победу сразу после сбора ряда
     }
 
     public void UpdateTableauLayouts()
     {
         if (pileManager == null) return;
 
-        // 1. СТОК (10-й слот)
         bool hasStockCards = (pileManager.StockPile != null && pileManager.StockPile.cards.Count > 0);
         SetPileCompressed(9, hasStockCards);
 
-        // 2. FOUNDATIONS
         int filledFoundations = 0;
         if (pileManager.FoundationPiles != null)
         {
@@ -143,12 +166,8 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
             }
         }
 
-        // --- ИСПРАВЛЕНИЕ: Добавляем ряды, которые сейчас летят ---
-        // Это заставит стопки сжаться сразу, как только ряд собран, не дожидаясь конца полета
         filledFoundations += ActiveFoundationAnimations;
-        // --------------------------------------------------------
 
-        // Логика сжатия (как в ТЗ)
         bool compressSlot1 = filledFoundations >= 1;
         bool compressSlot2 = filledFoundations >= 2;
         bool compressSlot3 = filledFoundations >= 6;
@@ -157,7 +176,6 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
         SetPileCompressed(1, compressSlot2);
         SetPileCompressed(2, compressSlot3);
 
-        // Остальные по дефолту
         for (int i = 3; i <= 8; i++) SetPileCompressed(i, false);
     }
 
@@ -173,7 +191,6 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
         }
     }
     
-
     public void CheckGameState()
     {
         UpdateTableauLayouts();
@@ -200,31 +217,30 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
             _defeatManager.CheckDefeatCondition();
         }
     }
+
+    // --- НОВОЕ: Обработка выхода со сцены ---
     private void OnDestroy()
     {
-        // Если объект уничтожается (уходим в меню), а игра еще идет и не выиграна
-        if (!_isGameEnded && StatisticsManager.Instance != null)
+        if (_hasGameStarted && !_isGameEnded)
         {
-            StatisticsManager.Instance.OnGameAbandoned();
+            if (StatisticsManager.Instance != null)
+                StatisticsManager.Instance.OnGameAbandoned();
         }
     }
+    // ----------------------------------------
+
     private IEnumerator VictoryRoutine()
     {
-        // --- ИСПРАВЛЕНИЕ ОШИБКИ 2: Передаем int (счет) ---
-        // Так как StatisticsManager уже знает, что мы играем в Spider (из OnGameStarted),
-        // ему нужен только итоговый СЧЕТ.
         if (StatisticsManager.Instance != null)
         {
             StatisticsManager.Instance.OnGameWon(CurrentScore);
         }
-        // -------------------------------------------------
 
         yield return new WaitForSeconds(1.0f);
 
         if (gameUI != null) gameUI.OnGameWon();
     }
 
-    // Служебные методы (SyncPileManager, GetNextEmptyFoundation, RestartGame и т.д.)
     private void SyncPileManager()
     {
         if (corePileManager == null || pileManager == null) return;
@@ -250,34 +266,21 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
 
     public void RestartGame()
     {
-        // --- ДОБАВИТЬ ЭТО ---
-        // Если рестартим игру, которая не была закончена победой - это поражение
-        if (!_isGameEnded && StatisticsManager.Instance != null)
+        // Если рестартим активную игру -> поражение
+        if (_hasGameStarted && !_isGameEnded)
         {
-            StatisticsManager.Instance.OnGameAbandoned();
+            if (StatisticsManager.Instance != null)
+                StatisticsManager.Instance.OnGameAbandoned();
         }
-        // --------------------
 
         _isGameEnded = false;
+        _hasGameStarted = false; // Сброс
         IsInputAllowed = true;
         ActiveFoundationAnimations = 0;
 
-        // Сразу запускаем новую сессию (таймер сбросится внутри OnGameStarted)
-        if (StatisticsManager.Instance != null)
-        {
-            // Повторяем логику старта, чтобы создать новую запись
-            // (Код формирования ключей такой же, как в InitializeGame)
-            int suits = GameSettings.SpiderSuitCount;
-            Difficulty diff = Difficulty.Easy;
-            if (suits == 2) diff = Difficulty.Medium;
-            if (suits == 4) diff = Difficulty.Hard;
-            string variant = $"{suits}Suit" + (suits > 1 ? "s" : "");
-
-            StatisticsManager.Instance.OnGameStarted("Spider", diff, variant);
-        }
-
         if (_scoreManager) _scoreManager.ResetScore();
         if (_defeatManager != null) _defeatManager.OnUndo();
+        
         deckManager.RestartGame();
         UpdateTableauLayouts();
     }
