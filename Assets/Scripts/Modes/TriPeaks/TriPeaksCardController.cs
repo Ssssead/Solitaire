@@ -1,26 +1,47 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class TriPeaksCardController : CardController, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class TriPeaksCardController : CardController
 {
-    // TriPeaks - игра на кликах. Мы намеренно "скрываем" (new) реализацию Drag-интерфейсов,
-    // чтобы Unity EventSystem не пыталась таскать карту.
+    private TriPeaksModeManager _modeManager;
 
-    public new void OnBeginDrag(PointerEventData eventData)
+    private void Start()
     {
-        // Drag запрещен. Можно добавить визуальный эффект (например, легкое покачивание "нельзя взять")
+        _modeManager = FindObjectOfType<TriPeaksModeManager>();
+        EnforceAnimationSettings();
     }
 
-    public new void OnDrag(PointerEventData eventData)
+    public void Configure(CardModel model)
     {
-        // Пусто
+        this.cardModel = model;
+        this.name = $"Card_{model.suit}_{model.rank}";
+
+        var dataComponent = GetComponent<CardData>();
+        if (dataComponent != null)
+        {
+            dataComponent.model = model;
+            // Принудительно чиним длительность анимации, если она сломана
+            EnforceAnimationSettings();
+        }
+
+        UpdateVisualState();
     }
 
-    public new void OnEndDrag(PointerEventData eventData)
+    private void EnforceAnimationSettings()
     {
-        // Пусто
+        var data = GetComponent<CardData>();
+        if (data != null)
+        {
+            // Если время анимации слишком маленькое (или 0), ставим стандартные 0.25 сек
+            if (data.flipDuration < 0.1f)
+            {
+                data.flipDuration = 0.25f;
+            }
+        }
     }
 
-    // Обработка клика остается в базовом классе (CardController.OnPointerClick), 
-    // который вызывает событие OnClicked.
+    public void UpdateVisualState()
+    {
+        // Здесь можно добавить визуальные эффекты для заблокированных карт
+    }
 }
