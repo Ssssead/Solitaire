@@ -5685,6 +5685,7 @@ GameObject:
   - component: {fileID: 959636151}
   - component: {fileID: 959636150}
   - component: {fileID: 959636149}
+  - component: {fileID: 959636152}
   m_Layer: 0
   m_Name: TriPeaksManager
   m_TagString: Untagged
@@ -5867,9 +5868,27 @@ MonoBehaviour:
   pileManager: {fileID: 959636150}
   scoreManager: {fileID: 959636149}
   undoManager: {fileID: 959636144}
-  animationService: {fileID: 959636148}
+  animationService: {fileID: 959636152}
   dragManager: {fileID: 959636145}
-  moveSpeed: 10
+  dealFlyDuration: 0.2
+  totalDealDuration: 1.5
+  stockToWasteDuration: 0.2
+  stockShiftDuration: 0.2
+  tableauToWasteDuration: 0.3
+  flipWaitDelay: 0.1
+--- !u!114 &959636152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 959636139}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6816ebe9fba92834088b1914e736cbde, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stockGap: 5
 --- !u!1 &1036070681
 GameObject:
   m_ObjectHideFlags: 0

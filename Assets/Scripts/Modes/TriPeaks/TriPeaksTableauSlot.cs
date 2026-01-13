@@ -1,23 +1,22 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
 
 public class TriPeaksTableauPile : MonoBehaviour, ICardContainer
 {
     [Header("Configuration")]
-    // Список карт, которые блокируют текущую (лежат поверх неё)
     public List<TriPeaksTableauPile> BlockingSlots;
 
     [Header("State")]
     public CardController CurrentCard;
-
     public bool HasCard => CurrentCard != null;
-
-    // --- Специфичные методы ---
 
     public void AddCard(CardController card)
     {
         CurrentCard = card;
         card.transform.SetParent(this.transform);
+        // Сброс позиции в 0 - теперь это безопасно, так как метод вызывается ПОСЛЕ полета
+        card.transform.localPosition = Vector3.zero;
     }
 
     public void RemoveCard(CardController card)
@@ -41,33 +40,10 @@ public class TriPeaksTableauPile : MonoBehaviour, ICardContainer
         return false;
     }
 
-    // --- Реализация ICardContainer ---
-
-    // 1. Свойство Transform
+    // --- Interface ---
     public Transform Transform => this.transform;
-
-    // 2. Визуальная реакция на перетаскивание (не используется в кликах, но нужна интерфейсу)
-    public void OnCardIncoming(CardController card)
-    {
-    }
-
-    // 3. Позиция для примагничивания (Vector2)
-    public Vector2 GetDropAnchoredPosition(CardController card)
-    {
-        return Vector2.zero;
-    }
-
-    // 4. Логика принятия карты
-    public void AcceptCard(CardController card)
-    {
-        AddCard(card);
-    }
-
-    // 5. Проверка возможности приема (всегда false для Tableau в TriPeaks, туда нельзя класть карты)
-    public bool CanAccept(CardController card)
-    {
-        // В TriPeaks карты возвращаются в Tableau только через Undo
-        // Для обычного геймплея игрок не может положить карту обратно в пирамиду
-        return false;
-    }
+    public void OnCardIncoming(CardController card) { }
+    public Vector2 GetDropAnchoredPosition(CardController card) => Vector2.zero;
+    public void AcceptCard(CardController card) { AddCard(card); }
+    public bool CanAccept(CardController card) => false;
 }

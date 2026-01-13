@@ -1,14 +1,27 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-public class TriPeaksCardController : CardController
+public class TriPeaksCardController : CardController, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     private TriPeaksModeManager _modeManager;
 
     private void Start()
     {
         _modeManager = FindObjectOfType<TriPeaksModeManager>();
-        EnforceAnimationSettings();
+
+        // 1. ИЗОЛЯЦИЯ ОТ СЛОТА (Самое важное для анимации)
+        // Добавляем компонент, который говорит слоту: "Не управляй моими размерами"
+        LayoutElement le = GetComponent<LayoutElement>();
+        if (le == null) le = gameObject.AddComponent<LayoutElement>();
+        le.ignoreLayout = true;
+
+        // 2. Страховка скорости анимации
+        var data = GetComponent<CardData>();
+        if (data != null && data.flipDuration < 0.1f)
+        {
+            data.flipDuration = 0.25f;
+        }
     }
 
     public void Configure(CardModel model)
@@ -20,28 +33,15 @@ public class TriPeaksCardController : CardController
         if (dataComponent != null)
         {
             dataComponent.model = model;
-            // Принудительно чиним длительность анимации, если она сломана
-            EnforceAnimationSettings();
+            if (dataComponent.flipDuration < 0.1f) dataComponent.flipDuration = 0.25f;
         }
-
         UpdateVisualState();
     }
 
-    private void EnforceAnimationSettings()
-    {
-        var data = GetComponent<CardData>();
-        if (data != null)
-        {
-            // Если время анимации слишком маленькое (или 0), ставим стандартные 0.25 сек
-            if (data.flipDuration < 0.1f)
-            {
-                data.flipDuration = 0.25f;
-            }
-        }
-    }
+    public void UpdateVisualState() { }
 
-    public void UpdateVisualState()
-    {
-        // Здесь можно добавить визуальные эффекты для заблокированных карт
-    }
+    // Отключаем перетаскивание (как вы просили)
+    public new void OnBeginDrag(PointerEventData eventData) { }
+    public new void OnDrag(PointerEventData eventData) { }
+    public new void OnEndDrag(PointerEventData eventData) { }
 }
