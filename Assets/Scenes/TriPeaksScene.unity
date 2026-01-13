@@ -5871,11 +5871,12 @@ MonoBehaviour:
   animationService: {fileID: 959636152}
   dragManager: {fileID: 959636145}
   dealFlyDuration: 0.2
-  totalDealDuration: 1.5
-  stockToWasteDuration: 0.2
+  totalDealDuration: 1
+  stockToWasteDuration: 0.3
   stockShiftDuration: 0.2
   tableauToWasteDuration: 0.3
-  flipWaitDelay: 0.1
+  tableauFlipDuration: 0.22
+  flipWaitDelay: 0.3
 --- !u!114 &959636152
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8934,7 +8935,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf91b99e250fbf444ba8084baab5588b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardPrefab: {fileID: 643552427574577458, guid: 7557bd7874bc06149a53affc457b43b2, type: 3}
+  cardPrefab: {fileID: 643552427574577458, guid: fbc7145fadb565a4db3dd927786f5e9e, type: 3}
   spriteDb: {fileID: 11400000, guid: b13673194ed34f748b29a1202506efac, type: 2}
   rootCanvas: {fileID: 2012075386}
   cardControllerTemplate: {fileID: 0}

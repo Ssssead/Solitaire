@@ -92,7 +92,7 @@ public class CardController : MonoBehaviour,
         OnPickedUp?.Invoke(this);
     }
 
-    public void OnDrag(PointerEventData eventData)
+    public virtual void OnDrag(PointerEventData eventData)
     {
         // --- днаюбкемн ---
         if (CardmodeManager != null && !CardmodeManager.IsInputAllowed) return;
@@ -274,7 +274,7 @@ public class CardController : MonoBehaviour,
 
     #region Click Logic & Safety
 
-    public void OnPointerClick(PointerEventData eventData)
+    public virtual void OnPointerClick(PointerEventData eventData)
     {
         if (CardmodeManager != null && !CardmodeManager.IsInputAllowed) return;
         if (isDragging) isDragging = false;

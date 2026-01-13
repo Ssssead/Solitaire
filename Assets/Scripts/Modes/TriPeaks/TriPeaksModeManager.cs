@@ -20,13 +20,14 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public DragManager dragManager;
 
     [Header("Animation Settings")]
-    public float dealFlyDuration = 0.3f; // Чуть медленнее для красоты
-    public float totalDealDuration = 1.5f;
+    public float dealFlyDuration = 0.35f;
+    public float totalDealDuration = 1.8f;
     public float stockToWasteDuration = 0.2f;
     public float stockShiftDuration = 0.2f;
     public float tableauToWasteDuration = 0.3f;
-    public float tableauFlipDuration = 0.25f;
-    public float flipWaitDelay = 0.3f;
+
+    // Пауза, чтобы игрок успел увидеть анимацию переворота
+    public float flipWaitDelay = 0.35f;
 
     private Difficulty currentDifficulty = Difficulty.Easy;
     private int currentRound = 1;
@@ -84,11 +85,13 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         {
             if (tableauIndex >= pileManager.TableauPiles.Count) break;
             if (cardList == null || cardList.Count == 0) { tableauIndex++; continue; }
-            CardController card = cardFactory.CreateCard(cardList[0].Card, pileManager.Stock.transform, Vector2.zero);
-            if (card is TriPeaksCardController t) t.Configure(cardList[0].Card);
 
+            // Создаем карту (Фабрика сама назначит спрайты)
+            CardController card = cardFactory.CreateCard(cardList[0].Card, pileManager.Stock.transform, Vector2.zero);
+
+            // Настраиваем: сразу закрыта, без анимации
             var cardData = card.GetComponent<CardData>();
-            if (cardData != null) cardData.SetFaceUp(false, true); // Создаем закрытой
+            if (cardData != null) cardData.SetFaceUp(false, false);
 
             card.OnClicked += OnCardClicked;
             tableauCards.Add(card);
@@ -97,15 +100,15 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
         List<CardInstance> stockSource = new List<CardInstance>(deal.stock);
         stockSource.Reverse();
+
         CardController initialWasteCard = null;
         if (stockSource.Count > 0)
         {
             CardInstance wInst = stockSource[stockSource.Count - 1];
             stockSource.RemoveAt(stockSource.Count - 1);
             initialWasteCard = cardFactory.CreateCard(wInst.Card, pileManager.Stock.transform, Vector2.zero);
-            if (initialWasteCard is TriPeaksCardController w) w.Configure(wInst.Card);
             var wd = initialWasteCard.GetComponent<CardData>();
-            if (wd != null) wd.SetFaceUp(false, true);
+            if (wd != null) wd.SetFaceUp(false, false);
         }
 
         int stockCount = stockSource.Count;
@@ -113,9 +116,9 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         {
             float targetX = (i - (stockCount - 1)) * (animationService ? animationService.stockGap : 5f);
             CardController card = cardFactory.CreateCard(stockSource[i].Card, pileManager.Stock.transform, new Vector2(targetX, 0));
-            if (card is TriPeaksCardController t) t.Configure(stockSource[i].Card);
             var cd = card.GetComponent<CardData>();
-            if (cd != null) cd.SetFaceUp(false, true);
+            if (cd != null) cd.SetFaceUp(false, false);
+
             pileManager.Stock.AddCard(card);
             card.gameObject.SetActive(true);
             card.OnClicked += OnCardClicked;
@@ -124,19 +127,19 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         pileManager.Stock.UpdateVisuals();
         yield return new WaitForSeconds(0.1f);
 
-        // --- ИСПРАВЛЕННАЯ АНИМАЦИЯ РАЗДАЧИ ---
+        // --- Анимация Раздачи ---
         float delayPerCard = totalDealDuration / (tableauCards.Count + 1);
         for (int i = 0; i < tableauCards.Count; i++)
         {
             CardController card = tableauCards[i];
             TriPeaksTableauPile targetSlot = pileManager.TableauPiles[i];
 
-            // Нижний ряд (18-27) летит открытым (переворачивается в полете)
+            // Карты нижнего ряда (18-27) переворачиваются в полете
             bool flyFaceUp = (i >= 18);
 
-            // ВАЖНО: AddCard вызываем ТОЛЬКО когда карта долетела (callback)
             StartCoroutine(animationService.AnimateMoveCard(card, targetSlot.transform, dealFlyDuration, flyFaceUp, () =>
             {
+                // Привязываем к слоту ТОЛЬКО после прилета
                 targetSlot.AddCard(card);
             }));
 
@@ -152,8 +155,15 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         }
 
         yield return new WaitForSeconds(dealFlyDuration + 0.1f);
+        ForceEnableInput();
 
-        // Включаем рейкасты
+        if (currentRound == 1 && StatisticsManager.Instance)
+            StatisticsManager.Instance.OnGameStarted("TriPeaks", currentDifficulty, $"{totalRounds}Rounds");
+        _isInputAllowed = true;
+    }
+
+    private void ForceEnableInput()
+    {
         var allCards = FindObjectsOfType<CardController>();
         foreach (var c in allCards)
         {
@@ -161,49 +171,20 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
             var img = c.GetComponent<Image>();
             if (img) img.raycastTarget = true;
         }
-
-        if (currentRound == 1 && StatisticsManager.Instance)
-            StatisticsManager.Instance.OnGameStarted("TriPeaks", currentDifficulty, $"{totalRounds}Rounds");
-        _isInputAllowed = true;
     }
-
-    private void ForceEnableInputOnCards()
-    {
-        var allCards = FindObjectsOfType<CardController>();
-        foreach (var card in allCards)
-        {
-            var cg = card.GetComponent<CanvasGroup>();
-            if (cg != null) { cg.blocksRaycasts = true; cg.interactable = true; }
-            var img = card.GetComponent<Image>();
-            if (img != null) img.raycastTarget = true;
-        }
-    }
-
-    // --- Обработка кликов ---
 
     public void OnCardClicked(CardController card)
     {
         if (!_isInputAllowed) return;
         if (!_hasGameStarted) _hasGameStarted = true;
-
-        if (pileManager.Stock.Contains(card))
-        {
-            OnStockClicked();
-            return;
-        }
+        if (pileManager.Stock.Contains(card)) { OnStockClicked(); return; }
 
         TriPeaksTableauPile slot = pileManager.FindSlotWithCard(card);
         if (slot != null)
         {
-            // Проверка блокировки
-            if (slot.IsBlocked())
-            {
-                // Можно добавить звук ошибки или покачивание карты
-                return;
-            }
+            if (slot.IsBlocked()) return;
 
             CardController wasteTop = pileManager.Waste.TopCard;
-            // Проверка правил (ранг +/- 1)
             if (wasteTop == null || CheckMatch(card.cardModel, wasteTop.cardModel))
             {
                 StartCoroutine(MoveToWasteRoutine(card, slot, pileManager.Waste));
@@ -225,7 +206,6 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     {
         _isInputAllowed = false;
         pileManager.Stock.RemoveCard(card);
-
         if (animationService != null) StartCoroutine(animationService.AnimateStockShift(pileManager.Stock, stockShiftDuration));
 
         yield return StartCoroutine(animationService.AnimateMoveCard(card, pileManager.Waste.transform, stockToWasteDuration, true, () =>
@@ -240,27 +220,26 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     private IEnumerator MoveToWasteRoutine(CardController card, ICardContainer source, ICardContainer target)
     {
-        _isInputAllowed = false; // Блокируем ввод пока карта летит
-
+        _isInputAllowed = false;
         if (source is TriPeaksTableauPile tSource) tSource.RemoveCard(card);
 
-        // Летим в отбой
         yield return StartCoroutine(animationService.AnimateMoveCard(card, target.Transform, tableauToWasteDuration, true, () =>
         {
             if (target is TriPeaksWastePile wTarget) wTarget.AddCard(card);
         }));
 
-        // Открываем карты под улетевшей
         if (source is TriPeaksTableauPile)
         {
             if (scoreManager) scoreManager.AddStreakScore();
+            // Запускаем обновление (переворот) разблокированных карт
             yield return StartCoroutine(UpdateTableauFacesRoutine());
         }
 
-        _isInputAllowed = true; // Разблокируем ввод
+        _isInputAllowed = true;
         CheckGameState();
     }
 
+    // --- ИСПРАВЛЕНО: Правильный вызов анимации переворота ---
     private IEnumerator UpdateTableauFacesRoutine()
     {
         bool anyFlip = false;
@@ -271,8 +250,10 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
                 var cardData = slot.CurrentCard.GetComponent<CardData>();
                 if (cardData != null && !cardData.IsFaceUp())
                 {
-                    // Запускаем анимацию переворота через CardData
-                    cardData.SetFaceUp(true, false);
+                    // ВТОРОЙ ПАРАМЕТР TRUE = С АНИМАЦИЕЙ!
+                    // Это чинит мгновенное переключение спрайта.
+                    // CardData сама запустит плавную смену scale и спрайта.
+                    cardData.SetFaceUp(true, true);
                     anyFlip = true;
                 }
             }
@@ -304,7 +285,6 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         else { _isGameWon = true; if (gameUI) gameUI.OnGameWon(); }
     }
 
-    // Заглушки
     public void OnUndoAction() { }
     public ICardContainer FindNearestContainer(CardController c, Vector2 p, float d) => null;
     public bool OnDropToBoard(CardController c, Vector2 p) => false;

@@ -32,7 +32,7 @@ public class StockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
     /// <summary>
     /// Инициализация StockPile.
     /// </summary>
-    public void Initialize(KlondikeModeManager m, RectTransform tf)
+    public virtual void Initialize(KlondikeModeManager m, RectTransform tf)
     {
         manager = m;
         rect = tf ?? GetComponent<RectTransform>();

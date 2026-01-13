@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -8,54 +7,7 @@ public class TriPeaksAnimationService : MonoBehaviour
     [Header("Settings")]
     public float stockGap = 5f;
 
-    // --- ПЛАВНЫЙ ПЕРЕВОРОТ НА МЕСТЕ ---
-    public IEnumerator AnimateFlip(CardController card, float duration)
-    {
-        var cardData = card.GetComponent<CardData>();
-        if (cardData == null) yield break;
-
-        float halfDuration = duration / 2f;
-        float elapsed = 0f;
-
-        // 1. Сжатие (1 -> 0)
-        while (elapsed < halfDuration)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / halfDuration);
-            // SmoothStep для мягкости
-            float scaleX = Mathf.SmoothStep(1f, 0f, t);
-
-            card.transform.localScale = new Vector3(scaleX, 1f, 1f);
-            card.transform.localPosition = Vector3.zero; // Держим в центре
-            yield return null;
-        }
-
-        // 2. Смена спрайта (КРИТИЧЕСКАЯ СЕКЦИЯ)
-        // CardData.SetFaceUp(..., true) внутри себя делает scale = 1.
-        // Мы должны это перекрыть в том же кадре.
-        card.transform.localScale = Vector3.zero;
-        cardData.SetFaceUp(true, true);
-        card.transform.localScale = Vector3.zero; // Гасим рывок
-
-        // 3. Расширение (0 -> 1)
-        elapsed = 0f;
-        while (elapsed < halfDuration)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / halfDuration);
-            float scaleX = Mathf.SmoothStep(0f, 1f, t);
-
-            card.transform.localScale = new Vector3(scaleX, 1f, 1f);
-            card.transform.localPosition = Vector3.zero;
-            yield return null;
-        }
-
-        // 4. Финальный сброс
-        card.transform.localScale = Vector3.one;
-        card.transform.localPosition = Vector3.zero;
-    }
-
-    // --- Анимация полета (аналогичная защита от рывка) ---
+    // Анимация полета
     public IEnumerator AnimateMoveCard(CardController card, Transform targetTransform, float duration, bool targetFaceUp, System.Action onComplete)
     {
         Canvas canvas = card.GetComponentInParent<Canvas>();
@@ -83,20 +35,23 @@ public class TriPeaksAnimationService : MonoBehaviour
 
             card.transform.position = Vector3.Lerp(startPos, endPos, tMove);
 
+            // Если нужно перевернуть в полете
             if (needsFlip)
             {
-                // Синусоида 0 -> 1 -> 0, инвертируем в scale 1 -> 0 -> 1
-                float scaleX = 1f - Mathf.Sin(t * Mathf.PI);
-                card.transform.localScale = new Vector3(Mathf.Abs(scaleX), 1f, 1f);
+                // Сжимаем и разжимаем сами
+                float scaleX = Mathf.Abs(2f * t - 1f);
+                card.transform.localScale = new Vector3(scaleX, 1f, 1f);
 
+                // Момент смены спрайта (середина пути)
                 if (t >= 0.5f && !flipTriggered && cardData != null)
                 {
-                    // Защита от рывка при полете
-                    cardData.SetFaceUp(targetFaceUp, true);
+                    // ВАЖНО: false = МГНОВЕННО.
+                    // Мы не хотим, чтобы CardData запускала свою корутину, 
+                    // так как мы сами меняем scale прямо здесь.
+                    cardData.SetFaceUp(targetFaceUp, false);
 
-                    // Пересчитываем Scale для текущего момента t, чтобы он не стал 1.0
-                    float currentScaleX = 1f - Mathf.Sin(t * Mathf.PI);
-                    card.transform.localScale = new Vector3(Mathf.Abs(currentScaleX), 1f, 1f);
+                    // Восстанавливаем scale, так как SetFaceUp(instant) сбрасывает его в 1
+                    card.transform.localScale = new Vector3(scaleX, 1f, 1f);
 
                     flipTriggered = true;
                 }
@@ -109,16 +64,25 @@ public class TriPeaksAnimationService : MonoBehaviour
             yield return null;
         }
 
-        // Фиксация в конце
+        // Финал
         card.transform.position = endPos;
         card.transform.SetParent(targetTransform);
         card.transform.localPosition = Vector3.zero;
-        card.transform.localRotation = Quaternion.identity;
         card.transform.localScale = Vector3.one;
+        card.transform.localRotation = Quaternion.identity;
 
-        if (cardData != null) cardData.SetFaceUp(targetFaceUp, true);
+        // Финальная синхронизация (мгновенно)
+        if (cardData != null) cardData.SetFaceUp(targetFaceUp, false);
 
         onComplete?.Invoke();
+    }
+
+    public IEnumerator AnimateFlip(CardController card, float duration)
+    {
+        // Этот метод больше не используется ModeManager-ом для игровых карт,
+        // так как мы перешли на нативную анимацию CardData.
+        // Оставляю его пустым или для совместимости.
+        yield break;
     }
 
     public IEnumerator AnimateStockShift(TriPeaksStockPile stockPile, float duration)
@@ -147,6 +111,7 @@ public class TriPeaksAnimationService : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
+
             for (int i = 0; i < count; i++)
             {
                 if (cardsInStock[i] != null)

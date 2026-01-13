@@ -10,37 +10,36 @@ public class TriPeaksCardController : CardController, IBeginDragHandler, IDragHa
     {
         _modeManager = FindObjectOfType<TriPeaksModeManager>();
 
-        // 1. ИЗОЛЯЦИЯ ОТ СЛОТА (Самое важное для анимации)
-        // Добавляем компонент, который говорит слоту: "Не управляй моими размерами"
+        // Очистка от LayoutElement (возвращаемся к нативному поведению как в Klondike)
         LayoutElement le = GetComponent<LayoutElement>();
-        if (le == null) le = gameObject.AddComponent<LayoutElement>();
-        le.ignoreLayout = true;
+        if (le != null) Destroy(le);
 
-        // 2. Страховка скорости анимации
+        // КРИТИЧНО: Страховка времени анимации.
+        // Если в префабе стоит 0, анимации не будет. Мы ставим дефолт.
         var data = GetComponent<CardData>();
         if (data != null && data.flipDuration < 0.1f)
         {
-            data.flipDuration = 0.25f;
+            data.flipDuration = 0.22f;
         }
     }
 
     public void Configure(CardModel model)
     {
+        // Просто запоминаем модель.
+        // Мы НЕ вызываем data.SetModel(), так как CardFactory уже сделала это
+        // и назначила правильный спрайт.
         this.cardModel = model;
         this.name = $"Card_{model.suit}_{model.rank}";
 
-        var dataComponent = GetComponent<CardData>();
-        if (dataComponent != null)
-        {
-            dataComponent.model = model;
-            if (dataComponent.flipDuration < 0.1f) dataComponent.flipDuration = 0.25f;
-        }
         UpdateVisualState();
     }
 
-    public void UpdateVisualState() { }
+    public void UpdateVisualState()
+    {
+        // Место для затемнения (Tint)
+    }
 
-    // Отключаем перетаскивание (как вы просили)
+    // Блокировка Drag & Drop (как в Pyramid)
     public new void OnBeginDrag(PointerEventData eventData) { }
     public new void OnDrag(PointerEventData eventData) { }
     public new void OnEndDrag(PointerEventData eventData) { }

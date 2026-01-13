@@ -11,12 +11,25 @@ public class TriPeaksTableauPile : MonoBehaviour, ICardContainer
     public CardController CurrentCard;
     public bool HasCard => CurrentCard != null;
 
+    private void Awake()
+    {
+        // Удаляем LayoutGroup, чтобы они не мешали анимации
+        var layouts = GetComponents<LayoutGroup>();
+        foreach (var l in layouts) Destroy(l);
+
+        var fitter = GetComponent<ContentSizeFitter>();
+        if (fitter != null) Destroy(fitter);
+    }
+
     public void AddCard(CardController card)
     {
         CurrentCard = card;
         card.transform.SetParent(this.transform);
-        // Сброс позиции в 0 - теперь это безопасно, так как метод вызывается ПОСЛЕ полета
+
+        // Ручное позиционирование (Klondike-style)
         card.transform.localPosition = Vector3.zero;
+        card.transform.localScale = Vector3.one;
+        card.transform.localRotation = Quaternion.identity;
     }
 
     public void RemoveCard(CardController card)
@@ -40,7 +53,6 @@ public class TriPeaksTableauPile : MonoBehaviour, ICardContainer
         return false;
     }
 
-    // --- Interface ---
     public Transform Transform => this.transform;
     public void OnCardIncoming(CardController card) { }
     public Vector2 GetDropAnchoredPosition(CardController card) => Vector2.zero;
