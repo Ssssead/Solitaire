@@ -90,9 +90,11 @@ public class StatisticsUI : MonoBehaviour
 
             // --- 5. TRIPEAKS ---
             case GameType.TriPeaks:
-                variantKeys.Add("1"); variantLabels.Add("1 Round");
-                variantKeys.Add("2"); variantLabels.Add("2 Rounds");
-                variantKeys.Add("3"); variantLabels.Add("3 Rounds");
+                // TriPeaksModeManager сохраняет как "1Rounds", "2Rounds"
+                // Исправляем ключи здесь, чтобы они совпадали с записью
+                variantKeys.Add("1Rounds"); variantLabels.Add("1 Round");
+                variantKeys.Add("2Rounds"); variantLabels.Add("2 Rounds");
+                variantKeys.Add("3Rounds"); variantLabels.Add("3 Rounds");
                 break;
 
             // --- 6. YUKON ---
