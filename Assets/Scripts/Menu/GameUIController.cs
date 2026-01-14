@@ -100,7 +100,29 @@ public class GameUIController : MonoBehaviour
     // 2. Вызывается кнопкой "ДА" в панели подтверждения выхода
     public void OnConfirmExitClicked()
     {
-        if (DealCacheSystem.Instance != null) DealCacheSystem.Instance.ReturnActiveDealToQueue();
+        // --- ИСПРАВЛЕНИЕ: Проверка ходов ---
+        if (DealCacheSystem.Instance != null)
+        {
+            // Проверяем, были ли сделаны ходы в текущей игре
+            int moves = 0;
+            if (StatisticsManager.Instance != null)
+            {
+                moves = StatisticsManager.Instance.GetCurrentMoves();
+            }
+
+            if (moves > 0)
+            {
+                // Если играли -> сжигаем расклад (чтобы не повторился)
+                DealCacheSystem.Instance.DiscardActiveDeal();
+            }
+            else
+            {
+                // Если не играли (просто посмотрели) -> возвращаем в очередь
+                DealCacheSystem.Instance.ReturnActiveDealToQueue();
+            }
+        }
+        // ------------------------------------
+
         SceneManager.LoadScene("MenuScene");
     }
 
@@ -140,13 +162,24 @@ public class GameUIController : MonoBehaviour
     // 2. Вызывается кнопкой "ДА" в панели подтверждения новой игры
     public void OnConfirmNewGameClicked()
     {
-        // Закрываем панель подтверждения
+        // Закрываем панели
         if (newGameConfirmationPanel) newGameConfirmationPanel.SetActive(false);
-
-        // Закрываем остальные панели (Pobeda, Porazhenie, Settings)
         if (winPanel) winPanel.SetActive(false);
         if (settingsPanel) settingsPanel.SetActive(false);
         if (defeatPanel) defeatPanel.SetActive(false);
+
+        // --- ИСПРАВЛЕНИЕ: Обработка старого расклада перед рестартом ---
+        if (DealCacheSystem.Instance != null)
+        {
+            // При рестарте мы обычно считаем, что старый расклад "проигран" или "сброшен",
+            // поэтому мы его сжигаем, чтобы получить новый.
+            // Но если игрок нажал рестарт сразу после старта (0 ходов), можно вернуть старый?
+            // Обычно в пасьянсах "New Game" означает "Дай мне ДРУГОЙ расклад".
+            // Поэтому всегда сжигаем.
+
+            DealCacheSystem.Instance.DiscardActiveDeal();
+        }
+        // -------------------------------------------------------------
 
         // Перезапускаем игру
         if (activeGameMode != null)
@@ -164,25 +197,31 @@ public class GameUIController : MonoBehaviour
 
     // --------------------------------------------------------
 
-    public void OnGameWon()
+    public void OnGameWon(int manualMoves = -1)
     {
+        // 1. Скрываем панель поражения (на всякий случай)
         if (defeatPanel) defeatPanel.SetActive(false);
-        if (winPanel != null) winPanel.SetActive(true);
 
-        UpdateWinPanelStats();
+        // 2. Включаем панель победы
+        if (winPanel) winPanel.SetActive(true);
 
+        // 3. Вызываем метод обновления статистики (который вы искали)
+        UpdateWinPanelStats(manualMoves);
+
+        // 4. Блокируем ввод
         if (activeGameMode != null) activeGameMode.IsInputAllowed = false;
     }
 
-    private void UpdateWinPanelStats()
+    private void UpdateWinPanelStats(int manualMoves)
     {
+        // 1. Сложность
         if (winDifficultyText) winDifficultyText.text = GameSettings.CurrentDifficulty.ToString();
 
-        if (winScoreText && activeGameMode != null)
+        // 2. Счет (через Reflection)
+        if (activeGameMode != null)
         {
             int finalScore = 0;
             var modeType = activeGameMode.GetType();
-
             var scoreProp = modeType.GetProperty("CurrentScore");
             if (scoreProp != null)
             {
@@ -190,13 +229,14 @@ public class GameUIController : MonoBehaviour
             }
             else
             {
+                // Fallback для ScoreManager
                 var smField = modeType.GetField("scoreManager");
                 if (smField != null)
                 {
                     var smObj = smField.GetValue(activeGameMode);
                     if (smObj != null)
                     {
-                        var innerScoreProp = smObj.GetType().GetProperty("CurrentScore");
+                        var innerScoreProp = smObj.GetType().GetProperty("Score") ?? smObj.GetType().GetProperty("CurrentScore");
                         if (innerScoreProp != null)
                         {
                             finalScore = (int)innerScoreProp.GetValue(smObj);
@@ -204,28 +244,25 @@ public class GameUIController : MonoBehaviour
                     }
                 }
             }
-            winScoreText.text = finalScore.ToString();
+            if (winScoreText) winScoreText.text = finalScore.ToString();
         }
 
+        // 3. Статистика (Время, Ходы, XP и Анимация Бара)
         if (StatisticsManager.Instance != null)
         {
-            if (winMovesText) winMovesText.text = StatisticsManager.Instance.GetCurrentMoves().ToString();
+            // --- Ходы (приоритет manualMoves) ---
+            int movesToShow = (manualMoves >= 0) ? manualMoves : StatisticsManager.Instance.GetCurrentMoves();
+            if (winMovesText) winMovesText.text = movesToShow.ToString();
 
-            float duration = StatisticsManager.Instance.GetLastGameDurationFromHistory();
+            // --- Время ---
+            float duration = StatisticsManager.Instance.LastGameTime; // Или GetLastGameDurationFromHistory() если такой метод есть
             if (winTimeText) winTimeText.text = FormatTime(duration);
+
+            // --- XP Текст ---
             if (winXPText) winXPText.text = $"+ {StatisticsManager.Instance.LastXPGained} XP";
 
+            // --- АНИМАЦИЯ БАРА (Восстановленная логика) ---
             string gameName = activeGameMode != null ? activeGameMode.GameName : "Unknown";
-
-            if (winLevelBar != null)
-            {
-                StatData data = StatisticsManager.Instance.GetGameGlobalStats(gameName);
-                if (data != null)
-                {
-                    int target = data.xpForNextLevel > 0 ? data.xpForNextLevel : 500;
-                    winLevelBar.UpdateBar(data.currentLevel, data.currentXP, target);
-                }
-            }
 
             if (winLevelBar != null)
             {
@@ -235,22 +272,30 @@ public class GameUIController : MonoBehaviour
                 {
                     int currentLevel = data.currentLevel;
                     int currentXP = data.currentXP;
+                    // Если в StatData нет xpForNextLevel, используем 500 как заглушку (как в старом коде)
                     int targetXP = data.xpForNextLevel > 0 ? data.xpForNextLevel : 500;
                     int xpGained = StatisticsManager.Instance.LastXPGained;
 
+                    // Вычисляем, сколько XP было ДО победы
                     int startXP = currentXP - xpGained;
 
                     if (startXP < 0)
                     {
+                        // Если был Level Up (старт был на предыдущем уровне)
                         int oldLevel = currentLevel - 1;
                         if (oldLevel < 1) oldLevel = 1;
-                        int oldTarget = oldLevel * 500;
-                        int oldXP = oldTarget + startXP;
 
+                        // Примерный расчет для старого уровня (если нет точных данных)
+                        // В идеале StatisticsManager должен возвращать targetXP для любого уровня
+                        int oldTarget = oldLevel * 500; // Упрощенная формула, замените на вашу
+                        int oldXP = oldTarget + startXP; // startXP тут отрицательный, так что это остаток
+
+                        // Запускаем сложную анимацию перехода уровня
                         winLevelBar.AnimateLevelUp(oldLevel, oldXP, oldTarget, currentLevel, currentXP, targetXP);
                     }
                     else
                     {
+                        // Обычная анимация заполнения
                         winLevelBar.AnimateBar(currentLevel, startXP, currentXP, targetXP);
                     }
                 }

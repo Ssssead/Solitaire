@@ -231,14 +231,25 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
 
     private IEnumerator VictoryRoutine()
     {
+        _isGameEnded = true;
+        IsInputAllowed = false;
+
+        yield return new WaitForSeconds(1.0f);
+
+        // 1. Запоминаем ходы ДО сброса
+        int finalMoves = 0;
+        if (StatisticsManager.Instance != null)
+            finalMoves = StatisticsManager.Instance.GetCurrentMoves();
+
+        // 2. Отправляем в статистику (счетчик сбросится)
         if (StatisticsManager.Instance != null)
         {
             StatisticsManager.Instance.OnGameWon(CurrentScore);
         }
 
-        yield return new WaitForSeconds(1.0f);
-
-        if (gameUI != null) gameUI.OnGameWon();
+        // 3. Показываем UI с сохраненными ходами
+        if (gameUI != null)
+            gameUI.OnGameWon(finalMoves);
     }
 
     private void SyncPileManager()

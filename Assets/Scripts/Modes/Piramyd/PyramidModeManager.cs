@@ -264,12 +264,28 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         {
             if (defeatRoutine != null) StopCoroutine(defeatRoutine);
             yield return new WaitForSeconds(removeAnimDuration);
-            if (currentRound < totalRounds) { currentRound++; StartRound(false); }
+
+            if (currentRound < totalRounds)
+            {
+                currentRound++;
+                StartRound(false);
+            }
             else
             {
-                _isGameWon = true; // ПОБЕДА
-                StatisticsManager.Instance.OnGameWon(scoreManager ? scoreManager.Score : 0);
-                if (gameUI != null) gameUI.OnGameWon();
+                _isGameWon = true; // Ставим флаг
+
+                // 1. Запоминаем ходы ДО сброса
+                int finalMoves = 0;
+                if (StatisticsManager.Instance != null)
+                    finalMoves = StatisticsManager.Instance.GetCurrentMoves();
+
+                // 2. Отправляем в статистику
+                if (StatisticsManager.Instance != null)
+                    StatisticsManager.Instance.OnGameWon(scoreManager ? scoreManager.Score : 0);
+
+                // 3. Открываем UI с сохраненными ходами
+                if (gameUI != null)
+                    gameUI.OnGameWon(finalMoves);
             }
         }
         else

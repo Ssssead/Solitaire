@@ -2425,7 +2425,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -12.6462, y: 46.61908}
+  m_AnchoredPosition: {x: -12.646179, y: 46.61908}
   m_SizeDelta: {x: -854.552, y: -780.8143}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &525928365
@@ -4104,7 +4104,7 @@ MonoBehaviour:
   dragManager: {fileID: 959636150}
   undoManager: {fileID: 959636144}
   animationService: {fileID: 959636148}
-  gameUI: {fileID: 0}
+  gameUI: {fileID: 48830003}
   rootCanvas: {fileID: 2012075386}
   dragLayer: {fileID: 1381169664}
   tableauVerticalGap: 30
@@ -4922,7 +4922,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -12.6462, y: 46.61908}
+  m_AnchoredPosition: {x: -12.646179, y: 46.61908}
   m_SizeDelta: {x: -854.552, y: -780.8143}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1057553755

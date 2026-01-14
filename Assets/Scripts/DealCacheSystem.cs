@@ -191,7 +191,12 @@ public class DealCacheSystem : MonoBehaviour
                 generatorRegistry.Add(gen.GameType, gen);
         }
     }
-
+    public void DiscardActiveDeal()
+    {
+        // Используем правильное имя переменной
+        currentActiveDeal = null;
+        dealWasPlayed = false;
+    }
     private void Update()
     {
         if (!isGenerating && generationQueue.Count > 0)

@@ -7,7 +7,10 @@ public class TriPeaksMoveRecord
     public CardController PreviousWasteTop;
     public bool IsFromStock;
 
-    // ИСПРАВЛЕНО: TriPeaksTableauPile вместо TriPeaksTableauSlot
+    // Откуда пришла карта (если IsFromStock == false)
+    public TriPeaksTableauPile SourcePile;
+
+    // Список слотов, карты в которых перевернулись (открылись) в результате этого хода
     public List<TriPeaksTableauPile> FlipList = new List<TriPeaksTableauPile>();
 
     public int PointsEarned;

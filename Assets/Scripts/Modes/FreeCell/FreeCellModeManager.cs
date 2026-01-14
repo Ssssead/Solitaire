@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -255,20 +256,35 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         }
     }
 
-    private System.Collections.IEnumerator VictorySequence()
+    private IEnumerator VictorySequence()
     {
+        isGameWon = true;
+        IsInputAllowed = false; // Áëîêèğóåì ââîä
+
         yield return new WaitForSeconds(1.0f);
 
+        // 1. ÇÀÏÎÌÈÍÀÅÌ ÕÎÄÛ ÏÅĞÅÄ ÑÁĞÎÑÎÌ
+        int finalMoves = 0;
+        if (StatisticsManager.Instance != null)
+        {
+            finalMoves = StatisticsManager.Instance.GetCurrentMoves();
+        }
+
+        // 2. ÎÒÏĞÀÂËßÅÌ ÏÎÁÅÄÓ Â ÑÒÀÒÈÑÒÈÊÓ (ñ÷åò÷èê ñáğîñèòñÿ â 0)
         if (StatisticsManager.Instance != null)
         {
             StatisticsManager.Instance.OnGameWon(CurrentScore);
         }
 
-        if (gameUI != null) gameUI.OnGameWon();
+        // 3. ÏÎÊÀÇÛÂÀÅÌ UI Ñ ÑÎÕĞÀÍÅÍÍÛÌÈ ÕÎÄÀÌÈ
+        if (gameUI != null)
+        {
+            gameUI.OnGameWon(finalMoves);
+        }
         else
         {
             var foundUI = FindObjectOfType<GameUIController>();
-            if (foundUI != null) foundUI.OnGameWon();
+            if (foundUI != null) foundUI.OnGameWon(finalMoves);
         }
     }
 

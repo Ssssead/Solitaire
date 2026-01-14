@@ -421,18 +421,27 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         if (IsGameWon())
         {
             hasWonGame = true;
+            IsInputAllowed = false; // Блокируем ввод
             Debug.Log("Game Won!");
 
+            // 1. ЗАПОМИНАЕМ ХОДЫ
+            int finalMoves = 0;
+            if (StatisticsManager.Instance != null)
+                finalMoves = StatisticsManager.Instance.GetCurrentMoves();
+
+            // 2. ОТПРАВЛЯЕМ В СТАТИСТИКУ (счетчик сбрасывается)
             if (StatisticsManager.Instance != null)
             {
                 int finalScore = scoreManager != null ? scoreManager.CurrentScore : 0;
                 StatisticsManager.Instance.OnGameWon(finalScore);
             }
 
-            if (gameUI != null) gameUI.OnGameWon();
+            // 3. ПОКАЗЫВАЕМ UI
+            if (gameUI != null) gameUI.OnGameWon(finalMoves);
             return;
         }
 
+        // Проверка авто-победы
         bool canAutoWin = CanAutoWin();
         if (autoWinButton != null && autoWinButton.gameObject.activeSelf != canAutoWin)
         {
