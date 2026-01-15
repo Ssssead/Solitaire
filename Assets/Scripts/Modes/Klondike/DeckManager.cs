@@ -453,7 +453,20 @@ public class DeckManager : MonoBehaviour
         if (mode != null) mode.IsInputAllowed = true;
         isDealing = false;
     }
+    public void LoadDeal(Deal deal)
+    {
+        if (isDealing) return;
 
+        // Ставим блокировку, как при обычной раздаче
+        isDealing = true;
+        if (mode != null) mode.IsInputAllowed = false;
+
+        // Очищаем стол перед загрузкой
+        ClearAllPiles();
+
+        // Используем существующую логику создания карт
+        ApplyDeal(deal);
+    }
     private void ClearAllPiles()
     {
         if (pileManager == null) return;

@@ -16,7 +16,6 @@ public static class GameSettings
     public static int RoundsCount = 1;
 }
 
-// Перечисление всех ваших будущих игр
 public enum GameType
 {
     Klondike,

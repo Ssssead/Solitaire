@@ -37,7 +37,7 @@ public class DealCacheSystem : MonoBehaviour
 
     [Header("Settings")]
     [Tooltip("Стандартный размер буфера, если не указано иное")]
-    [SerializeField] private int defaultBufferSize = 3;
+    [SerializeField] private int defaultBufferSize = 10;
 
     [Header("Persistent Database (Starter Pack)")]
     public DealDatabase database;
@@ -102,54 +102,49 @@ public class DealCacheSystem : MonoBehaviour
     /// </summary>
     private void InitializeCacheConfigs()
     {
-        // 1. KLONDIKE (18 раскладов)
-        // 3 diff * 2 params (Draw1, Draw3) * 3 buffer = 18
-        ConfigureStandardGame(GameType.Klondike, new int[] { 1, 3 }, 3);
+        // Базовый размер буфера (количество игр в запасе)
+        int baseBuffer = 10;
 
-        // 2. SPIDER (21 расклад)
-        // Специфичная настройка
+        // 1. KLONDIKE
+        // 3 diff * 2 params * 10 buffer
+        ConfigureStandardGame(GameType.Klondike, new int[] { 1, 3 }, baseBuffer);
+
+        // 2. SPIDER
         List<CacheConfig> spiderConfigs = new List<CacheConfig>();
         // 1 Suit (Easy, Medium)
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Easy, Param = 1, TargetBufferSize = 3 });
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 1, TargetBufferSize = 3 });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Easy, Param = 1, TargetBufferSize = baseBuffer });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 1, TargetBufferSize = baseBuffer });
         // 2 Suits (Easy, Medium, Hard)
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Easy, Param = 2, TargetBufferSize = 3 });
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 2, TargetBufferSize = 3 });
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Hard, Param = 2, TargetBufferSize = 3 });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Easy, Param = 2, TargetBufferSize = baseBuffer });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 2, TargetBufferSize = baseBuffer });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Hard, Param = 2, TargetBufferSize = baseBuffer });
         // 4 Suits (Medium, Hard)
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 4, TargetBufferSize = 3 });
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Hard, Param = 4, TargetBufferSize = 3 });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 4, TargetBufferSize = baseBuffer });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Hard, Param = 4, TargetBufferSize = baseBuffer });
         cacheRequirements[GameType.Spider] = spiderConfigs;
 
-        // 3. FREECELL (9 раскладов)
-        // 3 diff * 1 param (0) * 3 buffer = 9
-        ConfigureStandardGame(GameType.FreeCell, new int[] { 0 }, 3);
+        // 3. FREECELL
+        ConfigureStandardGame(GameType.FreeCell, new int[] { 0 }, baseBuffer);
 
-        // 4. PYRAMID (54 расклада)
-        // Param 1 (1 Round) -> Buffer 3 (3 games * 1 deal) -> Total 9
-        // Param 2 (2 Rounds) -> Buffer 6 (3 games * 2 deals) -> Total 18
-        // Param 3 (3 Rounds) -> Buffer 9 (3 games * 3 deals) -> Total 27
-        // Total: 9 + 18 + 27 = 54
-        ConfigureProgressiveGame(GameType.Pyramid);
+        // 4. PYRAMID (Прогрессивный буфер: 10 игр)
+        // 1 Round -> 10 deals
+        // 2 Rounds -> 20 deals
+        // 3 Rounds -> 30 deals
+        ConfigureProgressiveGame(GameType.Pyramid, baseBuffer);
 
-        // 5. TRIPEAKS (54 расклада)
-        // Идентично Pyramid
-        ConfigureProgressiveGame(GameType.TriPeaks);
+        // 5. TRIPEAKS
+        ConfigureProgressiveGame(GameType.TriPeaks, baseBuffer);
 
-        // 6. YUKON (18 раскладов)
-        // Classic (0) и Russian (1)
-        // 3 diff * 2 params * 3 buffer = 18
-        ConfigureStandardGame(GameType.Yukon, new int[] { 0, 1 }, 3);
+        // 6. YUKON
+        ConfigureStandardGame(GameType.Yukon, new int[] { 0, 1 }, baseBuffer);
 
-        // 7. MONTE CARLO (18 раскладов)
-        // 4 Ways (0) и 8 Ways (1)
-        ConfigureStandardGame(GameType.MonteCarlo, new int[] { 0, 1 }, 3);
+        // 7. MONTE CARLO
+        ConfigureStandardGame(GameType.MonteCarlo, new int[] { 0, 1 }, baseBuffer);
 
-        // 8. ОСТАЛЬНЫЕ (по 9 раскладов)
-        // Sultan, Octagon, MulticoloredStar
-        ConfigureStandardGame(GameType.Sultan, new int[] { 0 }, 3);
-        ConfigureStandardGame(GameType.Octagon, new int[] { 0 }, 3);
-        ConfigureStandardGame(GameType.MulticoloredStar, new int[] { 0 }, 3);
+        // 8. ОСТАЛЬНЫЕ
+        ConfigureStandardGame(GameType.Sultan, new int[] { 0 }, baseBuffer);
+        ConfigureStandardGame(GameType.Octagon, new int[] { 0 }, baseBuffer);
+        ConfigureStandardGame(GameType.MulticoloredStar, new int[] { 0 }, baseBuffer);
     }
 
     // Помощник для стандартных игр (фиксированный буфер)
@@ -167,17 +162,19 @@ public class DealCacheSystem : MonoBehaviour
     }
 
     // Помощник для Pyramid/TriPeaks (буфер растет с числом раундов)
-    private void ConfigureProgressiveGame(GameType type)
+    private void ConfigureProgressiveGame(GameType type, int baseBuffer)
     {
         List<CacheConfig> configs = new List<CacheConfig>();
         foreach (Difficulty d in System.Enum.GetValues(typeof(Difficulty)))
         {
-            // 1 Round -> храним 3
-            configs.Add(new CacheConfig { Diff = d, Param = 1, TargetBufferSize = 3 });
-            // 2 Rounds -> храним 6 (сгруппированы по 2)
-            configs.Add(new CacheConfig { Diff = d, Param = 2, TargetBufferSize = 6 });
-            // 3 Rounds -> храним 9 (сгруппированы по 3)
-            configs.Add(new CacheConfig { Diff = d, Param = 3, TargetBufferSize = 9 });
+            // 1 Round -> храним 10 (на 10 игр)
+            configs.Add(new CacheConfig { Diff = d, Param = 1, TargetBufferSize = baseBuffer * 1 });
+
+            // 2 Rounds -> храним 20 (на 10 игр по 2 расклада)
+            configs.Add(new CacheConfig { Diff = d, Param = 2, TargetBufferSize = baseBuffer * 2 });
+
+            // 3 Rounds -> храним 30 (на 10 игр по 3 расклада)
+            configs.Add(new CacheConfig { Diff = d, Param = 3, TargetBufferSize = baseBuffer * 3 });
         }
         cacheRequirements[type] = configs;
     }

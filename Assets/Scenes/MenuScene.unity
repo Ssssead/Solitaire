@@ -1655,10 +1655,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a69dbdfebe15104faa62c51b458b95b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  easyLinkChance: 0.9
-  hardLinkChance: 0.15
-  easyStockBias: 0.15
-  hardStockBias: 0.6
 --- !u!114 &116862363
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1671,7 +1667,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8016b37101ac85478ec9d1dc8380255, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBufferSize: 3
+  defaultBufferSize: 10
   database: {fileID: 11400000, guid: 9154578c5f648404083cf7081b5ce8b5, type: 2}
 --- !u!4 &116862364
 Transform:

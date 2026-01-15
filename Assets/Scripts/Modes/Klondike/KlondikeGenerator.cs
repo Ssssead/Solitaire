@@ -1,300 +1,259 @@
-// SolvableGenerator.cs [REVERSE ASSEMBLY - INSTANT & GUARANTEED]
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
+using System.Diagnostics;
 
-public enum Difficulty { Easy, Medium, Hard }
-
-
-public class SolvableGenerator : BaseGenerator
+public class KlondikeRandomGenerator : BaseGenerator
 {
     public override GameType GameType => GameType.Klondike;
 
-    [Header("Difficulty Tuning")]
-    // Шанс положить карту "идеально" (на родителя), создав цепочку.
-    // Easy: Высокий шанс (помогаем). Hard: Низкий (разбиваем пары).
-    [Range(0, 1)] public float easyLinkChance = 0.90f;
-    [Range(0, 1)] public float hardLinkChance = 0.15f;
-
-    // Шанс спрятать карту в колоду (Stock) вместо стола.
-    [Range(0, 1)] public float easyStockBias = 0.15f;
-    [Range(0, 1)] public float hardStockBias = 0.60f;
+    private const float FRAME_BUDGET_MS = 5.0f;
+    private const float GLOBAL_TIMEOUT_SEC = 2.5f;
 
     public override IEnumerator GenerateDeal(Difficulty difficulty, int param, Action<Deal, DealMetrics> onComplete)
     {
-        // Генерация занимает <1мс, но мы используем корутину для совместимости с CacheSystem
-        Deal deal = CreateSolvableDeal(difficulty);
+        Deal validDeal = null;
 
-        // Метрики фейковые, так как мы знаем, что расклад решаем по построению
-        var metrics = new DealMetrics
+        // Хранилища для "почти подходящих" раскладов
+        Deal bestFallback = null;
+        int bestFallbackScore = -1000; // Начинаем с очень низкого порога
+
+        int attempts = 0;
+        bool done = false;
+
+        Stopwatch frameTimer = new Stopwatch();
+        float totalTimeElapsed = 0f;
+
+        // --- НОВЫЕ СТРОГИЕ КРИТЕРИИ ---
+        int minTraps = 0, maxTraps = 100;
+        bool requireGreedyWin = false;
+        bool requireGreedyLoss = false;
+        int minSolutionMoves = 0;
+        int maxSolutionMoves = 9999;
+
+        switch (difficulty)
         {
-            Solved = true,
-            MoveEstimate = (difficulty == Difficulty.Hard) ? 150 : 60
-        };
+            case Difficulty.Easy:
+                minTraps = 0; maxTraps = 2; // Мало тупиков
+                minSolutionMoves = 0; maxSolutionMoves = 130; // Игра не должна быть бесконечной
+                requireGreedyWin = true;    // Должен решаться автопилотом
+                break;
 
-        yield return null; // Пропускаем кадр для плавности
-        onComplete?.Invoke(deal, metrics);
-    }
+            case Difficulty.Medium:
+                minTraps = 3; maxTraps = 7;
+                requireGreedyLoss = true;
+                minSolutionMoves = 50;      // Средняя длина
+                break;
 
-    private Deal CreateSolvableDeal(Difficulty difficulty)
-    {
-        float linkChance = (difficulty == Difficulty.Easy) ? easyLinkChance : hardLinkChance;
-        float stockBias = (difficulty == Difficulty.Easy) ? easyStockBias : hardStockBias;
-
-        // 1. Создаем "виртуальные дома" (полностью собранные)
-        List<List<CardModel>> solvedPiles = new List<List<CardModel>>();
-        foreach (Suit s in Enum.GetValues(typeof(Suit)))
-        {
-            var pile = new List<CardModel>();
-            for (int r = 1; r <= 13; r++) pile.Add(new CardModel(s, r));
-            solvedPiles.Add(pile);
+            case Difficulty.Hard:
+                // УЖЕСТОЧЕНИЕ:
+                // 1. Минимум 7 тупиков (раньше было 4)
+                // 2. Минимум 90 ходов решения (раньше было 45). Это отсеет "быстрые" победы.
+                minTraps = 7; maxTraps = 99;
+                requireGreedyLoss = true;
+                minSolutionMoves = 90;
+                break;
         }
 
-        // 2. Подготовка рабочих зон
-        List<List<CardModel>> table = new List<List<CardModel>>();
-        for (int i = 0; i < 7; i++) table.Add(new List<CardModel>());
-
-        List<CardModel> stockCards = new List<CardModel>();
-
-        // 3. ЦИКЛ ОБРАТНОГО РАЗБОРА (52 карты)
-        int cardsLeft = 52;
-        System.Random rng = new System.Random();
-
-        while (cardsLeft > 0)
+        while (!done)
         {
-            var availableSuits = solvedPiles.Where(p => p.Count > 0).ToList();
-            if (availableSuits.Count == 0) break;
+            frameTimer.Restart();
 
-            var chosenPile = availableSuits[rng.Next(availableSuits.Count)];
-            CardModel card = chosenPile[chosenPile.Count - 1];
-            chosenPile.RemoveAt(chosenPile.Count - 1);
-            cardsLeft--;
-
-            bool placedOnTable = false;
-
-            // --- Логика размещения на столе (без изменений) ---
-            if (card.rank == 13)
+            while (frameTimer.Elapsed.TotalMilliseconds < FRAME_BUDGET_MS)
             {
-                var emptySlots = Enumerable.Range(0, 7).Where(i => table[i].Count == 0).ToList();
-                if (emptySlots.Count > 0)
+                attempts++;
+
+                // 1. Конструктор (Создает структуру)
+                Deal candidate = CreateConstructedDeal(difficulty);
+
+                // 2. Жадный бот (Быстрый фильтр)
+                bool greedyWin = KlondikeSolver.IsSolvableByGreedy(candidate, param);
+
+                bool failsGreedy = (requireGreedyWin && !greedyWin);
+                bool failsAntiGreedy = (requireGreedyLoss && greedyWin);
+
+                // ОПТИМИЗАЦИЯ: Если у нас уже есть хороший Fallback, пропускаем плохих кандидатов
+                if (bestFallback != null && (failsGreedy || failsAntiGreedy)) continue;
+
+                // 3. Полный Солвер (Тяжелый анализ)
+                SolverResult result = KlondikeSolver.Solve(candidate, param);
+
+                if (result.IsSolved)
                 {
-                    if (rng.NextDouble() > stockBias * 0.5f)
+                    int traps = result.MovesCount;
+                    int moves = result.StockPasses; // Длина решения (ходов)
+
+                    bool matchesTraps = (traps >= minTraps && traps <= maxTraps);
+                    bool matchesLength = (moves >= minSolutionMoves && moves <= maxSolutionMoves);
+
+                    // --- СИСТЕМА ОЦЕНКИ (SCORING) ---
+                    // Начисляем очки, чтобы при таймауте выбрать САМЫЙ сложный из найденных (для Hard)
+                    // или САМЫЙ простой (для Easy).
+                    int score = 0;
+
+                    if (difficulty == Difficulty.Hard)
                     {
-                        int slot = emptySlots[rng.Next(emptySlots.Count)];
-                        table[slot].Add(card);
-                        placedOnTable = true;
+                        // Для Харда: чем больше тупиков и ходов, тем лучше
+                        score += (traps * 10);
+                        score += moves;
+                        if (!failsAntiGreedy) score += 100; // Жадный проиграл - это база
+                    }
+                    else if (difficulty == Difficulty.Easy)
+                    {
+                        // Для Изи: чем меньше тупиков и ходов, тем лучше
+                        score += (100 - traps * 10);
+                        score += (200 - moves);
+                        if (!failsGreedy) score += 500; // Жадный выиграл - это главное
+                    }
+                    else // Medium
+                    {
+                        // Для Медиума ищем баланс (ближе к цели)
+                        score += 100 - Math.Abs(traps - 5) * 10;
+                        score += 100 - Math.Abs(moves - 60);
+                        if (!failsAntiGreedy) score += 100;
+                    }
+
+                    // Обновляем Fallback, если этот расклад лучше предыдущего
+                    if (bestFallback == null || score > bestFallbackScore)
+                    {
+                        bestFallback = candidate;
+                        bestFallbackScore = score;
+                    }
+
+                    // ИДЕАЛ: Полное совпадение всех параметров
+                    if (matchesTraps && matchesLength && !failsGreedy && !failsAntiGreedy)
+                    {
+                        validDeal = candidate;
+                        UnityEngine.Debug.Log($"<color=green>[Gen] PERFECT {difficulty}! Traps: {traps}, Moves: {moves}. Att: {attempts}</color>");
+                        done = true;
+                        break;
                     }
                 }
             }
-            else
+
+            if (!done)
             {
-                var validParents = new List<int>();
-                for (int i = 0; i < 7; i++)
+                totalTimeElapsed += Time.unscaledDeltaTime;
+                if (totalTimeElapsed > GLOBAL_TIMEOUT_SEC)
                 {
-                    if (table[i].Count > 0)
+                    done = true;
+
+                    if (bestFallback != null)
                     {
-                        var potentialParent = table[i][table[i].Count - 1];
-                        if (IsOppositeColor(card, potentialParent) && potentialParent.rank == card.rank + 1)
-                        {
-                            validParents.Add(i);
-                        }
-                    }
-                }
-
-                if (validParents.Count > 0)
-                {
-                    if (rng.NextDouble() < linkChance)
-                    {
-                        int slot = validParents[rng.Next(validParents.Count)];
-                        table[slot].Add(card);
-                        placedOnTable = true;
-                    }
-                }
-            }
-
-            if (!placedOnTable)
-            {
-                stockCards.Add(card);
-            }
-        }
-
-        // --- 4. ФИНАЛЬНАЯ СБОРКА (ИСПРАВЛЕНИЕ ЛОГИКИ STOCK) ---
-
-        // Проблема была тут: stockCards заполнялся последовательно (A, 2, 3...) 
-        // и так и уходил в игру. Нам нужно его ПЕРЕМЕШАТЬ, даже для Easy.
-
-        // Для Easy мы хотим, чтобы в колоде были полезные карты, но не подряд идущие Тузы.
-        // Поэтому перемешиваем stockCards ВСЕГДА.
-        ShuffleList(stockCards, rng);
-
-        // Теперь формируем Deal. 
-        // Мы хотим сохранить структуру table (наши цепочки), но подогнать их под треугольник.
-
-        Deal finalDeal = new Deal();
-
-        // Превращаем table в очередь цепочек
-        // Мы НЕ сливаем их в один список с stockCards сразу, чтобы не потерять структуру.
-        // Мы будем брать карты ПРИОРИТЕТНО из table, заполняя треугольник.
-
-        // Список очередей для каждого столбца (чтобы брать снизу вверх, сохраняя порядок)
-        List<Queue<CardModel>> tableQueues = new List<Queue<CardModel>>();
-        foreach (var pile in table)
-        {
-            tableQueues.Add(new Queue<CardModel>(pile)); // pile[0] = King (Bottom)
-        }
-
-        Queue<CardModel> stockQueue = new Queue<CardModel>(stockCards);
-
-        // Раздача Tableau (Треугольник: 1, 2, 3... 7 карт)
-        for (int i = 0; i < 7; i++)
-        {
-            int height = i + 1;
-            for (int k = 0; k < height; k++)
-            {
-                CardModel c;
-                bool isTop = (k == height - 1);
-
-                // Стратегия Easy:
-                // Мы стараемся заполнить стол картами из наших "хороших" цепочек (tableQueues).
-                // Но если в i-й цепочке карт меньше, чем нужно (или 0), берем из Stock.
-
-                // ВАЖНО: Мы берем именно из tableQueues[i], чтобы сохранить вертикальные связи!
-                // Если мы будем брать из tableQueues[random], мы разобьем цепочки по разным столбцам.
-                // В Easy мы хотим, чтобы K червей и Q пик оказались в ОДНОМ столбце (или Q была доступна).
-
-                // Проблема: tableQueues[i] может быть пустой, а tableQueues[j] переполненной.
-                // Решение: Сдвиг. Если в текущем столбце кончились заготовленные карты,
-                // берем из самых длинных соседних столбцов или из Stock.
-
-                if (tableQueues[i].Count > 0)
-                {
-                    c = tableQueues[i].Dequeue();
-                }
-                else
-                {
-                    // Ищем любую другую цепочку, где много карт
-                    var richColumn = tableQueues.OrderByDescending(q => q.Count).FirstOrDefault(q => q.Count > 0);
-
-                    if (richColumn != null)
-                    {
-                        c = richColumn.Dequeue();
-                    }
-                    else if (stockQueue.Count > 0)
-                    {
-                        c = stockQueue.Dequeue();
+                        validDeal = bestFallback;
+                        // Выводим Score, чтобы понимать качество
+                        UnityEngine.Debug.LogWarning($"[Gen] Timeout. Fallback Score: {bestFallbackScore}. Attempts: {attempts}");
                     }
                     else
                     {
-                        // Карт не хватило вообще (теоретически невозможно при 52 картах)
-                        c = new CardModel(Suit.Spades, 1);
+                        // Крайний случай
+                        validDeal = CreateConstructedDeal(Difficulty.Easy);
+                        UnityEngine.Debug.LogError($"[Gen] FAIL. No solvable deals. Returning unchecked.");
                     }
                 }
-
-                finalDeal.tableau[i].Add(new CardInstance(c, isTop));
+                yield return null;
             }
         }
 
-        // Всё, что осталось в tableQueues (если мы сгенерировали слишком длинные цепочки),
-        // нужно скинуть в Stock, иначе карты пропадут.
-        List<CardModel> leftovers = new List<CardModel>();
-        foreach (var q in tableQueues) leftovers.AddRange(q);
+        onComplete?.Invoke(validDeal, null);
+    }
 
-        // Добавляем остатки из стока
-        leftovers.AddRange(stockQueue);
+    // --- УЛУЧШЕННЫЙ КОНСТРУКТОР ---
+    private Deal CreateConstructedDeal(Difficulty difficulty)
+    {
+        List<CardModel> deck = new List<CardModel>();
+        foreach (Suit s in Enum.GetValues(typeof(Suit))) for (int r = 1; r <= 13; r++) deck.Add(new CardModel(s, r));
 
-        // --- ВАЖНО: Финальная перетасовка колоды ---
-        // Карты, которые не попали на стол (остатки цепочек + изначальный сток),
-        // должны быть перемешаны, чтобы игрок искал их.
-        ShuffleList(leftovers, rng);
+        CardModel[] finalLayout = new CardModel[52];
+        bool[] occupied = new bool[52];
+        System.Random rng = new System.Random();
 
-        foreach (var c in leftovers)
+        var aces = deck.Where(c => c.rank == 1).ToList();
+        var twos = deck.Where(c => c.rank == 2).ToList();
+        var kings = deck.Where(c => c.rank == 13).ToList();
+
+        // Разделяем "Середину" на две части для Харда
+        var lowMids = deck.Where(c => c.rank >= 3 && c.rank <= 7).ToList();  // 3,4,5,6,7 (Нужны для постройки базы)
+        var highMids = deck.Where(c => c.rank >= 8 && c.rank <= 12).ToList(); // 8,9,10,J,Q (Нужны для начала цепочек)
+
+        // Объединяем их обратно для Easy/Medium, чтобы не ломать логику
+        var allOthers = new List<CardModel>();
+        allOthers.AddRange(lowMids);
+        allOthers.AddRange(highMids);
+
+        Shuffle(aces, rng); Shuffle(twos, rng); Shuffle(kings, rng);
+        Shuffle(lowMids, rng); Shuffle(highMids, rng); Shuffle(allOthers, rng);
+
+        if (difficulty == Difficulty.Easy)
         {
-            finalDeal.stock.Push(new CardInstance(c, false));
+            // EASY: Всё доступно
+            PlaceCardsInZone(finalLayout, occupied, aces, 26, 51, rng);
+            PlaceCardsInZone(finalLayout, occupied, twos, 26, 51, rng);
+            PlaceCardsInZone(finalLayout, occupied, kings, 0, 8, rng, true); // Короли пониже
+            PlaceCardsInZone(finalLayout, occupied, allOthers, 0, 51, rng);
+        }
+        else if (difficulty == Difficulty.Hard)
+        {
+            // HARD: 
+            // 1. Тузы на самое дно (0..6)
+            PlaceCardsInZone(finalLayout, occupied, aces, 0, 6, rng);
+
+            // 2. Двойки чуть выше (7..15)
+            PlaceCardsInZone(finalLayout, occupied, twos, 7, 15, rng);
+
+            // 3. Мелкие карты (3-7) закапываем в середину (10..25), 
+            // чтобы до них было трудно добраться через Королей
+            PlaceCardsInZone(finalLayout, occupied, lowMids, 10, 25, rng, true);
+
+            // 4. Короли блокируют верхушки (21..27)
+            PlaceCardsInZone(finalLayout, occupied, kings, 21, 27, rng, true);
+
+            // 5. Остальное (8-Q) заполняет дыры
+            PlaceCardsInZone(finalLayout, occupied, highMids, 0, 51, rng);
+        }
+        else // Medium
+        {
+            // MEDIUM: Смешанно
+            var hardAces = aces.Take(2).ToList();
+            var easyAces = aces.Skip(2).ToList();
+            PlaceCardsInZone(finalLayout, occupied, hardAces, 0, 10, rng);
+            PlaceCardsInZone(finalLayout, occupied, easyAces, 20, 51, rng);
+            PlaceCardsInZone(finalLayout, occupied, kings, 0, 51, rng);
+            PlaceCardsInZone(finalLayout, occupied, allOthers, 0, 51, rng);
         }
 
-        finalDeal.waste = new List<CardInstance>();
-        finalDeal.foundations = new List<List<CardModel>>();
-        for (int i = 0; i < 4; i++) finalDeal.foundations.Add(new List<CardModel>());
-
-        return finalDeal;
+        return AssembleDeal(finalLayout);
     }
 
-    private bool IsOppositeColor(CardModel a, CardModel b)
+    private void PlaceCardsInZone(CardModel[] layout, bool[] occupied, List<CardModel> cards, int minIdx, int maxIdx, System.Random rng, bool overflowToStock = false)
     {
-        bool aRed = (a.suit == Suit.Diamonds || a.suit == Suit.Hearts);
-        bool bRed = (b.suit == Suit.Diamonds || b.suit == Suit.Hearts);
-        return aRed != bRed;
-    }
-
-    private void ShuffleList<T>(List<T> list, System.Random rng)
-    {
-        for (int i = list.Count - 1; i > 0; i--)
+        foreach (var card in cards)
         {
-            int j = rng.Next(0, i + 1);
-            T tmp = list[i]; list[i] = list[j]; list[j] = tmp;
-        }
-    }
-}
-
-
-[Serializable] public class CardInstance { public CardModel Card; public bool FaceUp; public CardInstance(CardModel c, bool f) { Card = c; FaceUp = f; } public CardInstance Clone() => new CardInstance(new CardModel(Card.suit, Card.rank), FaceUp); }
-[Serializable] public class Deal { public List<List<CardInstance>> tableau = new List<List<CardInstance>>(); public Stack<CardInstance> stock = new Stack<CardInstance>(); public List<CardInstance> waste = new List<CardInstance>(); public List<List<CardModel>> foundations = new List<List<CardModel>>(); public int seed; public Deal() { for (int i = 0; i < 7; i++) tableau.Add(new List<CardInstance>()); for (int i = 0; i < 4; i++) foundations.Add(new List<CardModel>()); } public Deal DeepClone() { var d = new Deal(); d.tableau = tableau.Select(p => p.Select(c => c.Clone()).ToList()).ToList(); d.stock = new Stack<CardInstance>(stock.Reverse().Select(c => c.Clone())); d.waste = waste.Select(c => c.Clone()).ToList(); d.foundations = foundations.Select(l => l.Select(c => new CardModel(c.suit, c.rank)).ToList()).ToList(); return d; } }
-public class DealMetrics { public bool Solved; public int MoveEstimate; public int HiddenCards; public int TalonUses; public float BranchFactorAvg; }
-
-public class Solver
-{
-    private readonly int drawCount; private readonly int timeoutMs; private readonly int maxNodes;
-    public Solver(int dc, int tm, int mn) { drawCount = Math.Max(1, dc); timeoutMs = tm; maxNodes = mn; }
-    public DealMetrics Evaluate(Deal d)
-    {
-        var m = new DealMetrics(); if (d == null) { m.Solved = false; return m; }
-        int h = 0; foreach (var p in d.tableau) h += p.Count(c => !c.FaceUp); m.HiddenCards = h;
-        Deal start = d.DeepClone(); var sw = Stopwatch.StartNew();
-        var stack = new Stack<Deal>(); var visited = new HashSet<ulong>();
-        stack.Push(start); visited.Add(HashState(start));
-        int nodes = 0, found = 0, talon = 0; bool solved = false;
-        while (stack.Count > 0)
-        {
-            if (sw.ElapsedMilliseconds > timeoutMs || nodes > maxNodes) break;
-            var cur = stack.Pop(); nodes++;
-            if (cur.foundations.All(f => f.Count == 13)) { solved = true; break; }
-            var moves = GetLegalMoves(cur);
-            foreach (var mv in moves)
+            List<int> freeSlots = new List<int>();
+            for (int i = minIdx; i <= maxIdx; i++) if (i < 52 && !occupied[i]) freeSlots.Add(i);
+            if (freeSlots.Count > 0)
             {
-                var next = ApplyMove(cur, mv); ulong hs = HashState(next);
-                if (!visited.Contains(hs)) { visited.Add(hs); stack.Push(next); if (mv.Type == MoveType.RecycleWasteToStock) talon++; found++; }
+                int slot = freeSlots[rng.Next(freeSlots.Count)]; layout[slot] = card; occupied[slot] = true;
+            }
+            else if (overflowToStock)
+            {
+                for (int i = 28; i < 52; i++) if (!occupied[i]) { layout[i] = card; occupied[i] = true; break; }
+            }
+            else
+            {
+                for (int i = 0; i < 52; i++) if (!occupied[i]) { layout[i] = card; occupied[i] = true; break; }
             }
         }
-        m.Solved = solved; m.MoveEstimate = found; m.TalonUses = talon; return m;
     }
-    private ulong HashState(Deal d) { unchecked { ulong h = 17; foreach (var f in d.foundations) h = h * 31 + (ulong)(f.Count > 0 ? f.Last().rank : 0); foreach (var t in d.tableau) { h = h * 31 + (ulong)t.Count; if (t.Count > 0) h = h * 31 + (ulong)t.Last().Card.rank + (ulong)t.Last().Card.suit; } h = h * 31 + (ulong)d.stock.Count; if (d.waste.Count > 0) h = h * 31 + (ulong)d.waste.Last().Card.rank; return h; } }
-    private enum MoveType { StockDraw, WasteToFoundation, WasteToTableau, TableauToFoundation, TableauToTableau, RecycleWasteToStock }
-    private struct Move { public MoveType Type; public int FromIdx; public int ToIdx; public int Count; }
-    private List<Move> GetLegalMoves(Deal d)
+
+    private Deal AssembleDeal(CardModel[] layout)
     {
-        var moves = new List<Move>();
-        if (d.waste.Count > 0) { var c = d.waste.Last(); if (CanPlaceFoundation(d, c.Card)) moves.Add(new Move { Type = MoveType.WasteToFoundation }); for (int i = 0; i < 7; i++) if (CanPlaceTableau(d.tableau[i], c)) moves.Add(new Move { Type = MoveType.WasteToTableau, ToIdx = i }); }
-        for (int i = 0; i < 7; i++) { if (d.tableau[i].Count == 0) continue; var top = d.tableau[i].Last(); if (top.FaceUp && CanPlaceFoundation(d, top.Card)) moves.Add(new Move { Type = MoveType.TableauToFoundation, FromIdx = i }); var pile = d.tableau[i]; for (int k = 0; k < pile.Count; k++) { if (pile[k].FaceUp) { var card = pile[k]; for (int dest = 0; dest < 7; dest++) { if (i == dest) continue; if (CanPlaceTableau(d.tableau[dest], card)) { if (card.Card.rank == 13 && k == 0) continue; moves.Add(new Move { Type = MoveType.TableauToTableau, FromIdx = i, ToIdx = dest, Count = pile.Count - k }); } } break; } } }
-        if (d.stock.Count > 0) moves.Add(new Move { Type = MoveType.StockDraw }); else if (d.waste.Count > 0) moves.Add(new Move { Type = MoveType.RecycleWasteToStock });
-        return moves;
+        Deal d = new Deal(); int idx = 0;
+        for (int i = 0; i < 7; i++) { for (int j = 0; j <= i; j++) { bool isTop = (j == i); if (idx < 52) d.tableau[i].Add(new CardInstance(layout[idx], isTop)); idx++; } }
+        while (idx < 52) { d.stock.Push(new CardInstance(layout[idx], false)); idx++; }
+        return d;
     }
-    private bool CanPlaceFoundation(Deal d, CardModel c) { int idx = (int)c.suit; var f = d.foundations[idx]; return f.Count == 0 ? c.rank == 1 : f.Last().rank + 1 == c.rank; }
-    private bool CanPlaceTableau(List<CardInstance> p, CardInstance c) { if (p.Count == 0) return c.Card.rank == 13; var top = p.Last(); bool r1 = top.Card.suit == Suit.Diamonds || top.Card.suit == Suit.Hearts; bool r2 = c.Card.suit == Suit.Diamonds || c.Card.suit == Suit.Hearts; return r1 != r2 && c.Card.rank == top.Card.rank - 1; }
-    private Deal ApplyMove(Deal d, Move m)
-    {
-        Deal n = d.DeepClone();
-        switch (m.Type)
-        {
-            case MoveType.WasteToFoundation: var c = n.waste.Last(); n.waste.RemoveAt(n.waste.Count - 1); n.foundations[(int)c.Card.suit].Add(c.Card); break;
-            case MoveType.TableauToFoundation: var t = n.tableau[m.FromIdx]; var tc = t.Last(); t.RemoveAt(t.Count - 1); n.foundations[(int)tc.Card.suit].Add(tc.Card); if (t.Count > 0) t.Last().FaceUp = true; break;
-            case MoveType.WasteToTableau: var wc = n.waste.Last(); n.waste.RemoveAt(n.waste.Count - 1); n.tableau[m.ToIdx].Add(wc); break;
-            case MoveType.TableauToTableau: var src = n.tableau[m.FromIdx]; var r = src.GetRange(src.Count - m.Count, m.Count); src.RemoveRange(src.Count - m.Count, m.Count); if (src.Count > 0) src.Last().FaceUp = true; n.tableau[m.ToIdx].AddRange(r); break;
-            case MoveType.StockDraw: int cnt = Math.Min(n.stock.Count, drawCount); for (int i = 0; i < cnt; i++) { var dc = n.stock.Pop(); dc.FaceUp = true; n.waste.Add(dc); } break;
-            case MoveType.RecycleWasteToStock: for (int i = n.waste.Count - 1; i >= 0; i--) { var x = n.waste[i]; x.FaceUp = false; n.stock.Push(x); } n.waste.Clear(); break;
-        }
-        return n;
-    }
+    private void Shuffle<T>(List<T> list, System.Random rng) { int n = list.Count; while (n > 1) { n--; int k = rng.Next(n + 1); T value = list[k]; list[k] = list[n]; list[n] = value; } }
 }

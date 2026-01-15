@@ -192,19 +192,45 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
         IsInputAllowed = true;
         hasWonGame = false;
-        hasGameStarted = false; // Сброс флага
+        hasGameStarted = false;
 
         if (defeatManager != null) defeatManager.ResetManager();
         if (scoreManager != null) scoreManager.ResetScore();
 
         LogDebug("Starting new game...");
-        pileManager.CreatePiles();
+        pileManager.CreatePiles(); // Очищаем стол
 
         if (dragManager != null) dragManager.RefreshContainers();
-        deckManager.DealInitial();
-        animationService.ReorderAllContainers(pileManager.GetAllContainerTransforms());
 
-        // ВАЖНО: Мы НЕ вызываем OnGameStarted здесь. Ждем первого хода.
+        // --- ИЗМЕНЕНИЕ: ЗАГРУЗКА ИЗ КЭША ---
+
+        // 1. Определяем параметры
+        Difficulty currentDiff = GameSettings.CurrentDifficulty;
+        int drawParam = (stockDealMode == StockDealMode.Draw3) ? 3 : 1;
+
+        // 2. Пытаемся получить готовый расклад
+        Deal cachedDeal = null;
+        if (DealCacheSystem.Instance != null)
+        {
+            cachedDeal = DealCacheSystem.Instance.GetDeal(GameType.Klondike, currentDiff, drawParam);
+        }
+
+        // 3. Если расклад есть — загружаем его, иначе — рандом (Fallback)
+        if (cachedDeal != null && deckManager != null)
+        {
+            Debug.Log($"[KMM] Loading cached deal: {currentDiff} Draw{drawParam}");
+            // ВАЖНО: Убедитесь, что в DeckManager есть метод LoadDeal(Deal deal)
+            deckManager.LoadDeal(cachedDeal);
+        }
+        else
+        {
+            Debug.LogWarning("[KMM] No cached deal found! Falling back to random.");
+            deckManager.DealInitial();
+        }
+
+        // -------------------------------------
+
+        animationService.ReorderAllContainers(pileManager.GetAllContainerTransforms());
     }
 
     // --- НОВОЕ: Обработка выхода со сцены ---
