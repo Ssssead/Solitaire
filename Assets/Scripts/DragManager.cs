@@ -29,7 +29,7 @@ public class DragManager : MonoBehaviour
     private TableauPile sourceTableau = null;
     private ICardContainer sourceContainer = null;
     private int sourceIndex = -1;
-  
+
     /// <summary>
     /// Инициализация DragManager.
     /// </summary>
@@ -1083,7 +1083,7 @@ public class DragManager : MonoBehaviour
         draggingTopCard = null;
     }
 
-    
+
 
     /// <summary>
     /// Записывает ход в UndoManager.

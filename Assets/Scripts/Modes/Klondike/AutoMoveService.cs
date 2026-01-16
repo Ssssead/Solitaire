@@ -176,10 +176,11 @@ public class AutoMoveService : MonoBehaviour
         }
 
         // Проверка Waste
-        if (pileManager.WastePile != null && card.transform.parent == pileManager.WastePile.transform)
+       if (pileManager.WastePile != null && card.transform.IsChildOf(pileManager.WastePile.transform))
         {
             info.sourceType = SourceType.Waste;
-            info.isTopCard = true; // предполагаем, что это верхняя карта
+            // В WastePile интерактивна только верхняя карта, так что если мы по ней кликнули - она Top
+            info.isTopCard = true; 
             return info;
         }
 
@@ -305,15 +306,20 @@ public class AutoMoveService : MonoBehaviour
                 break;
 
             case SourceType.Waste:
-                // Запоминаем позицию ПЕРЕД тем, как PopTop потенциально изменит состояние
-                // (хотя PopTop только удаляет из списка, позиция на экране сохраняется)
+                // Запоминаем позицию
                 Vector3 wastePos = card.rectTransform.anchoredPosition;
+
+                // Запоминаем РЕАЛЬНОГО родителя (Слот), пока карта еще там
+                // Важно сделать это до того, как карта сменит родителя (хотя PopTop родителя не меняет)
+                Transform realSlotTransform = card.transform.parent;
 
                 card = pileManager.WastePile.PopTop();
                 if (card == null) return false;
 
-                sourceTransform = pileManager.WastePile.transform;
-                // ИСПРАВЛЕНИЕ: Передаем wastePos вместо Vector3.zero
+                // БЫЛО: sourceTransform = pileManager.WastePile.transform;
+                // СТАЛО: Записываем конкретный слот (WasteSlot_X)
+                sourceTransform = realSlotTransform;
+
                 sourceLocalPos = wastePos;
                 break;
 
@@ -445,6 +451,10 @@ public class AutoMoveService : MonoBehaviour
 
             case SourceType.Waste:
                 Vector3 wastePosT = card.rectTransform.anchoredPosition;
+
+                // Запоминаем слот
+                Transform realSlotParent = card.transform.parent;
+
                 card = pileManager.WastePile.PopTop();
                 if (card == null) return false;
 
@@ -452,7 +462,9 @@ public class AutoMoveService : MonoBehaviour
                     new List<CardController> { card },
                     pileManager.WastePile,
                     targetTableau,
-                    new List<Transform> { pileManager.WastePile.transform },
+                    // БЫЛО: new List<Transform> { pileManager.WastePile.transform },
+                    // СТАЛО: Передаем реальный слот
+                    new List<Transform> { realSlotParent },
                     new List<Vector3> { wastePosT },
                     new List<int> { -1 }
                 );

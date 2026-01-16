@@ -42,7 +42,7 @@ public class KlondikeRandomGenerator : BaseGenerator
                 break;
 
             case Difficulty.Medium:
-                minTraps = 3; maxTraps = 7;
+                minTraps = 3; maxTraps = 25;
                 requireGreedyLoss = true;
                 minSolutionMoves = 50;      // Средняя длина
                 break;
@@ -51,9 +51,9 @@ public class KlondikeRandomGenerator : BaseGenerator
                 // УЖЕСТОЧЕНИЕ:
                 // 1. Минимум 7 тупиков (раньше было 4)
                 // 2. Минимум 90 ходов решения (раньше было 45). Это отсеет "быстрые" победы.
-                minTraps = 7; maxTraps = 99;
+                minTraps = 30; maxTraps = 99;
                 requireGreedyLoss = true;
-                minSolutionMoves = 90;
+                minSolutionMoves = 100;
                 break;
         }
 

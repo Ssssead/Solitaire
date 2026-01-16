@@ -5,8 +5,8 @@ using System.Linq;
 public static class KlondikeSolver
 {
     // --- КОНСТАНТЫ (Настройка производительности WebGL) ---
-    private const int MAX_DEPTH = 500;     // Максимальная глубина рекурсии
-    private const int MAX_STATES = 10000;   // Лимит состояний (чтобы не виснуть на сложных)
+    private const int MAX_DEPTH = 1000;     // Максимальная глубина рекурсии
+    private const int MAX_STATES = 20000;   // Лимит состояний (чтобы не виснуть на сложных)
     private const int GREEDY_LIMIT = 600;  // Лимит ходов для жадного бота
 
     // --- ВНУТРЕННИЕ СТРУКТУРЫ ---

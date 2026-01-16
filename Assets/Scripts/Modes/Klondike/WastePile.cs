@@ -1,4 +1,4 @@
-// WastePile.cs
+// WastePile.cs [FIXED UNDO JUMP + YOUR STRUCTURE]
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,6 +12,10 @@ public class WastePile : MonoBehaviour, ICardContainer
     private List<CardController> cards = new List<CardController>();
     private KlondikeModeManager manager;
     private RectTransform rect;
+
+    // --- НОВОЕ: Три фиксированных слота ---
+    private RectTransform[] slots;
+    // --------------------------------------
 
     [Header("Layout Settings")]
     [SerializeField] private float xStep = 35f;             // Горизонтальное смещение между видимыми картами
@@ -32,6 +36,32 @@ public class WastePile : MonoBehaviour, ICardContainer
     {
         manager = m;
         rect = tf ?? GetComponent<RectTransform>();
+
+        // Генерируем слоты при инициализации
+        GenerateSlots();
+    }
+
+    private void GenerateSlots()
+    {
+        if (slots != null && slots.Length == 3 && slots[0] != null) return;
+
+        slots = new RectTransform[3];
+        for (int i = 0; i < 3; i++)
+        {
+            GameObject slotObj = new GameObject($"WasteSlot_{i}");
+            slotObj.transform.SetParent(rect, false);
+
+            RectTransform rt = slotObj.AddComponent<RectTransform>();
+
+            // Настройка слотов (как мы обсуждали)
+            rt.anchorMin = new Vector2(0, 0.5f);
+            rt.anchorMax = new Vector2(0, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            // Позиция слота соответствует смещению карты в старой логике
+            rt.anchoredPosition = new Vector2((i * xStep) + 50f, 0);
+
+            slots[i] = rt;
+        }
     }
 
     public void Clear()
@@ -55,15 +85,23 @@ public class WastePile : MonoBehaviour, ICardContainer
     {
         if (card == null) return;
 
-        // --- ИСПРАВЛЕНИЕ: true чтобы сохранить позицию после полета Undo ---
-        if (card.rectTransform.parent != transform)
-        {
-            card.rectTransform.SetParent(transform, true);
-        }
+        // --- ИСПРАВЛЕНИЕ СКАЧКА ПРИ UNDO ---
+        // 1. Вычисляем, в какой слот должна попасть карта ПРЯМО СЕЙЧАС.
+        // Если это Undo, карта должна сразу оказаться в Slot2 (или последнем), а не в центре.
 
-        // --- УДАЛЕНО: card.rectTransform.anchoredPosition = Vector2.zero; ---
-        // Мы не сбрасываем позицию, так как карта уже прилетела на нужное место (или близко к нему).
-        // StartLayoutAnimation ниже все поправит.
+        // Предсказываем индекс: текущее кол-во + 1 (эта карта будет последней)
+        int predictedCount = cards.Count + 1;
+        int targetSlotIndex = GetTargetSlotIndex(predictedCount - 1, predictedCount);
+
+        if (slots == null || slots.Length == 0) GenerateSlots();
+        RectTransform targetSlot = slots[targetSlotIndex];
+
+        // 2. Сразу меняем родителя на целевой слот
+        if (card.rectTransform.parent != targetSlot)
+        {
+            card.rectTransform.SetParent(targetSlot, true);
+        }
+        // -----------------------------------
 
         // Коррекция Z (локальная)
         Vector3 localPos = card.rectTransform.localPosition;
@@ -86,6 +124,7 @@ public class WastePile : MonoBehaviour, ICardContainer
         UpdateInteractivity();
     }
 
+    // --- МЕТОД, КОТОРОГО НЕ ХВАТАЛО UNDOMANAGER'У ---
     public void AddCardsBatch(List<CardController> cardsToAdd, bool faceUp)
     {
         if (cardsToAdd == null || cardsToAdd.Count == 0) return;
@@ -93,15 +132,31 @@ public class WastePile : MonoBehaviour, ICardContainer
         // Останавливаем текущую анимацию, чтобы не было конфликтов
         if (layoutCoroutine != null) { StopCoroutine(layoutCoroutine); layoutCoroutine = null; }
 
-        foreach (var card in cardsToAdd)
+        if (slots == null || slots.Length == 0) GenerateSlots();
+
+        int startCount = cards.Count;
+        int totalNewCount = startCount + cardsToAdd.Count;
+
+        for (int i = 0; i < cardsToAdd.Count; i++)
         {
+            var card = cardsToAdd[i];
             if (card == null) continue;
 
-            if (card.rectTransform.parent != transform) card.rectTransform.SetParent(transform, true);
+            // --- ИСПРАВЛЕНИЕ СКАЧКА ---
+            // Вычисляем слот для каждой карты в пачке
+            int currentIndex = startCount + i;
+            int slotIndex = GetTargetSlotIndex(currentIndex, totalNewCount);
+            RectTransform targetSlot = slots[slotIndex];
+
+            if (card.rectTransform.parent != targetSlot)
+            {
+                card.rectTransform.SetParent(targetSlot, true);
+            }
+            // --------------------------
 
             // Z коррекция
             Vector3 localPos = card.rectTransform.localPosition;
-            localPos.z = (cards.Count + 1) * zStep;
+            localPos.z = (currentIndex + 1) * zStep;
             card.rectTransform.localPosition = localPos;
 
             card.rectTransform.SetAsLastSibling();
@@ -115,49 +170,59 @@ public class WastePile : MonoBehaviour, ICardContainer
         StartLayoutAnimation();
         UpdateInteractivity();
     }
+    // ------------------------------------------------
 
     /// <summary>
     /// Добавляет карту из Stock с анимацией layout.
     /// </summary>
     public void OnCardArrivedFromStock(CardController card, bool faceUp)
     {
-        if (card == null) return;
-
-        // Сохраняем мировую позицию при смене parent
-        card.rectTransform.SetParent(transform, true);
-
-        var cardData = card.GetComponent<CardData>();
-        if (cardData != null)
-        {
-            cardData.SetFaceUp(faceUp);
-        }
-
-        if (card.canvasGroup != null)
-        {
-            card.canvasGroup.blocksRaycasts = false;
-        }
-
-        cards.Add(card);
-
-        // Запускаем анимацию перестроения
-        StartLayoutAnimation();
+        // Используем AddCard, так как там теперь правильная логика слотов
+        AddCard(card, faceUp);
     }
 
+    // --- ВСПОМОГАТЕЛЬНЫЙ МЕТОД ДЛЯ ВЫЧИСЛЕНИЯ СЛОТА ---
+    private int GetTargetSlotIndex(int cardIndex, int totalCount)
+    {
+        if (totalCount <= 0) return 0;
+
+        // Логика "Скользящего окна" (как в анимации)
+        // Показываем последние 3 карты
+
+        // Если карт мало (<= 3):
+        // 0 -> Slot0
+        // 1 -> Slot1
+        // 2 -> Slot2
+
+        // Если карт много (> 3):
+        // (N-3) -> Slot0
+        // (N-2) -> Slot1
+        // (N-1) -> Slot2
+
+        int shift = Mathf.Max(0, totalCount - 3);
+        int slotIndex = Mathf.Clamp(cardIndex - shift, 0, 2);
+
+        // Защита от переполнения (если слотов меньше 3)
+        return Mathf.Min(slotIndex, slots.Length - 1);
+    }
+    // --------------------------------------------------
+
     #region ICardContainer Implementation
+
+    // --- ДОБАВЛЕНЫ МЕТОДЫ ИНТЕРФЕЙСА (Они нужны DragManager) ---
+    public bool ContainsCard(CardController card) => cards.Contains(card);
+    public void OnCardIncoming(CardController card) { } // Заглушка
+    // ------------------------------------------------------------
 
     /// <summary>
     /// Waste не принимает карты через drag & drop (только через Stock).
     /// </summary>
     public bool CanAccept(CardController card) => false;
 
-    public void OnCardIncoming(CardController card) { }
-
     public bool IsEmpty() => cards.Count == 0;
     public CardController GetTopCard()
     {
         if (Count == 0) return null;
-        // WastePile наследуется от BasePile? Или имеет свой список?
-        // Обычно это cards[cards.Count-1]
         return cards.Count > 0 ? cards[cards.Count - 1] : null;
     }
 
@@ -166,12 +231,9 @@ public class WastePile : MonoBehaviour, ICardContainer
     /// </summary>
     public Vector2 GetDropAnchoredPosition(CardController card)
     {
-        int n = cards.Count + 1;  // Как будто карта уже добавлена
-        int index = n - 1;
-        int shift = Mathf.Max(0, n - 3);  // Показываем максимум 3 карты
-        int slot = Mathf.Clamp(index - shift, 0, 2);
-        float x = slot * xStep;
-        return new Vector2(x, 0f);
+        // Возвращаем позицию 3-го слота (или последнего актуального)
+        if (slots != null && slots.Length > 2) return slots[2].anchoredPosition;
+        return Vector2.zero;
     }
 
     public void AcceptCard(CardController card)
@@ -228,15 +290,6 @@ public class WastePile : MonoBehaviour, ICardContainer
     }
 
     /// <summary>
-    /// Проверяет, является ли карта верхней в Waste.
-    /// </summary>
-    public bool ContainsCard(CardController card)
-    {
-        if (cards.Count == 0) return false;
-        return cards[cards.Count - 1] == card;
-    }
-
-    /// <summary>
     /// Количество карт в Waste.
     /// </summary>
     public int Count => cards.Count;
@@ -268,39 +321,33 @@ public class WastePile : MonoBehaviour, ICardContainer
             yield break;
         }
 
-        // Вычисляем целевые позиции (показываем максимум 3 карты справа)
-        Vector2[] targetPositions = new Vector2[n];
+        // --- ИЗМЕНЕННАЯ ЛОГИКА: Цели теперь зависят от слотов (0,0) ---
+        // Но чтобы сохранить вашу анимацию, мы просто привязываем карты к слотам
+        // и анимируем к localPosition = 0
 
-        for (int i = 0; i < n; i++)
-        {
-            int shift = Mathf.Max(0, n - 3);  // Смещение для показа последних 3
-            int slot = Mathf.Clamp(i - shift, 0, 2);
-            float x = slot * xStep;
-            targetPositions[i] = new Vector2(x, 0f);
-        }
+        // Создаем слоты, если вдруг их нет
+        if (slots == null || slots.Length == 0) GenerateSlots();
 
-        // Сохраняем стартовые позиции
-        Vector2[] startPositions = new Vector2[n];
         for (int i = 0; i < n; i++)
         {
             var card = cards[i];
-            if (card == null)
+            if (card == null) continue;
+
+            // Вычисляем, в какой слот должна попасть карта
+            int slotIndex = GetTargetSlotIndex(i, n);
+            RectTransform targetSlot = slots[slotIndex];
+
+            // 1. Меняем родителя на слот (это убирает скачок при drag!)
+            if (card.rectTransform.parent != targetSlot)
             {
-                startPositions[i] = Vector2.zero;
-                continue;
+                card.rectTransform.SetParent(targetSlot, true); // true = без визуального прыжка
             }
 
-            // Приводим карту к этому transform
-            if (card.rectTransform.parent != transform)
-            {
-                card.rectTransform.SetParent(transform, true);
-            }
-
-            startPositions[i] = card.rectTransform.anchoredPosition;
-            card.rectTransform.SetSiblingIndex(i);
+            // 2. Ставим Z-порядок
+            card.rectTransform.SetSiblingIndex(i); // Или SetAsLastSibling если в одном слоте
         }
 
-        // Анимация
+        // Анимация к центру слотов (0,0)
         float elapsed = 0f;
         while (elapsed < layoutAnimDuration)
         {
@@ -313,13 +360,10 @@ public class WastePile : MonoBehaviour, ICardContainer
                 var card = cards[i];
                 if (card == null) continue;
 
-                Vector2 pos = Vector2.LerpUnclamped(startPositions[i], targetPositions[i], eased);
-                card.rectTransform.anchoredPosition = pos;
-
-                // Обновляем Z для глубины
-                Vector3 localPos = card.rectTransform.localPosition;
-                localPos.z = i * zStep;
-                card.rectTransform.localPosition = localPos;
+                // Анимируем к 0,0,0 в локальных координатах слота
+                // Z учитываем для глубины
+                Vector3 targetLocalPos = new Vector3(0, 0, i * zStep);
+                card.rectTransform.localPosition = Vector3.Lerp(card.rectTransform.localPosition, targetLocalPos, eased);
             }
 
             yield return null;
@@ -330,12 +374,7 @@ public class WastePile : MonoBehaviour, ICardContainer
         {
             var card = cards[i];
             if (card == null) continue;
-
-            card.rectTransform.anchoredPosition = targetPositions[i];
-
-            Vector3 localPos = card.rectTransform.localPosition;
-            localPos.z = i * zStep;
-            card.rectTransform.localPosition = localPos;
+            card.rectTransform.localPosition = new Vector3(0, 0, i * zStep);
         }
 
         UpdateInteractivity();

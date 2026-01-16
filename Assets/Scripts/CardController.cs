@@ -70,7 +70,7 @@ public class CardController : MonoBehaviour,
     {
         // 1. Проверка блокировки ввода (Global)
         if (CardmodeManager != null && !CardmodeManager.IsInputAllowed) return;
-        
+
         // 2. --- ИСПРАВЛЕНИЕ: Проверка, открыта ли карта ---
         // Получаем компонент данных карты
         var cardData = GetComponent<CardData>();
@@ -267,7 +267,7 @@ public class CardController : MonoBehaviour,
         }
 
         isAnimating = false;
-       
+
     }
 
     #endregion
