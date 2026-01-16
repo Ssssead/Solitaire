@@ -150,7 +150,59 @@ public class TableauPile : MonoBehaviour, ICardContainer
         }
         ForceRecalculateLayout();
     }
+    public void ForceRebuildLayout()
+    {
+        if (cards.Count == 0) return;
 
+        for (int i = 0; i < cards.Count; i++)
+        {
+            var card = cards[i];
+            if (card == null) continue;
+
+            // 1. Гарантируем родителя
+            if (card.rectTransform.parent != transform)
+            {
+                card.rectTransform.SetParent(transform, true);
+            }
+
+            // 2. Гарантируем порядок (Hierarchy Z-Order)
+            card.rectTransform.SetSiblingIndex(i);
+
+            // 3. Восстанавливаем кликабельность
+            if (card.canvasGroup != null)
+            {
+                card.canvasGroup.blocksRaycasts = true;
+                card.canvasGroup.alpha = 1f;
+            }
+
+            // 4. Синхронизируем визуал
+            var data = card.GetComponent<CardData>();
+            if (data != null)
+            {
+                // --- ИСПРАВЛЕНИЕ ОШИБКИ: добавлены скобки () ---
+                data.SetFaceUp(data.IsFaceUp(), animate: false);
+            }
+        }
+
+        // 5. Пересчет позиций
+        ComputeFaceUpGap();
+
+        float currentY = 0;
+        for (int i = 0; i < cards.Count; i++)
+        {
+            var card = cards[i];
+            card.rectTransform.anchoredPosition = new Vector2(0, -currentY);
+
+            var data = card.GetComponent<CardData>();
+            // --- ИСПРАВЛЕНИЕ ОШИБКИ: добавлены скобки () ---
+            bool isFaceUp = data != null && data.IsFaceUp();
+
+            if (i < cards.Count - 1)
+            {
+                currentY += isFaceUp ? currentFaceUpGap : faceDownGap;
+            }
+        }
+    }
     public virtual void ForceRecalculateLayout()
     {
         // Сначала вычисляем, какой должен быть отступ

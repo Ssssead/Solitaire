@@ -55,8 +55,25 @@ public class FoundationPile : MonoBehaviour, ICardContainer
     {
         if (card == null) return false;
 
+        // --- ИСПРАВЛЕНИЕ: ПРОВЕРКА ЧЕРЕЗ DRAG MANAGER ---
+        // Если у карты есть ссылка на DragManager, спрашиваем у него, тащим ли мы стопку.
+        // Если тащим больше 1 карты — Foundation отказывает.
+        if (card.dragManager != null)
+        {
+            if (card.dragManager.GetDraggingStackCount() > 1)
+            {
+                return false;
+            }
+        }
+        // Fallback: старая проверка на случай, если dragManager не назначен или это не драг
+        else if (card.GetComponentsInChildren<CardController>().Length > 1)
+        {
+            return false;
+        }
+        // ------------------------------------------------
+
         var cardData = card.GetComponent<CardData>();
-        if (cardData == null || !cardData.IsFaceUp()) return false;
+        if (cardData == null) return false; // Убрали проверку FaceUp, так как при драге она и так открыта
 
         // Если foundation пуст - принимаем только туза (rank = 1)
         if (cards.Count == 0)

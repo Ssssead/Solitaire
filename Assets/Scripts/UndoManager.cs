@@ -39,8 +39,8 @@ public class UndoManager : MonoBehaviour
 
     // Сохраняем поддержку isRapidUndo
     public void RecordMove(List<CardController> cards, ICardContainer source, ICardContainer target,
-                          List<Transform> origParents = null, List<Vector3> origLocal = null, List<int> origSibling = null,
-                          string groupID = null, bool isRapidUndo = false)
+                           List<Transform> origParents = null, List<Vector3> origLocal = null, List<int> origSibling = null,
+                           string groupID = null, bool isRapidUndo = false)
     {
         if (undoStack.Count == 0 && DealCacheSystem.Instance != null)
             DealCacheSystem.Instance.MarkCurrentDealAsPlayed();
@@ -120,17 +120,58 @@ public class UndoManager : MonoBehaviour
         gameMode?.CheckGameState();
     }
 
+    // --- ИЗМЕНЕННЫЙ МЕТОД: ВЫПОЛНЯЕТСЯ ЗА ОДИН КАДР ---
     private IEnumerator UndoAllCoroutine()
     {
         if (inProgress || undoStack.Count == 0) yield break;
         inProgress = true;
+
+        StopAllCoroutines();
         gameMode?.OnUndoAction();
+
         while (undoStack.Count > 0)
         {
             var record = undoStack.Pop();
-            yield return StartCoroutine(PerformUndo(record, immediate: true));
+
+            // --- ЗАЩИТА ОТ КРАША (Fix для FreeCell/Klondike) ---
+            // Проверяем, существуют ли карты физически. 
+            // Unity уничтожает объекты при перезагрузке, но C# ссылка остается (как null).
+            bool isRecordBroken = false;
+            if (record.cards == null || record.cards.Count == 0) isRecordBroken = true;
+            else
+            {
+                foreach (var card in record.cards)
+                {
+                    // Проверка: (card == null) сработает, если Unity уничтожила объект
+                    if (card == null || card.gameObject == null)
+                    {
+                        isRecordBroken = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isRecordBroken)
+            {
+                // Если запись ссылается на мертвые карты, просто пропускаем её
+                continue;
+            }
+            // ----------------------------------------------------
+
+            // Если карты живы, выполняем откат
+            RemoveCardsFromTarget(record);
+
+            if (record.sourceCardWasFlipped && record.sourceContainer is TableauPile tableau)
+            {
+                if (record.flippedCardIndex >= 0) tableau.ForceFlipFaceDown(record.flippedCardIndex, true);
+            }
+
+            RestoreCardsPositionImmediate(record);
+            AddCardsBackToSource(record, true);
         }
+
         Canvas.ForceUpdateCanvases();
+
         if (animationService != null && pileManager != null)
             animationService.ReorderAllContainers(pileManager.GetAllContainerTransforms());
 
@@ -138,21 +179,20 @@ public class UndoManager : MonoBehaviour
         {
             foreach (var container in pileManager.Tableau)
             {
-                // Получаем компонент TableauPile (он есть и в FreeCell, и в Klondike)
                 var pileScript = container.GetComponent<TableauPile>();
-
-                if (pileScript != null)
-                {
-                    // Этот метод внутри себя проверяет cards.Count и меняет yOffset
-                    pileScript.StartLayoutAnimationPublic();
-                }
+                if (pileScript != null) pileScript.StartLayoutAnimationPublic();
             }
         }
+
+        // Обновляем Waste (для Klondike)
+        var waste = FindObjectOfType<WastePile>();
+        if (waste != null) waste.UpdateLayout();
 
         inProgress = false;
         UpdateButtons();
         gameMode?.CheckGameState();
     }
+    // ----------------------------------------------------
 
     private IEnumerator PerformUndo(MoveRecord record, bool immediate)
     {
@@ -199,24 +239,51 @@ public class UndoManager : MonoBehaviour
         Transform sourceTrans = (record.sourceContainer as Component)?.transform;
         bool isStock = record.sourceContainer.GetType().Name.Contains("Stock");
 
+        // Проверка: возвращаем ли мы карты в WastePile?
+        WastePile wasteTarget = record.sourceContainer as WastePile;
+
         for (int i = 0; i < cards.Count; i++)
         {
             var card = cards[i];
             if (card == null) continue;
             startPos.Add(card.rectTransform.position);
+
+            // Поднимаем в слой драга для красивого полета
             if (dragLayer != null) card.rectTransform.SetParent(dragLayer, true);
             card.rectTransform.SetAsLastSibling();
 
             if (isStock) card.GetComponent<CardData>()?.SetFaceUp(false, animate: true);
 
             Vector3 targetW = Vector3.zero;
-            if (record.sourceLocalPositions != null && i < record.sourceLocalPositions.Count && sourceTrans != null)
+
+            // --- ЛОГИКА ИСПРАВЛЕНИЯ ---
+            if (wasteTarget != null)
             {
+                // Для WastePile игнорируем savedPositions, так как лейаут мог измениться.
+                // Рассчитываем, где карта должна оказаться "в будущем".
+                int futureCount = wasteTarget.Count + cards.Count;
+                int futureIndex = wasteTarget.Count + i; // i идет от 0 до cards.Count, сохраняя порядок
+
+                Vector2 anchor = wasteTarget.GetAnchoredPositionForFutureIndex(futureCount, futureIndex);
+
+                if (animationService != null)
+                    targetW = animationService.AnchoredToWorldPosition(wasteTarget.Transform as RectTransform, anchor);
+                else
+                    targetW = wasteTarget.Transform.TransformPoint(anchor);
+            }
+            // ---------------------------
+            else if (record.sourceLocalPositions != null && i < record.sourceLocalPositions.Count && sourceTrans != null)
+            {
+                // Стандартная логика для Tableau и других
                 Vector3 savedLocal = record.sourceLocalPositions[i];
                 if (animationService != null) targetW = animationService.AnchoredToWorldPosition(sourceTrans as RectTransform, new Vector2(savedLocal.x, savedLocal.y));
                 else targetW = sourceTrans.TransformPoint(savedLocal);
             }
-            else targetW = sourceTrans != null ? sourceTrans.position : card.transform.position;
+            else
+            {
+                targetW = sourceTrans != null ? sourceTrans.position : card.transform.position;
+            }
+
             targetPos.Add(targetW);
         }
 
@@ -225,7 +292,11 @@ public class UndoManager : MonoBehaviour
         {
             t += Time.unscaledDeltaTime;
             float p = t / undoAnimDuration;
-            for (int i = 0; i < cards.Count; i++) if (cards[i] != null) cards[i].rectTransform.position = Vector3.Lerp(startPos[i], targetPos[i], p);
+            // Добавим SmoothStep для более плавной анимации, как в DeckManager
+            p = p * p * (3f - 2f * p);
+
+            for (int i = 0; i < cards.Count; i++)
+                if (cards[i] != null) cards[i].rectTransform.position = Vector3.Lerp(startPos[i], targetPos[i], p);
             yield return null;
         }
     }

@@ -180,7 +180,13 @@ public class DragManager : MonoBehaviour
         public TableauPile tableauPile;
         public int index;
     }
-
+    /// <summary>
+    /// Возвращает количество карт, находящихся сейчас в процессе перетаскивания.
+    /// </summary>
+    public int GetDraggingStackCount()
+    {
+        return draggingStack != null ? draggingStack.Count : 0;
+    }
     private SourceInfo FindCardSourceInfo(CardController card)
     {
         var info = new SourceInfo { found = false, index = -1 };
