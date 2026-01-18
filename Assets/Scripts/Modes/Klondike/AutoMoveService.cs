@@ -110,6 +110,7 @@ public class AutoMoveService : MonoBehaviour
         if (moveSuccessful)
         {
             // ’од сделан успешно Ч провер€ем услови€ победы
+            mode.RegisterMoveAndStartIfNeeded();
             mode.CheckGameState();
         }
         else

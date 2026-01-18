@@ -5,6 +5,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 {
@@ -30,6 +31,8 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     [Header("UI Buttons")]
     public Button autoWinButton;
+    [Tooltip("Перетащите сюда объект TextMeshPro со сцены для отображения ходов")]
+    public TMP_Text movesText;
 
     [Header("Settings")]
     public StockDealMode stockDealMode = StockDealMode.Draw1;
@@ -49,8 +52,6 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public GameUIController gameUI;
 
     private bool hasWonGame = false;
-
-    // --- НОВОЕ: Флаг старта игры ---
     private bool hasGameStarted = false;
 
     public string GameName => "Klondike";
@@ -183,7 +184,6 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void StartNewGame()
     {
-        // 1. Если предыдущая была начата, но не закончена -> Поражение
         if (hasGameStarted && !hasWonGame)
         {
             if (StatisticsManager.Instance != null)
@@ -194,32 +194,28 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         hasWonGame = false;
         hasGameStarted = false;
 
+        UpdateMovesUI();
+
         if (defeatManager != null) defeatManager.ResetManager();
         if (scoreManager != null) scoreManager.ResetScore();
 
         LogDebug("Starting new game...");
-        pileManager.CreatePiles(); // Очищаем стол
+        pileManager.CreatePiles();
 
         if (dragManager != null) dragManager.RefreshContainers();
 
-        // --- ИЗМЕНЕНИЕ: ЗАГРУЗКА ИЗ КЭША ---
-
-        // 1. Определяем параметры
         Difficulty currentDiff = GameSettings.CurrentDifficulty;
         int drawParam = (stockDealMode == StockDealMode.Draw3) ? 3 : 1;
 
-        // 2. Пытаемся получить готовый расклад
         Deal cachedDeal = null;
         if (DealCacheSystem.Instance != null)
         {
             cachedDeal = DealCacheSystem.Instance.GetDeal(GameType.Klondike, currentDiff, drawParam);
         }
 
-        // 3. Если расклад есть — загружаем его, иначе — рандом (Fallback)
         if (cachedDeal != null && deckManager != null)
         {
             Debug.Log($"[KMM] Loading cached deal: {currentDiff} Draw{drawParam}");
-            // ВАЖНО: Убедитесь, что в DeckManager есть метод LoadDeal(Deal deal)
             deckManager.LoadDeal(cachedDeal);
         }
         else
@@ -228,12 +224,9 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
             deckManager.DealInitial();
         }
 
-        // -------------------------------------
-
         animationService.ReorderAllContainers(pileManager.GetAllContainerTransforms());
     }
 
-    // --- НОВОЕ: Обработка выхода со сцены ---
     private void OnDestroy()
     {
         if (hasGameStarted && !hasWonGame)
@@ -242,9 +235,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
                 StatisticsManager.Instance.OnGameAbandoned();
         }
     }
-    // ----------------------------------------
 
-    // --- НОВОЕ: Метод регистрации первого хода ---
     public void RegisterMoveAndStartIfNeeded()
     {
         if (!hasGameStarted)
@@ -258,11 +249,23 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
             }
         }
 
-        // Регистрируем сам ход
         if (StatisticsManager.Instance != null)
             StatisticsManager.Instance.RegisterMove();
+
+        UpdateMovesUI();
+        CheckGameState();
     }
-    // ---------------------------------------------
+
+    private void UpdateMovesUI()
+    {
+        if (movesText != null)
+        {
+            if (StatisticsManager.Instance != null)
+                movesText.text = StatisticsManager.Instance.GetCurrentMoves().ToString();
+            else
+                movesText.text = "0";
+        }
+    }
 
     #endregion
 
@@ -277,9 +280,8 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     {
         if (!IsInputAllowed) return;
 
-        // --- ИСПРАВЛЕНО: Регистрация хода ---
+        // Взятие карты из колоды считается ходом
         RegisterMoveAndStartIfNeeded();
-        // ------------------------------------
 
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.StartTimerIfNotStarted();
 
@@ -307,17 +309,18 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         StartCoroutine(CheckAutoMoveResult(card, oldContainer));
     }
 
+    // --- ИСПРАВЛЕНО: Учет ходов при двойном клике ---
     private System.Collections.IEnumerator CheckAutoMoveResult(CardController card, ICardContainer oldContainer)
     {
+        // Ждем, пока анимация или логика AutoMoveService завершит перемещение
         yield return new WaitForSeconds(0.25f);
 
         ICardContainer newContainer = card.CurrentContainer;
 
+        // Если контейнер изменился (неважно, Foundation это или другой Tableau)
         if (newContainer != null && newContainer != oldContainer)
         {
-            // --- ИСПРАВЛЕНО: Регистрация хода ---
-            RegisterMoveAndStartIfNeeded(); // Фиксируем старт игры при успешном авто-ходе
-            // ------------------------------------
+            
 
             if (scoreManager != null) scoreManager.OnCardMove(newContainer);
             if (deckManager != null) deckManager.OnProductiveMoveMade();
@@ -325,6 +328,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
             CheckGameState();
         }
     }
+    // ------------------------------------------------
 
     public void OnCardLongPressed(CardController card)
     {
@@ -340,9 +344,8 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
             if (deckManager == null) deckManager = GetComponent<DeckManager>();
             if (deckManager != null) deckManager.OnProductiveMoveMade();
 
-            // --- ИСПРАВЛЕНО: Регистрация хода ---
+            // Перетаскивание карты считается ходом
             RegisterMoveAndStartIfNeeded();
-            // ------------------------------------
 
             if (scoreManager != null) scoreManager.OnCardMove(container);
         }
@@ -423,20 +426,20 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void RestartGame()
     {
+        UpdateMovesUI();
         var deck = GetComponent<DeckManager>();
         if (deck != null)
         {
             deck.difficulty = GameSettings.CurrentDifficulty;
             this.stockDealMode = (GameSettings.KlondikeDrawCount == 3) ? StockDealMode.Draw3 : StockDealMode.Draw1;
 
-            // Если предыдущая игра была начата - поражение
             if (hasGameStarted && !hasWonGame)
             {
                 if (StatisticsManager.Instance != null)
                     StatisticsManager.Instance.OnGameAbandoned();
             }
 
-            StartNewGame(); // Вместо deck.RestartGame, чтобы обновить флаги здесь
+            StartNewGame();
         }
     }
 
@@ -447,27 +450,23 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         if (IsGameWon())
         {
             hasWonGame = true;
-            IsInputAllowed = false; // Блокируем ввод
+            IsInputAllowed = false;
             Debug.Log("Game Won!");
 
-            // 1. ЗАПОМИНАЕМ ХОДЫ
             int finalMoves = 0;
             if (StatisticsManager.Instance != null)
                 finalMoves = StatisticsManager.Instance.GetCurrentMoves();
 
-            // 2. ОТПРАВЛЯЕМ В СТАТИСТИКУ (счетчик сбрасывается)
             if (StatisticsManager.Instance != null)
             {
                 int finalScore = scoreManager != null ? scoreManager.CurrentScore : 0;
                 StatisticsManager.Instance.OnGameWon(finalScore);
             }
 
-            // 3. ПОКАЗЫВАЕМ UI
             if (gameUI != null) gameUI.OnGameWon(finalMoves);
             return;
         }
 
-        // Проверка авто-победы
         bool canAutoWin = CanAutoWin();
         if (autoWinButton != null && autoWinButton.gameObject.activeSelf != canAutoWin)
         {
@@ -479,8 +478,9 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void OnUndoAction()
     {
-        // Undo тоже считается активностью
+        // --- ИСПРАВЛЕНО: Undo теперь считается действием (+1 ход) ---
         RegisterMoveAndStartIfNeeded();
+        // ------------------------------------------------------------
 
         if (autoWinButton != null) autoWinButton.gameObject.SetActive(false);
         if (defeatManager != null) defeatManager.OnUndo();
@@ -501,6 +501,10 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     private void OnAutoWinClicked()
     {
+        // --- ИСПРАВЛЕНО: Авто-сбор считается за 1 действие (+1 ход) ---
+        RegisterMoveAndStartIfNeeded();
+        // --------------------------------------------------------------
+
         if (autoWinButton != null) autoWinButton.gameObject.SetActive(false);
         if (autoMoveService != null) StartCoroutine(autoMoveService.PlayAutoWinAnimation());
     }

@@ -193,7 +193,7 @@ public class PileManager : MonoBehaviour
         RectTransform slotRect = stockSlotTransform as RectTransform;
         stockPile.Initialize(mode, slotRect);
 
-        Debug.Log($"[PileManager] StockPile ready: GameObject={stockSlotTransform.name}, Component={(wasCreated ? "created" : "existing")}, Path={GetGameObjectPath(stockSlotTransform.gameObject)}");
+        //Debug.Log($"[PileManager] StockPile ready: GameObject={stockSlotTransform.name}, Component={(wasCreated ? "created" : "existing")}, Path={GetGameObjectPath(stockSlotTransform.gameObject)}");
     }
 
     private void CreateWastePile()
@@ -230,7 +230,7 @@ public class PileManager : MonoBehaviour
         RectTransform slotRect = wasteSlotTransform as RectTransform;
         wastePile.Initialize(mode, slotRect);
 
-        Debug.Log($"[PileManager] WastePile ready: GameObject={wasteSlotTransform.name}, Component={(wasCreated ? "created" : "existing")}, Path={GetGameObjectPath(wasteSlotTransform.gameObject)}");
+        //Debug.Log($"[PileManager] WastePile ready: GameObject={wasteSlotTransform.name}, Component={(wasCreated ? "created" : "existing")}, Path={GetGameObjectPath(wasteSlotTransform.gameObject)}");
     }
 
     #endregion

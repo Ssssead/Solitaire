@@ -9,256 +9,300 @@ public class KlondikeRandomGenerator : BaseGenerator
 {
     public override GameType GameType => GameType.Klondike;
 
-    private const float FRAME_BUDGET_MS = 5.0f;
-    private const float GLOBAL_TIMEOUT_SEC = 2.0f; // 2 секунды достаточно для поиска
+    [Header("Generation Strategy")]
+    public int maxMutationsPerCandidate = 5; // Если за 5 попыток не вышло - сброс и новый расклад
+    public bool calibrationMode = true;      // Автозапуск при старте
+    public Difficulty targetDifficulty;      // Целевая сложность для тестов
+    [Header("Optimization")]
+    [Range(1, 16)]
+    public float frameBudgetMs = 8.0f; // Бюджет: 8ms = 120 FPS, 16ms = 60 FPS
 
+    // Диапазоны Score (устанавливаются в коде)
+    private int minScore, maxScore;
+
+    // --- АВТОЗАПУСК (ДЛЯ ТЕСТОВ В РЕДАКТОРЕ) ---
+    private void Start()
+    {
+        if (calibrationMode)
+        {
+            UnityEngine.Debug.Log($"[SmartGen] Starting Infinite Grinder for {targetDifficulty}...");
+            // Запускаем бесконечный поиск одного идеального расклада
+            StartCoroutine(GenerateDeal(targetDifficulty, 1, (deal, metrics) =>
+            {
+                UnityEngine.Debug.Log("<color=yellow>[SmartGen] DONE! Valid deal found and ready.</color>");
+            }));
+        }
+    }
+
+    // --- ГЛАВНАЯ КОРУТИНА ГЕНЕРАЦИИ ---
     public override IEnumerator GenerateDeal(Difficulty difficulty, int param, Action<Deal, DealMetrics> onComplete)
     {
+        SetupScoreRanges(difficulty);
         Deal validDeal = null;
-        Deal bestFallback = null;
-        int bestFallbackScore = -99999;
+        int totalAttempts = 0;
+        bool found = false;
 
-        int attempts = 0;
-        bool done = false;
+        // Таймер для мутаций
+        Stopwatch frameWatch = new Stopwatch();
 
-        Stopwatch frameTimer = new Stopwatch();
-        float totalTimeElapsed = 0f;
-
-        // --- КРИТЕРИИ ---
-        int minDecisions = 0;
-        int minMoves = 0;
-
-        bool requireGreedyWin = false;
-        bool requireGreedyLoss = false;
-
-        switch (difficulty)
+        while (!found)
         {
-            case Difficulty.Easy:
-                // Easy: Жадный бот должен выигрывать.
-                // Расклад должен выглядеть случайно, но быть проходимым "в лоб".
-                minDecisions = 0;
-                requireGreedyWin = true;
-                break;
+            totalAttempts++;
 
-            case Difficulty.Medium:
-                // Medium: Жадный бот может проиграть, но не обязательно.
-                // Главное - длина игры 60+ ходов.
-                minDecisions = 1;
-                minMoves = 60;
-                break;
+            // Если бюджет кадра кончился во время создания - ждем
+            if (frameWatch.ElapsedMilliseconds > frameBudgetMs) { yield return null; frameWatch.Restart(); }
 
-            case Difficulty.Hard:
-                // Hard: Жадный бот ОБЯЗАН проиграть.
-                // Длина 90+, и хотя бы 4 момента выбора.
-                minDecisions = 4; // Снизил с 6 до 4, чтобы убрать Timeout
-                minMoves = 90;
-                requireGreedyLoss = true;
-                break;
-        }
+            // 1. Создаем базу (Быстро)
+            Deal candidate = CreateSmartDeal(difficulty);
 
-        while (!done)
-        {
-            frameTimer.Restart();
-
-            while (frameTimer.Elapsed.TotalMilliseconds < FRAME_BUDGET_MS)
+            // 2. Мутации
+            for (int m = 0; m <= maxMutationsPerCandidate; m++)
             {
-                attempts++;
+                // Запускаем АСИНХРОННЫЙ Солвер
+                // Мы передаем ему "остаток" времени в кадре
+                float timeLeft = frameBudgetMs - frameWatch.ElapsedMilliseconds;
+                if (timeLeft <= 0) { yield return null; frameWatch.Restart(); timeLeft = frameBudgetMs; }
 
-                // ИСПОЛЬЗУЕМ ЗОНАЛЬНУЮ ГЕНЕРАЦИЮ (Естественный вид)
-                Deal candidate = CreateConstructedDeal(difficulty);
+                KlondikeSolver.ExtendedSolverResult result = new KlondikeSolver.ExtendedSolverResult();
 
-                // 1. Жадный бот (Быстрый тест)
-                bool greedyWin = KlondikeSolver.IsSolvableByGreedy(candidate, param);
+                // ЖДЕМ, ПОКА СОЛВЕР ЗАКОНЧИТ (ОН БУДЕТ ДЕЛАТЬ YIELD ВНУТРИ СЕБЯ)
+                yield return StartCoroutine(KlondikeSolver.SolveAsync(candidate, param, frameBudgetMs, result));
 
-                // Строгие фильтры
-                if (requireGreedyWin && !greedyWin) continue; // Easy обязан быть простым
-
-                // Для Hard: Если жадный выиграл -> это мусор, даже в Fallback не берем
-                if (requireGreedyLoss && greedyWin) continue;
-
-                // 2. Полный Солвер
-                var result = KlondikeSolver.SolveExtended(candidate, param);
+                // Когда вернулись сюда - Солвер закончил работу
+                // Проверяем бюджет, так как yield был в солвере
+                frameWatch.Restart();
 
                 if (result.IsSolved)
                 {
-                    int decisions = result.Decisions;
-                    int moves = result.Moves;
-                    int traps = result.Traps;
-
-                    bool okDecisions = decisions >= minDecisions;
-                    bool okMoves = moves >= minMoves;
-
-                    // --- ОЧКИ КАЧЕСТВА ---
-                    int score = 0;
-
-                    if (difficulty == Difficulty.Hard)
-                    {
-                        // Для Харда ценим запутанность
-                        score += decisions * 100;
-                        score += moves;
-                        score += traps * 10;
-                    }
-                    else if (difficulty == Difficulty.Medium)
-                    {
-                        // Для Медиума ищем ~80 ходов
-                        score += 1000 - Math.Abs(moves - 80) * 10;
-                        if (!greedyWin) score += 200; // Бонус за сложность
-                    }
-                    else // Easy
-                    {
-                        // Для Изи: чем меньше ходов и решений, тем лучше
-                        score += 1000 - moves;
-                        score += 500 - decisions * 100;
-                    }
-
-                    // Сохраняем лучший
-                    if (bestFallback == null || score > bestFallbackScore)
-                    {
-                        bestFallback = candidate;
-                        bestFallbackScore = score;
-                    }
-
-                    // ИДЕАЛ
-                    if (okDecisions && okMoves)
+                    int score = result.Score;
+                    if (score >= minScore && score <= maxScore)
                     {
                         validDeal = candidate;
-                        UnityEngine.Debug.Log($"<color=green>[Gen] PERFECT {difficulty}! Decis:{decisions} Moves:{moves} Traps:{traps}. Att:{attempts}</color>");
-                        done = true;
+                        UnityEngine.Debug.Log($"<color=green>[Gen] FOUND! Diff:{difficulty} Score:{score} ({totalAttempts} attempts)</color>");
+                        found = true;
                         break;
                     }
+
+                    if (score < minScore) MutateSmart(candidate, true);
+                    else if (score > maxScore) MutateSmart(candidate, false);
                 }
-            }
-
-            if (!done)
-            {
-                totalTimeElapsed += Time.unscaledDeltaTime;
-
-                // Если таймаут или слишком много попыток
-                if (totalTimeElapsed > GLOBAL_TIMEOUT_SEC)
+                else
                 {
-                    done = true;
-
-                    if (bestFallback != null)
-                    {
-                        validDeal = bestFallback;
-                        // Предупреждение, но Fallback теперь качественный (лучший по Score)
-                        UnityEngine.Debug.LogWarning($"[Gen] Timeout. Fallback used. Score: {bestFallbackScore}.");
-                    }
-                    else
-                    {
-                        // Если вообще ничего не нашли (редкость для Easy/Medium)
-                        validDeal = CreateConstructedDeal(Difficulty.Easy);
-                        UnityEngine.Debug.LogError("[Gen] FAIL. No solvable deals found. Returning unchecked Easy.");
-                    }
+                    MutateSmart(candidate, false);
                 }
-                yield return null;
             }
+
+            if (found) break;
+            yield return null;
         }
 
         onComplete?.Invoke(validDeal, null);
     }
 
-    // --- ЗОНАЛЬНЫЙ КОНСТРУКТОР (ЕСТЕСТВЕННЫЙ ВИД) ---
-    private Deal CreateConstructedDeal(Difficulty difficulty)
+    // =========================================================================
+    // 1. SMART CONSTRUCTION (АРХИТЕКТОР РАСКЛАДА)
+    // =========================================================================
+    private Deal CreateSmartDeal(Difficulty difficulty)
     {
+        // 1. Создаем чистую колоду
         List<CardModel> deck = new List<CardModel>();
         foreach (Suit s in Enum.GetValues(typeof(Suit))) for (int r = 1; r <= 13; r++) deck.Add(new CardModel(s, r));
 
-        CardModel[] finalLayout = new CardModel[52];
-        bool[] occupied = new bool[52];
+        // 2. Делим на фракции
+        var aces = deck.Where(c => c.rank <= 2).ToList();    // A, 2 (Ключевые карты)
+        var kings = deck.Where(c => c.rank >= 12).ToList();  // Q, K (Блокеры)
+        var mids = deck.Where(c => c.rank >= 3 && c.rank <= 11).ToList(); // Остальное ("Мясо")
+
         System.Random rng = new System.Random();
+        List<CardModel> constructedDeck = new List<CardModel>(new CardModel[52]); // Пустой массив для сборки
+        bool[] filled = new bool[52];
 
-        var aces = deck.Where(c => c.rank == 1).ToList();
-        var twos = deck.Where(c => c.rank == 2).ToList();
-        var kings = deck.Where(c => c.rank == 13).ToList();
-
-        // Остальные карты делим на группы для более умного распределения
-        var lowMids = deck.Where(c => c.rank >= 3 && c.rank <= 7).ToList();
-        var highMids = deck.Where(c => c.rank >= 8 && c.rank <= 12).ToList();
-        var allOthers = new List<CardModel>(); allOthers.AddRange(lowMids); allOthers.AddRange(highMids);
-
-        // ВАЖНО: Тщательно мешаем группы, чтобы не было "цепочек" как в прошлом варианте
-        Shuffle(aces, rng); Shuffle(twos, rng); Shuffle(kings, rng);
-        Shuffle(lowMids, rng); Shuffle(highMids, rng); Shuffle(allOthers, rng);
-
-        if (difficulty == Difficulty.Easy)
+        // Локальная функция для размещения карт в заданный диапазон индексов
+        void PlaceCards(List<CardModel> source, int startIdx, int endIdx, int count)
         {
-            // EASY: Максимальный рандом, но без глупостей.
-            // Тузы и Двойки в доступной зоне (Сток или верх стопок)
-            PlaceCardsInZone(finalLayout, occupied, aces, 20, 51, rng);
-            PlaceCardsInZone(finalLayout, occupied, twos, 20, 51, rng);
+            Shuffle(source, rng);
+            // Пытаемся разместить count карт
+            for (int i = 0; i < count && source.Count > 0; i++)
+            {
+                var card = source[0];
+                source.RemoveAt(0);
 
-            // Короли внизу (0-15), чтобы не блокировали
-            PlaceCardsInZone(finalLayout, occupied, kings, 0, 15, rng, true);
+                // Ищем свободные слоты в диапазоне
+                List<int> slots = new List<int>();
+                for (int k = startIdx; k <= endIdx; k++) if (!filled[k]) slots.Add(k);
 
-            // Остальное рандомно
-            PlaceCardsInZone(finalLayout, occupied, allOthers, 0, 51, rng);
-        }
-        else if (difficulty == Difficulty.Hard)
-        {
-            // HARD: "Блокировка"
-            // 1. Тузы на самое дно (0-4)
-            PlaceCardsInZone(finalLayout, occupied, aces, 0, 4, rng);
-
-            // 2. Короли СТРОГО на верхушках (21-27) или в начале стока
-            // Это создает пробки.
-            PlaceCardsInZone(finalLayout, occupied, kings, 21, 30, rng);
-
-            // 3. Низкие карты (3-5), нужные для старта, прячем в середину (10-20)
-            // Чтобы до них добраться, нужно снять Королей.
-            PlaceCardsInZone(finalLayout, occupied, lowMids, 10, 25, rng, true);
-
-            // 4. Двойки тоже глубоко
-            PlaceCardsInZone(finalLayout, occupied, twos, 5, 15, rng);
-
-            // Остальное (8-Q) заполняет пустоты
-            PlaceCardsInZone(finalLayout, occupied, highMids, 0, 51, rng);
-        }
-        else // Medium
-        {
-            // MEDIUM: Смешанно
-            var hardAces = aces.Take(2).ToList();
-            var easyAces = aces.Skip(2).ToList();
-
-            PlaceCardsInZone(finalLayout, occupied, hardAces, 0, 10, rng);
-            PlaceCardsInZone(finalLayout, occupied, easyAces, 20, 51, rng);
-
-            // Короли где угодно, но избегая дна (0-5), чтобы расклад не был совсем уж простым
-            PlaceCardsInZone(finalLayout, occupied, kings, 5, 51, rng);
-
-            PlaceCardsInZone(finalLayout, occupied, allOthers, 0, 51, rng);
+                if (slots.Count > 0)
+                {
+                    int slot = slots[rng.Next(slots.Count)];
+                    constructedDeck[slot] = card;
+                    filled[slot] = true;
+                }
+                else
+                {
+                    // Если места нет, возвращаем в пул "мяса"
+                    mids.Add(card);
+                }
+            }
         }
 
-        return AssembleDeal(finalLayout);
+        // --- ЛОГИКА СЛОЕВ ---
+        // Индексы в плоском списке (0..51) при стандартной раздаче:
+        // 0..6:   Самое дно 7 стопок (Bottom Layer) -> Влияет на AceDepth
+        // 7..20:  Середина закрытых карт (Middle Layer)
+        // 21..27: Верхние открытые карты стопок (Top Layer) -> Влияет на Blockers
+        // 28..51: Колода (Stock)
+
+        if (difficulty == Difficulty.Hard)
+        {
+            // HARD: 
+            // 1. Закапываем Тузы и Двойки на дно (0-6)
+            PlaceCards(aces, 0, 6, 4);
+
+            // 2. Блокируем верх стопок Королями и Дамами (21-27)
+            PlaceCards(kings, 21, 27, 4);
+
+            // 3. Остаток Тузов/Королей смешиваем с мидом и заполняем остальное
+            mids.AddRange(aces); aces.Clear();
+            mids.AddRange(kings); kings.Clear();
+            PlaceCards(mids, 0, 51, 52);
+        }
+        else if (difficulty == Difficulty.Medium)
+        {
+            // MEDIUM: Смешанный подход
+            // Немного тузов вниз, немного королей вверх, но без фанатизма
+            PlaceCards(aces, 0, 15, 2);
+            PlaceCards(kings, 15, 30, 2);
+
+            mids.AddRange(aces); aces.Clear();
+            mids.AddRange(kings); kings.Clear();
+            PlaceCards(mids, 0, 51, 52);
+        }
+        else // EASY
+        {
+            // EASY: 
+            // 1. Короли на дно (0-10), чтобы не блокировали
+            PlaceCards(kings, 0, 10, 6);
+
+            // 2. Тузы наверх стопок и в начало стока (21-35) - быстрый старт
+            PlaceCards(aces, 21, 35, 6);
+
+            mids.AddRange(aces); aces.Clear();
+            mids.AddRange(kings); kings.Clear();
+            PlaceCards(mids, 0, 51, 52);
+        }
+
+        // Заполнение пропусков (если алгоритм пропустил слоты)
+        for (int i = 0; i < 52; i++) if (!filled[i] && mids.Count > 0) { constructedDeck[i] = mids[0]; mids.RemoveAt(0); }
+
+        // Собираем объект Deal
+        Deal d = new Deal();
+        RebuildDeal(d, constructedDeck);
+        return d;
     }
 
-    private void PlaceCardsInZone(CardModel[] layout, bool[] occupied, List<CardModel> cards, int minIdx, int maxIdx, System.Random rng, bool overflowToStock = false)
+    // =========================================================================
+    // 2. SMART MUTATION (УМНАЯ МУТАЦИЯ)
+    // =========================================================================
+    private void MutateSmart(Deal d, bool makeHarder)
     {
-        foreach (var card in cards)
+        List<CardModel> flat = FlattenDeal(d);
+        System.Random rng = new System.Random();
+
+        if (makeHarder)
         {
-            List<int> freeSlots = new List<int>();
-            for (int i = minIdx; i <= maxIdx; i++) if (i < 52 && !occupied[i]) freeSlots.Add(i);
-            if (freeSlots.Count > 0)
+            // УСЛОЖНИТЬ:
+            // 1. Найти Туза (A, 2), который лежит слишком высоко (>20) и закопать его
+            int easyAceIdx = flat.FindLastIndex(c => c.rank <= 2);
+
+            if (easyAceIdx > 15)
             {
-                int slot = freeSlots[rng.Next(freeSlots.Count)]; layout[slot] = card; occupied[slot] = true;
-            }
-            else if (overflowToStock)
-            {
-                for (int i = 28; i < 52; i++) if (!occupied[i]) { layout[i] = card; occupied[i] = true; break; }
+                // Меняем с дном (0-10)
+                Swap(flat, easyAceIdx, rng.Next(0, 10));
             }
             else
             {
-                for (int i = 0; i < 52; i++) if (!occupied[i]) { layout[i] = card; occupied[i] = true; break; }
+                // Если Тузы уже глубоко, найдем Короля внизу и поднимем наверх (создать пробку)
+                int buriedKingIdx = flat.FindIndex(c => c.rank >= 12);
+                if (buriedKingIdx != -1 && buriedKingIdx < 20)
+                    Swap(flat, buriedKingIdx, rng.Next(21, 28)); // На верхушки
+                else
+                    Swap(flat, rng.Next(0, 52), rng.Next(0, 52)); // Рандом, если нет идей
             }
+        }
+        else // Make Easier
+        {
+            // УПРОСТИТЬ:
+            // 1. Найти закопанного Туза (<20) и поднять наверх (>28)
+            int buriedAceIdx = flat.FindIndex(c => c.rank <= 2);
+
+            if (buriedAceIdx != -1 && buriedAceIdx < 20)
+            {
+                Swap(flat, buriedAceIdx, rng.Next(28, 52)); // В сток или наверх
+            }
+            else
+            {
+                // Или убрать блокирующего Короля с вершины (21-27) на дно
+                bool kingMoved = false;
+                for (int i = 21; i <= 27; i++)
+                {
+                    if (flat[i].rank >= 12) { Swap(flat, i, rng.Next(0, 10)); kingMoved = true; break; }
+                }
+                if (!kingMoved) Swap(flat, rng.Next(0, 52), rng.Next(0, 52));
+            }
+        }
+        RebuildDeal(d, flat);
+    }
+
+    // --- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ---
+
+    private void SetupScoreRanges(Difficulty d)
+    {
+        switch (d)
+        {
+            // Новые диапазоны на основе формулы 2.0
+            case Difficulty.Easy: minScore = 1000; maxScore = 5000; break;
+            case Difficulty.Medium: minScore = 7500; maxScore = 13500; break;
+            case Difficulty.Hard: minScore = 16000; maxScore = 999999; break;
         }
     }
 
-    private Deal AssembleDeal(CardModel[] layout)
+    private void Swap(List<CardModel> list, int a, int b)
     {
-        Deal d = new Deal(); int idx = 0;
-        for (int i = 0; i < 7; i++) { for (int j = 0; j <= i; j++) { bool isTop = (j == i); if (idx < 52) d.tableau[i].Add(new CardInstance(layout[idx], isTop)); idx++; } }
-        while (idx < 52) { d.stock.Push(new CardInstance(layout[idx], false)); idx++; }
-        return d;
+        if (a < 0 || b < 0 || a >= list.Count || b >= list.Count) return;
+        var temp = list[a]; list[a] = list[b]; list[b] = temp;
     }
-    private void Shuffle<T>(List<T> list, System.Random rng) { int n = list.Count; while (n > 1) { n--; int k = rng.Next(n + 1); T value = list[k]; list[k] = list[n]; list[n] = value; } }
+
+    // Превращает Deal в плоский список (Табло слева направо + Сток)
+    private List<CardModel> FlattenDeal(Deal d)
+    {
+        List<CardModel> list = new List<CardModel>();
+        foreach (var pile in d.tableau) foreach (var c in pile) list.Add(c.Card);
+        // В Deal.stock Push кладет наверх. Чтобы сохранить порядок списка, берем как есть.
+        list.AddRange(d.stock.Select(x => x.Card));
+        return list;
+    }
+
+    // Собирает Deal обратно
+    private void RebuildDeal(Deal d, List<CardModel> cards)
+    {
+        foreach (var t in d.tableau) t.Clear();
+        d.stock.Clear();
+        int idx = 0;
+        // Раздача Табло
+        for (int i = 0; i < 7; i++)
+        {
+            for (int j = 0; j <= i; j++)
+            {
+                if (idx < cards.Count) d.tableau[i].Add(new CardInstance(cards[idx++], j == i));
+            }
+        }
+        // Остаток в Сток
+        while (idx < cards.Count) d.stock.Push(new CardInstance(cards[idx++], false));
+    }
+
+    private void Shuffle<T>(List<T> list, System.Random rng)
+    {
+        int n = list.Count;
+        while (n > 1) { n--; int k = rng.Next(n + 1); T value = list[k]; list[k] = list[n]; list[n] = value; }
+    }
 }
