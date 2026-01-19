@@ -51,7 +51,7 @@ public class FoundationPile : MonoBehaviour, ICardContainer
     /// ѕровер€ет, может ли эта foundation-стопка прин€ть карту.
     /// ѕравила: перва€ карта должна быть тузом, следующие - той же масти и на 1 ранг выше.
     /// </summary>
-    public bool CanAccept(CardController card)
+    public virtual bool CanAccept(CardController card)
     {
         if (card == null) return false;
 

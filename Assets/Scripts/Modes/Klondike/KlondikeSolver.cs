@@ -10,15 +10,49 @@ public static class KlondikeSolver
     private const int MAX_DEPTH = 1000;
     private const int MAX_STATES = 30000;
 
-    // --- ВЕСА (Ваша формула) ---
-    private const int W_BASE = 10;     // Ходы
-    private const int W_ACE = 200;     // Глубина тузов
-    private const int W_STOCK = 800;   // Прокрутки
-    private const int W_RET = 2500;    // Возврат из дома
-    private const int W_BRK = 2000;    // Разрыв цепочки
-    private const int W_TRAP = 4000;   // Ловушки
+    // --- НАСТРОЙКИ ВЕСОВ (ДИНАМИЧЕСКИЕ) ---
+    private struct SolverWeights
+    {
+        public int BaseMoves;
+        public int Stock;
+        public int Trap;
+        public int Break;
+        public int RecycleLimit;
+    }
 
-    // --- СТРУКТУРЫ ---
+    // Возвращает настройки в зависимости от режима
+    private static SolverWeights GetWeights(int drawParam)
+    {
+        if (drawParam == 3)
+        {
+            // DRAW 3: Новая калибровка
+            return new SolverWeights
+            {
+                BaseMoves = 15,
+                Stock = 1500,      // Прокрутка дорогая (индикатор сложности)
+                Trap = 50000,      // Ловушки недопустимы для простых уровней
+                Break = 3000,      // Бонус за разбив цепочек
+                RecycleLimit = 60  // Нужно много прокруток для сдвига фазы
+            };
+        }
+        else
+        {
+            // DRAW 1: Классическая калибровка (без изменений)
+            return new SolverWeights
+            {
+                BaseMoves = 10,
+                Stock = 800,
+                Trap = 4000,
+                Break = 2000,
+                RecycleLimit = 12
+            };
+        }
+    }
+
+    private const int W_ACE = 200;     // Глубина тузов (одинаково важна)
+    private const int W_RET = 2500;    // Возврат из дома (Foundation Return)
+
+    // --- СТРУКТУРЫ ДАННЫХ ---
     private struct StateKey : IEquatable<StateKey>
     {
         public readonly int TableauHash;
@@ -27,9 +61,16 @@ public static class KlondikeSolver
 
         public StateKey(int tHash, int sCount, int wCount)
         {
-            TableauHash = tHash; StockCount = sCount; WasteCount = wCount;
+            TableauHash = tHash;
+            StockCount = sCount;
+            WasteCount = wCount;
         }
-        public bool Equals(StateKey other) => TableauHash == other.TableauHash && StockCount == other.StockCount && WasteCount == other.WasteCount;
+
+        public bool Equals(StateKey other)
+        {
+            return TableauHash == other.TableauHash && StockCount == other.StockCount && WasteCount == other.WasteCount;
+        }
+
         public override int GetHashCode()
         {
             unchecked
@@ -81,10 +122,13 @@ public static class KlondikeSolver
     private class MoveCommand
     {
         public MoveType Type;
-        public int FromIdx; public int ToIdx; public int Count; public int Priority; public bool IsSequenceBreak;
+        public int FromIdx;
+        public int ToIdx;
+        public int Count;
+        public int Priority;
+        public bool IsSequenceBreak;
     }
 
-    // Класс результата (Reference type, чтобы передавать в корутину)
     [Serializable]
     public class ExtendedSolverResult
     {
@@ -99,14 +143,17 @@ public static class KlondikeSolver
     }
 
     // =================================================================================
-    // АСИНХРОННЫЙ СОЛВЕР (COROUTINE)
+    // АСИНХРОННЫЙ МЕТОД (COROUTINE)
     // =================================================================================
     public static IEnumerator SolveAsync(Deal initialDeal, int drawCount, float frameBudgetMs, ExtendedSolverResult resultOut)
     {
-        // 1. Статический анализ
+        // 1. Получаем веса для текущего режима
+        SolverWeights w = GetWeights(drawCount);
+
+        // 2. Статический анализ
         int aceDepthScore = CalculateAceDepthSum(initialDeal);
 
-        // 2. Инициализация
+        // 3. Инициализация
         SolveContext ctx = new SolveContext { DrawParam = drawCount };
         Stack<SearchNode> stack = new Stack<SearchNode>();
 
@@ -116,11 +163,10 @@ public static class KlondikeSolver
         Stopwatch sw = new Stopwatch();
         sw.Start();
 
-        // 3. Главный цикл (Iterative DFS)
+        // 4. Главный цикл (Iterative DFS)
         while (stack.Count > 0)
         {
-            // --- TIME SLICING ---
-            // Если бюджет кадра исчерпан, прерываемся и ждем следующий кадр
+            // TIME SLICING: Если бюджет кадра исчерпан, ждем следующий кадр
             if (sw.ElapsedMilliseconds >= frameBudgetMs)
             {
                 yield return null;
@@ -184,9 +230,9 @@ public static class KlondikeSolver
 
                 int nextRecycles = node.Recycles + (move.Type == MoveType.RecycleWaste ? 1 : 0);
 
-                if (nextRecycles <= 12) // Limit recycles
+                // Используем динамический лимит прокруток (12 для Draw1, 60 для Draw3)
+                if (nextRecycles <= w.RecycleLimit)
                 {
-                    // Применяем ход
                     Deal nextState = ApplyMove(node.DealState, move);
                     int nextReturns = node.Returns + (move.Type == MoveType.FoundationToTableau ? 1 : 0);
                     int nextBreaks = node.Breaks + (move.IsSequenceBreak ? 1 : 0);
@@ -204,24 +250,26 @@ public static class KlondikeSolver
             }
         }
 
-        // 4. Формирование результата
+        // 5. Формирование результата
         if (ctx.Solved)
         {
             resultOut.IsSolved = true;
 
-            // Расчет Traps (грубая оценка: посещенные минус полезные)
+            // Расчет Traps (грубая оценка: посещенные состояния минус длина решения)
             int effectiveTraps = Math.Max(0, (ctx.StatesVisited - ctx.SolutionMoves) / 10);
 
-            // Формула Score
-            int score = 0;
-            score += ctx.SolutionMoves * W_BASE;
+            // РАСЧЕТ ОЧКОВ С УЧЕТОМ РЕЖИМА
+            long score = 0;
+            score += ctx.SolutionMoves * w.BaseMoves;
             score += aceDepthScore * W_ACE;
-            score += ctx.SolutionRecycles * W_STOCK;
+            score += ctx.SolutionRecycles * w.Stock; // Динамический вес
             score += ctx.FoundationReturns * W_RET;
-            score += ctx.SequenceBreaks * W_BRK;
-            score += effectiveTraps * W_TRAP;
+            score += ctx.SequenceBreaks * w.Break;
+            score += effectiveTraps * w.Trap;        // Динамический вес
 
-            resultOut.Score = score;
+            if (score > int.MaxValue) score = int.MaxValue;
+            resultOut.Score = (int)score;
+
             resultOut.Moves = ctx.SolutionMoves;
             resultOut.AceDepth = aceDepthScore;
             resultOut.Recycles = ctx.SolutionRecycles;
@@ -236,58 +284,15 @@ public static class KlondikeSolver
     }
 
     // =================================================================================
-    // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ (LOGIC)
+    // ЛОГИКА ХОДОВ И ХЕЛПЕРЫ
     // =================================================================================
-
-    private static int CalculateAceDepthSum(Deal d)
-    {
-        int totalDepth = 0;
-        for (int i = 0; i < 7; i++)
-        {
-            var pile = d.tableau[i];
-            for (int k = 0; k < pile.Count; k++)
-            {
-                if (pile[k].Card.rank == 1) totalDepth += (pile.Count - 1) - k;
-            }
-        }
-        var stockList = d.stock.ToList();
-        for (int i = 0; i < stockList.Count; i++)
-        {
-            if (stockList[i].Card.rank == 1) totalDepth += 5 + (i / 3);
-        }
-        return totalDepth;
-    }
-
-    private static StateKey GetStateKey(Deal d)
-    {
-        unchecked
-        {
-            int tHash = 19;
-            for (int i = 0; i < 7; i++)
-            {
-                var pile = d.tableau[i];
-                if (pile.Count > 0)
-                {
-                    var c = pile[pile.Count - 1].Card;
-                    tHash = tHash * 31 + (c.rank + (int)c.suit * 13);
-                    for (int k = 0; k < pile.Count; k++) if (pile[k].FaceUp) { tHash += k; break; }
-                }
-                else { tHash = tHash * 31 + -1; }
-            }
-            for (int i = 0; i < 4; i++)
-            {
-                var f = d.foundations[i];
-                tHash = tHash * 17 + (f.Count > 0 ? f[f.Count - 1].rank : 0);
-            }
-            return new StateKey(tHash, d.stock.Count, d.waste.Count);
-        }
-    }
 
     private static List<MoveCommand> GetPossibleMoves(Deal d, int drawCount)
     {
+        // Capacity 12 достаточно для большинства ситуаций
         var moves = new List<MoveCommand>(12);
 
-        // 1. Foundation
+        // 1. Foundation (Auto-stack)
         for (int i = 0; i < 7; i++)
         {
             if (d.tableau[i].Count > 0)
@@ -300,7 +305,7 @@ public static class KlondikeSolver
         if (d.waste.Count > 0 && CanAddToFoundation(d, d.waste.Last().Card))
             moves.Add(new MoveCommand { Type = MoveType.Foundation, FromIdx = -1 });
 
-        // 2. Tableau
+        // 2. Tableau Moves
         for (int i = 0; i < 7; i++)
         {
             if (d.tableau[i].Count == 0) continue;
@@ -349,7 +354,7 @@ public static class KlondikeSolver
             }
         }
 
-        // 4. Returns
+        // 4. Returns (Foundation -> Tableau)
         for (int s = 0; s < 4; s++)
         {
             if (d.foundations[s].Count > 0)
@@ -366,8 +371,16 @@ public static class KlondikeSolver
             }
         }
 
-        if (d.stock.Count > 0) moves.Add(new MoveCommand { Type = MoveType.StockDraw });
-        else if (d.waste.Count > 0) moves.Add(new MoveCommand { Type = MoveType.RecycleWaste });
+        // 5. Stock / Recycle
+        if (d.stock.Count > 0)
+        {
+            // Здесь передаем drawCount (1 или 3), чтобы команда знала, сколько карт тянуть
+            moves.Add(new MoveCommand { Type = MoveType.StockDraw, Count = drawCount });
+        }
+        else if (d.waste.Count > 0)
+        {
+            moves.Add(new MoveCommand { Type = MoveType.RecycleWaste });
+        }
 
         return moves;
     }
@@ -378,22 +391,103 @@ public static class KlondikeSolver
         switch (m.Type)
         {
             case MoveType.Foundation:
-                if (m.FromIdx == -1) { var c = d.waste.Last(); d.waste.RemoveAt(d.waste.Count - 1); d.foundations[(int)c.Card.suit].Add(c.Card); }
-                else { var c = d.tableau[m.FromIdx].Last(); d.tableau[m.FromIdx].RemoveAt(d.tableau[m.FromIdx].Count - 1); d.foundations[(int)c.Card.suit].Add(c.Card); if (d.tableau[m.FromIdx].Count > 0) d.tableau[m.FromIdx].Last().FaceUp = true; }
+                if (m.FromIdx == -1)
+                {
+                    var c = d.waste.Last();
+                    d.waste.RemoveAt(d.waste.Count - 1);
+                    d.foundations[(int)c.Card.suit].Add(c.Card);
+                }
+                else
+                {
+                    var c = d.tableau[m.FromIdx].Last();
+                    d.tableau[m.FromIdx].RemoveAt(d.tableau[m.FromIdx].Count - 1);
+                    d.foundations[(int)c.Card.suit].Add(c.Card);
+                    if (d.tableau[m.FromIdx].Count > 0) d.tableau[m.FromIdx].Last().FaceUp = true;
+                }
                 break;
+
             case MoveType.RevealTableau:
             case MoveType.MoveTableau:
-                var src = d.tableau[m.FromIdx]; var moving = src.GetRange(src.Count - m.Count, m.Count); src.RemoveRange(src.Count - m.Count, m.Count); if (src.Count > 0) src.Last().FaceUp = true; d.tableau[m.ToIdx].AddRange(moving); break;
+                var src = d.tableau[m.FromIdx];
+                var moving = src.GetRange(src.Count - m.Count, m.Count);
+                src.RemoveRange(src.Count - m.Count, m.Count);
+                if (src.Count > 0) src.Last().FaceUp = true;
+                d.tableau[m.ToIdx].AddRange(moving);
+                break;
+
             case MoveType.WasteToTableau:
-                var wc = d.waste.Last(); d.waste.RemoveAt(d.waste.Count - 1); d.tableau[m.ToIdx].Add(wc); break;
+                var wc = d.waste.Last();
+                d.waste.RemoveAt(d.waste.Count - 1);
+                d.tableau[m.ToIdx].Add(wc);
+                break;
+
             case MoveType.FoundationToTableau:
-                var suitList = d.foundations[m.FromIdx]; var cardToReturn = suitList.Last(); suitList.RemoveAt(suitList.Count - 1); d.tableau[m.ToIdx].Add(new CardInstance(cardToReturn, true)); break;
+                var suitList = d.foundations[m.FromIdx];
+                var cardToReturn = suitList.Last();
+                suitList.RemoveAt(suitList.Count - 1);
+                d.tableau[m.ToIdx].Add(new CardInstance(cardToReturn, true));
+                break;
+
             case MoveType.StockDraw:
-                var x = d.stock.Pop(); x.FaceUp = true; d.waste.Add(x); break;
+                // Тянем m.Count карт (1 или 3), или сколько осталось в колоде
+                int cardsToDraw = Math.Min(m.Count, d.stock.Count);
+                for (int i = 0; i < cardsToDraw; i++)
+                {
+                    var x = d.stock.Pop();
+                    x.FaceUp = true;
+                    d.waste.Add(x);
+                }
+                break;
+
             case MoveType.RecycleWaste:
-                RecycleWaste(d); break;
+                RecycleWaste(d);
+                break;
         }
         return d;
+    }
+
+    private static int CalculateAceDepthSum(Deal d)
+    {
+        int totalDepth = 0;
+        for (int i = 0; i < 7; i++)
+        {
+            var pile = d.tableau[i];
+            for (int k = 0; k < pile.Count; k++)
+            {
+                if (pile[k].Card.rank == 1) totalDepth += (pile.Count - 1) - k;
+            }
+        }
+        var stockList = d.stock.ToList();
+        for (int i = 0; i < stockList.Count; i++)
+        {
+            if (stockList[i].Card.rank == 1) totalDepth += 5 + (i / 3);
+        }
+        return totalDepth;
+    }
+
+    private static StateKey GetStateKey(Deal d)
+    {
+        unchecked
+        {
+            int tHash = 19;
+            for (int i = 0; i < 7; i++)
+            {
+                var pile = d.tableau[i];
+                if (pile.Count > 0)
+                {
+                    var c = pile[pile.Count - 1].Card;
+                    tHash = tHash * 31 + (c.rank + (int)c.suit * 13);
+                    for (int k = 0; k < pile.Count; k++) if (pile[k].FaceUp) { tHash += k; break; }
+                }
+                else { tHash = tHash * 31 + -1; }
+            }
+            for (int i = 0; i < 4; i++)
+            {
+                var f = d.foundations[i];
+                tHash = tHash * 17 + (f.Count > 0 ? f[f.Count - 1].rank : 0);
+            }
+            return new StateKey(tHash, d.stock.Count, d.waste.Count);
+        }
     }
 
     private static void SortMovesByHeuristic(List<MoveCommand> moves)
@@ -415,9 +509,42 @@ public static class KlondikeSolver
     }
 
     private static bool IsSignificantMove(MoveCommand m) => m.Type != MoveType.StockDraw && m.Type != MoveType.RecycleWaste;
-    private static bool CanPlaceOnTableau(Deal d, int idx, CardModel c) { if (d.tableau[idx].Count == 0) return c.rank == 13; var top = d.tableau[idx].Last().Card; return IsOppositeColor(c, top) && top.rank == c.rank + 1; }
-    private static bool CanAddToFoundation(Deal d, CardModel c) { var f = d.foundations[(int)c.suit]; return f.Count == 0 ? c.rank == 1 : f.Last().rank == c.rank - 1; }
-    private static bool IsOppositeColor(CardModel a, CardModel b) { bool rA = (a.suit == Suit.Diamonds || a.suit == Suit.Hearts); bool rB = (b.suit == Suit.Diamonds || b.suit == Suit.Hearts); return rA != rB; }
-    private static void RecycleWaste(Deal d) { for (int i = d.waste.Count - 1; i >= 0; i--) { var c = d.waste[i]; c.FaceUp = false; d.stock.Push(c); } d.waste.Clear(); }
-    private static bool IsGameWon(Deal d) { int f = 0; foreach (var q in d.foundations) f += q.Count; return f == 52; }
+
+    private static bool CanPlaceOnTableau(Deal d, int idx, CardModel c)
+    {
+        if (d.tableau[idx].Count == 0) return c.rank == 13;
+        var top = d.tableau[idx].Last().Card;
+        return IsOppositeColor(c, top) && top.rank == c.rank + 1;
+    }
+
+    private static bool CanAddToFoundation(Deal d, CardModel c)
+    {
+        var f = d.foundations[(int)c.suit];
+        return f.Count == 0 ? c.rank == 1 : f.Last().rank == c.rank - 1;
+    }
+
+    private static bool IsOppositeColor(CardModel a, CardModel b)
+    {
+        bool rA = (a.suit == Suit.Diamonds || a.suit == Suit.Hearts);
+        bool rB = (b.suit == Suit.Diamonds || b.suit == Suit.Hearts);
+        return rA != rB;
+    }
+
+    private static void RecycleWaste(Deal d)
+    {
+        for (int i = d.waste.Count - 1; i >= 0; i--)
+        {
+            var c = d.waste[i];
+            c.FaceUp = false;
+            d.stock.Push(c);
+        }
+        d.waste.Clear();
+    }
+
+    private static bool IsGameWon(Deal d)
+    {
+        int f = 0;
+        foreach (var q in d.foundations) f += q.Count;
+        return f == 52;
+    }
 }
