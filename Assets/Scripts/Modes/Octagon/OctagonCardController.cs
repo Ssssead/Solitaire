@@ -7,56 +7,58 @@ public class OctagonCardController : CardController
     private OctagonModeManager _mode;
     private Transform _originalParent;
     private int _originalIndex;
+    private bool _isAnimating = false;
+
+    // --- НОВОЕ: Запоминаем источник для нашей системы Undo ---
+    public ICardContainer SourceContainer { get; private set; }
+    // --------------------------------------------------------
 
     private void Start()
     {
         _mode = FindObjectOfType<OctagonModeManager>();
-
-        // Инициализируем компоненты, чтобы избежать ошибок базы
         if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
         if (rectTransform == null) rectTransform = GetComponent<RectTransform>();
+        this.OnDoubleClick += HandleDoubleClick;
+    }
+
+    private void OnDestroy() { this.OnDoubleClick -= HandleDoubleClick; }
+    private void HandleDoubleClick(CardController card) { if (_mode != null) _mode.OnCardDoubleClicked(this); }
+
+    public override void OnPointerClick(PointerEventData eventData)
+    {
+        var data = GetComponent<CardData>();
+        if (data != null && !data.IsFaceUp()) return;
+        base.OnPointerClick(eventData);
     }
 
     public override void OnBeginDrag(PointerEventData eventData)
     {
+        if (_isAnimating) { eventData.pointerDrag = null; return; }
         if (_mode != null && !_mode.IsInputAllowed) { eventData.pointerDrag = null; return; }
 
-        // Блокировка Foundation (нельзя брать карты из баз)
-        if (transform.parent != null && transform.parent.GetComponent<OctagonFoundationPile>() != null)
-        {
-            eventData.pointerDrag = null;
-            return;
-        }
-        // Блокировка Stock
-        if (transform.parent != null && transform.parent.GetComponent<OctagonStockPile>() != null)
-        {
-            eventData.pointerDrag = null;
-            return;
-        }
-        // Блокировка закрытых карт
+        var foundation = transform.parent.GetComponent<OctagonFoundationPile>();
+        if (foundation != null && !foundation.CanTakeCard(this)) { eventData.pointerDrag = null; return; }
+        if (transform.parent != null && transform.parent.GetComponent<OctagonStockPile>() != null) { eventData.pointerDrag = null; return; }
         var data = GetComponent<CardData>();
         if (data != null && !data.IsFaceUp()) { eventData.pointerDrag = null; return; }
 
-        // --- НАЧАЛО ПЕРЕТАСКИВАНИЯ ---
         _originalParent = transform.parent;
         _originalIndex = transform.GetSiblingIndex();
 
+        // --- ЗАПИСЬ ИСТОЧНИКА ---
+        if (_originalParent != null)
+            SourceContainer = _originalParent.GetComponent<ICardContainer>();
+        // ------------------------
+
         if (canvasGroup != null) canvasGroup.blocksRaycasts = false;
+        if (_mode != null && _mode.DragLayer != null) { transform.SetParent(_mode.DragLayer, true); transform.SetAsLastSibling(); }
 
-        // Поднимаем карту на слой DragLayer
-        if (_mode != null && _mode.DragLayer != null)
-        {
-            transform.SetParent(_mode.DragLayer, true);
-            transform.SetAsLastSibling();
-        }
-
-        // Вызываем базу для совместимости (чтобы работали события, если они есть)
         base.OnBeginDrag(eventData);
     }
 
     public override void OnDrag(PointerEventData eventData)
     {
-        // Двигаем карту сами, если база не справляется
+        if (_isAnimating) return;
         if (rectTransform != null && _mode != null && _mode.RootCanvas != null)
         {
             rectTransform.anchoredPosition += eventData.delta / _mode.RootCanvas.scaleFactor;
@@ -69,56 +71,73 @@ public class OctagonCardController : CardController
 
     public override void OnEndDrag(PointerEventData eventData)
     {
-        // Не вызываем base.OnEndDrag, чтобы полностью контролировать логику завершения
-        // base.OnEndDrag(eventData); 
+        if (_isAnimating) return;
 
-        if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
-
-        bool success = false;
-
+        ICardContainer target = null;
         if (_mode != null)
         {
-            // 1. Спрашиваем у менеджера: "Куда я упал?"
-            // Мы передаем 0 в maxDistance, так как логика внутри менеджера использует RectTransformUtility
-            ICardContainer target = _mode.FindNearestContainer(this, eventData.position, 0);
-
-            // 2. Если нашли валидный контейнер
-            if (target != null)
-            {
-                // Кладем карту в контейнер
-                target.AcceptCard(this);
-
-                // Сообщаем менеджеру о ходе (для проверки победы)
-                _mode.OnCardDroppedToContainer(this, target);
-
-                success = true;
-            }
+            target = _mode.FindNearestContainer(this, eventData.position, 0);
         }
 
-        // 3. Если не попали в контейнер — возвращаемся домой
-        if (!success)
+        if (target != null)
         {
-            ReturnToOriginalParent();
+            AnimateMoveTo(target);
+        }
+        else
+        {
+            AnimateReturn();
         }
     }
 
-    private void ReturnToOriginalParent()
+    private void AnimateMoveTo(ICardContainer target)
     {
-        if (_originalParent != null)
-        {
-            transform.SetParent(_originalParent);
-            transform.SetSiblingIndex(_originalIndex);
+        _isAnimating = true;
+        StartCoroutine(_mode.OctagonAnim.AnimateMoveCard(
+            this,
+            target.Transform,
+            target.GetDropAnchoredPosition(this),
+            0.2f,
+            true,
+            () =>
+            {
+                target.AcceptCard(this);
+                _mode.OnCardDroppedToContainer(this, target);
+                FinishAnimation();
+            }
+        ));
+    }
 
-            // Если вернулись в Waste, обновляем раскладку
-            var waste = _originalParent.GetComponent<OctagonWastePile>();
-            if (waste != null)
+    private void AnimateReturn()
+    {
+        _isAnimating = true;
+        StartCoroutine(_mode.OctagonAnim.AnimateMoveCard(
+            this,
+            _originalParent,
+            Vector3.zero,
+            0.25f,
+            true,
+            () =>
             {
-                waste.UpdateLayout();
+                if (_originalParent != null)
+                {
+                    transform.SetParent(_originalParent);
+                    transform.SetSiblingIndex(_originalIndex);
+
+                    if (_originalParent.GetComponent<OctagonWastePile>())
+                        _originalParent.GetComponent<OctagonWastePile>().UpdateLayout();
+                    else if (_originalParent.GetComponent<OctagonTableauSlot>())
+                        _originalParent.GetComponent<OctagonTableauSlot>().UpdateLayout();
+                    else
+                        rectTransform.anchoredPosition = Vector2.zero;
+                }
+                FinishAnimation();
             }
-            else
-            {
-                rectTransform.anchoredPosition = Vector2.zero;
-            }
-        }
+        ));
+    }
+
+    private void FinishAnimation()
+    {
+        _isAnimating = false;
+        if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
     }
 }

@@ -23,6 +23,23 @@ public class OctagonFoundationPile : MonoBehaviour, ICardContainer
         return sameSuit && nextRank;
     }
 
+    // --- НОВЫЙ МЕТОД: Можно ли забрать карту? ---
+    public bool CanTakeCard(CardController card)
+    {
+        // 1. Можно брать только верхнюю карту
+        if (GetTopCard() != card) return false;
+
+        int rank = card.cardModel.rank;
+
+        // 2. Нельзя брать Тузов (Rank 1)
+        if (rank == 1) return false;
+
+        // 3. Нельзя брать Королей (Rank 13) - если стопка собрана
+        if (rank == 13) return false;
+
+        return true;
+    }
+
     public void AcceptCard(CardController card)
     {
         if (card == null) return;
@@ -36,7 +53,6 @@ public class OctagonFoundationPile : MonoBehaviour, ICardContainer
     public CardController GetTopCard()
     {
         if (transform.childCount == 0) return null;
-        // Берем именно последний объект в иерархии
         return transform.GetChild(transform.childCount - 1).GetComponent<CardController>();
     }
 

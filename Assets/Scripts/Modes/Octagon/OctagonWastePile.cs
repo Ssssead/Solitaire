@@ -2,11 +2,9 @@ using UnityEngine;
 
 public class OctagonWastePile : MonoBehaviour, ICardContainer
 {
-    [SerializeField] private float spacing = 35f;
-
     public Transform Transform => transform;
+    public int CardCount => transform.childCount;
 
-    // В Waste руками класть нельзя (только из Stock по клику)
     public bool CanAccept(CardController card) => false;
 
     public void AcceptCard(CardController card)
@@ -17,37 +15,45 @@ public class OctagonWastePile : MonoBehaviour, ICardContainer
     public void AddCard(CardController card)
     {
         card.transform.SetParent(transform);
+        card.rectTransform.anchoredPosition = Vector2.zero;
+        card.transform.localRotation = Quaternion.identity;
+        card.transform.SetAsLastSibling();
 
-        // В Waste карты открыты и интерактивны
         var data = card.GetComponent<CardData>();
-        if (data) data.SetFaceUp(true, true);
+        if (data != null) data.SetFaceUp(true, true);
 
         var cg = card.GetComponent<CanvasGroup>();
-        if (cg) cg.blocksRaycasts = true;
+        if (cg != null) cg.blocksRaycasts = true;
+    }
 
+    // --- НОВЫЙ МЕТОД: Взять карту со дна (для Refill) ---
+    public CardController DrawBottomCard()
+    {
+        if (transform.childCount == 0) return null;
+
+        // Берем самую нижнюю карту (индекс 0)
+        // Это та карта, которая при Recycle попала бы на верх Stock
+        Transform bottomCardTr = transform.GetChild(0);
+        CardController card = bottomCardTr.GetComponent<CardController>();
+
+        if (card != null)
+        {
+            // Отцепляем от Waste
+            card.transform.SetParent(null);
+        }
+
+        // Обновляем позиции оставшихся (хотя они и так в 0,0, но для порядка)
         UpdateLayout();
+
+        return card;
     }
 
     public void UpdateLayout()
     {
-        int count = transform.childCount;
-        if (count == 0) return;
-
-        // Показываем последние 3 карты
-        int startIndex = Mathf.Max(0, count - 3);
-
-        for (int i = 0; i < count; i++)
+        foreach (Transform child in transform)
         {
-            Transform child = transform.GetChild(i);
-            if (i >= startIndex)
-            {
-                float offset = (i - startIndex) * spacing;
-                child.localPosition = new Vector3(offset, 0, 0);
-            }
-            else
-            {
-                child.localPosition = Vector3.zero;
-            }
+            child.localPosition = Vector3.zero;
+            child.localRotation = Quaternion.identity;
         }
     }
 

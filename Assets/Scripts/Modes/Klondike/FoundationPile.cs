@@ -134,7 +134,7 @@ public class FoundationPile : MonoBehaviour, ICardContainer
     /// <summary>
     /// Принимает карту в foundation-стопку.
     /// </summary>
-    public void AcceptCard(CardController card)
+    public virtual void AcceptCard(CardController card)
     {
         if (card == null) return;
 

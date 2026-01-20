@@ -5,7 +5,6 @@ using System.Collections.Generic;
 public class OctagonStockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
 {
     private OctagonModeManager _manager;
-
     public int CardCount => transform.childCount;
 
     private void Start()
@@ -15,28 +14,32 @@ public class OctagonStockPile : MonoBehaviour, ICardContainer, IPointerClickHand
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (_manager != null)
+        if (_manager != null && _manager.IsInputAllowed)
         {
             _manager.OnStockClicked();
         }
     }
 
-    // Метод для менеджера: забрать N карт (для авто-раздачи)
+    public CardController PeekTopCard()
+    {
+        if (transform.childCount == 0) return null;
+        return transform.GetChild(transform.childCount - 1).GetComponent<CardController>();
+    }
+
     public List<CardController> DrawCards(int count)
     {
         List<CardController> drawn = new List<CardController>();
-        // Берем с конца (сверху стопки)
         for (int i = 0; i < count; i++)
         {
             if (transform.childCount == 0) break;
-
+            
             Transform t = transform.GetChild(transform.childCount - 1);
             CardController c = t.GetComponent<CardController>();
             if (c != null)
             {
                 drawn.Add(c);
-                // Отвязываем сразу, чтобы не взять ту же самую
-                c.transform.SetParent(null);
+                // ВАЖНО: Мы НЕ делаем SetParent(null) здесь.
+                // Карта остается ребенком Stock, пока AnimationService не заберет её.
             }
         }
         return drawn;
@@ -46,12 +49,12 @@ public class OctagonStockPile : MonoBehaviour, ICardContainer, IPointerClickHand
     {
         card.transform.SetParent(transform);
         card.rectTransform.anchoredPosition = Vector2.zero;
-
+        
         var data = card.GetComponent<CardData>();
         if (data) data.SetFaceUp(false, false);
-
+        
         var cg = card.GetComponent<CanvasGroup>();
-        if (cg) cg.blocksRaycasts = false;
+        if (cg) cg.blocksRaycasts = false; 
     }
 
     public Transform Transform => transform;
