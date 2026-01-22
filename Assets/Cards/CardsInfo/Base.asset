@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7656c51f5933e02488e72eada9a3947b, type: 3}
-  m_Name: New Card Sprite Database
+  m_Name: Base
   m_EditorClassIdentifier: 
   backSprite: {fileID: 21300000, guid: 0ee705834ede55646b0bf2f369ae4d76, type: 3}
   entries:

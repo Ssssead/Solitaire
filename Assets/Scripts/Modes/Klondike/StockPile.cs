@@ -24,6 +24,11 @@ public class StockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
     [Header("Settings")]
     public StockDealMode dealMode = StockDealMode.Draw1; // Настройка в инспекторе
 
+    // --- НОВОЕ: Отступ между картами ---
+    [Tooltip("Смещение каждой следующей карты (для эффекта толщины)")]
+    [SerializeField] private float stackGap = 4f;
+    // -----------------------------------
+
     // Добавляем ссылку на режим
     private StockDealMode currentDealMode;
 
@@ -116,7 +121,11 @@ public class StockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
             card.rectTransform.SetParent(transform, false);
         }
 
-        card.rectTransform.anchoredPosition = Vector2.zero;
+        // --- ИЗМЕНЕНИЕ: Смещение по X вместо Y ---
+        float xOffset = cards.Count * stackGap;
+        card.rectTransform.anchoredPosition = new Vector2(xOffset, 0);
+        // -----------------------------------------
+
         card.rectTransform.SetAsLastSibling();
 
         cards.Add(card);
@@ -124,8 +133,6 @@ public class StockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
         var cardData = card.GetComponent<CardData>();
         if (cardData != null)
         {
-            // animate: false здесь нормально, так как карта уже перевернулась во время полета
-            // Этот вызов просто гарантирует финальное состояние
             cardData.SetFaceUp(faceUp, animate: false);
         }
 

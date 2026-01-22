@@ -12,6 +12,11 @@ public class FoundationPile : MonoBehaviour, ICardContainer
     private KlondikeModeManager manager;
     private RectTransform rect;
     private AnimationService animationService;
+    [Header("Rules")]
+    [Tooltip("Если true, этот слот будет принимать только указанную масть")]
+    [SerializeField] private bool restrictSuit = false;
+    [Tooltip("Масть, которую принимает этот слот (если restrictSuit = true)")]
+    [SerializeField] private Suit forcedSuit;
 
     [Header("Visual Feedback")]
     [SerializeField] private bool showAcceptHighlight = false;
@@ -51,37 +56,45 @@ public class FoundationPile : MonoBehaviour, ICardContainer
     /// Проверяет, может ли эта foundation-стопка принять карту.
     /// Правила: первая карта должна быть тузом, следующие - той же масти и на 1 ранг выше.
     /// </summary>
+    /// <summary>
+    /// Проверяет, может ли эта foundation-стопка принять карту.
+    /// Правила: 
+    /// 1. Если пустая: Туз (и правильной масти, если задано).
+    /// 2. Если не пустая: Та же масть, ранг + 1.
+    /// </summary>
     public virtual bool CanAccept(CardController card)
     {
         if (card == null) return false;
 
-        // --- ИСПРАВЛЕНИЕ: ПРОВЕРКА ЧЕРЕЗ DRAG MANAGER ---
-        // Если у карты есть ссылка на DragManager, спрашиваем у него, тащим ли мы стопку.
-        // Если тащим больше 1 карты — Foundation отказывает.
+        // Проверка через DragManager (не тащим ли стопку)
         if (card.dragManager != null)
         {
-            if (card.dragManager.GetDraggingStackCount() > 1)
-            {
-                return false;
-            }
+            if (card.dragManager.GetDraggingStackCount() > 1) return false;
         }
-        // Fallback: старая проверка на случай, если dragManager не назначен или это не драг
         else if (card.GetComponentsInChildren<CardController>().Length > 1)
         {
             return false;
         }
-        // ------------------------------------------------
 
         var cardData = card.GetComponent<CardData>();
-        if (cardData == null) return false; // Убрали проверку FaceUp, так как при драге она и так открыта
+        if (cardData == null) return false;
 
-        // Если foundation пуст - принимаем только туза (rank = 1)
+        // --- ЛОГИКА ДЛЯ ПУСТОЙ СТОПКИ ---
         if (cards.Count == 0)
         {
-            return cardData.model.rank == 1;
+            // Сначала проверяем ранг (должен быть Туз = 1)
+            if (cardData.model.rank != 1) return false;
+
+            // Если включено ограничение по масти, проверяем масть
+            if (restrictSuit)
+            {
+                if (cardData.model.suit != forcedSuit) return false;
+            }
+
+            return true;
         }
 
-        // Если не пуст - проверяем масть и ранг
+        // --- ЛОГИКА ДЛЯ НЕ ПУСТОЙ СТОПКИ ---
         var topCard = cards[cards.Count - 1];
         var topData = topCard.GetComponent<CardData>();
 

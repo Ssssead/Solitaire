@@ -26,27 +26,30 @@ public class OctagonWastePile : MonoBehaviour, ICardContainer
         if (cg != null) cg.blocksRaycasts = true;
     }
 
-    // --- НОВЫЙ МЕТОД: Взять карту со дна (для Refill) ---
-    public CardController DrawBottomCard()
+    // --- НОВЫЙ МЕТОД: Взять карту со дна и отсоединить ---
+    public CardController PopBottomCard()
     {
         if (transform.childCount == 0) return null;
 
-        // Берем самую нижнюю карту (индекс 0)
-        // Это та карта, которая при Recycle попала бы на верх Stock
+        // Индекс 0 = Самая нижняя карта
         Transform bottomCardTr = transform.GetChild(0);
         CardController card = bottomCardTr.GetComponent<CardController>();
 
         if (card != null)
         {
-            // Отцепляем от Waste
-            card.transform.SetParent(null);
+            // Отсоединяем от Waste, чтобы индексы сдвинулись
+            // Canvas/Root как временный родитель
+            Canvas root = GetComponentInParent<Canvas>();
+            if (root) card.transform.SetParent(root.transform);
+            else card.transform.SetParent(null);
         }
 
-        // Обновляем позиции оставшихся (хотя они и так в 0,0, но для порядка)
-        UpdateLayout();
-
+        UpdateLayout(); // Обновляем оставшиеся
         return card;
     }
+
+    // Совместимость со старым кодом
+    public CardController DrawBottomCard() => PopBottomCard();
 
     public void UpdateLayout()
     {
@@ -56,7 +59,6 @@ public class OctagonWastePile : MonoBehaviour, ICardContainer
             child.localRotation = Quaternion.identity;
         }
     }
-
     public void OnCardIncoming(CardController card) { }
     public Vector2 GetDropAnchoredPosition(CardController card) => Vector2.zero;
 }

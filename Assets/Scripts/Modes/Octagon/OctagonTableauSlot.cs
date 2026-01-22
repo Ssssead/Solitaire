@@ -40,10 +40,15 @@ public class OctagonTableauSlot : MonoBehaviour, ICardContainer
 
         CardController topCard = GetTopCard();
 
-        // 1. В пустой слот класть нельзя
+        // 1. В пустой слот класть нельзя (ваше правило)
         if (topCard == null) return false;
 
-        // 2. Правило: Только Ранг (7 на 8). Масть ЛЮБАЯ.
+        // 2. Проверка: Верхняя карта должна быть открыта
+        var topData = topCard.GetComponent<CardData>();
+        if (topData != null && !topData.IsFaceUp()) return false;
+
+        // 3. Правило: Только Ранг (7 на 8). Масть ЛЮБАЯ.
+        // Это разрешит Drag 6H -> 7D
         bool correctRank = card.cardModel.rank == topCard.cardModel.rank - 1;
 
         return correctRank;
@@ -52,9 +57,9 @@ public class OctagonTableauSlot : MonoBehaviour, ICardContainer
     public void AcceptCard(CardController card)
     {
         if (card == null) return;
-        card.transform.SetParent(this.transform);
+        card.transform.SetParent(transform);
+        // Позиция обновится автоматически через OnTransformChildrenChanged
     }
-
     public void OnCardIncoming(CardController card) { }
 
     public Vector2 GetDropAnchoredPosition(CardController card)
