@@ -541,7 +541,7 @@ public class DragManager : MonoBehaviour
     {
         if (draggingStack != null && draggingStack.Count > 0)
         {
-            // 1. ДЕЛАЕМ СНИМОК СОСТОЯНИЯ (Копируем все списки)
+            // 1. Создаем копию данных (Snapshot), чтобы передать в корутину
             var snapshot = new DragSnapshot
             {
                 cards = new List<CardController>(draggingStack),
@@ -550,11 +550,11 @@ public class DragManager : MonoBehaviour
                 siblings = new List<int>(originalSiblingIndices)
             };
 
-            // 2. СРАЗУ ОЧИЩАЕМ ГЛОБАЛЬНОЕ СОСТОЯНИЕ
-            // Теперь игрок может брать следующую карту, пока эти летят обратно
+            // 2. СРАЗУ очищаем состояние менеджера. 
+            // Это критично: система готова к новому клику, пока анимация возврата еще идет.
             ClearDraggingState();
 
-            // 3. ЗАПУСКАЕМ АНИМАЦИЮ, ПЕРЕДАВАЯ ЕЙ СНИМОК
+            // 3. Запускаем анимацию возврата
             StartCoroutine(AnimateReturnDraggingStack(snapshot));
         }
         else
@@ -753,7 +753,7 @@ public class DragManager : MonoBehaviour
                 else if (container is FreeCellPile fc) fc.AcceptCard(card);
 
                 // Даже одиночный перенос считается ходом
-                NotifyGameModeOnMove(); // <--- ДОБАВЛЕНО
+                NotifyGameModeOnMove();
             }
             ClearDraggingState();
             return;

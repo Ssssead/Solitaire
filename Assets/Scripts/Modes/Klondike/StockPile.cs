@@ -112,7 +112,7 @@ public class StockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
     /// <summary>
     /// Добавляет карту в Stock.
     /// </summary>
-    public void AddCard(CardController card, bool faceUp)
+    public virtual void AddCard(CardController card, bool faceUp)
     {
         if (card == null) return;
 

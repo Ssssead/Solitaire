@@ -210,7 +210,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         Deal cachedDeal = null;
         if (DealCacheSystem.Instance != null)
         {
-            cachedDeal = DealCacheSystem.Instance.GetDeal(GameType.Klondike, currentDiff, drawParam);
+            cachedDeal = DealCacheSystem.Instance.GetDeal(GameType.Sultan, currentDiff, drawParam);
         }
 
         if (cachedDeal != null && deckManager != null)

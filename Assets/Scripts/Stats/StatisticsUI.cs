@@ -119,8 +119,8 @@ public class StatisticsUI : MonoBehaviour
                 variantKeys.Add("Standard"); variantLabels.Add("Standard");
                 break;
 
-            // --- 10. MULTICOLORED STAR ---
-            case GameType.MulticoloredStar:
+            // --- 10. Montana ---
+            case GameType.Montana:
                 variantKeys.Add("Standard"); variantLabels.Add("Standard");
                 break;
 

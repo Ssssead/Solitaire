@@ -193,7 +193,7 @@ public class FoundationPile : MonoBehaviour, ICardContainer
     /// <summary>
     /// Проверяет, завершена ли эта foundation-стопка (все 13 карт от туза до короля).
     /// </summary>
-    public bool IsComplete() => (cards.Count == 13);
+    public virtual bool IsComplete() => (cards.Count == 13);
 
     /// <summary>
     /// Проверяет, принадлежит ли карта этой foundation-стопке.

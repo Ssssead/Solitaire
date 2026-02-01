@@ -25,7 +25,7 @@ public enum GameType
     TriPeaks,
     Octagon,
     Sultan,
-    MulticoloredStar,
+    Montana,
     Yukon,
     MonteCarlo
 }

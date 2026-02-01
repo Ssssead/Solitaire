@@ -218,7 +218,7 @@ public class DeckManager : MonoBehaviour
         mode?.CheckGameState();
     }
 
-    private void RecycleWasteToStock()
+    public void RecycleWasteToStock()
     {
         // Здесь проверку isDealing можно убрать или оставить.
         // Так как DrawFromStock уже проверил isDealing, сюда мы попадем только если колода свободна.

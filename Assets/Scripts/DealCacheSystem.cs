@@ -144,7 +144,7 @@ public class DealCacheSystem : MonoBehaviour
         // 8. ОСТАЛЬНЫЕ
         ConfigureStandardGame(GameType.Sultan, new int[] { 0 }, baseBuffer);
         ConfigureStandardGame(GameType.Octagon, new int[] { 0 }, baseBuffer);
-        ConfigureStandardGame(GameType.MulticoloredStar, new int[] { 0 }, baseBuffer);
+        ConfigureStandardGame(GameType.Montana, new int[] { 0 }, baseBuffer);
     }
 
     // Помощник для стандартных игр (фиксированный буфер)

@@ -20,7 +20,7 @@ public class SpiderTableauPile : TableauPile
         if (_pileCanvasGroup == null) _pileCanvasGroup = gameObject.AddComponent<CanvasGroup>();
 
         // Гарантируем дефолт при старте
-        maxHeight = DefaultHeight;
+       // maxHeight = DefaultHeight;
     }
 
     // --- НОВЫЙ МЕТОД: Переключение высоты ---
@@ -29,9 +29,9 @@ public class SpiderTableauPile : TableauPile
         float targetHeight = isCompressed ? CompressedHeight : DefaultHeight;
 
         // Если высота отличается, меняем и пересчитываем
-        if (Mathf.Abs(maxHeight - targetHeight) > 1f)
+       // if (Mathf.Abs(maxHeight - targetHeight) > 1f)
         {
-            maxHeight = targetHeight;
+      //      maxHeight = targetHeight;
             ForceRecalculateLayout(); // Это встроенный метод TableauPile, он сам всё пересчитает
         }
     }

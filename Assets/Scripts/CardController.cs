@@ -13,6 +13,7 @@ public class CardController : MonoBehaviour,
     public Canvas canvas;
     public ICardGameMode CardmodeManager;
     public DragManager dragManager;
+    private CardDragShadow shadowAnim;
 
     [Header("Settings")]
     [SerializeField] private bool isDraggable = true;
@@ -46,6 +47,7 @@ public class CardController : MonoBehaviour,
         rectTransform = GetComponent<RectTransform>();
         canvasGroup = GetComponent<CanvasGroup>();
         cardData = GetComponent<CardData>();
+        shadowAnim = GetComponent<CardDragShadow>();
 
         if (canvasGroup == null) canvasGroup = gameObject.AddComponent<CanvasGroup>();
         if (canvas == null) canvas = GetComponentInParent<Canvas>();
@@ -90,6 +92,7 @@ public class CardController : MonoBehaviour,
 
         // Теперь это событие сработает, ТОЛЬКО если карта открыта
         OnPickedUp?.Invoke(this);
+        if (shadowAnim != null) shadowAnim.OnBeginDrag(eventData);
     }
 
     public virtual void OnDrag(PointerEventData eventData)
@@ -106,6 +109,11 @@ public class CardController : MonoBehaviour,
                 rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
             }
         }
+        if (isDragging && dragManager != null)
+        {
+            
+            if (shadowAnim != null) shadowAnim.OnDrag(eventData); // NEW
+        }
     }
 
     public virtual void OnEndDrag(PointerEventData eventData)
@@ -120,6 +128,7 @@ public class CardController : MonoBehaviour,
         }
 
         isDragging = false;
+        if (shadowAnim != null) shadowAnim.OnEndDrag(eventData);
         if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
 
         // 1. Находим DragManager, если ссылка потерялась

@@ -30,7 +30,7 @@ EditorBuildSettings:
     path: Assets/Scenes/SultanScene.unity
     guid: 36155ac24d337d246aeffb64ad33678f
   - enabled: 1
-    path: Assets/Scenes/MulticoloredStarScene.unity
+    path: Assets/Scenes/MontanaScene.unity
     guid: 413da8cfdce54654692591d7e1bf7505
   - enabled: 1
     path: Assets/Scenes/YukonScene.unity

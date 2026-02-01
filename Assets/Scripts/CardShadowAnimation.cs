@@ -338,17 +338,5 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         return rt.position.y - (rt.rect.height * rt.pivot.y * rt.lossyScale.y);
     }
 
-    // Вспомогательный метод для поиска компонента (как в Unity)
-    /*
-    private T GetComponentInParent<T>() where T : class
-    {
-        Transform t = transform;
-        while (t != null)
-        {
-            var comp = t.GetComponent(typeof(T)) as T;
-            if (comp != null) return comp;
-            t = t.parent;
-        }
-        return null;
-    }*/
+   
 }
