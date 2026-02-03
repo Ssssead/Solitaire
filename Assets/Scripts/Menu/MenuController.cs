@@ -17,6 +17,7 @@ public class MenuController : MonoBehaviour
         public bool showSuitSelector;
         public bool showDifficulty;
         public bool showRoundsSelector; // <--- НОВЫЙ ФЛАГ (для Pyramid/TriPeaks)
+
     }
 
     [Header("Game Definitions")]
@@ -29,6 +30,8 @@ public class MenuController : MonoBehaviour
 
     [Header("Level Controller")]
     public MenuLevelController levelController;
+    [Header("Animations")]
+    public CardAnimationController cardAnimator;
 
     [Header("Settings UI Elements")]
     public GameObject drawModeContainer;
@@ -43,6 +46,13 @@ public class MenuController : MonoBehaviour
     public Color toggleOffColor = new Color(0.3f, 0.3f, 0.3f);
     public float handleXOff = -20f;
     public float handleXOn = 20f;
+
+    [Header("Menu Overlays")]
+    public GameObject globalSettingsPanel; // Глобальные настройки (Звук/Музыка)
+    
+    public GameObject leaderboardPanel;    // Лидерборд
+    public GameObject shopPanel;           // Магазин
+    public GameObject dailyQuestsPanel;    // Ежедневные задания
 
     [Header("Difficulty Buttons (Visuals)")]
     public Button[] diffButtons; // Порядок: 0-Easy, 1-Medium, 2-Hard
@@ -80,25 +90,34 @@ public class MenuController : MonoBehaviour
 
         currentGame = games[gameIndex];
         GameSettings.CurrentGameType = currentGame.type;
-        string gameName = currentGame.type.ToString();
-
-        // Сброс раундов на 1 при выборе новой игры
         GameSettings.RoundsCount = 1;
 
-        // 1. Сначала включаем панель
-        mainSelectionPanel.SetActive(false);
+        // 1. Логика панелей (SettingsPanel включается, MainSelectionPanel НЕ выключается полностью, чтобы видеть карты)
+        // ВАЖНО: Мы не делаем mainSelectionPanel.SetActive(false), иначе карты исчезнут.
+        // Вместо этого мы перекрываем её панелью настроек, у которой должен быть прозрачный фон (кроме кнопок).
         settingsPanel.SetActive(true);
 
-        // 2. Настраиваем UI под игру
+        // Если у вас SettingsPanel имеет свой фон, который закрывает всё, 
+        // то карты нужно вынести из MainSelectionPanel в отдельный контейнер, который всегда виден.
+
         SetupSettingsPanel();
 
-        // 3. Обновляем бар
+        // 2. ЗАПУСК АНИМАЦИИ
+        if (cardAnimator != null)
+        {
+            cardAnimator.SelectCard(currentGame.type);
+        }
+
+        // 3. Обновляем бары (уже есть в вашем коде)
         if (levelController != null)
         {
-            levelController.UpdateLocalBar(gameName);
+            // Здесь можно вызвать обновление, но сами бары уже обновлены в Start
         }
     }
-
+    public void OnGlobalSettingsClicked()
+    {
+        OpenOverlay(globalSettingsPanel);
+    }
     // --- СТАТИСТИКА ---
     public void OnStatisticsClicked()
     {
@@ -112,7 +131,51 @@ public class MenuController : MonoBehaviour
             }
         }
     }
+    public void OnLeaderboardClicked()
+    {
+        OpenOverlay(leaderboardPanel);
+    }
 
+    public void OnShopClicked()
+    {
+        OpenOverlay(shopPanel);
+    }
+
+    public void OnDailyQuestsClicked()
+    {
+        OpenOverlay(dailyQuestsPanel);
+    }
+
+    // Универсальный метод закрытия (повесить на кнопку "X" или "Назад" внутри каждой панели)
+    public void OnCloseOverlayClicked()
+    {
+        CloseAllOverlays();
+        // Убеждаемся, что главное меню активно (если мы были в нем)
+        if (!settingsPanel.activeSelf)
+        {
+            mainSelectionPanel.SetActive(true);
+        }
+    }
+
+    // Вспомогательный метод
+    private void OpenOverlay(GameObject panelToOpen)
+    {
+        if (panelToOpen == null) return;
+
+        // Опционально: можно скрывать MainSelectionPanel, если хотите чистый экран
+        // mainSelectionPanel.SetActive(false); 
+
+        panelToOpen.SetActive(true);
+    }
+
+    private void CloseAllOverlays()
+    {
+        if (globalSettingsPanel) globalSettingsPanel.SetActive(false);
+        if (statisticsPanel) statisticsPanel.SetActive(false);
+        if (leaderboardPanel) leaderboardPanel.SetActive(false);
+        if (shopPanel) shopPanel.SetActive(false);
+        if (dailyQuestsPanel) dailyQuestsPanel.SetActive(false);
+    }
     public void OnCloseStatisticsClicked()
     {
         if (statisticsPanel != null) statisticsPanel.SetActive(false);
@@ -279,6 +342,13 @@ public class MenuController : MonoBehaviour
 
     public void OnBackClicked()
     {
-        ShowMainPanel();
+        // Скрываем настройки
+        settingsPanel.SetActive(false);
+
+        // Возвращаем карты на места
+        if (cardAnimator != null)
+        {
+            cardAnimator.ResetGrid();
+        }
     }
 }

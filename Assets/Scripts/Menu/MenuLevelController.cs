@@ -2,76 +2,93 @@ using UnityEngine;
 
 public class MenuLevelController : MonoBehaviour
 {
-    [Header("Global Level UI (Main Menu)")]
+    [Header("Global Level UI")]
     public XPProgressBar globalLevelBar;
 
-    [Header("Local Level UI (Settings Panel)")]
-    public XPProgressBar localLevelBar;
+    [Header("Game Progress Bars (Links)")]
+    // Ссылки на 10 объектов в главном меню (маленькие карточки)
+    public XPProgressBar klondikeBar;
+    public XPProgressBar spiderBar;
+    public XPProgressBar freeCellBar;
+    public XPProgressBar pyramidBar;
+    public XPProgressBar tripeaksBar;
+    public XPProgressBar yukonBar;
+    public XPProgressBar sultanBar;
+    public XPProgressBar octagonBar;
+    public XPProgressBar monteCarloBar;
+    public XPProgressBar montanaBar;
+
+    [Header("Preview Bar (Optional)")]
+    // Ссылка на "Большую" карточку в панели настроек (справа на скриншоте 2)
+    public XPProgressBar bigPreviewBar;
 
     private void Start()
     {
-        UpdateGlobalBar();
+        UpdateAllBars();
     }
 
-    // Этот метод вызывается, когда включается объект (если скрипт висит на активном объекте)
     private void OnEnable()
     {
-        UpdateGlobalBar();
+        UpdateAllBars();
     }
 
-    public void UpdateGlobalBar()
+    /// <summary>
+    /// Проходится по всем 10 играм и обновляет их полоски
+    /// </summary>
+    public void UpdateAllBars()
     {
         if (StatisticsManager.Instance == null) return;
 
-        if (globalLevelBar == null)
-        {
-            Debug.LogWarning("[MenuLevelController] Global Level Bar is not assigned!");
-            return;
-        }
+        // 1. Глобальный уровень
+        UpdateSingleBar(globalLevelBar, StatisticsManager.Instance.GetGlobalStats());
 
-        StatData data = StatisticsManager.Instance.GetGlobalStats();
-        if (data != null)
-        {
-            int target = data.xpForNextLevel > 0 ? data.xpForNextLevel : 2000;
-            globalLevelBar.UpdateBar(data.currentLevel, data.currentXP, target);
-        }
-        else
-        {
-            globalLevelBar.UpdateBar(1, 0, 2000);
-        }
+        // 2. Игры (строки должны совпадать с теми, что в StatisticsManager/SaveSystem)
+        UpdateSingleBar(klondikeBar, StatisticsManager.Instance.GetGameGlobalStats("Klondike"));
+        UpdateSingleBar(spiderBar, StatisticsManager.Instance.GetGameGlobalStats("Spider"));
+        UpdateSingleBar(freeCellBar, StatisticsManager.Instance.GetGameGlobalStats("FreeCell"));
+        UpdateSingleBar(pyramidBar, StatisticsManager.Instance.GetGameGlobalStats("Pyramid"));
+        UpdateSingleBar(tripeaksBar, StatisticsManager.Instance.GetGameGlobalStats("Tripeaks"));
+        UpdateSingleBar(yukonBar, StatisticsManager.Instance.GetGameGlobalStats("Yukon"));
+        UpdateSingleBar(sultanBar, StatisticsManager.Instance.GetGameGlobalStats("Sultan"));
+        UpdateSingleBar(octagonBar, StatisticsManager.Instance.GetGameGlobalStats("Octagon"));
+        UpdateSingleBar(monteCarloBar, StatisticsManager.Instance.GetGameGlobalStats("MonteCarlo"));
+        UpdateSingleBar(montanaBar, StatisticsManager.Instance.GetGameGlobalStats("Montana"));
     }
 
-    public void UpdateLocalBar(string gameName)
+    /// <summary>
+    /// Вызывается из MenuController, когда мы кликаем на игру, 
+    /// чтобы обновить "Большую карточку" справа в настройках
+    /// </summary>
+    public void UpdatePreviewBar(GameType type)
     {
-        Debug.Log($"[MenuLevelController] Update Request for: {gameName}");
+        if (bigPreviewBar == null) return;
+        if (StatisticsManager.Instance == null) return;
 
-        if (localLevelBar == null)
-        {
-            Debug.LogError("[MenuLevelController] ERROR: 'Local Level Bar' is not assigned in Inspector!");
-            return;
-        }
+        // Получаем статистику выбранной игры
+        StatData data = StatisticsManager.Instance.GetGameGlobalStats(type.ToString());
 
-        if (StatisticsManager.Instance == null)
-        {
-            Debug.LogError("[MenuLevelController] StatisticsManager missing!");
-            return;
-        }
+        // 1. Обновляем данные (Level/XP)
+        UpdateSingleBar(bigPreviewBar, data);
 
-        // Прямой запрос данных
-        StatData data = StatisticsManager.Instance.GetGameGlobalStats(gameName);
+        // 2. ВАЖНО: Тут можно добавить логику смены Спрайта/Цвета для большой карточки, 
+        // чтобы она визуально соответствовала выбранной игре.
+        // bigPreviewBar.SetCustomSprite(...); // Если потребуется
+    }
+
+    private void UpdateSingleBar(XPProgressBar bar, StatData data)
+    {
+        if (bar == null) return;
 
         if (data != null)
         {
-            Debug.Log($"[MenuLevelController] SUCCESS. Found data for {gameName}. Level: {data.currentLevel}, XP: {data.currentXP}/{data.xpForNextLevel}");
-
-            // Обновляем визуальную часть
             int target = data.xpForNextLevel > 0 ? data.xpForNextLevel : 500;
-            localLevelBar.UpdateBar(data.currentLevel, data.currentXP, target);
+            // Обновляем визуал (XPProgressBar сам выберет цвет/спрайт если вы настроили список спрайтов)
+            bar.UpdateBar(data.currentLevel, data.currentXP, target);
         }
         else
         {
-            Debug.LogWarning($"[MenuLevelController] WARNING. No data found for key '{gameName}_Global'. Showing default 1.");
-            localLevelBar.UpdateBar(1, 0, 500);
+            // Если игрок еще не играл, показываем 1 уровень
+            bar.UpdateBar(1, 0, 500);
         }
     }
 }

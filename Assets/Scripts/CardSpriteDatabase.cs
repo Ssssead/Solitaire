@@ -1,4 +1,3 @@
-// CardSpriteDatabase.cs
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -13,25 +12,59 @@ public class CardSpriteDatabase : ScriptableObject
         public Sprite sprite;
     }
 
-    public Sprite backSprite;
+    [Header("Standard Set (English: J, Q, K, A)")]
     public List<Entry> entries = new List<Entry>();
 
-    // быстрый кэш
+    [Header("Localized Overrides (Russian: В, Д, К, Т)")]
+    // Сюда добавьте только те карты, которые отличаются (например, Вальтов, Дам, Тузов)
+    public List<Entry> localizedOverrides = new List<Entry>();
+
+    [Header("Backs and Backgrounds")]
+    public Sprite backSprite; // Текущая рубашка
+
+    // Кэш для быстрого поиска
     private Dictionary<string, Sprite> cache;
+    private bool useRussianSymbols = false;
+
+    // Метод для переключения режима (вызывается из UI)
+    public void SetSymbolMode(bool isRussian)
+    {
+        useRussianSymbols = isRussian;
+        BuildCache(); // Пересобираем кэш с новыми настройками
+    }
 
     public void BuildCache()
     {
-        cache = new Dictionary<string, Sprite>(entries.Count);
+        cache = new Dictionary<string, Sprite>();
+
+        // 1. Сначала загружаем стандартные спрайты
         foreach (var e in entries)
         {
-            cache[$"{(int)e.suit}-{e.rank}"] = e.sprite;
+            string key = $"{(int)e.suit}-{e.rank}";
+            if (!cache.ContainsKey(key))
+            {
+                cache.Add(key, e.sprite);
+            }
+        }
+
+        // 2. Если включен русский режим, перезаписываем нужные карты
+        if (useRussianSymbols)
+        {
+            foreach (var e in localizedOverrides)
+            {
+                string key = $"{(int)e.suit}-{e.rank}";
+                // Перезаписываем или добавляем
+                cache[key] = e.sprite;
+            }
         }
     }
 
     public Sprite GetSprite(Suit suit, int rank)
     {
         if (cache == null) BuildCache();
-        cache.TryGetValue($"{(int)suit}-{rank}", out var sp);
+
+        string key = $"{(int)suit}-{rank}";
+        cache.TryGetValue(key, out var sp);
         return sp;
     }
 }
