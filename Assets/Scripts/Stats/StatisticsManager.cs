@@ -108,19 +108,36 @@ public class StatisticsManager : MonoBehaviour
         string difficultyStr = currentGameKey.Split('_')[1];
         string variantStr = currentGameKey.Split('_')[2];
 
-        // Парсим Enum сложности для калькулятора
+        // 1. Парсим Enum сложности и Типа игры
         Difficulty diffEnum = (Difficulty)System.Enum.Parse(typeof(Difficulty), difficultyStr);
 
-        // --- 1. РАСЧЕТ ОПЫТА ---
-        int xpGained = LevelingUtils.CalculateXP(gameName, diffEnum, variantStr, IsUserPremium);
+        // --- ИСПРАВЛЕНИЕ НАЧАЛО ---
+        GameType gType;
+        try
+        {
+            gType = (GameType)System.Enum.Parse(typeof(GameType), gameName);
+        }
+        catch
+        {
+            gType = GameType.Klondike; // Фолбэк на случай ошибки
+        }
+
+        string gameGlobalKey = $"{gameName}_Global"; // Klondike_Global
+        string appGlobalKey = "Global";              // Global
+
+        // 2. Получаем текущие данные игры, чтобы узнать УРОВЕНЬ (для расчета бонуса)
+        StatData gameData = stats.GetData(gameGlobalKey);
+        int currentLevel = (gameData != null) ? gameData.currentLevel : 1;
+
+        // 3. РАСЧЕТ ОПЫТА (Передаем 5 аргументов: Тип, Уровень, Сложность, Вариант, Премиум)
+        int xpGained = LevelingUtils.CalculateXP(gType, currentLevel, diffEnum, variantStr, IsUserPremium);
+        // --- ИСПРАВЛЕНИЕ КОНЕЦ ---
+
         LastXPGained = xpGained;
 
         Debug.Log($"[XP System] Gained {xpGained} XP. (Diff: {diffEnum}, Var: {variantStr})");
 
-        // --- 2. СОХРАНЕНИЕ СТАТИСТИКИ И ОПЫТА ---
-
-        string gameGlobalKey = $"{gameName}_Global"; // Klondike_Global
-        string appGlobalKey = "Global";              // Global
+        // --- 4. СОХРАНЕНИЕ СТАТИСТИКИ И ОПЫТА ---
 
         // А. Обычная запись статистики (победы, очки)
         stats.UpdateData(currentGameKey, true, duration, currentMoves, finalScore, difficultyStr, gameName, variantStr);
@@ -130,7 +147,9 @@ public class StatisticsManager : MonoBehaviour
         // Б. Начисление опыта
 
         // 1) Локальный уровень (Игра: Klondike_Global)
+        // Используем переменную gameData, которую получили выше, или берем заново
         StatData localStats = stats.GetData(gameGlobalKey);
+
         // Важно: первый раз инициализируем цель, если она дефолтная
         if (localStats.currentLevel == 1 && localStats.xpForNextLevel == 0) localStats.xpForNextLevel = 500;
 

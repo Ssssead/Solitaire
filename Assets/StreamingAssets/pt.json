@@ -1,0 +1,782 @@
+{
+    "items": [
+        {
+            "key": "Levels",
+            "value": "Níveis"
+        },
+        {
+            "key": "Puzzles",
+            "value": "Quebra-cabeças"
+        },
+        {
+            "key": "Play",
+            "value": "Jogar"
+        },
+        {
+            "key": "level",
+            "value": "Nível"
+        },
+        {
+            "key": "clue.l1.oclock_numeric",
+            "value": "A porta abrirá quando o relógio marcar {H}:{MM}."
+        },
+        {
+            "key": "clue.l1.hint_minutes",
+            "value": "A porta abrirá quando o ponteiro dos minutos marcar {minuteWord} minutos e o ponteiro das horas marcar {hourWord}."
+        },
+        {
+            "key": "word.hour.1",
+            "value": "a uma"
+        },
+        {
+            "key": "word.hour.2",
+            "value": "as duas"
+        },
+        {
+            "key": "word.hour.3",
+            "value": "às três"
+        },
+        {
+            "key": "word.hour.4",
+            "value": "as quatro"
+        },
+        {
+            "key": "word.hour.5",
+            "value": "às cinco"
+        },
+        {
+            "key": "word.hour.6",
+            "value": "às seis"
+        },
+        {
+            "key": "word.hour.7",
+            "value": "às sete"
+        },
+        {
+            "key": "word.hour.8",
+            "value": "às oito"
+        },
+        {
+            "key": "word.hour.9",
+            "value": "às nove"
+        },
+        {
+            "key": "word.hour.10",
+            "value": "às dez"
+        },
+        {
+            "key": "word.hour.11",
+            "value": "às onze"
+        },
+        {
+            "key": "word.hour.12",
+            "value": "às doze"
+        },
+        {
+            "key": "word.minute.0",
+            "value": "em ponto"
+        },
+        {
+            "key": "word.minute.5",
+            "value": "cinco"
+        },
+        {
+            "key": "word.minute.10",
+            "value": "dez"
+        },
+        {
+            "key": "word.minute.15",
+            "value": "quinze"
+        },
+        {
+            "key": "word.minute.20",
+            "value": "vinte"
+        },
+        {
+            "key": "word.minute.25",
+            "value": "vinte e cinco"
+        },
+        {
+            "key": "word.minute.30",
+            "value": "trinta"
+        },
+        {
+            "key": "word.minute.35",
+            "value": "trinta e cinco"
+        },
+        {
+            "key": "word.minute.40",
+            "value": "quarenta"
+        },
+        {
+            "key": "word.minute.45",
+            "value": "quarenta e cinco"
+        },
+        {
+            "key": "word.minute.50",
+            "value": "cinquenta"
+        },
+        {
+            "key": "word.minute.55",
+            "value": "cinquenta e cinco"
+        },
+
+        {
+            "key": "clue.l2.solar_noon",
+            "value": "A porta abrirá quando o sol atingir o zénite."
+        },
+        {
+            "key": "clue.l2.time.half_past",
+            "value": "A porta abrirá {hourWord} e meia."
+        },
+        {
+            "key": "clue.l2.time.quarter_past",
+            "value": "A porta abrirá {hourWord} e um quarto."
+        },
+        {
+            "key": "clue.l2.time.quarter_to",
+            "value": "A porta abrirá {hourPointerWord} menos um quarto."
+        },
+        {
+            "key": "clue.l2.time.minutes_to",
+            "value": "A porta abrirá {nextminuteWord} minutos para {hourPointerWord}."
+        },
+        {
+            "key": "clue.l2.time.minutes_past",
+            "value": "A porta abrirá {minuteWord} minutos passados {hourWord}."
+        },
+        {
+            "key": "word.nextminute.0",
+            "value": "em ponto"
+        },
+        {
+            "key": "word.nextminute.5",
+            "value": "cinco"
+        },
+        {
+            "key": "word.nextminute.10",
+            "value": "dez"
+        },
+        {
+            "key": "word.nextminute.15",
+            "value": "quinze"
+        },
+        {
+            "key": "word.nextminute.20",
+            "value": "vinte"
+        },
+        {
+            "key": "word.nextminute.25",
+            "value": "vinte e cinco"
+        },
+        {
+            "key": "word.nextminute.30",
+            "value": "trinta"
+        },
+        {
+            "key": "word.nextminute.35",
+            "value": "trinta e cinco"
+        },
+        {
+            "key": "word.nextminute.40",
+            "value": "quarenta"
+        },
+        {
+            "key": "word.nextminute.45",
+            "value": "quarenta e cinco"
+        },
+        {
+            "key": "word.nextminute.50",
+            "value": "cinquenta"
+        },
+        {
+            "key": "word.nextminute.55",
+            "value": "cinquenta e cinco"
+        },
+        {
+            "key": "word.nexthour.1",
+            "value": "às doze"
+        },
+        {
+            "key": "word.nexthour.2",
+            "value": "a uma"
+        },
+        {
+            "key": "word.nexthour.3",
+            "value": "as duas"
+        },
+        {
+            "key": "word.nexthour.4",
+            "value": "às três"
+        },
+        {
+            "key": "word.nexthour.5",
+            "value": "as quatro"
+        },
+        {
+            "key": "word.nexthour.6",
+            "value": "às cinco"
+        },
+        {
+            "key": "word.nexthour.7",
+            "value": "às seis"
+        },
+        {
+            "key": "word.nexthour.8",
+            "value": "às sete"
+        },
+        {
+            "key": "word.nexthour.9",
+            "value": "às oito"
+        },
+        {
+            "key": "word.nexthour.10",
+            "value": "às nove"
+        },
+        {
+            "key": "word.nexthour.11",
+            "value": "às dez"
+        },
+        {
+            "key": "word.nexthour.12",
+            "value": "às onze"
+        },
+
+        {
+            "key": "clue.l2.time.start_hour",
+            "value": "A porta abrirá quando começar a {nextHourStartWord} hora."
+        },
+        {
+            "key": "word.hour_start.1",
+            "value": "décima segunda"
+        },
+        {
+            "key": "word.hour_start.2",
+            "value": "primeira"
+        },
+        {
+            "key": "word.hour_start.3",
+            "value": "segunda"
+        },
+        {
+            "key": "word.hour_start.4",
+            "value": "terceira"
+        },
+        {
+            "key": "word.hour_start.5",
+            "value": "quarta"
+        },
+        {
+            "key": "word.hour_start.6",
+            "value": "quinta"
+        },
+        {
+            "key": "word.hour_start.7",
+            "value": "sexta"
+        },
+        {
+            "key": "word.hour_start.8",
+            "value": "sétima"
+        },
+        {
+            "key": "word.hour_start.9",
+            "value": "oitava"
+        },
+        {
+            "key": "word.hour_start.10",
+            "value": "nona"
+        },
+        {
+            "key": "word.hour_start.11",
+            "value": "décima"
+        },
+        {
+            "key": "word.hour_start.12",
+            "value": "décima primeira"
+        },
+        {
+            "key": "clue.l3.time.half_past",
+            "value": "A porta abrirá {hourWord} e meia e {SS} segundos."
+        },
+        {
+            "key": "clue.l3.time.quarter_past",
+            "value": "A porta abrirá {hourWord} e {SS} segundos."
+        },
+        {
+            "key": "clue.l3.time.quarter_to",
+            "value": "A porta abrirá {hourPointerWord} menos um quarto e {SS} segundos."
+        },
+        {
+            "key": "clue.l3.time.minutes_to",
+            "value": "A porta abrirá {nextminuteWord} minutos para {hourPointerWord} e {SS} segundos."
+        },
+        {
+            "key": "clue.l3.time.minutes_past",
+            "value": "A porta abrirá {minuteWord} minutos passados {hourWord} e {SS} segundos."
+        },
+        {
+            "key": "clue.l3.time.start_hour",
+            "value": "A porta abrirá quando começar a {nextHourStartWord} hora e {SS} segundos."
+        },
+        {
+            "key": "word.nexthour_after.1",
+            "value": "a uma"
+        },
+        {
+            "key": "word.nexthour_after.2",
+            "value": "as duas"
+        },
+        {
+            "key": "word.nexthour_after.3",
+            "value": "às três"
+        },
+        {
+            "key": "word.nexthour_after.4",
+            "value": "as quatro"
+        },
+        {
+            "key": "word.nexthour_after.5",
+            "value": "às cinco"
+        },
+        {
+            "key": "word.nexthour_after.6",
+            "value": "às seis"
+        },
+        {
+            "key": "word.nexthour_after.7",
+            "value": "às sete"
+        },
+        {
+            "key": "word.nexthour_after.8",
+            "value": "às oito"
+        },
+        {
+            "key": "word.nexthour_after.9",
+            "value": "às nove"
+        },
+        {
+            "key": "word.nexthour_after.10",
+            "value": "às dez"
+        },
+        {
+            "key": "word.nexthour_after.11",
+            "value": "às onze"
+        },
+        {
+            "key": "word.nexthour_after.12",
+            "value": "às doze"
+        },
+        {
+            "key": "word.hour_pointer.1",
+            "value": "as duas"
+        },
+        {
+            "key": "word.hour_pointer.2",
+            "value": "às três"
+        },
+        {
+            "key": "word.hour_pointer.3",
+            "value": "as quatro"
+        },
+        {
+            "key": "word.hour_pointer.4",
+            "value": "às cinco"
+        },
+        {
+            "key": "word.hour_pointer.5",
+            "value": "às seis"
+        },
+        {
+            "key": "word.hour_pointer.6",
+            "value": "às sete"
+        },
+        {
+            "key": "word.hour_pointer.7",
+            "value": "às oito"
+        },
+        {
+            "key": "word.hour_pointer.8",
+            "value": "às nove"
+        },
+        {
+            "key": "word.hour_pointer.9",
+            "value": "às dez"
+        },
+        {
+            "key": "word.hour_pointer.10",
+            "value": "às onze"
+        },
+        {
+            "key": "word.hour_pointer.11",
+            "value": "às doze"
+        },
+        {
+            "key": "word.hour_pointer.12",
+            "value": "a uma"
+        },
+        {
+            "key": "ru",
+            "value": "Russo"
+        },
+        {
+            "key": "en",
+            "value": "Inglês"
+        },
+        {
+            "key": "es",
+            "value": "Espanhol"
+        },
+        {
+            "key": "pt",
+            "value": "Português"
+        },
+        {
+            "key": "fr",
+            "value": "Francês"
+        },
+        {
+            "key": "tr",
+            "value": "Turco"
+        },
+        {
+            "key": "de",
+            "value": "Alemão"
+        },
+        {
+            "key": "ja",
+            "value": "Japonês"
+        },
+        {
+            "key": "lang",
+            "value": "Idioma"
+        },
+        {
+            "key": "setsound",
+            "value": "Sons"
+        },
+        {
+            "key": "PuzzleDiff",
+            "value": "Dificuldade do quebra-cabeça"
+        },
+        {
+            "key": "PuzzleSettings",
+            "value": "Configurações do quebra-cabeça"
+        },
+        {
+            "key": "PuzzleMode",
+            "value": "Modo de quebra-cabeça"
+        },
+        {
+            "key": "BookArabic",
+            "value": "Números arábicos"
+        },
+        {
+            "key": "BookRoman",
+            "value": "Números romanos"
+        },
+        {
+            "key": "BookPicture",
+            "value": "Imagem"
+        },
+        {
+            "key": "PuzzleSolved",
+            "value": "Quebra-cabeça resolvido!"
+        },
+        {
+            "key": "BackToMenu",
+            "value": "Voltar ao menu"
+        },
+        {
+            "key": "hint_first_card",
+            "value": "{0} é a primeira carta."
+        },
+        {
+            "key": "hint_last_card",
+            "value": "{0} é a última carta."
+        },
+        {
+            "key": "hint_immediately_after",
+            "value": "{0} vem imediatamente depois de {1}."
+        },
+        {
+            "key": "hint_immediately_before",
+            "value": "{0} vem imediatamente antes de {1}."
+        },
+        {
+            "key": "hint_between",
+            "value": "{0} está entre {1} e {2}."
+        },
+        {
+            "key": "hint_left_of",
+            "value": "{0} está à esquerda de {1}."
+        },
+        {
+            "key": "hint_right_of",
+            "value": "{0} está à direita de {1}."
+        },
+        {
+            "key": "hint_one_false",
+            "value": "Uma dica é falsa."
+        },
+        {
+            "key": "hint_no_suit",
+            "value": "Não há cartas de {0} na mesa."
+        },
+        {
+            "key": "hint_no_rank",
+            "value": "Não há cartas de valor {0} na mesa."
+        },
+        {
+            "key": "hint_no_even",
+            "value": "Não há cartas pares na mesa."
+        },
+        {
+            "key": "hint_no_odd",
+            "value": "Não há cartas ímpares na mesa."
+        },
+        {
+            "key": "hint_no_above_10",
+            "value": "Não há cartas maiores que 10 na mesa."
+        },
+        {
+            "key": "hint_no_below_6",
+            "value": "Não há cartas menores que 6 na mesa."
+        },
+        {
+            "key": "hint_has_suit",
+            "value": "Há cartas de {0} na mesa."
+        },
+        {
+            "key": "hint_has_rank",
+            "value": "Há cartas de valor {0} na mesa."
+        },
+        {
+            "key": "hint_position_of_card",
+            "value": "{0} está na posição {1}."
+        },
+        {
+            "key": "hint_not_first",
+            "value": "{0} não está na primeira posição."
+        },
+        {
+            "key": "hint_not_last",
+            "value": "{0} não está na última posição."
+        },
+        {
+            "key": "hint_not_neighbor",
+            "value": "{0} não está ao lado de {1}."
+        },
+        {
+            "key": "hint_exact_count_suit",
+            "value": "Há exatamente {0} cartas de {1} na mesa."
+        },
+        {
+            "key": "hint_exact_count_rank",
+            "value": "Há exatamente {0} cartas de valor {1} na mesa."
+        },
+        {
+            "key": "hint_even_position",
+            "value": "{0} está em uma posição par."
+        },
+        {
+            "key": "hint_odd_position",
+            "value": "{0} está em uma posição ímpar."
+        },
+        {
+            "key": "hint_between_count",
+            "value": "Há exatamente {2} carta(s) entre {0} e {1}."
+        },
+        {
+            "key": "false_there_is",
+            "value": "Com certeza há {0} na mesa."
+        },
+        {
+            "key": "false_no",
+            "value": "Não há {0} na mesa."
+        },
+        {
+            "key": "false_first",
+            "value": "{0} é a primeira carta."
+        },
+        {
+            "key": "false_last",
+            "value": "{0} é a última carta."
+        },
+        {
+            "key": "false_immediately_after",
+            "value": "{0} vem imediatamente depois de {1}."
+        },
+        {
+            "key": "false_exact_count_suit",
+            "value": "Há exatamente {0} cartas de {1} na mesa."
+        },
+        {
+            "key": "false_exact_count_rank",
+            "value": "Há exatamente {0} cartas de valor {1} na mesa."
+        },
+        {
+            "key": "false_position_of_card",
+            "value": "{0} está na posição {1}."
+        },
+        {
+            "key": "false_neighbor",
+            "value": "{0} está ao lado de {1}."
+        },
+        {
+            "key": "ArmorPuzzleInfo1",
+            "value": "É necessário colocar as partes da armadura na ordem correta."
+        },
+        {
+            "key": "ArmorPuzzleInfo2",
+            "value": "Na célula superior — capacete; na média — couraça; na inferior — botas."
+        },
+        {
+            "key": "BalancePuzzleInfo",
+            "value": "É necessário equilibrar a balança colocando todos os pesos."
+        },
+        {
+            "key": "BookPuzzleInfo",
+            "value": "É necessário colocar os livros na ordem correta."
+        },
+        {
+            "key": "SlidersPuzzleInfo",
+            "value": "É necessário organizar as placas em ordem."
+        },
+        {
+            "key": "MazePuzzleInfo1",
+            "value": "É necessário tirar a esfera vermelha do labirinto."
+        },
+        {
+            "key": "MazePuzzleInfo2",
+            "value": "Controles: WASD."
+        },
+        {
+            "key": "ClockPuzzleInfo1",
+            "value": "É necessário ajustar o horário no relógio conforme a dica."
+        },
+        {
+            "key": "ClockPuzzleInfo2",
+            "value": "É necessário ajustar o horário no relógio conforme as dicas. Há dicas falsas."
+        },
+        {
+            "key": "ClockPuzzleInfo3",
+            "value": "A — girar no sentido anti-horário."
+        },
+        {
+            "key": "ClockPuzzleInfo4",
+            "value": "D — girar no sentido horário."
+        },
+        {
+            "key": "ClockPuzzleInfo5",
+            "value": "E — trocar o ponteiro."
+        },
+        {
+            "key": "ClockPuzzleInfo6",
+            "value": "Controles:"
+        },
+        {
+            "key": "ClockPuzzleInfo7",
+            "value": "Você precisa ajustar a hora no relógio com base nas dicas. Algumas dicas são falsas. Os ponteiros afetam o movimento um do outro."
+        },
+        {
+            "key": "CardsPuzzleInfo1",
+            "value": "É necessário formar uma fileira de cartas com base nas condições."
+        },
+        {
+            "key": "CardsPuzzleInfo2",
+            "value": "Na área com o círculo amarelo é possível colocar cartas que possam corresponder às condições."
+        },
+        {
+            "key": "CardsPuzzleInfo3",
+            "value": "Na área com a cruz vermelha é possível colocar cartas que definitivamente não correspondem às condições."
+        },
+        {
+            "key": "DicesPuzzleInfo1",
+            "value": "É necessário colocar os dados na parte superior para que a equação seja verdadeira."
+        },
+        {
+            "key": "DicesPuzzleInfo2",
+            "value": "Botão direito do mouse — alterar o número do dado."
+        },
+        {
+            "key": "DicesPuzzleInfo3",
+            "value": "Condições:"
+        },
+        {
+            "key": "DicesPuzzleInfo4",
+            "value": "Essa condição significa que no primeiro slot deve haver um dado com valor 1."
+        },
+        {
+            "key": "DicesPuzzleInfo5",
+            "value": "Essa condição significa que não se pode usar dados com valor 1."
+        },
+        {
+            "key": "DicesPuzzleInfo6",
+            "value": "Essa condição significa que deve haver menos de dois dados com valor 1."
+        },
+        {
+            "key": "DicesPuzzleInfo7",
+            "value": "Essa condição significa que deve haver mais de dois dados com valor 1."
+        },
+        {
+            "key": "DicesPuzzleInfo8",
+            "value": "Botão esquerdo do mouse — alterar a cor do dado."
+        },
+        {
+            "key": "DicesPuzzleInfo9",
+            "value": "Essa condição significa que não pode haver mais de dois dados pretos seguidos."
+        },
+        {
+            "key": "DicesPuzzleInfo10",
+            "value": "Essa condição significa que no primeiro slot deve haver um dado branco."
+        },
+        {
+            "key": "DicesPuzzleInfo11",
+            "value": "Essa condição significa que dados pretos e brancos devem alternar."
+        },
+        {
+            "key": "GameOver",
+            "value": "Você morreu!"
+        },
+        {
+            "key": "LevelComplete",
+            "value": "Nível concluído!"
+        },
+        {
+            "key": "RestartLevel",
+            "value": "Reiniciar nível"
+        },
+        {
+            "key": "NextLevel",
+            "value": "Próximo nível"
+        },
+        {
+            "key": "EndPuzzleInfo1",
+            "value": "Você precisa girar os fragmentos do baixo-relevo para restaurá-lo."
+        },
+        {
+            "key": "EndPuzzleInfo2",
+            "value": "E - trocar a chave redonda"
+        },
+        {
+            "key": "DoorWrongSide",
+            "value": "A porta abre pelo outro lado."
+        },
+        {
+            "key": "NoFuel",
+            "value": "É preciso fogo para acender a tocha!"
+        },
+        {
+            "key": "Settings",
+            "value": "Configurações"
+        },
+        {
+            "key": "Restart",
+            "value": "Reiniciar"
+        },
+        {
+            "key": "SkipPanelText",
+            "value": "Resolva o quebra-cabeça para desbloquear."
+        }
+    ]
+}

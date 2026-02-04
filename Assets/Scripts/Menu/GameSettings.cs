@@ -1,19 +1,27 @@
 // GameSettings.cs
 public static class GameSettings
 {
-    // Тип выбранной игры
+    // --- Основные ---
     public static GameType CurrentGameType;
-
-    // Общие настройки
     public static Difficulty CurrentDifficulty = Difficulty.Medium;
 
-    // Настройки для Klondike
+    // --- Klondike ---
     public static int KlondikeDrawCount = 1; // 1 или 3
 
-    // Настройки для будущего Spider (пример)
-    public static int SpiderSuitCount = 1;
+    // --- Spider ---
+    public static int SpiderSuitCount = 1; // 1, 2 или 4
 
-    public static int RoundsCount = 1;
+    // --- Pyramid / TriPeaks ---
+    public static int RoundsCount = 1; // 1, 2 или 3
+
+    // --- Yukon ---
+    public static bool YukonRussian = false; // false = Classic, true = Russian
+
+    // --- Monte Carlo ---
+    public static bool MonteCarlo4Ways = false; // false = 8 Ways, true = 4 Ways
+
+    // --- Montana ---
+    public static bool MontanaHard = false; // false = Classic, true = Hard
 }
 
 public enum GameType

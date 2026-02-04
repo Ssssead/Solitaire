@@ -5,8 +5,7 @@ public class MenuLevelController : MonoBehaviour
     [Header("Global Level UI")]
     public XPProgressBar globalLevelBar;
 
-    [Header("Game Progress Bars (Links)")]
-    // Ссылки на 10 объектов в главном меню (маленькие карточки)
+    [Header("Game Progress Bars")]
     public XPProgressBar klondikeBar;
     public XPProgressBar spiderBar;
     public XPProgressBar freeCellBar;
@@ -18,31 +17,16 @@ public class MenuLevelController : MonoBehaviour
     public XPProgressBar monteCarloBar;
     public XPProgressBar montanaBar;
 
-    [Header("Preview Bar (Optional)")]
-    // Ссылка на "Большую" карточку в панели настроек (справа на скриншоте 2)
-    public XPProgressBar bigPreviewBar;
+    // Ссылка на бар, который сейчас показывает превью (чтобы потом его спрятать)
+    private XPProgressBar lastActivePreviewBar;
 
-    private void Start()
-    {
-        UpdateAllBars();
-    }
+    private void Start() => UpdateAllBars();
+    private void OnEnable() => UpdateAllBars();
 
-    private void OnEnable()
-    {
-        UpdateAllBars();
-    }
-
-    /// <summary>
-    /// Проходится по всем 10 играм и обновляет их полоски
-    /// </summary>
     public void UpdateAllBars()
     {
         if (StatisticsManager.Instance == null) return;
-
-        // 1. Глобальный уровень
         UpdateSingleBar(globalLevelBar, StatisticsManager.Instance.GetGlobalStats());
-
-        // 2. Игры (строки должны совпадать с теми, что в StatisticsManager/SaveSystem)
         UpdateSingleBar(klondikeBar, StatisticsManager.Instance.GetGameGlobalStats("Klondike"));
         UpdateSingleBar(spiderBar, StatisticsManager.Instance.GetGameGlobalStats("Spider"));
         UpdateSingleBar(freeCellBar, StatisticsManager.Instance.GetGameGlobalStats("FreeCell"));
@@ -55,40 +39,74 @@ public class MenuLevelController : MonoBehaviour
         UpdateSingleBar(montanaBar, StatisticsManager.Instance.GetGameGlobalStats("Montana"));
     }
 
-    /// <summary>
-    /// Вызывается из MenuController, когда мы кликаем на игру, 
-    /// чтобы обновить "Большую карточку" справа в настройках
-    /// </summary>
-    public void UpdatePreviewBar(GameType type)
+    // --- ГЛАВНАЯ ЛОГИКА ---
+    public void ShowXPGainPreview(GameType type, int potentialGain)
     {
-        if (bigPreviewBar == null) return;
-        if (StatisticsManager.Instance == null) return;
+        XPProgressBar targetBar = GetBarByType(type);
+        if (targetBar == null || StatisticsManager.Instance == null) return;
 
-        // Получаем статистику выбранной игры
+        // 1. Если до этого была выбрана ДРУГАЯ игра, прячем её превью
+        if (lastActivePreviewBar != null && lastActivePreviewBar != targetBar)
+        {
+            lastActivePreviewBar.HidePreviewXP();
+        }
+
+        // 2. Обновляем текущий активный бар
+        lastActivePreviewBar = targetBar;
+
+        // 3. Показываем превью на новом
         StatData data = StatisticsManager.Instance.GetGameGlobalStats(type.ToString());
+        int currentXP = (data != null) ? data.currentXP : 0;
+        int targetXP = (data != null && data.xpForNextLevel > 0) ? data.xpForNextLevel : 500;
 
-        // 1. Обновляем данные (Level/XP)
-        UpdateSingleBar(bigPreviewBar, data);
-
-        // 2. ВАЖНО: Тут можно добавить логику смены Спрайта/Цвета для большой карточки, 
-        // чтобы она визуально соответствовала выбранной игре.
-        // bigPreviewBar.SetCustomSprite(...); // Если потребуется
+        targetBar.ShowPreviewXP(currentXP, potentialGain, targetXP);
     }
 
+    // Метод для принудительного скрытия всех превью (например, при нажатии Back)
+    public void HideAllPreviews()
+    {
+        if (lastActivePreviewBar != null)
+        {
+            lastActivePreviewBar.HidePreviewXP();
+            lastActivePreviewBar = null;
+        }
+    }
+
+    private XPProgressBar GetBarByType(GameType type)
+    {
+        switch (type)
+        {
+            case GameType.Klondike: return klondikeBar;
+            case GameType.Spider: return spiderBar;
+            case GameType.FreeCell: return freeCellBar;
+            case GameType.Pyramid: return pyramidBar;
+            case GameType.TriPeaks: return tripeaksBar;
+            case GameType.Octagon: return octagonBar;
+            case GameType.Sultan: return sultanBar;
+            case GameType.Montana: return montanaBar;
+            case GameType.Yukon: return yukonBar;
+            case GameType.MonteCarlo: return monteCarloBar;
+            default: return null;
+        }
+    }
+    public void UpdatePreviewBar(GameType type)
+    {
+        XPProgressBar targetBar = GetBarByType(type);
+        if (targetBar == null) return;
+
+        if (StatisticsManager.Instance == null) return;
+
+        StatData data = StatisticsManager.Instance.GetGameGlobalStats(type.ToString());
+        UpdateSingleBar(targetBar, data);
+    }
     private void UpdateSingleBar(XPProgressBar bar, StatData data)
     {
         if (bar == null) return;
-
         if (data != null)
         {
             int target = data.xpForNextLevel > 0 ? data.xpForNextLevel : 500;
-            // Обновляем визуал (XPProgressBar сам выберет цвет/спрайт если вы настроили список спрайтов)
             bar.UpdateBar(data.currentLevel, data.currentXP, target);
         }
-        else
-        {
-            // Если игрок еще не играл, показываем 1 уровень
-            bar.UpdateBar(1, 0, 500);
-        }
+        else bar.UpdateBar(1, 0, 500);
     }
 }

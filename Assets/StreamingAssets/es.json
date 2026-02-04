@@ -1,0 +1,856 @@
+{
+    "items": [
+        {
+            "key": "Levels",
+            "value": "Niveles"
+        },
+        {
+            "key": "Puzzles",
+            "value": "Rompecabezas"
+        },
+        {
+            "key": "Play",
+            "value": "Jugar"
+        },
+        {
+            "key": "level",
+            "value": "Nivel"
+        },
+        {
+            "key": "clue.l1.oclock_numeric",
+            "value": "La puerta se abrirá cuando el reloj marque {H}:{MM}."
+        },
+        {
+            "key": "clue.l1.hint_minutes",
+            "value": "La puerta se abrirá cuando la manecilla de los minutos señale {minuteWord} minutos y la manecilla de las horas señale {hourWord}."
+        },
+        {
+            "key": "word.hour.1",
+            "value": "la una"
+        },
+        {
+            "key": "word.hour.2",
+            "value": "las dos"
+        },
+        {
+            "key": "word.hour.3",
+            "value": "las tres"
+        },
+        {
+            "key": "word.hour.4",
+            "value": "las cuatro"
+        },
+        {
+            "key": "word.hour.5",
+            "value": "las cinco"
+        },
+        {
+            "key": "word.hour.6",
+            "value": "las seis"
+        },
+        {
+            "key": "word.hour.7",
+            "value": "las siete"
+        },
+        {
+            "key": "word.hour.8",
+            "value": "las ocho"
+        },
+        {
+            "key": "word.hour.9",
+            "value": "las nueve"
+        },
+        {
+            "key": "word.hour.10",
+            "value": "las diez"
+        },
+        {
+            "key": "word.hour.11",
+            "value": "las once"
+        },
+        {
+            "key": "word.hour.12",
+            "value": "las doce"
+        },
+        {
+            "key": "word.minute.0",
+            "value": "cero"
+        },
+        {
+            "key": "word.minute.5",
+            "value": "cinco"
+        },
+        {
+            "key": "word.minute.10",
+            "value": "diez"
+        },
+        {
+            "key": "word.minute.15",
+            "value": "quince"
+        },
+        {
+            "key": "word.minute.20",
+            "value": "veinte"
+        },
+        {
+            "key": "word.minute.25",
+            "value": "veinticinco"
+        },
+        {
+            "key": "word.minute.30",
+            "value": "treinta"
+        },
+        {
+            "key": "word.minute.35",
+            "value": "treinta y cinco"
+        },
+        {
+            "key": "word.minute.40",
+            "value": "cuarenta"
+        },
+        {
+            "key": "word.minute.45",
+            "value": "cuarenta y cinco"
+        },
+        {
+            "key": "word.minute.50",
+            "value": "cincuenta"
+        },
+        {
+            "key": "word.minute.55",
+            "value": "cincuenta y cinco"
+        },
+        {
+            "key": "clue.l2.solar_noon",
+            "value": "La puerta se abrirá cuando el sol alcance su cenit."
+        },
+        {
+            "key": "clue.l2.time.half_past",
+            "value": "La puerta se abrirá a {hourWord} y media."
+        },
+        {
+            "key": "clue.l2.time.quarter_past",
+            "value": "La puerta se abrirá a {hourWord} y cuarto."
+        },
+        {
+            "key": "clue.l2.time.quarter_to",
+            "value": "La puerta se abrirá a {hourPointerWord} menos cuarto."
+        },
+        {
+            "key": "clue.l2.time.minutes_to",
+            "value": "La puerta se abrirá {nextminuteWord} minutos para {hourPointerWord}."
+        },
+        {
+            "key": "clue.l2.time.minutes_past",
+            "value": "La puerta se abrirá {minuteWord} minutos pasadas {hourWord}."
+        },
+        {
+            "key": "word.nextminute.0",
+            "value": "cero"
+        },
+        {
+            "key": "word.nextminute.5",
+            "value": "cinco"
+        },
+        {
+            "key": "word.nextminute.10",
+            "value": "diez"
+        },
+        {
+            "key": "word.nextminute.15",
+            "value": "quince"
+        },
+        {
+            "key": "word.nextminute.20",
+            "value": "veinte"
+        },
+        {
+            "key": "word.nextminute.25",
+            "value": "veinticinco"
+        },
+        {
+            "key": "word.nextminute.30",
+            "value": "treinta"
+        },
+        {
+            "key": "word.nextminute.35",
+            "value": "treinta y cinco"
+        },
+        {
+            "key": "word.nextminute.40",
+            "value": "cuarenta"
+        },
+        {
+            "key": "word.nextminute.45",
+            "value": "cuarenta y cinco"
+        },
+        {
+            "key": "word.nextminute.50",
+            "value": "cincuenta"
+        },
+        {
+            "key": "word.nextminute.55",
+            "value": "cincuenta y cinco"
+        },
+        {
+            "key": "word.nexthour.1",
+            "value": "las doce"
+        },
+        {
+            "key": "word.nexthour.2",
+            "value": "la una"
+        },
+        {
+            "key": "word.nexthour.3",
+            "value": "las dos"
+        },
+        {
+            "key": "word.nexthour.4",
+            "value": "las tres"
+        },
+        {
+            "key": "word.nexthour.5",
+            "value": "las cuatro"
+        },
+        {
+            "key": "word.nexthour.6",
+            "value": "las cinco"
+        },
+        {
+            "key": "word.nexthour.7",
+            "value": "las seis"
+        },
+        {
+            "key": "word.nexthour.8",
+            "value": "las siete"
+        },
+        {
+            "key": "word.nexthour.9",
+            "value": "las ocho"
+        },
+        {
+            "key": "word.nexthour.10",
+            "value": "las nueve"
+        },
+        {
+            "key": "word.nexthour.11",
+            "value": "las diez"
+        },
+        {
+            "key": "word.nexthour.12",
+            "value": "las once"
+        },
+        {
+            "key": "clue.l2.time.start_hour",
+            "value": "La puerta se abrirá cuando comience la {nextHourStartWord} hora."
+        },
+        {
+            "key": "word.hour_start.1",
+            "value": "duodécima"
+        },
+        {
+            "key": "word.hour_start.2",
+            "value": "primera"
+        },
+        {
+            "key": "word.hour_start.3",
+            "value": "segunda"
+        },
+        {
+            "key": "word.hour_start.4",
+            "value": "tercera"
+        },
+        {
+            "key": "word.hour_start.5",
+            "value": "cuarta"
+        },
+        {
+            "key": "word.hour_start.6",
+            "value": "quinta"
+        },
+        {
+            "key": "word.hour_start.7",
+            "value": "sexta"
+        },
+        {
+            "key": "word.hour_start.8",
+            "value": "séptima"
+        },
+        {
+            "key": "word.hour_start.9",
+            "value": "octava"
+        },
+        {
+            "key": "word.hour_start.10",
+            "value": "novena"
+        },
+        {
+            "key": "word.hour_start.11",
+            "value": "décima"
+        },
+        {
+            "key": "word.hour_start.12",
+            "value": "undécima"
+        },
+        {
+            "key": "clue.l3.time.half_past",
+            "value": "La puerta se abrirá a {hourWord} y media y {SS} segundos."
+        },
+        {
+            "key": "clue.l3.time.quarter_past",
+            "value": "La puerta se abrirá a {hourWord} y {SS} segundos."
+        },
+        {
+            "key": "clue.l3.time.quarter_to",
+            "value": "La puerta se abrirá a {hourWord} menos cuarto y {SS} segundos."
+        },
+        {
+            "key": "clue.l3.time.minutes_to",
+            "value": "La puerta se abrirá a {nextminuteWord} minutos para {hourPointerWord} y {SS} segundos."
+        },
+        {
+            "key": "clue.l3.time.minutes_past",
+            "value": "La puerta se abrirá a {minuteWord} minutos pasadas {hourWord} y {SS} segundos."
+        },
+        {
+            "key": "clue.l3.time.start_hour",
+            "value": "La puerta se abrirá cuando comience la {nextHourStartWord} hora y {SS} segundos."
+        },
+        {
+            "key": "word.nexthour_after.1",
+            "value": "la una"
+        },
+        {
+            "key": "word.nexthour_after.2",
+            "value": "las dos"
+        },
+        {
+            "key": "word.nexthour_after.3",
+            "value": "las tres"
+        },
+        {
+            "key": "word.nexthour_after.4",
+            "value": "las cuatro"
+        },
+        {
+            "key": "word.nexthour_after.5",
+            "value": "las cinco"
+        },
+        {
+            "key": "word.nexthour_after.6",
+            "value": "las seis"
+        },
+        {
+            "key": "word.nexthour_after.7",
+            "value": "las siete"
+        },
+        {
+            "key": "word.nexthour_after.8",
+            "value": "las ocho"
+        },
+        {
+            "key": "word.nexthour_after.9",
+            "value": "las nueve"
+        },
+        {
+            "key": "word.nexthour_after.10",
+            "value": "las diez"
+        },
+        {
+            "key": "word.nexthour_after.11",
+            "value": "las once"
+        },
+        {
+            "key": "word.nexthour_after.12",
+            "value": "las doce"
+        },
+        {
+            "key": "word.hour_pointer.1",
+            "value": "las dos"
+        },
+        {
+            "key": "word.hour_pointer.2",
+            "value": "las tres"
+        },
+        {
+            "key": "word.hour_pointer.3",
+            "value": "las cuatro"
+        },
+        {
+            "key": "word.hour_pointer.4",
+            "value": "las cinco"
+        },
+        {
+            "key": "word.hour_pointer.5",
+            "value": "las seis"
+        },
+        {
+            "key": "word.hour_pointer.6",
+            "value": "las siete"
+        },
+        {
+            "key": "word.hour_pointer.7",
+            "value": "las ocho"
+        },
+        {
+            "key": "word.hour_pointer.8",
+            "value": "las nueve"
+        },
+        {
+            "key": "word.hour_pointer.9",
+            "value": "las diez"
+        },
+        {
+            "key": "word.hour_pointer.10",
+            "value": "las once"
+        },
+        {
+            "key": "word.hour_pointer.11",
+            "value": "las doce"
+        },
+        {
+            "key": "word.hour_pointer.12",
+            "value": "la una"
+        },
+        {
+            "key": "ru",
+            "value": "Ruso"
+        },
+        {
+            "key": "en",
+            "value": "Inglés"
+        },
+        {
+            "key": "es",
+            "value": "Español"
+        },
+        {
+            "key": "pt",
+            "value": "Portugués"
+        },
+        {
+            "key": "fr",
+            "value": "Francés"
+        },
+        {
+            "key": "tr",
+            "value": "Turco"
+        },
+        {
+            "key": "ja",
+            "value": "Japonés"
+        },
+        {
+            "key": "de",
+            "value": "Alemán"
+        },
+        {
+            "key": "lang",
+            "value": "Idioma"
+        },
+        {
+            "key": "setsound",
+            "value": "Sonidos"
+        },
+        {
+            "key": "PuzzleDiff",
+            "value": "Dificultad del rompecabezas"
+        },
+        {
+            "key": "PuzzleSettings",
+            "value": "Configuración del rompecabezas"
+        },
+        {
+            "key": "PuzzleMode",
+            "value": "Modo de rompecabezas"
+        },
+        {
+            "key": "BookArabic",
+            "value": "Números arábigos"
+        },
+        {
+            "key": "BookRoman",
+            "value": "Números romanos"
+        },
+        {
+            "key": "BookPicture",
+            "value": "Imagen"
+        },
+        {
+            "key": "PuzzleSolved",
+            "value": "¡Rompecabezas resuelto!"
+        },
+        {
+            "key": "BackToMenu",
+            "value": "Volver al menú"
+        },
+        {
+            "key": "hint_first_card",
+            "value": "{0} es la primera carta."
+        },
+        {
+            "key": "hint_last_card",
+            "value": "{0} es la última carta."
+        },
+        {
+            "key": "hint_immediately_after",
+            "value": "{0} está inmediatamente después de {1}."
+        },
+        {
+            "key": "hint_immediately_before",
+            "value": "{0} está inmediatamente antes de {1}."
+        },
+        {
+            "key": "hint_between",
+            "value": "{0} está entre {1} y {2}."
+        },
+        {
+            "key": "hint_left_of",
+            "value": "{0} está a la izquierda de {1}."
+        },
+        {
+            "key": "hint_right_of",
+            "value": "{0} está a la derecha de {1}."
+        },
+        {
+            "key": "hint_one_false",
+            "value": "Una pista es falsa."
+        },
+        {
+            "key": "hint_no_suit",
+            "value": "No hay cartas de {0} en la mesa."
+        },
+        {
+            "key": "hint_no_rank",
+            "value": "No hay cartas de valor {0} en la mesa."
+        },
+        {
+            "key": "hint_no_even",
+            "value": "No hay cartas pares en la mesa."
+        },
+        {
+            "key": "hint_no_odd",
+            "value": "No hay cartas impares en la mesa."
+        },
+        {
+            "key": "hint_no_above_10",
+            "value": "No hay cartas mayores que 10 en la mesa."
+        },
+        {
+            "key": "hint_no_below_6",
+            "value": "No hay cartas menores que 6 en la mesa."
+        },
+        {
+            "key": "hint_has_suit",
+            "value": "Hay cartas de {0} en la mesa."
+        },
+        {
+            "key": "hint_has_rank",
+            "value": "Hay cartas con valor {0} en la mesa."
+        },
+        {
+            "key": "hint_position_of_card",
+            "value": "{0} está en la posición {1}."
+        },
+        {
+            "key": "hint_not_first",
+            "value": "{0} no está en la primera posición."
+        },
+        {
+            "key": "hint_not_last",
+            "value": "{0} no está en la última posición."
+        },
+        {
+            "key": "hint_not_neighbor",
+            "value": "{0} no está al lado de {1}."
+        },
+        {
+            "key": "hint_exact_count_suit",
+            "value": "Hay exactamente {0} cartas de {1} en la mesa."
+        },
+        {
+            "key": "hint_exact_count_rank",
+            "value": "Hay exactamente {0} cartas de valor {1} en la mesa."
+        },
+        {
+            "key": "hint_even_position",
+            "value": "{0} está en una posición par."
+        },
+        {
+            "key": "hint_odd_position",
+            "value": "{0} está en una posición impar."
+        },
+        {
+            "key": "hint_between_count",
+            "value": "Hay exactamente {2} carta(s) entre {0} y {1}."
+        },
+        {
+            "key": "false_there_is",
+            "value": "Definitivamente hay {0} en la mesa."
+        },
+        {
+            "key": "false_no",
+            "value": "No hay {0} en la mesa."
+        },
+        {
+            "key": "false_first",
+            "value": "{0} es la primera carta."
+        },
+        {
+            "key": "false_last",
+            "value": "{0} es la última carta."
+        },
+        {
+            "key": "false_immediately_after",
+            "value": "{0} está inmediatamente después de {1}."
+        },
+        {
+            "key": "false_exact_count_suit",
+            "value": "Hay exactamente {0} cartas de {1} en la mesa."
+        },
+        {
+            "key": "false_exact_count_rank",
+            "value": "Hay exactamente {0} cartas de valor {1} en la mesa."
+        },
+        {
+            "key": "false_position_of_card",
+            "value": "{0} está en la posición {1}."
+        },
+        {
+            "key": "false_neighbor",
+            "value": "{0} está al lado de {1}."
+        },
+        {
+            "key": "ArmorPuzzleInfo1",
+            "value": "Debes colocar las piezas de la armadura en el orden correcto."
+        },
+        {
+            "key": "ArmorPuzzleInfo2",
+            "value": "En la casilla superior — casco, en la media — coraza, en la inferior — botas."
+        },
+        {
+            "key": "BalancePuzzleInfo",
+            "value": "Debes equilibrar la balanza colocando todos los pesos."
+        },
+        {
+            "key": "BookPuzzleInfo",
+            "value": "Debes colocar los libros en el orden correcto."
+        },
+        {
+            "key": "SlidersPuzzleInfo",
+            "value": "Debes colocar las losas en orden."
+        },
+        {
+            "key": "MazePuzzleInfo1",
+            "value": "Debes sacar la bola roja del laberinto."
+        },
+        {
+            "key": "MazePuzzleInfo2",
+            "value": "Controles: WASD."
+        },
+        {
+            "key": "ClockPuzzleInfo1",
+            "value": "Debes ajustar la hora en el reloj según la pista."
+        },
+        {
+            "key": "ClockPuzzleInfo2",
+            "value": "Debes ajustar la hora en el reloj según las pistas. Hay pistas falsas."
+        },
+        {
+            "key": "ClockPuzzleInfo3",
+            "value": "A — girar en sentido antihorario."
+        },
+        {
+            "key": "ClockPuzzleInfo4",
+            "value": "D — girar en sentido horario."
+        },
+        {
+            "key": "ClockPuzzleInfo5",
+            "value": "E — cambiar la aguja."
+        },
+        {
+            "key": "ClockPuzzleInfo7",
+            "value": "Debes ajustar la hora del reloj según las pistas. Algunas pistas son falsas. Las manecillas afectan el movimiento entre sí."
+        },
+        {
+            "key": "ClockPuzzleInfo6",
+            "value": "Controles:"
+        },
+        {
+            "key": "CardsPuzzleInfo1",
+            "value": "Debes formar una fila de cartas según las condiciones."
+        },
+        {
+            "key": "CardsPuzzleInfo2",
+            "value": "En el área con el círculo amarillo puedes colocar cartas que puedan cumplir las condiciones."
+        },
+        {
+            "key": "CardsPuzzleInfo3",
+            "value": "En el área con la cruz roja puedes colocar cartas que definitivamente no cumplen las condiciones."
+        },
+        {
+            "key": "DicesPuzzleInfo1",
+            "value": "Debes colocar los dados en la parte superior para que la ecuación sea correcta."
+        },
+        {
+            "key": "DicesPuzzleInfo2",
+            "value": "Botón derecho del ratón — cambiar el número del dado."
+        },
+        {
+            "key": "DicesPuzzleInfo3",
+            "value": "Condiciones:"
+        },
+        {
+            "key": "DicesPuzzleInfo4",
+            "value": "Esta condición significa que en la primera casilla debe haber un dado con valor 1."
+        },
+        {
+            "key": "DicesPuzzleInfo5",
+            "value": "Esta condición significa que no se pueden usar dados con valor 1."
+        },
+        {
+            "key": "DicesPuzzleInfo6",
+            "value": "Esta condición significa que debe haber menos de dos dados con valor 1."
+        },
+        {
+            "key": "DicesPuzzleInfo7",
+            "value": "Esta condición significa que debe haber más de dos dados con valor 1."
+        },
+        {
+            "key": "DicesPuzzleInfo8",
+            "value": "Botón izquierdo del ratón — cambiar el color del dado."
+        },
+        {
+            "key": "DicesPuzzleInfo9",
+            "value": "Esta condición significa que no debe haber más de dos dados negros seguidos."
+        },
+        {
+            "key": "DicesPuzzleInfo10",
+            "value": "Esta condición significa que en la primera casilla debe haber un dado blanco."
+        },
+        {
+            "key": "DicesPuzzleInfo11",
+            "value": "Esta condición significa que los dados negros y blancos deben alternarse."
+        },
+        {
+            "key": "SkipPuzzle",
+            "value": "Pular"
+        },
+        {
+            "key": "ContinuePuzzle",
+            "value": "Continuar"
+        },
+        {
+            "key": "NewItem",
+            "value": "Novo item!"
+        },
+        {
+            "key": "ItemSuitable",
+            "value": "O item serve."
+        },
+        {
+            "key": "ItemNotSuitable",
+            "value": "Item não serve."
+        },
+        {
+            "key": "InventoryFull",
+            "value": "Inventário cheio."
+        },
+        {
+            "key": "ItemBall",
+            "value": "Bola vermelha"
+        },
+        {
+            "key": "ItemBook",
+            "value": "Livro"
+        },
+        {
+            "key": "ItemCards",
+            "value": "Cartas (baralho)"
+        },
+        {
+            "key": "ItemClockHand",
+            "value": "Ponteiro do relógio"
+        },
+        {
+            "key": "ItemDices",
+            "value": "Dados"
+        },
+        {
+            "key": "ItemExitKey",
+            "value": "Chave redonda"
+        },
+        {
+            "key": "ItemGoldenKey",
+            "value": "Chave dourada"
+        },
+        {
+            "key": "ItemHelmet",
+            "value": "Capacete"
+        },
+        {
+            "key": "ItemIronKey",
+            "value": "Chave de ferro"
+        },
+        {
+            "key": "ItemWeight",
+            "value": "Peso para a balança"
+        },
+        {
+            "key": "ItemLight",
+            "value": "Tocha"
+        },
+        {
+            "key": "ItemPreciousKey",
+            "value": "Chave preciosa"
+        },
+        {
+            "key": "ItemStonePlate",
+            "value": "Placa de pedra"
+        },
+        {
+            "key": "GameOver",
+            "value": "¡Has muerto!"
+        },
+        {
+            "key": "LevelComplete",
+            "value": "¡Nivel completado!"
+        },
+        {
+            "key": "RestartLevel",
+            "value": "Reiniciar nivel"
+        },
+        {
+            "key": "NextLevel",
+            "value": "Siguiente nivel"
+        },
+        {
+            "key": "EndPuzzleInfo1",
+            "value": "Necesitas girar los fragmentos del bajorrelieve para restaurarlo."
+        },
+        {
+            "key": "EndPuzzleInfo2",
+            "value": "E - cambiar la llave redonda"
+        },
+        {
+            "key": "DoorWrongSide",
+            "value": "La puerta se abre desde el otro lado."
+        },
+        {
+            "key": "NoFuel",
+            "value": "¡Necesitas fuego para encender la antorcha!"
+        },
+        {
+            "key": "Settings",
+            "value": "Configuración"
+        },
+        {
+            "key": "Restart",
+            "value": "Reiniciar"
+        },
+        {
+            "key": "SkipPanelText",
+            "value": "Resuelve el rompecabezas para desbloquear."
+        }
+    ]
+}

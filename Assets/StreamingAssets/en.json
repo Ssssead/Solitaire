@@ -1,0 +1,856 @@
+{
+    "items": [
+        {
+            "key": "Level",
+            "value": "Level"
+        },
+        {
+            "key": "Klondike",
+            "value": "Klondike"
+        },
+        {
+            "key": "Spider",
+            "value": "Spider"
+        },
+        {
+            "key": "Freecell",
+            "value": "FreeCell"
+        },
+        {
+            "key": "Pyramid",
+            "value": "Pyramid"
+        },
+        {
+            "key": "TriPeaks",
+            "value": "Tri Peaks"
+        },
+        {
+            "key": "Sultan",
+            "value": "Sultan"
+        },
+        {
+            "key": "MonteCarlo",
+            "value": "Monte-Carlo"
+        },
+        {
+            "key": "Montana",
+            "value": "Montana"
+        },
+        {
+            "key": "Octagon",
+            "value": "Octagon"
+        },
+        {
+            "key": "Yukon",
+            "value": "Yukon"
+        },
+        {
+            "key": "Start",
+            "value": "Start"
+        },
+        {
+            "key": "DiffHard",
+            "value": "Hard"
+        },
+        {
+            "key": "DiffMedium",
+            "value": "Medium"
+        },
+        {
+            "key": "DiffEasy",
+            "value": "Easy"
+        },
+        {
+            "key": "Diff",
+            "value": "Difficulty:"
+        },
+        {
+            "key": "DrawMode",
+            "value": "Draw Mode:"
+        },
+        {
+            "key": "Rounds",
+            "value": "Rounds Count:"
+        },
+        {
+            "key": "SuitMode",
+            "value": "Suit Mode:"
+        },
+        {
+            "key": "Classic",
+            "value": "Classic"
+        },
+        {
+            "key": "Russian",
+            "value": "Russian"
+        },
+        {
+            "key": "4Ways",
+            "value": "4 Ways"
+        },
+        {
+            "key": "8Ways",
+            "value": "8 Ways"
+        },
+        {
+            "key": "GameMode",
+            "value": "Game Mode:"
+        },
+        {
+            "key": "xp_reward_preview",
+            "value": "You will get {0} XP"
+        },
+        {
+            "key": "word.minute.35",
+            "value": "thirty-five"
+        },
+        {
+            "key": "word.minute.40",
+            "value": "forty"
+        },
+        {
+            "key": "word.minute.45",
+            "value": "forty-five"
+        },
+        {
+            "key": "word.minute.50",
+            "value": "fifty"
+        },
+        {
+            "key": "word.minute.55",
+            "value": "fifty-five"
+        },
+        {
+            "key": "clue.l2.solar_noon",
+            "value": "The door will open when the sun reaches its zenith."
+        },
+        {
+            "key": "clue.l2.time.half_past",
+            "value": "The door will open at half past {nextHourWord}."
+        },
+        {
+            "key": "clue.l2.time.quarter_past",
+            "value": "The door will open at quarter past {nextHourWord}."
+        },
+        {
+            "key": "clue.l2.time.quarter_to",
+            "value": "The door will open at quarter to {hourWord}."
+        },
+        {
+            "key": "clue.l2.time.minutes_to",
+            "value": "The door will open {nextminuteWord} minutes to {hourPointerWord}."
+        },
+        {
+            "key": "clue.l2.time.minutes_past",
+            "value": "The door will open {minuteWord} minutes past {hourWord}."
+        },
+        {
+            "key": "word.nextminute.0",
+            "value": "zero"
+        },
+        {
+            "key": "word.nextminute.5",
+            "value": "five"
+        },
+        {
+            "key": "word.nextminute.10",
+            "value": "ten"
+        },
+        {
+            "key": "word.nextminute.15",
+            "value": "fifteen"
+        },
+        {
+            "key": "word.nextminute.20",
+            "value": "twenty"
+        },
+        {
+            "key": "word.nextminute.25",
+            "value": "twenty-five"
+        },
+        {
+            "key": "word.nextminute.30",
+            "value": "thirty"
+        },
+        {
+            "key": "word.nextminute.35",
+            "value": "thirty-five"
+        },
+        {
+            "key": "word.nextminute.40",
+            "value": "forty"
+        },
+        {
+            "key": "word.nextminute.45",
+            "value": "forty-five"
+        },
+        {
+            "key": "word.nextminute.50",
+            "value": "fifty"
+        },
+        {
+            "key": "word.nextminute.55",
+            "value": "fifty-five"
+        },
+        {
+            "key": "word.nexthour.1",
+            "value": "twelve"
+        },
+        {
+            "key": "word.nexthour.2",
+            "value": "one"
+        },
+        {
+            "key": "word.nexthour.3",
+            "value": "two"
+        },
+        {
+            "key": "word.nexthour.4",
+            "value": "three"
+        },
+        {
+            "key": "word.nexthour.5",
+            "value": "four"
+        },
+        {
+            "key": "word.nexthour.6",
+            "value": "five"
+        },
+        {
+            "key": "word.nexthour.7",
+            "value": "six"
+        },
+        {
+            "key": "word.nexthour.8",
+            "value": "seven"
+        },
+        {
+            "key": "word.nexthour.9",
+            "value": "eight"
+        },
+        {
+            "key": "word.nexthour.10",
+            "value": "nine"
+        },
+        {
+            "key": "word.nexthour.11",
+            "value": "ten"
+        },
+        {
+            "key": "word.nexthour.12",
+            "value": "eleven"
+        },
+        {
+            "key": "clue.l2.time.start_hour",
+            "value": "The door will open when the {nextHourStartWord} hour begins."
+        },
+        {
+            "key": "word.hour_start.1",
+            "value": "twelfth"
+        },
+        {
+            "key": "word.hour_start.2",
+            "value": "first"
+        },
+        {
+            "key": "word.hour_start.3",
+            "value": "second"
+        },
+        {
+            "key": "word.hour_start.4",
+            "value": "third"
+        },
+        {
+            "key": "word.hour_start.5",
+            "value": "fourth"
+        },
+        {
+            "key": "word.hour_start.6",
+            "value": "fifth"
+        },
+        {
+            "key": "word.hour_start.7",
+            "value": "sixth"
+        },
+        {
+            "key": "word.hour_start.8",
+            "value": "seventh"
+        },
+        {
+            "key": "word.hour_start.9",
+            "value": "eighth"
+        },
+        {
+            "key": "word.hour_start.10",
+            "value": "ninth"
+        },
+        {
+            "key": "word.hour_start.11",
+            "value": "tenth"
+        },
+        {
+            "key": "word.hour_start.12",
+            "value": "eleventh"
+        },
+        {
+            "key": "clue.l3.time.half_past",
+            "value": "The door will open at half past {nextHourWord} and {SS} seconds."
+        },
+        {
+            "key": "clue.l3.time.quarter_past",
+            "value": "The door will open at quarter past {nextHourWord} and {SS} seconds."
+        },
+        {
+            "key": "clue.l3.time.quarter_to",
+            "value": "The door will open at quarter to {hourWord} and {SS} seconds."
+        },
+        {
+            "key": "clue.l3.time.minutes_to",
+            "value": "The door will open {nextminuteWord} minutes to {hourPointerWord} and {SS} seconds."
+        },
+        {
+            "key": "clue.l3.time.minutes_past",
+            "value": "The door will open {minuteWord} minutes past {hourWord} and {SS} seconds."
+        },
+        {
+            "key": "clue.l3.time.start_hour",
+            "value": "The door will open when the {nextHourStartWord} hour begins and {SS} seconds."
+        },
+        {
+            "key": "word.nexthour_after.1",
+            "value": "one"
+        },
+        {
+            "key": "word.nexthour_after.2",
+            "value": "two"
+        },
+        {
+            "key": "word.nexthour_after.3",
+            "value": "three"
+        },
+        {
+            "key": "word.nexthour_after.4",
+            "value": "four"
+        },
+        {
+            "key": "word.nexthour_after.5",
+            "value": "five"
+        },
+        {
+            "key": "word.nexthour_after.6",
+            "value": "six"
+        },
+        {
+            "key": "word.nexthour_after.7",
+            "value": "seven"
+        },
+        {
+            "key": "word.nexthour_after.8",
+            "value": "eight"
+        },
+        {
+            "key": "word.nexthour_after.9",
+            "value": "nine"
+        },
+        {
+            "key": "word.nexthour_after.10",
+            "value": "ten"
+        },
+        {
+            "key": "word.nexthour_after.11",
+            "value": "eleven"
+        },
+        {
+            "key": "word.nexthour_after.12",
+            "value": "twelve"
+        },
+        {
+            "key": "word.hour_pointer.1",
+            "value": "two"
+        },
+        {
+            "key": "word.hour_pointer.2",
+            "value": "three"
+        },
+        {
+            "key": "word.hour_pointer.3",
+            "value": "four"
+        },
+        {
+            "key": "word.hour_pointer.4",
+            "value": "five"
+        },
+        {
+            "key": "word.hour_pointer.5",
+            "value": "six"
+        },
+        {
+            "key": "word.hour_pointer.6",
+            "value": "seven"
+        },
+        {
+            "key": "word.hour_pointer.7",
+            "value": "eight"
+        },
+        {
+            "key": "word.hour_pointer.8",
+            "value": "nine"
+        },
+        {
+            "key": "word.hour_pointer.9",
+            "value": "ten"
+        },
+        {
+            "key": "word.hour_pointer.10",
+            "value": "eleven"
+        },
+        {
+            "key": "word.hour_pointer.11",
+            "value": "twelve"
+        },
+        {
+            "key": "word.hour_pointer.12",
+            "value": "one"
+        },
+        {
+            "key": "ru",
+            "value": "Russian"
+        },
+        {
+            "key": "en",
+            "value": "English"
+        },
+        {
+            "key": "de",
+            "value": "German"
+        },
+        {
+            "key": "es",
+            "value": "Spanish"
+        },
+        {
+            "key": "pt",
+            "value": "Portugiese"
+        },
+        {
+            "key": "fr",
+            "value": "French"
+        },
+        {
+            "key": "tr",
+            "value": "Turkish"
+        },
+        {
+            "key": "ja",
+            "value": "Japaniese"
+        },
+        {
+            "key": "lang",
+            "value": "Language"
+        },
+        {
+            "key": "setsound",
+            "value": "Sounds"
+        },
+        {
+            "key": "PuzzleDiff",
+            "value": "Puzzle Difficulty"
+        },
+        {
+            "key": "PuzzleSettings",
+            "value": "Puzzle Settings"
+        },
+        {
+            "key": "PuzzleMode",
+            "value": "Puzzle Mode"
+        },
+        {
+            "key": "BookArabic",
+            "value": "Arabic Numerals"
+        },
+        {
+            "key": "BookRoman",
+            "value": "Roman Numerals"
+        },
+        {
+            "key": "BookPicture",
+            "value": "Picture"
+        },
+        {
+            "key": "PuzzleSolved",
+            "value": "Puzzle Solved!"
+        },
+        {
+            "key": "BackToMenu",
+            "value": "Back to Menu"
+        },
+        {
+            "key": "hint_first_card",
+            "value": "{0} is the first card."
+        },
+        {
+            "key": "hint_last_card",
+            "value": "{0} is the last card."
+        },
+        {
+            "key": "hint_immediately_after",
+            "value": "{0} is immediately after {1}."
+        },
+        {
+            "key": "hint_immediately_before",
+            "value": "{0} is immediately before {1}."
+        },
+        {
+            "key": "hint_between",
+            "value": "{0} is between {1} and {2}."
+        },
+        {
+            "key": "hint_left_of",
+            "value": "{0} is to the left of {1}."
+        },
+        {
+            "key": "hint_right_of",
+            "value": "{0} is to the right of {1}."
+        },
+        {
+            "key": "hint_one_false",
+            "value": "One hint is false."
+        },
+        {
+            "key": "hint_no_suit",
+            "value": "There are no {0} suit cards on the table."
+        },
+        {
+            "key": "hint_no_rank",
+            "value": "There are no {0} cards on the table."
+        },
+        {
+            "key": "hint_no_even",
+            "value": "There are no even cards on the table."
+        },
+        {
+            "key": "hint_no_odd",
+            "value": "There are no odd cards on the table."
+        },
+        {
+            "key": "hint_no_above_10",
+            "value": "There are no cards above 10 on the table."
+        },
+        {
+            "key": "hint_no_below_6",
+            "value": "There are no cards below 6 on the table."
+        },
+        {
+            "key": "hint_has_suit",
+            "value": "There are {0} suit cards on the table."
+        },
+        {
+            "key": "hint_has_rank",
+            "value": "There are cards with value {0} on the table."
+        },
+        {
+            "key": "hint_position_of_card",
+            "value": "{0} is at position {1}."
+        },
+        {
+            "key": "hint_not_first",
+            "value": "{0} is not at the first position."
+        },
+        {
+            "key": "hint_not_last",
+            "value": "{0} is not at the last position."
+        },
+        {
+            "key": "hint_not_neighbor",
+            "value": "{0} is not next to {1}."
+        },
+        {
+            "key": "hint_exact_count_suit",
+            "value": "There are exactly {0} {1} suit cards on the table."
+        },
+        {
+            "key": "hint_exact_count_rank",
+            "value": "There are exactly {0} cards with value {1} on the table."
+        },
+        {
+            "key": "hint_even_position",
+            "value": "{0} is at an even position."
+        },
+        {
+            "key": "hint_odd_position",
+            "value": "{0} is at an odd position."
+        },
+        {
+            "key": "hint_between_count",
+            "value": "There are exactly {2} card(s) between {0} and {1}."
+        },
+        {
+            "key": "false_there_is",
+            "value": "There is definitely {0} on the table."
+        },
+        {
+            "key": "false_no",
+            "value": "There is no {0} on the table."
+        },
+        {
+            "key": "false_first",
+            "value": "{0} is the first card."
+        },
+        {
+            "key": "false_last",
+            "value": "{0} is the last card."
+        },
+        {
+            "key": "false_immediately_after",
+            "value": "{0} is immediately after {1}."
+        },
+        {
+            "key": "false_exact_count_suit",
+            "value": "There are exactly {0} {1} suit cards on the table."
+        },
+        {
+            "key": "false_exact_count_rank",
+            "value": "There are exactly {0} cards with value {1} on the table."
+        },
+        {
+            "key": "false_position_of_card",
+            "value": "{0} is at position {1}."
+        },
+        {
+            "key": "false_neighbor",
+            "value": "{0} is next to {1}."
+        },
+        {
+            "key": "ArmorPuzzleInfo1",
+            "value": "Place the pieces of the armor in the correct order."
+        },
+        {
+            "key": "ArmorPuzzleInfo2",
+            "value": "Top slot — helmet, middle — breastplate, bottom — boots."
+        },
+        {
+            "key": "BalancePuzzleInfo",
+            "value": "Balance the scales by placing all the weights."
+        },
+        {
+            "key": "BookPuzzleInfo",
+            "value": "Place the books in the correct order."
+        },
+        {
+            "key": "SlidersPuzzleInfo",
+            "value": "Arrange the tiles in order."
+        },
+        {
+            "key": "MazePuzzleInfo1",
+            "value": "Guide the red ball out of the maze."
+        },
+        {
+            "key": "MazePuzzleInfo2",
+            "value": "Controls: WASD."
+        },
+        {
+            "key": "ClockPuzzleInfo1",
+            "value": "Set the time on the clock according to the hint."
+        },
+        {
+            "key": "ClockPuzzleInfo2",
+            "value": "Set the time on the clock according to the hints. Some hints are false."
+        },
+        {
+            "key": "ClockPuzzleInfo3",
+            "value": "A — rotate counterclockwise."
+        },
+        {
+            "key": "ClockPuzzleInfo4",
+            "value": "D — rotate clockwise."
+        },
+        {
+            "key": "ClockPuzzleInfo5",
+            "value": "E — switch the clock hand."
+        },
+        {
+            "key": "ClockPuzzleInfo6",
+            "value": "Controls:"
+        },
+        {
+            "key": "ClockPuzzleInfo7",
+            "value": "You need to set the time on the clock based on the hints. Some hints are false. The hands affect each other's movement."
+        },
+        {
+            "key": "CardsPuzzleInfo1",
+            "value": "Build a row of cards according to the conditions."
+        },
+        {
+            "key": "CardsPuzzleInfo2",
+            "value": "You can place cards that may satisfy the conditions into the yellow-circle area."
+        },
+        {
+            "key": "CardsPuzzleInfo3",
+            "value": "You can place cards that definitely do not meet the conditions into the red-cross area."
+        },
+        {
+            "key": "DicesPuzzleInfo1",
+            "value": "Place the dice into the top area so that the equation is correct."
+        },
+        {
+            "key": "DicesPuzzleInfo2",
+            "value": "Right mouse button — change the number on a die."
+        },
+        {
+            "key": "DicesPuzzleInfo3",
+            "value": "Conditions:"
+        },
+        {
+            "key": "DicesPuzzleInfo4",
+            "value": "This condition means that the first slot must contain a die with the value 1."
+        },
+        {
+            "key": "DicesPuzzleInfo5",
+            "value": "This condition means that dice with the value 1 cannot be used."
+        },
+        {
+            "key": "DicesPuzzleInfo6",
+            "value": "This condition means that there must be fewer than two dice with the value 1."
+        },
+        {
+            "key": "DicesPuzzleInfo7",
+            "value": "This condition means that there must be more than two dice with the value 1."
+        },
+        {
+            "key": "DicesPuzzleInfo8",
+            "value": "Left mouse button — change the color of a die."
+        },
+        {
+            "key": "DicesPuzzleInfo9",
+            "value": "This condition means there must not be more than two black dice in a row."
+        },
+        {
+            "key": "DicesPuzzleInfo10",
+            "value": "This condition means that the first slot must contain a white die."
+        },
+        {
+            "key": "DicesPuzzleInfo11",
+            "value": "This condition means that black and white dice must alternate."
+        },
+        {
+            "key": "SkipPuzzle",
+            "value": "Skip"
+        },
+        {
+            "key": "ContinuePuzzle",
+            "value": "Continue"
+        },
+        {
+            "key": "NewItem",
+            "value": "New item!"
+        },
+        {
+            "key": "ItemSuitable",
+            "value": "Item fits."
+        },
+        {
+            "key": "ItemNotSuitable",
+            "value": "Item not suitable."
+        },
+        {
+            "key": "InventoryFull",
+            "value": "Inventory is full."
+        },
+        {
+            "key": "ItemBall",
+            "value": "Red ball"
+        },
+        {
+            "key": "ItemBook",
+            "value": "Book"
+        },
+        {
+            "key": "ItemCards",
+            "value": "Playing cards"
+        },
+        {
+            "key": "ItemClockHand",
+            "value": "Clock hand"
+        },
+        {
+            "key": "ItemDices",
+            "value": "Dice"
+        },
+        {
+            "key": "ItemExitKey",
+            "value": "Round key"
+        },
+        {
+            "key": "ItemGoldenKey",
+            "value": "Golden key"
+        },
+        {
+            "key": "ItemHelmet",
+            "value": "Helmet"
+        },
+        {
+            "key": "ItemIronKey",
+            "value": "Iron key"
+        },
+        {
+            "key": "ItemWeight",
+            "value": "Weight (for scales)"
+        },
+        {
+            "key": "ItemLight",
+            "value": "Torch"
+        },
+        {
+            "key": "ItemPreciousKey",
+            "value": "Precious key"
+        },
+        {
+            "key": "ItemStonePlate",
+            "value": "Stone plate"
+        },
+        {
+            "key": "GameOver",
+            "value": "You died!"
+        },
+        {
+            "key": "LevelComplete",
+            "value": "Level complete!"
+        },
+        {
+            "key": "RestartLevel",
+            "value": "Restart level"
+        },
+        {
+            "key": "NextLevel",
+            "value": "Next level"
+        },
+        {
+            "key": "EndPuzzleInfo1",
+            "value": "You need to rotate the fragments of the bas-relief to restore it."
+        },
+        {
+            "key": "EndPuzzleInfo2",
+            "value": "E - switch the round key"
+        },
+        {
+            "key": "DoorWrongSide",
+            "value": "The door opens from the other side."
+        },
+        {
+            "key": "NoFuel",
+            "value": "You need fire to light the torch!"
+        },
+        {
+            "key": "Settings",
+            "value": "Settings"
+        },
+        {
+            "key": "Restart",
+            "value": "Restart"
+        },
+        {
+            "key": "SkipPanelText",
+            "value": "Solve the puzzle to unlock."
+        }
+    ]
+}

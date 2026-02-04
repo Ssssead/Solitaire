@@ -1,0 +1,905 @@
+{
+    "items": [
+        {
+            "key": "Level",
+            "value": "Уровень"
+        },
+        {
+            "key": "Klondike",
+            "value": "Косынка"
+        },
+        {
+            "key": "Spider",
+            "value": "Паук"
+        },
+        {
+            "key": "Freecell",
+            "value": "Свободная ячейка"
+        },
+        {
+            "key": "Pyramid",
+            "value": "Пирамида"
+        },
+        {
+            "key": "TriPeaks",
+            "value": "Три Вершины"
+        },
+        {
+            "key": "Sultan",
+            "value": "Султан"
+        },
+        {
+            "key": "MonteCarlo",
+            "value": "Монте-Карло"
+        },
+        {
+            "key": "Montana",
+            "value": "Ковёр"
+        },
+        {
+            "key": "Octagon",
+            "value": "Восьмиугольник"
+        },
+        {
+            "key": "Yukon",
+            "value": "Юкон"
+        },
+        {
+            "key": "Start",
+            "value": "Начать"
+        },
+        {
+            "key": "DiffHard",
+            "value": "Сложный"
+        },
+        {
+            "key": "DiffMedium",
+            "value": "Средний"
+        },
+        {
+            "key": "DiffEasy",
+            "value": "Легкий"
+        },
+        {
+            "key": "Diff",
+            "value": "Уровень сложности:"
+        },
+        {
+            "key": "DrawMode",
+            "value": "Режим выдачи карт:"
+        },
+        {
+            "key": "Rounds",
+            "value": "Количество раундов:"
+        },
+        {
+            "key": "SuitMode",
+            "value": "Количество мастей:"
+        },
+        {
+            "key": "Classic",
+            "value": "Классический"
+        },
+        {
+            "key": "Russian",
+            "value": "Русский"
+        },
+        {
+            "key": "4Ways",
+            "value": "4 Стороны"
+        },
+        {
+            "key": "8Ways",
+            "value": "8 Сторон"
+        },
+        {
+            "key": "GameMode",
+            "value": "Режим игры:"
+        },
+        {
+            "key": "xp_reward_preview",
+            "value": "Вы получите {0} опыта"
+        },
+        {
+            "key": "plus.word.hour.8",
+            "value": "девять"
+        },
+        {
+            "key": "plus.word.hour.9",
+            "value": "десять"
+        },
+        {
+            "key": "plus.word.hour.10",
+            "value": "одиннадцать"
+        },
+        {
+            "key": "plus.word.hour.11",
+            "value": "двенадцать"
+        },
+        {
+            "key": "plus.word.hour.12",
+            "value": "час"
+        },
+        {
+            "key": "word.minute.0",
+            "value": "ноль"
+        },
+        {
+            "key": "word.minute.5",
+            "value": "пять"
+        },
+        {
+            "key": "word.minute.10",
+            "value": "десять"
+        },
+        {
+            "key": "word.minute.15",
+            "value": "пятнадцать"
+        },
+        {
+            "key": "word.minute.20",
+            "value": "двадцать"
+        },
+        {
+            "key": "word.minute.25",
+            "value": "двадцать пять"
+        },
+        {
+            "key": "word.minute.30",
+            "value": "тридцать"
+        },
+        {
+            "key": "word.minute.35",
+            "value": "тридцать пять"
+        },
+        {
+            "key": "word.minute.40",
+            "value": "сорок"
+        },
+        {
+            "key": "word.minute.45",
+            "value": "сорок пять"
+        },
+        {
+            "key": "word.minute.50",
+            "value": "пятьдесят"
+        },
+        {
+            "key": "word.minute.55",
+            "value": "пятьдесят пять"
+        },
+        {
+            "key": "clue.l2.solar_noon",
+            "value": "Дверь откроется, когда солнце достигнет зенита."
+        },
+        {
+            "key": "clue.l2.time.half_past",
+            "value": "Дверь откроется в пол {nextHourWord}."
+        },
+        {
+            "key": "clue.l2.time.quarter_past",
+            "value": "Дверь откроется в четверть {nextHourWord}."
+        },
+        {
+            "key": "clue.l2.time.quarter_to",
+            "value": "Дверь откроется без четверти {plushourWord}."
+        },
+        {
+            "key": "clue.l2.time.minutes_to",
+            "value": "Дверь откроется без {nextminuteWord} {plushourWord}."
+        },
+        {
+            "key": "clue.l2.time.minutes_past",
+            "value": "Дверь откроется через {minuteWord} минут после {nextHourWord}."
+        },
+        {
+            "key": "word.nextminute.0",
+            "value": "нуля"
+        },
+        {
+            "key": "word.nextminute.5",
+            "value": "пяти"
+        },
+        {
+            "key": "word.nextminute.10",
+            "value": "десяти"
+        },
+        {
+            "key": "word.nextminute.15",
+            "value": "пятнадцати"
+        },
+        {
+            "key": "word.nextminute.20",
+            "value": "двадцати"
+        },
+        {
+            "key": "word.nextminute.25",
+            "value": "двадцати пяти"
+        },
+        {
+            "key": "word.nextminute.30",
+            "value": "тридцати"
+        },
+        {
+            "key": "word.nextminute.35",
+            "value": "тридцати пяти"
+        },
+        {
+            "key": "word.nextminute.40",
+            "value": "сорока"
+        },
+        {
+            "key": "word.nextminute.45",
+            "value": "сорока пяти"
+        },
+        {
+            "key": "word.nextminute.50",
+            "value": "пятидесяти"
+        },
+        {
+            "key": "word.nextminute.55",
+            "value": "пятидесяти пяти"
+        },
+        {
+            "key": "word.nexthour.1",
+            "value": "первого"
+        },
+        {
+            "key": "word.nexthour.2",
+            "value": "второго"
+        },
+        {
+            "key": "word.nexthour.3",
+            "value": "третьего"
+        },
+        {
+            "key": "word.nexthour.4",
+            "value": "четвертого"
+        },
+        {
+            "key": "word.nexthour.5",
+            "value": "пятого"
+        },
+        {
+            "key": "word.nexthour.6",
+            "value": "шестого"
+        },
+        {
+            "key": "word.nexthour.7",
+            "value": "седьмого"
+        },
+        {
+            "key": "word.nexthour.8",
+            "value": "восьмого"
+        },
+        {
+            "key": "word.nexthour.9",
+            "value": "девятого"
+        },
+        {
+            "key": "word.nexthour.10",
+            "value": "десятого"
+        },
+        {
+            "key": "word.nexthour.11",
+            "value": "одиннадцатого"
+        },
+        {
+            "key": "word.nexthour.12",
+            "value": "двенадцатого"
+        },
+        {
+            "key": "clue.l2.time.start_hour",
+            "value": "Дверь откроется когда начнётся {nextHourStartWord} час."
+        },
+        {
+            "key": "word.hour_start.1",
+            "value": "первый"
+        },
+        {
+            "key": "word.hour_start.2",
+            "value": "второй"
+        },
+        {
+            "key": "word.hour_start.3",
+            "value": "третий"
+        },
+        {
+            "key": "word.hour_start.4",
+            "value": "четвертый"
+        },
+        {
+            "key": "word.hour_start.5",
+            "value": "пятый"
+        },
+        {
+            "key": "word.hour_start.6",
+            "value": "шестой"
+        },
+        {
+            "key": "word.hour_start.7",
+            "value": "седьмой"
+        },
+        {
+            "key": "word.hour_start.8",
+            "value": "восьмой"
+        },
+        {
+            "key": "word.hour_start.9",
+            "value": "девятый"
+        },
+        {
+            "key": "word.hour_start.10",
+            "value": "десятый"
+        },
+        {
+            "key": "word.hour_start.11",
+            "value": "одиннадцатый"
+        },
+        {
+            "key": "word.hour_start.12",
+            "value": "двенадцатый"
+        },
+        {
+            "key": "clue.l3.time.half_past",
+            "value": "Дверь откроется в пол {nextHourWord} и {SS} секунд."
+        },
+        {
+            "key": "clue.l3.time.quarter_past",
+            "value": "Дверь откроется в четверть {nextHourWord} и {SS} секунд."
+        },
+        {
+            "key": "clue.l3.time.quarter_to",
+            "value": "Дверь откроется без четверти {plushourWord} и {SS} секунд."
+        },
+        {
+            "key": "clue.l3.time.minutes_to",
+            "value": "Дверь откроется без {nextminuteWord} {plushourWord} и {SS} секунд."
+        },
+        {
+            "key": "clue.l3.time.minutes_past",
+            "value": "Дверь откроется через {minuteWord} минут после {nextHourWord} и {SS} секунд."
+        },
+        {
+            "key": "clue.l3.time.start_hour",
+            "value": "Дверь откроется, когда начнётся {nextHourStartWord} час и {SS} секунд."
+        },
+        {
+            "key": "word.nexthour_after.1",
+            "value": "двенадцати"
+        },
+        {
+            "key": "word.nexthour_after.2",
+            "value": "часа"
+        },
+        {
+            "key": "word.nexthour_after.3",
+            "value": "двух"
+        },
+        {
+            "key": "word.nexthour_after.4",
+            "value": "трех"
+        },
+        {
+            "key": "word.nexthour_after.5",
+            "value": "четырех"
+        },
+        {
+            "key": "word.nexthour_after.6",
+            "value": "пяти"
+        },
+        {
+            "key": "word.nexthour_after.7",
+            "value": "шести"
+        },
+        {
+            "key": "word.nexthour_after.8",
+            "value": "семи"
+        },
+        {
+            "key": "word.nexthour_after.9",
+            "value": "восьми"
+        },
+        {
+            "key": "word.nexthour_after.10",
+            "value": "девяти"
+        },
+        {
+            "key": "word.nexthour_after.11",
+            "value": "десяти"
+        },
+        {
+            "key": "word.nexthour_after.12",
+            "value": "одиннадцати"
+        },
+        {
+            "key": "word.hour_pointer.1",
+            "value": "единицу"
+        },
+        {
+            "key": "word.hour_pointer.2",
+            "value": "двойку"
+        },
+        {
+            "key": "word.hour_pointer.3",
+            "value": "тройку"
+        },
+        {
+            "key": "word.hour_pointer.4",
+            "value": "четвёрку"
+        },
+        {
+            "key": "word.hour_pointer.5",
+            "value": "пятёрку"
+        },
+        {
+            "key": "word.hour_pointer.6",
+            "value": "шестёрку"
+        },
+        {
+            "key": "word.hour_pointer.7",
+            "value": "семёрку"
+        },
+        {
+            "key": "word.hour_pointer.8",
+            "value": "восьмёрку"
+        },
+        {
+            "key": "word.hour_pointer.9",
+            "value": "девятку"
+        },
+        {
+            "key": "word.hour_pointer.10",
+            "value": "десятку"
+        },
+        {
+            "key": "word.hour_pointer.11",
+            "value": "одиннадцать"
+        },
+        {
+            "key": "word.hour_pointer.12",
+            "value": "двенадцать"
+        },
+        {
+            "key": "ru",
+            "value": "Русский"
+        },
+        {
+            "key": "en",
+            "value": "Английский"
+        },
+        {
+            "key": "es",
+            "value": "Испанский"
+        },
+        {
+            "key": "tr",
+            "value": "Турецкий"
+        },
+        {
+            "key": "pt",
+            "value": "Португальский"
+        },
+        {
+            "key": "fr",
+            "value": "Французский"
+        },
+        {
+            "key": "ja",
+            "value": "Японский"
+        },
+        {
+            "key": "de",
+            "value": "Немецкий"
+        },
+        {
+            "key": "lang",
+            "value": "Язык"
+        },
+        {
+            "key": "setsound",
+            "value": "Звуки"
+        },
+        {
+            "key": "PuzzleDiff",
+            "value": "Сложность головоломки"
+        },
+        {
+            "key": "PuzzleSettings",
+            "value": "Настройки головоломки"
+        },
+        {
+            "key": "PuzzleMode",
+            "value": "Режим головоломки"
+        },
+        {
+            "key": "BookArabic",
+            "value": "Арабские цифры"
+        },
+        {
+            "key": "BookRoman",
+            "value": "Римские цифры"
+        },
+        {
+            "key": "BookPicture",
+            "value": "Картинка"
+        },
+        {
+            "key": "PuzzleSolved",
+            "value": "Головоломка решена!"
+        },
+        {
+            "key": "BackToMenu",
+            "value": "Вернуться в меню"
+        },
+        {
+            "key": "hint_first_card",
+            "value": "{0} — первая карта."
+        },
+        {
+            "key": "hint_last_card",
+            "value": "{0} — последняя карта."
+        },
+        {
+            "key": "hint_immediately_after",
+            "value": "{0} стоит сразу после {1}"
+        },
+        {
+            "key": "hint_immediately_before",
+            "value": "{0} стоит сразу перед {1}."
+        },
+        {
+            "key": "hint_between",
+            "value": "{0} стоит между {1} и {2}."
+        },
+        {
+            "key": "hint_left_of",
+            "value": "{0} стоит левее {1}."
+        },
+        {
+            "key": "hint_right_of",
+            "value": "{0} стоит правее {1}."
+        },
+        {
+            "key": "hint_one_false",
+            "value": "Одна подсказка ложная"
+        },
+        {
+            "key": "hint_no_suit",
+            "value": "На столе нет карт масти {0}."
+        },
+        {
+            "key": "hint_no_rank",
+            "value": "На столе нет {0}."
+        },
+        {
+            "key": "hint_no_even",
+            "value": "На столе нет чётных карт."
+        },
+        {
+            "key": "hint_no_odd",
+            "value": "На столе нет нечётных карт."
+        },
+        {
+            "key": "hint_no_above_10",
+            "value": "На столе нет карт со значением выше 10."
+        },
+        {
+            "key": "hint_no_below_6",
+            "value": "На столе нет карт со значением ниже 6."
+        },
+        {
+            "key": "hint_has_suit",
+            "value": "На столе есть карты масти {0}."
+        },
+        {
+            "key": "hint_has_rank",
+            "value": "На столе есть карты со значением {0}."
+        },
+        {
+            "key": "hint_position_of_card",
+            "value": "{0} находится на позиции {1}."
+        },
+        {
+            "key": "hint_not_first",
+            "value": "{0} не находится на первой позиции."
+        },
+        {
+            "key": "hint_not_last",
+            "value": "{0} не находится на последней позиции."
+        },
+        {
+            "key": "hint_not_neighbor",
+            "value": "{0} не соседствует с {1}."
+        },
+        {
+            "key": "hint_exact_count_suit",
+            "value": "На столе ровно {0} карт масти {1}."
+        },
+        {
+            "key": "hint_exact_count_rank",
+            "value": "На столе ровно {0} карт со значением {1}."
+        },
+        {
+            "key": "hint_even_position",
+            "value": "{0} находится на чётной позиции."
+        },
+        {
+            "key": "hint_odd_position",
+            "value": "{0} находится на нечётной позиции."
+        },
+        {
+            "key": "hint_between_count",
+            "value": "Между {0} и {1} ровно {2} карт(ы)."
+        },
+        {
+            "key": "false_there_is",
+            "value": "На столе точно есть {0}."
+        },
+        {
+            "key": "false_no",
+            "value": "На столе нет {0}."
+        },
+        {
+            "key": "false_first",
+            "value": "{0} — первая карта."
+        },
+        {
+            "key": "false_last",
+            "value": "{0} — последняя карта."
+        },
+        {
+            "key": "false_immediately_after",
+            "value": "{0} стоит сразу после {1}."
+        },
+        {
+            "key": "false_exact_count_suit",
+            "value": "На столе ровно {0} карт(а) масти {1}."
+        },
+        {
+            "key": "false_exact_count_rank",
+            "value": "На столе ровно {0} карт(а) со значением {1}."
+        },
+        {
+            "key": "false_position_of_card",
+            "value": "{0} находится на позиции {1}."
+        },
+        {
+            "key": "false_neighbor",
+            "value": "{0} соседствует с {1}."
+        },
+        {
+            "key": "ArmorPuzzleInfo1",
+            "value": "Нужно расставить части брони в правильном порядке."
+        },
+        {
+            "key": "ArmorPuzzleInfo2",
+            "value": "В верхней ячейке — шлем, в средней — кираса, в нижней — ботинки."
+        },
+        {
+            "key": "BalancePuzzleInfo",
+            "value": "Нужно уравновесить весы, поставив все гири."
+        },
+        {
+            "key": "BookPuzzleInfo",
+            "value": "Нужно расставить книги в правильном порядке."
+        },
+        {
+            "key": "SlidersPuzzleInfo",
+            "value": "Нужно расположить плиты по порядку."
+        },
+        {
+            "key": "MazePuzzleInfo1",
+            "value": "Нужно вывести красный шар из лабиринта."
+        },
+        {
+            "key": "MazePuzzleInfo2",
+            "value": "Управление: WASD."
+        },
+        {
+            "key": "ClockPuzzleInfo1",
+            "value": "Нужно поставить время на часах, исходя из подсказки."
+        },
+        {
+            "key": "ClockPuzzleInfo2",
+            "value": "Нужно поставить время на часах, исходя из подсказок. Есть ложные подсказки."
+        },
+        {
+            "key": "ClockPuzzleInfo3",
+            "value": "A — вращение против часовой стрелки."
+        },
+        {
+            "key": "ClockPuzzleInfo4",
+            "value": "D — вращение по часовой стрелке."
+        },
+        {
+            "key": "ClockPuzzleInfo5",
+            "value": "E — смена стрелки."
+        },
+        {
+            "key": "ClockPuzzleInfo6",
+            "value": "Управление:"
+        },
+        {
+            "key": "ClockPuzzleInfo7",
+            "value": "Нужно поставить время на часах, исходя из подсказок. Есть ложные подсказки. Стрелки влияют на движение друг друга."
+        },
+        {
+            "key": "CardsPuzzleInfo1",
+            "value": "Нужно составить ряд карт, исходя из условий."
+        },
+        {
+            "key": "CardsPuzzleInfo2",
+            "value": "В зону с жёлтым кругом можно поместить карты, которые могут подходить под условия."
+        },
+        {
+            "key": "CardsPuzzleInfo3",
+            "value": "В зону с красным крестом можно поместить карты, которые точно не подходят под условия."
+        },
+        {
+            "key": "DicesPuzzleInfo1",
+            "value": "Нужно поместить кости в верхнюю часть так, чтобы уравнение стало верным."
+        },
+        {
+            "key": "DicesPuzzleInfo2",
+            "value": "Правая кнопка мыши — изменить число на кубике."
+        },
+        {
+            "key": "DicesPuzzleInfo3",
+            "value": "Условия:"
+        },
+        {
+            "key": "DicesPuzzleInfo4",
+            "value": "Такое условие означает, что в первом слоте должен быть кубик со значением 1."
+        },
+        {
+            "key": "DicesPuzzleInfo5",
+            "value": "Такое условие означает, что нельзя использовать кубики со значением 1."
+        },
+        {
+            "key": "DicesPuzzleInfo6",
+            "value": "Такое условие означает, что кубиков со значением 1 должно быть менее двух."
+        },
+        {
+            "key": "DicesPuzzleInfo7",
+            "value": "Такое условие означает, что кубиков со значением 1 должно быть более двух."
+        },
+        {
+            "key": "DicesPuzzleInfo8",
+            "value": "Левая кнопка мыши — изменить цвет кубика."
+        },
+        {
+            "key": "DicesPuzzleInfo9",
+            "value": "Такое условие означает, что не должно быть более двух чёрных кубиков подряд."
+        },
+        {
+            "key": "DicesPuzzleInfo10",
+            "value": "Такое условие означает, что в первом слоте должен быть белый кубик."
+        },
+        {
+            "key": "DicesPuzzleInfo11",
+            "value": "Такое условие означает, что чёрные и белые кубики должны чередоваться."
+        },
+        {
+            "key": "SkipPuzzle",
+            "value": "Пропустить"
+        },
+        {
+            "key": "ContinuePuzzle",
+            "value": "Продолжить"
+        },
+        {
+            "key": "NewItem",
+            "value": "Новый предмет!"
+        },
+        {
+            "key": "ItemSuitable",
+            "value": "Предмет подошёл"
+        },
+        {
+            "key": "ItemNotSuitable",
+            "value": "Предмет не подходит"
+        },
+        {
+            "key": "InventoryFull",
+            "value": "Инвентарь полон"
+        },
+        {
+            "key": "ItemBall",
+            "value": "Красный шар"
+        },
+        {
+            "key": "ItemBook",
+            "value": "Книга"
+        },
+        {
+            "key": "ItemCards",
+            "value": "Игральные карты"
+        },
+        {
+            "key": "ItemClockHand",
+            "value": "Стрелка часов"
+        },
+        {
+            "key": "ItemDices",
+            "value": "Игральные кости"
+        },
+        {
+            "key": "ItemExitKey",
+            "value": "Круглый ключ"
+        },
+        {
+            "key": "ItemGoldenKey",
+            "value": "Золотой ключ"
+        },
+        {
+            "key": "ItemHelmet",
+            "value": "Шлем"
+        },
+        {
+            "key": "ItemIronKey",
+            "value": "Железный ключ"
+        },
+        {
+            "key": "ItemWeight",
+            "value": "Грузик для весов"
+        },
+        {
+            "key": "ItemLight",
+            "value": "Факел"
+        },
+        {
+            "key": "ItemPreciousKey",
+            "value": "Драгоценный ключ"
+        },
+        {
+            "key": "ItemStonePlate",
+            "value": "Каменная плита"
+        },
+        {
+            "key": "LevelComplete",
+            "value": "Уровень пройден!"
+        },
+        {
+            "key": "RestartLevel",
+            "value": "Повторить уровень"
+        },
+        {
+            "key": "NextLevel",
+            "value": "Следующий уровень"
+        },
+        {
+            "key": "GameOver",
+            "value": "Вы погибли!"
+        },
+        {
+            "key": "EndPuzzleInfo1",
+            "value": "Нужно вращать фрагменты барельефа чтобы его восстановить."
+        },
+        {
+            "key": "EndPuzzleInfo2",
+            "value": "E - смена круглого ключа"
+        },
+        {
+            "key": "DoorWrongSide",
+            "value": "Дверь открывается с другой стороны."
+        },
+        {
+            "key": "NoFuel",
+            "value": "Нужен огонь, чтобы зажечь факел!"
+        },
+        {
+            "key": "Settings",
+            "value": "Настройки"
+        },
+        {
+            "key": "Restart",
+            "value": "Перезапустить"
+        },
+        {
+            "key": "SkipPanelText",
+            "value": "Решите пазл, чтобы разблокировать."
+        }
+
+    ]
+}

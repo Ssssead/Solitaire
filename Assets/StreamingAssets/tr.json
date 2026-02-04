@@ -1,0 +1,856 @@
+{
+    "items": [
+        {
+            "key": "Levels",
+            "value": "Seviyeler"
+        },
+        {
+            "key": "Puzzles",
+            "value": "Bulmacalar"
+        },
+        {
+            "key": "Play",
+            "value": "Oyna"
+        },
+        {
+            "key": "level",
+            "value": "Seviye"
+        },
+        {
+            "key": "clue.l1.oclock_numeric",
+            "value": "Kapı saat {H}:{MM} olduğunda açılacak."
+        },
+        {
+            "key": "clue.l1.hint_minutes",
+            "value": "Kapı, dakika ibresi {minuteWord} dakika ve saat ibresi {hourWord} gösterdiğinde açılacak."
+        },
+        {
+            "key": "word.hour.1",
+            "value": "saat bir"
+        },
+        {
+            "key": "word.hour.2",
+            "value": "saat iki"
+        },
+        {
+            "key": "word.hour.3",
+            "value": "saat üç"
+        },
+        {
+            "key": "word.hour.4",
+            "value": "saat dört"
+        },
+        {
+            "key": "word.hour.5",
+            "value": "saat beş"
+        },
+        {
+            "key": "word.hour.6",
+            "value": "saat altı"
+        },
+        {
+            "key": "word.hour.7",
+            "value": "saat yedi"
+        },
+        {
+            "key": "word.hour.8",
+            "value": "saat sekiz"
+        },
+        {
+            "key": "word.hour.9",
+            "value": "saat dokuz"
+        },
+        {
+            "key": "word.hour.10",
+            "value": "saat on"
+        },
+        {
+            "key": "word.hour.11",
+            "value": "saat on bir"
+        },
+        {
+            "key": "word.hour.12",
+            "value": "saat on iki"
+        },
+        {
+            "key": "word.minute.0",
+            "value": "tam"
+        },
+        {
+            "key": "word.minute.5",
+            "value": "beş"
+        },
+        {
+            "key": "word.minute.10",
+            "value": "on"
+        },
+        {
+            "key": "word.minute.15",
+            "value": "on beş"
+        },
+        {
+            "key": "word.minute.20",
+            "value": "yirmi"
+        },
+        {
+            "key": "word.minute.25",
+            "value": "yirmi beş"
+        },
+        {
+            "key": "word.minute.30",
+            "value": "otuz"
+        },
+        {
+            "key": "word.minute.35",
+            "value": "otuz beş"
+        },
+        {
+            "key": "word.minute.40",
+            "value": "kırk"
+        },
+        {
+            "key": "word.minute.45",
+            "value": "kırk beş"
+        },
+        {
+            "key": "word.minute.50",
+            "value": "elli"
+        },
+        {
+            "key": "word.minute.55",
+            "value": "elli beş"
+        },
+        {
+            "key": "clue.l2.solar_noon",
+            "value": "Kapı güneş tepe noktasına ulaştığında açılacak."
+        },
+        {
+            "key": "clue.l2.time.half_past",
+            "value": "Kapı  {hourWord} buçukta açılacak."
+        },
+        {
+            "key": "clue.l2.time.quarter_past",
+            "value": "Kapı  {hourWord} çeyrek geçe açılacak."
+        },
+        {
+            "key": "clue.l2.time.quarter_to",
+            "value": "Kapı  {hourPointerWord}e çeyrek kala açılacak."
+        },
+        {
+            "key": "clue.l2.time.minutes_to",
+            "value": "Kapı  {hourPointerWord}e {nextminuteWord} kala açılacak."
+        },
+        {
+            "key": "clue.l2.time.minutes_past",
+            "value": "Kapı  {hourWord} {minuteWord} geçe açılacak."
+        },
+        {
+            "key": "word.nextminute.0",
+            "value": "tam"
+        },
+        {
+            "key": "word.nextminute.5",
+            "value": "beş"
+        },
+        {
+            "key": "word.nextminute.10",
+            "value": "on"
+        },
+        {
+            "key": "word.nextminute.15",
+            "value": "on beş"
+        },
+        {
+            "key": "word.nextminute.20",
+            "value": "yirmi"
+        },
+        {
+            "key": "word.nextminute.25",
+            "value": "yirmi beş"
+        },
+        {
+            "key": "word.nextminute.30",
+            "value": "otuz"
+        },
+        {
+            "key": "word.nextminute.35",
+            "value": "otuz beş"
+        },
+        {
+            "key": "word.nextminute.40",
+            "value": "kırk"
+        },
+        {
+            "key": "word.nextminute.45",
+            "value": "kırk beş"
+        },
+        {
+            "key": "word.nextminute.50",
+            "value": "elli"
+        },
+        {
+            "key": "word.nextminute.55",
+            "value": "elli beş"
+        },
+        {
+            "key": "word.nexthour.1",
+            "value": "saat bir"
+        },
+        {
+            "key": "word.nexthour.2",
+            "value": "saat iki"
+        },
+        {
+            "key": "word.nexthour.3",
+            "value": "saat üç"
+        },
+        {
+            "key": "word.nexthour.4",
+            "value": "saat dört"
+        },
+        {
+            "key": "word.nexthour.5",
+            "value": "saat beş"
+        },
+        {
+            "key": "word.nexthour.6",
+            "value": "saat altı"
+        },
+        {
+            "key": "word.nexthour.7",
+            "value": "saat yedi"
+        },
+        {
+            "key": "word.nexthour.8",
+            "value": "saat sekiz"
+        },
+        {
+            "key": "word.nexthour.9",
+            "value": "saat dokuz"
+        },
+        {
+            "key": "word.nexthour.10",
+            "value": "saat on"
+        },
+        {
+            "key": "word.nexthour.11",
+            "value": "saat on bir"
+        },
+        {
+            "key": "word.nexthour.12",
+            "value": "saat on iki"
+        },
+        {
+            "key": "clue.l2.time.start_hour",
+            "value": "Kapı {nextHourStartWord} saat başladığında açılacak."
+        },
+        {
+            "key": "word.hour_start.1",
+            "value": "birinci"
+        },
+        {
+            "key": "word.hour_start.2",
+            "value": "ikinci"
+        },
+        {
+            "key": "word.hour_start.3",
+            "value": "üçüncü"
+        },
+        {
+            "key": "word.hour_start.4",
+            "value": "dördüncü"
+        },
+        {
+            "key": "word.hour_start.5",
+            "value": "beşinci"
+        },
+        {
+            "key": "word.hour_start.6",
+            "value": "altıncı"
+        },
+        {
+            "key": "word.hour_start.7",
+            "value": "yedinci"
+        },
+        {
+            "key": "word.hour_start.8",
+            "value": "sekizinci"
+        },
+        {
+            "key": "word.hour_start.9",
+            "value": "dokuzuncu"
+        },
+        {
+            "key": "word.hour_start.10",
+            "value": "onuncu"
+        },
+        {
+            "key": "word.hour_start.11",
+            "value": "on birinci"
+        },
+        {
+            "key": "word.hour_start.12",
+            "value": "on ikinci"
+        },
+        {
+            "key": "clue.l3.time.half_past",
+            "value": "Kapı {hourWord} buçukta, {SS} saniye sonra açılacak."
+        },
+        {
+            "key": "clue.l3.time.quarter_past",
+            "value": "Kapı {hourWord} çeyrek geçe, {SS} saniye sonra açılacak."
+        },
+        {
+            "key": "clue.l3.time.quarter_to",
+            "value": "Kapı {hourPointerWord} çeyrek kala, {SS} saniye sonra açılacak."
+        },
+        {
+            "key": "clue.l3.time.minutes_to",
+            "value": "Kapı {hourPointerWord} {nextminuteWord} kala, {SS} saniye sonra açılacak."
+        },
+        {
+            "key": "clue.l3.time.minutes_past",
+            "value": "Kapı {hourWord} {minuteWord} dakika geçe, {SS} saniye sonra açılacak."
+        },
+        {
+            "key": "clue.l3.time.start_hour",
+            "value": "Kapı {nextHourStartWord} saat başladığında, {SS} saniye sonra açılacak."
+        },
+        {
+            "key": "word.nexthour_after.1",
+            "value": "saat bir"
+        },
+        {
+            "key": "word.nexthour_after.2",
+            "value": "saat iki"
+        },
+        {
+            "key": "word.nexthour_after.3",
+            "value": "saat üç"
+        },
+        {
+            "key": "word.nexthour_after.4",
+            "value": "saat dört"
+        },
+        {
+            "key": "word.nexthour_after.5",
+            "value": "saat beş"
+        },
+        {
+            "key": "word.nexthour_after.6",
+            "value": "saat altı"
+        },
+        {
+            "key": "word.nexthour_after.7",
+            "value": "saat yedi"
+        },
+        {
+            "key": "word.nexthour_after.8",
+            "value": "saat sekiz"
+        },
+        {
+            "key": "word.nexthour_after.9",
+            "value": "saat dokuz"
+        },
+        {
+            "key": "word.nexthour_after.10",
+            "value": "saat on"
+        },
+        {
+            "key": "word.nexthour_after.11",
+            "value": "saat on bir"
+        },
+        {
+            "key": "word.nexthour_after.12",
+            "value": "saat on iki"
+        },
+        {
+            "key": "word.hour_pointer.1",
+            "value": "saat ikiye"
+        },
+        {
+            "key": "word.hour_pointer.2",
+            "value": "saat üçe"
+        },
+        {
+            "key": "word.hour_pointer.3",
+            "value": "saat dörde"
+        },
+        {
+            "key": "word.hour_pointer.4",
+            "value": "saat beşe"
+        },
+        {
+            "key": "word.hour_pointer.5",
+            "value": "saat altıya"
+        },
+        {
+            "key": "word.hour_pointer.6",
+            "value": "saat yediye"
+        },
+        {
+            "key": "word.hour_pointer.7",
+            "value": "saat sekize"
+        },
+        {
+            "key": "word.hour_pointer.8",
+            "value": "saat dokuza"
+        },
+        {
+            "key": "word.hour_pointer.9",
+            "value": "saat ona"
+        },
+        {
+            "key": "word.hour_pointer.10",
+            "value": "saat on bire"
+        },
+        {
+            "key": "word.hour_pointer.11",
+            "value": "saat on ikiye"
+        },
+        {
+            "key": "word.hour_pointer.12",
+            "value": "saat bire"
+        },
+        {
+            "key": "ru",
+            "value": "Rusça"
+        },
+        {
+            "key": "en",
+            "value": "İngilizce"
+        },
+        {
+            "key": "es",
+            "value": "İspanyolca"
+        },
+        {
+            "key": "pt",
+            "value": "Portekizce"
+        },
+        {
+            "key": "fr",
+            "value": "Fransızca"
+        },
+        {
+            "key": "tr",
+            "value": "Türkçe"
+        },
+        {
+            "key": "de",
+            "value": "Almanca"
+        },
+        {
+            "key": "ja",
+            "value": "Japonca"
+        },
+        {
+            "key": "lang",
+            "value": "Dil"
+        },
+        {
+            "key": "setsound",
+            "value": "Sesler"
+        },
+        {
+            "key": "PuzzleDiff",
+            "value": "Bulmaca Zorluğu"
+        },
+        {
+            "key": "PuzzleSettings",
+            "value": "Bulmaca Ayarları"
+        },
+        {
+            "key": "PuzzleMode",
+            "value": "Bulmaca Modu"
+        },
+        {
+            "key": "BookArabic",
+            "value": "Arap rakamları"
+        },
+        {
+            "key": "BookRoman",
+            "value": "Romen rakamları"
+        },
+        {
+            "key": "BookPicture",
+            "value": "Resim"
+        },
+        {
+            "key": "PuzzleSolved",
+            "value": "Bulmaca çözüldü!"
+        },
+        {
+            "key": "BackToMenu",
+            "value": "Menüye dön"
+        },
+        {
+            "key": "hint_first_card",
+            "value": "{0} ilk karttır."
+        },
+        {
+            "key": "hint_last_card",
+            "value": "{0} son karttır."
+        },
+        {
+            "key": "hint_immediately_after",
+            "value": "{0}, {1}’den hemen sonradır."
+        },
+        {
+            "key": "hint_immediately_before",
+            "value": "{0}, {1}’den hemen öncedir."
+        },
+        {
+            "key": "hint_between",
+            "value": "{0}, {1} ile {2} arasındadır."
+        },
+        {
+            "key": "hint_left_of",
+            "value": "{0}, {1}’in solundadır."
+        },
+        {
+            "key": "hint_right_of",
+            "value": "{0}, {1}’in sağındadır."
+        },
+        {
+            "key": "hint_one_false",
+            "value": "İpuçlarından biri yanlıştır."
+        },
+        {
+            "key": "hint_no_suit",
+            "value": "Masada {0} renginde kart yok."
+        },
+        {
+            "key": "hint_no_rank",
+            "value": "Masada {0} değerinde kart yok."
+        },
+        {
+            "key": "hint_no_even",
+            "value": "Masada çift sayılı kart yok."
+        },
+        {
+            "key": "hint_no_odd",
+            "value": "Masada tek sayılı kart yok."
+        },
+        {
+            "key": "hint_no_above_10",
+            "value": "Masada 10’dan büyük kart yok."
+        },
+        {
+            "key": "hint_no_below_6",
+            "value": "Masada 6’dan küçük kart yok."
+        },
+        {
+            "key": "hint_has_suit",
+            "value": "Masada {0} renginde kartlar var."
+        },
+        {
+            "key": "hint_has_rank",
+            "value": "Masada {0} değerinde kartlar var."
+        },
+        {
+            "key": "hint_position_of_card",
+            "value": "{0}, {1}. pozisyondadır."
+        },
+        {
+            "key": "hint_not_first",
+            "value": "{0} ilk pozisyonda değildir."
+        },
+        {
+            "key": "hint_not_last",
+            "value": "{0} son pozisyonda değildir."
+        },
+        {
+            "key": "hint_not_neighbor",
+            "value": "{0}, {1}’in yanında değildir."
+        },
+        {
+            "key": "hint_exact_count_suit",
+            "value": "Masada tam olarak {0} tane {1} renginde kart vardır."
+        },
+        {
+            "key": "hint_exact_count_rank",
+            "value": "Masada tam olarak {0} tane {1} değerinde kart vardır."
+        },
+        {
+            "key": "hint_even_position",
+            "value": "{0} çift numaralı bir pozisyondadır."
+        },
+        {
+            "key": "hint_odd_position",
+            "value": "{0} tek numaralı bir pozisyondadır."
+        },
+        {
+            "key": "hint_between_count",
+            "value": "{0} ile {1} arasında tam olarak {2} kart vardır."
+        },
+        {
+            "key": "false_there_is",
+            "value": "Masada kesinlikle {0} vardır."
+        },
+        {
+            "key": "false_no",
+            "value": "Masada {0} yoktur."
+        },
+        {
+            "key": "false_first",
+            "value": "{0} ilk karttır."
+        },
+        {
+            "key": "false_last",
+            "value": "{0} son karttır."
+        },
+        {
+            "key": "false_immediately_after",
+            "value": "{0}, {1}’den hemen sonradır."
+        },
+        {
+            "key": "false_exact_count_suit",
+            "value": "Masada tam olarak {0} tane {1} renginde kart vardır."
+        },
+        {
+            "key": "false_exact_count_rank",
+            "value": "Masada tam olarak {0} tane {1} değerinde kart vardır."
+        },
+        {
+            "key": "false_position_of_card",
+            "value": "{0}, {1}. pozisyondadır."
+        },
+        {
+            "key": "false_neighbor",
+            "value": "{0}, {1}’in yanındadır."
+        },
+        {
+            "key": "ArmorPuzzleInfo1",
+            "value": "Zırh parçalarını doğru sırayla yerleştirmeniz gerekiyor."
+        },
+        {
+            "key": "ArmorPuzzleInfo2",
+            "value": "Üst hücrede — miğfer, orta hücrede — göğüs zırhı, alt hücrede — çizmeler."
+        },
+        {
+            "key": "BalancePuzzleInfo",
+            "value": "Tüm ağırlıkları koyarak teraziyi dengelemeniz gerekiyor."
+        },
+        {
+            "key": "BookPuzzleInfo",
+            "value": "Kitapları doğru sırayla yerleştirmeniz gerekiyor."
+        },
+        {
+            "key": "SlidersPuzzleInfo",
+            "value": "Plakaları sıraya koymanız gerekiyor."
+        },
+        {
+            "key": "MazePuzzleInfo1",
+            "value": "Kırmızı topu labirentten çıkarmanız gerekiyor."
+        },
+        {
+            "key": "MazePuzzleInfo2",
+            "value": "Kontroller: WASD."
+        },
+        {
+            "key": "ClockPuzzleInfo1",
+            "value": "İpucuna göre saatteki zamanı ayarlamanız gerekiyor."
+        },
+        {
+            "key": "ClockPuzzleInfo2",
+            "value": "İpucuna göre saatteki zamanı ayarlamanız gerekiyor. Bazı ipuçları yanlış olabilir."
+        },
+        {
+            "key": "ClockPuzzleInfo3",
+            "value": "A — saat yönünün tersine döndürme."
+        },
+        {
+            "key": "ClockPuzzleInfo4",
+            "value": "D — saat yönünde döndürme."
+        },
+        {
+            "key": "ClockPuzzleInfo5",
+            "value": "E — ibre değiştirme."
+        },
+        {
+            "key": "ClockPuzzleInfo6",
+            "value": "Kontroller:"
+        },
+        {
+            "key": "ClockPuzzleInfo7",
+            "value": "İpuçlarına göre saati ayarlaman gerekiyor. Bazı ipuçları yanlıştır. Akrep ve yelkovan birbirinin hareketini etkiler."
+        },
+        {
+            "key": "CardsPuzzleInfo1",
+            "value": "Koşullara göre bir kart sırası oluşturmanız gerekiyor."
+        },
+        {
+            "key": "CardsPuzzleInfo2",
+            "value": "Sarı daireli alana, koşullara uyma ihtimali olan kartları yerleştirebilirsin."
+        },
+        {
+            "key": "CardsPuzzleInfo3",
+            "value": "Kırmızı artı işaretli alana, kesinlikle koşullara uymayan kartları yerleştirebilirsin."
+        },
+        {
+            "key": "DicesPuzzleInfo1",
+            "value": "Denklem doğru olacak şekilde zarları üst alana yerleştirmeniz gerekiyor."
+        },
+        {
+            "key": "DicesPuzzleInfo2",
+            "value": "Sağ fare tuşu — zar üzerindeki sayıyı değiştir."
+        },
+        {
+            "key": "DicesPuzzleInfo3",
+            "value": "Koşullar:"
+        },
+        {
+            "key": "DicesPuzzleInfo4",
+            "value": "Bu koşul, ilk kutuda değeri 1 olan bir zar olması gerektiğini belirtir."
+        },
+        {
+            "key": "DicesPuzzleInfo5",
+            "value": "Bu koşul, değeri 1 olan zarların kullanılamayacağını belirtir."
+        },
+        {
+            "key": "DicesPuzzleInfo6",
+            "value": "Bu koşul, değeri 1 olan zarların sayısının iki'den az olması gerektiğini belirtir."
+        },
+        {
+            "key": "DicesPuzzleInfo7",
+            "value": "Bu koşul, değeri 1 olan zarların sayısının iki'den fazla olması gerektiğini belirtir."
+        },
+        {
+            "key": "DicesPuzzleInfo8",
+            "value": "Sol fare tuşu — zarın rengini değiştir."
+        },
+        {
+            "key": "DicesPuzzleInfo9",
+            "value": "Bu koşul, üst üste iki siyah zardan fazla olmaması gerektiğini belirtir."
+        },
+        {
+            "key": "DicesPuzzleInfo10",
+            "value": "Bu koşul, ilk kutuda beyaz bir zar olması gerektiğini belirtir."
+        },
+        {
+            "key": "DicesPuzzleInfo11",
+            "value": "Bu koşul, siyah ve beyaz zarların sırayla olması gerektiğini belirtir."
+        },
+        {
+            "key": "SkipPuzzle",
+            "value": "Atla"
+        },
+        {
+            "key": "ContinuePuzzle",
+            "value": "Devam et"
+        },
+        {
+            "key": "NewItem",
+            "value": "Yeni eşya!"
+        },
+        {
+            "key": "ItemSuitable",
+            "value": "Eşya uyuyor."
+        },
+        {
+            "key": "ItemNotSuitable",
+            "value": "Eşya uygun değil."
+        },
+        {
+            "key": "InventoryFull",
+            "value": "Envanter dolu."
+        },
+        {
+            "key": "ItemBall",
+            "value": "Kırmızı top"
+        },
+        {
+            "key": "ItemBook",
+            "value": "Kitap"
+        },
+        {
+            "key": "ItemCards",
+            "value": "Oyun kartları"
+        },
+        {
+            "key": "ItemClockHand",
+            "value": "Saat ibresi"
+        },
+        {
+            "key": "ItemDices",
+            "value": "Zarlar"
+        },
+        {
+            "key": "ItemExitKey",
+            "value": "Yuvarlak anahtar"
+        },
+        {
+            "key": "ItemGoldenKey",
+            "value": "Altın anahtar"
+        },
+        {
+            "key": "ItemHelmet",
+            "value": "Miğfer"
+        },
+        {
+            "key": "ItemIronKey",
+            "value": "Demir anahtar"
+        },
+        {
+            "key": "ItemWeight",
+            "value": "Terazi için ağırlık"
+        },
+        {
+            "key": "ItemLight",
+            "value": "Meşale"
+        },
+        {
+            "key": "ItemPreciousKey",
+            "value": "Değerli anahtar"
+        },
+        {
+            "key": "ItemStonePlate",
+            "value": "Taş plaka"
+        },
+        {
+            "key": "GameOver",
+            "value": "Öldün!"
+        },
+        {
+            "key": "LevelComplete",
+            "value": "Bölüm tamamlandı!"
+        },
+        {
+            "key": "RestartLevel",
+            "value": "Bölümü yeniden başlat"
+        },
+        {
+            "key": "NextLevel",
+            "value": "Sonraki bölüm"
+        },
+        {
+            "key": "EndPuzzleInfo1",
+            "value": "Kabartmayı onarmak için parçaları döndürmelisin."
+        },
+        {
+            "key": "EndPuzzleInfo2",
+            "value": "E - yuvarlak anahtarı değiştir"
+        },
+        {
+            "key": "DoorWrongSide",
+            "value": "Kapı diğer taraftan açılıyor."
+        },
+        {
+            "key": "NoFuel",
+            "value": "Meşaleyi yakmak için ateş gerekiyor!"
+        },
+        {
+            "key": "Settings",
+            "value": "Ayarlar"
+        },
+        {
+            "key": "Restart",
+            "value": "Yeniden başlat"
+        },
+        {
+            "key": "SkipPanelText",
+            "value": "Kilidi açmak için bulmacayı çözün."
+        }
+    ]
+}
