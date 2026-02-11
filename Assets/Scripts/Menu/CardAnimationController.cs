@@ -69,14 +69,14 @@ public class CardAnimationController : MonoBehaviour
         }
     }
 
-    private void ResetRenderPriority()
+  /*  private void ResetRenderPriority()
     {
         foreach (var card in allCards)
         {
             if (card.hoverEffect != null)
                 card.hoverEffect.SetPriorityRender(false);
         }
-    }
+    }*/
 
     private void RefreshCardVisuals(RectTransform card)
     {
@@ -96,7 +96,7 @@ public class CardAnimationController : MonoBehaviour
     {
         StopAllCoroutines();
         SetAllHovers(false);
-        ResetRenderPriority();
+        //ResetRenderPriority();
 
         StartCoroutine(SelectCardRoutine(selectedType));
     }
@@ -160,7 +160,7 @@ public class CardAnimationController : MonoBehaviour
 
             if (selectedCardEntry.hoverEffect != null)
             {
-                selectedCardEntry.hoverEffect.SetPriorityRender(true);
+               // selectedCardEntry.hoverEffect.SetPriorityRender(true);
                 selectedCardEntry.hoverEffect.SetSelectedMode(true);
             }
         }
@@ -170,7 +170,7 @@ public class CardAnimationController : MonoBehaviour
     {
         StopAllCoroutines();
         SetAllHovers(false);
-        ResetRenderPriority();
+        //ResetRenderPriority();
 
         foreach (var card in allCards)
         {

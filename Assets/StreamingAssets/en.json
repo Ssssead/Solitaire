@@ -101,144 +101,144 @@
             "value": "You will get {0} XP"
         },
         {
-            "key": "word.minute.35",
-            "value": "thirty-five"
+            "key": "stats",
+            "value": "Statistics"
         },
         {
-            "key": "word.minute.40",
-            "value": "forty"
+            "key": "settings",
+            "value": "Settings"
         },
         {
-            "key": "word.minute.45",
-            "value": "forty-five"
+            "key": "shop",
+            "value": "Shop"
         },
         {
-            "key": "word.minute.50",
-            "value": "fifty"
+            "key": "leaderboards",
+            "value": "Leaderboard"
         },
         {
-            "key": "word.minute.55",
-            "value": "fifty-five"
+            "key": "dailyquests",
+            "value": "Daily Quests"
         },
         {
-            "key": "clue.l2.solar_noon",
-            "value": "The door will open when the sun reaches its zenith."
+            "key": "STATSGlobalStats",
+            "value": "Global Stats"
         },
         {
-            "key": "clue.l2.time.half_past",
-            "value": "The door will open at half past {nextHourWord}."
+            "key": "STATSGamesPlayed",
+            "value": "GAMES PLAYED: "
         },
         {
-            "key": "clue.l2.time.quarter_past",
-            "value": "The door will open at quarter past {nextHourWord}."
+            "key": "STATSWins",
+            "value": "WINS:"
         },
         {
-            "key": "clue.l2.time.quarter_to",
-            "value": "The door will open at quarter to {hourWord}."
+            "key": "STATSRecords",
+            "value": "RECORDS:"
         },
         {
-            "key": "clue.l2.time.minutes_to",
-            "value": "The door will open {nextminuteWord} minutes to {hourPointerWord}."
+            "key": "STATSScore",
+            "value": "Score:"
         },
         {
-            "key": "clue.l2.time.minutes_past",
-            "value": "The door will open {minuteWord} minutes past {hourWord}."
+            "key": "STATSTime",
+            "value": "Time:"
         },
         {
-            "key": "word.nextminute.0",
-            "value": "zero"
+            "key": "STATSMoves",
+            "value": "Moves:"
         },
         {
-            "key": "word.nextminute.5",
-            "value": "five"
+            "key": "STATSPERFORMANCE",
+            "value": "PERFORMANCE:"
         },
         {
-            "key": "word.nextminute.10",
-            "value": "ten"
+            "key": "STATSWinRate",
+            "value": "Win Rate:"
         },
         {
-            "key": "word.nextminute.15",
-            "value": "fifteen"
+            "key": "STATSAvgTime",
+            "value": "Avg Time:"
         },
         {
-            "key": "word.nextminute.20",
-            "value": "twenty"
+            "key": "STATSAvgMoves",
+            "value": "Avg Moves:"
         },
         {
-            "key": "word.nextminute.25",
-            "value": "twenty-five"
+            "key": "STATSStreaks",
+            "value": "STREAKS:"
         },
         {
-            "key": "word.nextminute.30",
-            "value": "thirty"
+            "key": "STATSCurrentStreak",
+            "value": "Current:"
         },
         {
-            "key": "word.nextminute.35",
-            "value": "thirty-five"
+            "key": "STATSBestStreak",
+            "value": "Best:"
         },
         {
-            "key": "word.nextminute.40",
-            "value": "forty"
+            "key": "STATSHistory",
+            "value": "HISTORY (Last 10):"
         },
         {
-            "key": "word.nextminute.45",
-            "value": "forty-five"
+            "key": "STATSDifficulties",
+            "value": "Difficulties Stats:"
         },
         {
-            "key": "word.nextminute.50",
-            "value": "fifty"
+            "key": "STATSEasyStats",
+            "value": "Easy Stats"
         },
         {
-            "key": "word.nextminute.55",
-            "value": "fifty-five"
+            "key": "STATSMediumStats",
+            "value": "Medium Stats"
         },
         {
-            "key": "word.nexthour.1",
-            "value": "twelve"
+            "key": "STATSHardStats",
+            "value": "Hard Stats"
         },
         {
-            "key": "word.nexthour.2",
-            "value": "one"
+            "key": "STATSGlobal",
+            "value": "Global Stats"
         },
         {
-            "key": "word.nexthour.3",
-            "value": "two"
+            "key": "STATSKlondike",
+            "value": "Klondike Stats"
         },
         {
-            "key": "word.nexthour.4",
-            "value": "three"
+            "key": "STATSSpider",
+            "value": "Spider Stats"
         },
         {
-            "key": "word.nexthour.5",
-            "value": "four"
+            "key": "STATSFreecell",
+            "value": "FreeCell Stats"
         },
         {
-            "key": "word.nexthour.6",
-            "value": "five"
+            "key": "STATSPyramid",
+            "value": "Pyramid Stats"
         },
         {
-            "key": "word.nexthour.7",
-            "value": "six"
+            "key": "STATSTripeaks",
+            "value": "TriPeaks Stats"
         },
         {
-            "key": "word.nexthour.8",
-            "value": "seven"
+            "key": "STATSOctagon",
+            "value": "Octagon Stats"
         },
         {
-            "key": "word.nexthour.9",
-            "value": "eight"
+            "key": "STATSMontana",
+            "value": "Montana Stats"
         },
         {
-            "key": "word.nexthour.10",
-            "value": "nine"
+            "key": "STATSMontecarlo",
+            "value": "Monte-Carlo Stats"
         },
         {
-            "key": "word.nexthour.11",
-            "value": "ten"
+            "key": "STATSSultan",
+            "value": "Sultan Stats"
         },
         {
-            "key": "word.nexthour.12",
-            "value": "eleven"
+            "key": "STATSYukon",
+            "value": "Yukon Stats"
         },
         {
             "key": "clue.l2.time.start_hour",

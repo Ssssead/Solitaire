@@ -5,282 +5,425 @@ using System.Collections.Generic;
 
 public class StatisticsUI : MonoBehaviour
 {
-    [Header("UI Header")]
+    [Header("Header")]
     public TMP_Text headerText;
+    public Button closeButton;
 
-    [Header("Global Stats References")]
-    public StatBinder globalBinder;
+    [Header("Tabs (Global vs Diff)")]
+    public Button globalTabButton;
+    public TMP_Text globalTabLabel;
+    public Button difficultiesTabButton;
+    public TMP_Text difficultiesTabLabel;
 
-    [Header("Difficulty Stats References")]
-    public DifficultyGroupBinder difficultyBinder;
+    [Header("Visual Colors")]
+    public Color activeTabColor = new Color32(255, 196, 0, 255);
+    public Color inactiveTabColor = new Color32(101, 68, 45, 255);
+    public Color activeTextColor = Color.black;
+    public Color inactiveTextColor = Color.white;
 
-    [Header("Variant Selector")]
-    public GameObject selectorContainer;
-    public TMP_Text variantLabel;
-    public Button prevButton;
-    public Button nextButton;
+    [Header("--- Containers References ---")]
+    [Tooltip("Ссылка на общую панель, в которой лежат DiffContainer, DrawModeContainer и т.д.")]
+    public GameObject filtersParentPanel; // <--- НОВОЕ ПОЛЕ: Общая панель фильтров
 
-    [Header("Assets")]
-    public Sprite winSprite;
-    public Sprite lossSprite;
-    public Sprite emptySprite;
+    [Header("Common: Difficulty")]
+    public GameObject difficultyContainer;
+    public Button[] difficultyButtons;     // 0: Easy, 1: Medium, 2: Hard
 
-    // Состояние
+    [Header("Klondike: Draw Mode")]
+    public GameObject drawModeContainer;
+    public Button[] drawModeButtons;       // 0: Draw 1, 1: Draw 3
+
+    [Header("Spider: Suit Mode")]
+    public GameObject suitModeContainer;
+    public Button[] suitModeButtons;       // 0: 1 Suit, 1: 2 Suits, 2: 4 Suits
+
+    [Header("Pyramid/TriPeaks: Rounds")]
+    public GameObject roundsContainer;
+    public Button[] roundsButtons;         // 0: 1 Round, 1: 2 Rounds, 2: 3 Rounds
+
+    [Header("Yukon/Montana/MonteCarlo: Game Mode")]
+    public GameObject otherModesContainer;
+    public Button[] otherModesButtons;
+
+    [Header("Main Stats Display")]
+    public TMP_Text gamesPlayedText;
+    public TMP_Text winsText;
+
+    [Header("Donut Chart")]
+    public Image winRateCircle;
+    public TMP_Text winRatePercentText;
+    public TMP_Text winRateValueText;
+
+    [Header("Performance")]
+    public TMP_Text avgTimeText;
+    public TMP_Text avgMovesText;
+
+    [Header("Records")]
+    public TMP_Text bestScoreText;
+    public TMP_Text bestTimeText;
+    public TMP_Text bestMovesText;
+
+    [Header("Streaks")]
+    public TMP_Text currentStreakText;
+    public TMP_Text bestStreakText;
+
+    [Header("History")]
+    public Image[] historySlots;
+    public Sprite winIcon;
+    public Sprite lossIcon;
+    public Sprite emptyIcon;
+
+    // --- State ---
     private GameType currentGame;
-    private int currentVariantIndex = 0;
+    private bool isGlobalTab = true;
+    private Difficulty currentDifficulty = Difficulty.Easy;
+    private string currentVariantKey = "";
 
-    // Списки вариантов
-    private List<string> variantKeys = new List<string>();
-    private List<string> variantLabels = new List<string>();
+    private Button[] currentActiveVariantButtons;
+    private List<string> currentActiveVariantKeys = new List<string>();
 
     private void Start()
     {
-        if (prevButton) prevButton.onClick.AddListener(OnPrevVariant);
-        if (nextButton) nextButton.onClick.AddListener(OnNextVariant);
+        if (globalTabButton) globalTabButton.onClick.AddListener(() => SetTab(true));
+        if (difficultiesTabButton) difficultiesTabButton.onClick.AddListener(() => SetTab(false));
+        if (closeButton) closeButton.onClick.AddListener(() => gameObject.SetActive(false));
+
+        for (int i = 0; i < difficultyButtons.Length; i++)
+        {
+            int index = i;
+            if (difficultyButtons[i])
+                difficultyButtons[i].onClick.AddListener(() => OnDifficultyClicked((Difficulty)index));
+        }
     }
 
-    private void OnEnable()
-    {
-        RefreshUI();
-    }
-
-    // --- ГЛАВНЫЙ МЕТОД ---
     public void ShowStatsForGame(GameType gameType)
     {
         currentGame = gameType;
-        if (headerText) headerText.text = gameType.ToString() + " Stats";
+        UpdateHeaderLocalisation();
 
-        SetupVariants();
-        RefreshUI();
+        isGlobalTab = true;
+        currentDifficulty = Difficulty.Easy;
+
+        ConfigureGameVariants();
+        RefreshWholeUI();
     }
-    // ---------------------
 
-    private void SetupVariants()
+    private void SetTab(bool isGlobal)
     {
-        variantKeys.Clear();
-        variantLabels.Clear();
-        currentVariantIndex = 0;
+        if (isGlobalTab == isGlobal) return;
+        this.isGlobalTab = isGlobal;
+        RefreshWholeUI();
+    }
+
+    private void OnDifficultyClicked(Difficulty diff)
+    {
+        currentDifficulty = diff;
+        RefreshWholeUI();
+    }
+
+    private void OnVariantButtonClicked(int index)
+    {
+        if (index >= 0 && index < currentActiveVariantKeys.Count)
+        {
+            currentVariantKey = currentActiveVariantKeys[index];
+            RefreshWholeUI();
+        }
+    }
+
+    private void ConfigureGameVariants()
+    {
+        currentActiveVariantKeys.Clear();
+        currentActiveVariantButtons = null;
+        currentVariantKey = "Standard";
 
         switch (currentGame)
         {
-            // --- 1. KLONDIKE ---
             case GameType.Klondike:
-                variantKeys.Add("Draw1"); variantLabels.Add("Draw 1");
-                variantKeys.Add("Draw3"); variantLabels.Add("Draw 3");
+                currentActiveVariantKeys.Add("Draw1");
+                currentActiveVariantKeys.Add("Draw3");
+                currentActiveVariantButtons = drawModeButtons;
+                currentVariantKey = "Draw1";
                 break;
 
-            // --- 2. SPIDER ---
             case GameType.Spider:
-                variantKeys.Add("1Suit"); variantLabels.Add("1 Suit");
-                variantKeys.Add("2Suits"); variantLabels.Add("2 Suits");
-                variantKeys.Add("4Suits"); variantLabels.Add("4 Suits");
+                currentActiveVariantKeys.Add("1Suit");
+                currentActiveVariantKeys.Add("2Suits");
+                currentActiveVariantKeys.Add("4Suits");
+                currentActiveVariantButtons = suitModeButtons;
+                currentVariantKey = "1Suit";
                 break;
 
-            // --- 3. FREECELL ---
-            case GameType.FreeCell:
-                variantKeys.Add("Standard"); variantLabels.Add("Standard");
-                break;
-
-            // --- 4. PYRAMID ---
             case GameType.Pyramid:
-                variantKeys.Add("1"); variantLabels.Add("1 Round");
-                variantKeys.Add("2"); variantLabels.Add("2 Rounds");
-                variantKeys.Add("3"); variantLabels.Add("3 Rounds");
-                break;
-
-            // --- 5. TRIPEAKS ---
             case GameType.TriPeaks:
-                // TriPeaksModeManager сохраняет как "1Rounds", "2Rounds"
-                // Исправляем ключи здесь, чтобы они совпадали с записью
-                variantKeys.Add("1Rounds"); variantLabels.Add("1 Round");
-                variantKeys.Add("2Rounds"); variantLabels.Add("2 Rounds");
-                variantKeys.Add("3Rounds"); variantLabels.Add("3 Rounds");
+                currentActiveVariantKeys.Add("1Rounds");
+                currentActiveVariantKeys.Add("2Rounds");
+                currentActiveVariantKeys.Add("3Rounds");
+                currentActiveVariantButtons = roundsButtons;
+                currentVariantKey = "1Rounds";
                 break;
 
-            // --- 6. YUKON ---
             case GameType.Yukon:
-                variantKeys.Add("Classic"); variantLabels.Add("Classic");
-                variantKeys.Add("Russian"); variantLabels.Add("Russian");
+                currentActiveVariantKeys.Add("Classic");
+                currentActiveVariantKeys.Add("Russian");
+                currentActiveVariantButtons = otherModesButtons;
+                currentVariantKey = "Classic";
                 break;
 
-            // --- 7. MONTE CARLO ---
             case GameType.MonteCarlo:
-                variantKeys.Add("8Ways"); variantLabels.Add("8 Ways");
-                variantKeys.Add("4Ways"); variantLabels.Add("4 Ways");
+                currentActiveVariantKeys.Add("8Ways");
+                currentActiveVariantKeys.Add("4Ways");
+                currentActiveVariantButtons = otherModesButtons;
+                currentVariantKey = "8Ways";
                 break;
 
-            // --- 8. SULTAN ---
-            case GameType.Sultan:
-                variantKeys.Add("Standard"); variantLabels.Add("Standard");
-                break;
-
-            // --- 9. OCTAGON ---
-            case GameType.Octagon:
-                variantKeys.Add("Standard"); variantLabels.Add("Standard");
-                break;
-
-            // --- 10. Montana ---
             case GameType.Montana:
-                variantKeys.Add("Standard"); variantLabels.Add("Standard");
+                currentActiveVariantKeys.Add("Standard");
+                currentActiveVariantKeys.Add("Hard");
+                currentActiveVariantButtons = otherModesButtons;
+                currentVariantKey = "Standard";
                 break;
 
-            // --- DEFAULT ---
             default:
-                variantKeys.Add("Standard"); variantLabels.Add("Standard");
+                currentActiveVariantButtons = null;
                 break;
         }
 
-        // Показываем кнопки переключения, только если вариантов больше 1
-        if (selectorContainer) selectorContainer.SetActive(variantKeys.Count > 1);
-
-        UpdateVariantLabel();
-    }
-
-    private void OnPrevVariant()
-    {
-        if (variantKeys.Count <= 1) return;
-        currentVariantIndex--;
-        if (currentVariantIndex < 0) currentVariantIndex = variantKeys.Count - 1;
-        UpdateVariantLabel();
-        RefreshUI();
-    }
-
-    private void OnNextVariant()
-    {
-        if (variantKeys.Count <= 1) return;
-        currentVariantIndex++;
-        if (currentVariantIndex >= variantKeys.Count) currentVariantIndex = 0;
-        UpdateVariantLabel();
-        RefreshUI();
-    }
-
-    private void UpdateVariantLabel()
-    {
-        if (variantLabel && variantLabels.Count > currentVariantIndex)
+        if (currentActiveVariantButtons != null)
         {
-            variantLabel.text = variantLabels[currentVariantIndex];
+            for (int i = 0; i < currentActiveVariantButtons.Length; i++)
+            {
+                if (currentActiveVariantButtons[i] == null) continue;
+                currentActiveVariantButtons[i].onClick.RemoveAllListeners();
+                int idx = i;
+                currentActiveVariantButtons[i].onClick.AddListener(() => OnVariantButtonClicked(idx));
+            }
+        }
+
+        UpdateVariantLabels();
+    }
+
+    private void UpdateVariantLabels()
+    {
+        if (currentActiveVariantButtons != otherModesButtons) return;
+        if (LocalizationManager.instance == null) return;
+
+        for (int i = 0; i < currentActiveVariantButtons.Length; i++)
+        {
+            if (i >= currentActiveVariantKeys.Count) break;
+
+            Button btn = currentActiveVariantButtons[i];
+            if (btn == null) continue;
+
+            TMP_Text label = btn.GetComponentInChildren<TMP_Text>();
+            if (label == null) continue;
+
+            string variantKey = currentActiveVariantKeys[i];
+            string localizationKey = variantKey;
+
+            switch (variantKey)
+            {
+                case "Standard": localizationKey = "Classic"; break;
+                case "Hard": localizationKey = "DiffHard"; break;
+            }
+
+            label.text = LocalizationManager.instance.GetLocalizedValue(localizationKey);
         }
     }
 
-    private void RefreshUI()
+    private void RefreshWholeUI()
     {
         if (StatisticsManager.Instance == null) return;
-        if (variantKeys.Count == 0) return;
 
-        string currentVariantKey = variantKeys[currentVariantIndex];
-        string gameName = currentGame.ToString();
+        UpdateLayoutVisibility(); // Здесь логика появления новой панели
+        UpdateTabVisuals();
 
-        // Заполняем слоты сложностей
-        FillBinder(difficultyBinder.easy, StatisticsManager.Instance.GetStats(gameName, Difficulty.Easy, currentVariantKey), HistorySlotHover.SlotType.Difficulty);
-        FillBinder(difficultyBinder.medium, StatisticsManager.Instance.GetStats(gameName, Difficulty.Medium, currentVariantKey), HistorySlotHover.SlotType.Difficulty);
-        FillBinder(difficultyBinder.hard, StatisticsManager.Instance.GetStats(gameName, Difficulty.Hard, currentVariantKey), HistorySlotHover.SlotType.Difficulty);
+        StatData dataToShow;
+        if (isGlobalTab)
+        {
+            dataToShow = StatisticsManager.Instance.GetGameGlobalStats(currentGame.ToString());
+        }
+        else
+        {
+            dataToShow = StatisticsManager.Instance.GetStats(currentGame.ToString(), currentDifficulty, currentVariantKey);
+            UpdateFilterButtonsVisuals();
+        }
 
-        // Заполняем глобальную статистику
-        StatData globalData = StatisticsManager.Instance.GetGameGlobalStats(gameName);
-        FillBinder(globalBinder, globalData, HistorySlotHover.SlotType.GameGlobal);
+        FillData(dataToShow);
     }
 
-    private void FillBinder(StatBinder binder, StatData data, HistorySlotHover.SlotType slotType)
+    // --- ОБНОВЛЕННАЯ ЛОГИКА ВИДИМОСТИ ---
+    private void UpdateLayoutVisibility()
     {
-        if (data == null) data = new StatData();
-
-        SetText(binder.gamesPlayed, data.gamesStarted);
-        SetText(binder.wins, data.gamesWon);
-
-        SetText(binder.score, data.bestScore);
-        SetText(binder.time, FormatTime(data.bestTime));
-        SetText(binder.moves, (data.fewestMoves == 0 || data.fewestMoves == int.MaxValue) ? "-" : data.fewestMoves.ToString());
-
-        SetText(binder.winRate, $"{data.WinRate:F0}%");
-
-        SetText(binder.avgTime, FormatTime(data.AvgTime));
-        SetText(binder.avgMoves, $"{data.AvgMoves:F0}");
-        SetText(binder.currentStreak, data.currentStreak);
-        SetText(binder.bestStreak, data.bestStreak);
-
-        // --- ИСТОРИЯ ---
-        if (binder.historySlots != null && binder.historySlots.Length > 0)
+        if (isGlobalTab)
         {
-            int historyCount = data.history.Count;
+            // 1. Если Global Stats — просто выключаем родительскую панель
+            if (filtersParentPanel) filtersParentPanel.SetActive(false);
 
-            for (int i = 0; i < binder.historySlots.Length; i++)
+            // Внутренности можно не трогать, их все равно не видно
+        }
+        else
+        {
+            // 2. Если Difficulties Stats — включаем родительскую панель
+            if (filtersParentPanel) filtersParentPanel.SetActive(true);
+
+            // 3. Теперь настраиваем внутренности (какой именно контейнер показать)
+
+            // Сначала всё выключаем внутри
+            if (drawModeContainer) drawModeContainer.SetActive(false);
+            if (suitModeContainer) suitModeContainer.SetActive(false);
+            if (roundsContainer) roundsContainer.SetActive(false);
+            if (otherModesContainer) otherModesContainer.SetActive(false);
+
+            // Контейнер сложности нужен всегда в режиме Difficulties
+            if (difficultyContainer) difficultyContainer.SetActive(true);
+
+            // Включаем специфичный контейнер
+            switch (currentGame)
             {
-                Image img = binder.historySlots[i];
-                if (img == null) continue;
-
-                int dataIndex = historyCount - 1 - i;
-
-                HistorySlotHover hover = img.GetComponent<HistorySlotHover>();
-                if (hover == null) hover = img.gameObject.AddComponent<HistorySlotHover>();
-
-                if (dataIndex >= 0)
-                {
-                    GameHistoryEntry entry = data.history[dataIndex];
-                    img.sprite = entry.won ? winSprite : lossSprite;
-                    img.color = Color.white;
-                    hover.Setup(entry, slotType);
-                }
-                else
-                {
-                    img.sprite = emptySprite;
-                    img.color = (emptySprite == null) ? new Color(0, 0, 0, 0) : new Color(1, 1, 1, 0.5f);
-                    hover.Setup(null, slotType);
-                }
+                case GameType.Klondike:
+                    if (drawModeContainer) drawModeContainer.SetActive(true);
+                    break;
+                case GameType.Spider:
+                    if (suitModeContainer) suitModeContainer.SetActive(true);
+                    break;
+                case GameType.Pyramid:
+                case GameType.TriPeaks:
+                    if (roundsContainer) roundsContainer.SetActive(true);
+                    break;
+                case GameType.Yukon:
+                case GameType.Montana:
+                case GameType.MonteCarlo:
+                    if (otherModesContainer) otherModesContainer.SetActive(true);
+                    break;
             }
         }
     }
 
-    private void SetText(TMP_Text textParams, object value)
+    private void UpdateFilterButtonsVisuals()
     {
-        if (textParams != null) textParams.text = value.ToString();
+        if (currentActiveVariantButtons != null)
+        {
+            for (int i = 0; i < currentActiveVariantButtons.Length; i++)
+            {
+                if (i >= currentActiveVariantKeys.Count) break;
+                bool isSelected = (currentActiveVariantKeys[i] == currentVariantKey);
+
+                SetButtonVisualState(
+                    currentActiveVariantButtons[i],
+                    currentActiveVariantButtons[i].GetComponentInChildren<TMP_Text>(),
+                    isSelected
+                );
+            }
+        }
+
+        for (int i = 0; i < difficultyButtons.Length; i++)
+        {
+            if (difficultyButtons[i] == null) continue;
+            bool isSelected = ((int)currentDifficulty == i);
+            SetButtonVisualState(
+                difficultyButtons[i],
+                difficultyButtons[i].GetComponentInChildren<TMP_Text>(),
+                isSelected
+            );
+        }
+    }
+
+    private void SetButtonVisualState(Button btn, TMP_Text label, bool isActive)
+    {
+        if (btn == null) return;
+        Image bg = btn.GetComponent<Image>();
+        if (bg) bg.color = isActive ? activeTabColor : inactiveTabColor;
+        if (label) label.color = isActive ? activeTextColor : inactiveTextColor;
+    }
+
+    private void UpdateHeaderLocalisation()
+    {
+        if (headerText == null || LocalizationManager.instance == null) return;
+        string key = GetStatsKey(currentGame);
+        headerText.text = LocalizationManager.instance.GetLocalizedValue(key);
+    }
+
+    private string GetStatsKey(GameType type)
+    {
+        switch (type)
+        {
+            case GameType.Klondike: return "STATSKlondike";
+            case GameType.Spider: return "STATSSpider";
+            case GameType.FreeCell: return "STATSFreecell";
+            case GameType.Pyramid: return "STATSPyramid";
+            case GameType.TriPeaks: return "STATSTripeaks";
+            case GameType.Octagon: return "STATSOctagon";
+            case GameType.Montana: return "STATSMontana";
+            case GameType.MonteCarlo: return "STATSMontecarlo";
+            case GameType.Sultan: return "STATSSultan";
+            case GameType.Yukon: return "STATSYukon";
+            default: return "STATS" + type.ToString();
+        }
+    }
+
+    private void UpdateTabVisuals()
+    {
+        SetButtonVisualState(globalTabButton, globalTabLabel, isGlobalTab);
+        SetButtonVisualState(difficultiesTabButton, difficultiesTabLabel, !isGlobalTab);
+    }
+
+    private void FillData(StatData data)
+    {
+        if (data == null) data = new StatData();
+
+        gamesPlayedText.text = data.gamesStarted.ToString();
+        winsText.text = data.gamesWon.ToString();
+
+        float winRate01 = (data.gamesStarted > 0) ? (float)data.gamesWon / data.gamesStarted : 0f;
+        if (winRateCircle) winRateCircle.fillAmount = winRate01;
+        if (winRatePercentText) winRatePercentText.text = $"{data.WinRate:F0}%";
+        if (winRateValueText) winRateValueText.text = $"{data.WinRate:F0}%";
+
+        avgTimeText.text = FormatTime(data.AvgTime);
+        avgMovesText.text = $"{data.AvgMoves:F0}";
+
+        bestScoreText.text = data.bestScore.ToString();
+        bestTimeText.text = FormatTime(data.bestTime);
+        bestMovesText.text = (data.fewestMoves == 0 || data.fewestMoves == int.MaxValue) ? "-" : data.fewestMoves.ToString();
+
+        currentStreakText.text = data.currentStreak.ToString();
+        bestStreakText.text = data.bestStreak.ToString();
+
+        UpdateHistorySlots(data.history);
+    }
+
+    private void UpdateHistorySlots(List<GameHistoryEntry> history)
+    {
+        if (historySlots == null) return;
+        int count = history.Count;
+        for (int i = 0; i < historySlots.Length; i++)
+        {
+            int dataIndex = count - 1 - i;
+            if (dataIndex >= 0)
+            {
+                var entry = history[dataIndex];
+                historySlots[i].sprite = entry.won ? winIcon : lossIcon;
+                historySlots[i].color = Color.white;
+            }
+            else
+            {
+                historySlots[i].sprite = emptyIcon;
+                historySlots[i].color = (emptyIcon == null) ? Color.clear : new Color(1, 1, 1, 0.5f);
+            }
+        }
     }
 
     private string FormatTime(float s)
     {
-        if (s == 0 || s > 360000) return "-";
-
-        if (s > 3600)
+        if (s <= 0 || s > 360000) return "-";
+        int minutes = Mathf.FloorToInt(s / 60);
+        int seconds = Mathf.FloorToInt(s % 60);
+        if (minutes >= 60)
         {
-            int hours = Mathf.FloorToInt(s / 3600);
-            int minutes = Mathf.FloorToInt((s % 3600) / 60);
+            int hours = minutes / 60;
+            minutes = minutes % 60;
             return $"{hours}h {minutes}m";
         }
-
-        return $"{(int)(s / 60)}:{(int)(s % 60):00}";
+        return $"{minutes}:{seconds:00}";
     }
-}
-
-// --- ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ ---
-
-[System.Serializable]
-public class StatBinder
-{
-    [Header("Basic")]
-    public TMP_Text gamesPlayed;
-    public TMP_Text wins;
-
-    [Header("Records")]
-    public TMP_Text score;
-    public TMP_Text time;
-    public TMP_Text moves;
-
-    [Header("Performance")]
-    public TMP_Text winRate;
-    public TMP_Text avgTime;
-    public TMP_Text avgMoves;
-
-    [Header("Streaks")]
-    public TMP_Text currentStreak;
-    public TMP_Text bestStreak;
-
-    [Header("History (Drag 10 Images here)")]
-    public Image[] historySlots;
-}
-
-[System.Serializable]
-public class DifficultyGroupBinder
-{
-    public StatBinder easy;
-    public StatBinder medium;
-    public StatBinder hard;
 }

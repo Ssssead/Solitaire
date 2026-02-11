@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using TMPro;
+using System.Collections;
 
 public class MenuController : MonoBehaviour
 {
@@ -85,6 +86,24 @@ public class MenuController : MonoBehaviour
 
     [Header("Main Action Buttons")]
     public Button startButton; // <--- НОВАЯ ССЫЛКА НА КНОПКУ СТАРТ
+
+    // --- НОВАЯ СЕКЦИЯ: ДВИЖЕНИЕ ПО МАРКЕРАМ ---
+    [Header("Dynamic Buttons (Target Objects)")]
+    public RectTransform leaderboardButton; // Сама кнопка
+    public RectTransform statsButton;       // Сама кнопка
+
+    [Header("Position Markers")]
+    [Tooltip("Пустой объект, где кнопка Лидерборда стоит в ГЛАВНОМ МЕНЮ")]
+    public Transform lbStartMarker;
+    [Tooltip("Пустой объект, куда кнопка Лидерборда уезжает в НАСТРОЙКАХ")]
+    public Transform lbEndMarker;
+
+    [Tooltip("Пустой объект, где кнопка Статистики стоит в ГЛАВНОМ МЕНЮ")]
+    public Transform statsStartMarker;
+    [Tooltip("Пустой объект, куда кнопка Статистики уезжает в НАСТРОЙКАХ")]
+    public Transform statsEndMarker;
+
+    private Coroutine buttonsMoveCoroutine;
 
     [Header("Visual Settings (Background)")]
     // FFB01A (Orange)
@@ -194,9 +213,14 @@ public class MenuController : MonoBehaviour
 
         currentGame = games[gameIndex];
         GameSettings.CurrentGameType = currentGame.type;
+
         SetButtonState(startButton, true);
         ResetGameSettingsDefault();
+        SetupSettingsPanel();
         UpdateXPPreview();
+
+        // Запускаем анимацию К "EndMarker"
+        MoveButtonsToTarget(true);
 
         if (cardAnimator != null) cardAnimator.SelectCard(currentGame.type);
 
@@ -208,15 +232,14 @@ public class MenuController : MonoBehaviour
                 {
                     SetupSettingsPanel();
                     if (levelController != null) levelController.UpdatePreviewBar(currentGame.type);
-                    UpdateXPPreview(); // <--- ОБНОВЛЯЕМ XP ПРИ ПЕРЕКЛЮЧЕНИИ
+                    UpdateXPPreview();
                 });
             }
             else
             {
-                SetupSettingsPanel();
                 if (levelController != null) levelController.UpdatePreviewBar(currentGame.type);
                 settingsPanelAnimator.AnimateOpen();
-                UpdateXPPreview(); // <--- ОБНОВЛЯЕМ XP ПРИ ОТКРЫТИИ
+                UpdateXPPreview();
             }
         }
         else
@@ -224,7 +247,7 @@ public class MenuController : MonoBehaviour
             settingsPanel.SetActive(true);
             SetupSettingsPanel();
             if (levelController != null) levelController.UpdatePreviewBar(currentGame.type);
-            UpdateXPPreview(); // <--- ОБНОВЛЯЕМ XP
+            UpdateXPPreview();
         }
     }
 
@@ -253,15 +276,54 @@ public class MenuController : MonoBehaviour
 
     public void OnBackClicked()
     {
-        // 1. Анимация закрытия панели
         if (settingsPanelAnimator != null) settingsPanelAnimator.AnimateClose();
         else settingsPanel.SetActive(false);
 
-        // 2. Возврат карт
         if (cardAnimator != null) cardAnimator.ResetGrid();
-
-        // 3. НОВОЕ: Прячем превью XP (сдувание полоски)
         if (levelController != null) levelController.HideAllPreviews();
+
+        // Запускаем анимацию обратно К "StartMarker"
+        MoveButtonsToTarget(false);
+    }
+
+    private void MoveButtonsToTarget(bool toSettingsMode)
+    {
+        if (buttonsMoveCoroutine != null) StopCoroutine(buttonsMoveCoroutine);
+        buttonsMoveCoroutine = StartCoroutine(AnimateButtonsRoutine(toSettingsMode));
+    }
+
+    private IEnumerator AnimateButtonsRoutine(bool toSettingsMode)
+    {
+        // Проверка ссылок, чтобы не было ошибок
+        if (!leaderboardButton || !statsButton || !lbStartMarker || !lbEndMarker || !statsStartMarker || !statsEndMarker)
+            yield break;
+
+        float duration = 0.4f;
+        float elapsed = 0f;
+
+        // Откуда летим (текущая позиция, чтобы не дергалось, если анимация прервана)
+        Vector3 startPosL = leaderboardButton.position;
+        Vector3 startPosS = statsButton.position;
+
+        // Куда летим
+        Vector3 targetPosL = toSettingsMode ? lbEndMarker.position : lbStartMarker.position;
+        Vector3 targetPosS = toSettingsMode ? statsEndMarker.position : statsStartMarker.position;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            float smoothT = Mathf.SmoothStep(0f, 1f, t);
+
+            // Используем .position (Global World Position) для точного совпадения с маркером
+            leaderboardButton.position = Vector3.Lerp(startPosL, targetPosL, smoothT);
+            statsButton.position = Vector3.Lerp(startPosS, targetPosS, smoothT);
+
+            yield return null;
+        }
+
+        leaderboardButton.position = targetPosL;
+        statsButton.position = targetPosS;
     }
 
     // --- OVERLAYS (Магазин, Лидерборд и т.д.) ---
@@ -302,9 +364,9 @@ public class MenuController : MonoBehaviour
         {
             statisticsPanel.SetActive(true);
             // Если у вас есть скрипт StatisticsUI, обновляем его
-            /* var ui = statisticsPanel.GetComponent<StatisticsUI>();
+             var ui = statisticsPanel.GetComponent<StatisticsUI>();
             if (ui != null) ui.ShowStatsForGame(currentGame.type);
-            */
+            
         }
     }
 

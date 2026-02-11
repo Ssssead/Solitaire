@@ -93,7 +93,7 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
     }
 
     // --- Приоритет отрисовки (Sorting Order) ---
-    public void SetPriorityRender(bool enable)
+   /* public void SetPriorityRender(bool enable)
     {
         if (overrideCanvas == null)
         {
@@ -105,14 +105,14 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
         if (enable)
         {
             overrideCanvas.overrideSorting = true;
-            overrideCanvas.sortingOrder = 100;
+            overrideCanvas.sortingOrder = 1;
         }
         else
         {
             overrideCanvas.overrideSorting = false;
             overrideCanvas.sortingOrder = 0;
         }
-    }
+    }*/
 
     // --- События мыши ---
 

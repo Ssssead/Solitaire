@@ -101,136 +101,144 @@
             "value": "Вы получите {0} опыта"
         },
         {
-            "key": "plus.word.hour.8",
-            "value": "девять"
+            "key": "stats",
+            "value": "Статистика"
         },
         {
-            "key": "plus.word.hour.9",
-            "value": "десять"
+            "key": "settings",
+            "value": "Настройки"
         },
         {
-            "key": "plus.word.hour.10",
-            "value": "одиннадцать"
+            "key": "shop",
+            "value": "Магазин"
         },
         {
-            "key": "plus.word.hour.11",
-            "value": "двенадцать"
+            "key": "leaderboards",
+            "value": "Таблица лидеров"
         },
         {
-            "key": "plus.word.hour.12",
-            "value": "час"
+            "key": "dailyquests",
+            "value": "Ежедневные задания"
         },
         {
-            "key": "word.minute.0",
-            "value": "ноль"
+            "key": "STATSGlobalStats",
+            "value": "Общая Статистика"
         },
         {
-            "key": "word.minute.5",
-            "value": "пять"
+            "key": "STATSGamesPlayed",
+            "value": "Игр сыграно: "
         },
         {
-            "key": "word.minute.10",
-            "value": "десять"
+            "key": "STATSWins",
+            "value": "Побед:"
         },
         {
-            "key": "word.minute.15",
-            "value": "пятнадцать"
+            "key": "STATSRecords",
+            "value": "Рекорды:"
         },
         {
-            "key": "word.minute.20",
-            "value": "двадцать"
+            "key": "STATSScore",
+            "value": "Счёт:"
         },
         {
-            "key": "word.minute.25",
-            "value": "двадцать пять"
+            "key": "STATSTime",
+            "value": "Время:"
         },
         {
-            "key": "word.minute.30",
-            "value": "тридцать"
+            "key": "STATSMoves",
+            "value": "Ходы:"
         },
         {
-            "key": "word.minute.35",
-            "value": "тридцать пять"
+            "key": "STATSPERFORMANCE",
+            "value": "Эффективность:"
         },
         {
-            "key": "word.minute.40",
-            "value": "сорок"
+            "key": "STATSWinRate",
+            "value": "Процент побед:"
         },
         {
-            "key": "word.minute.45",
-            "value": "сорок пять"
+            "key": "STATSAvgTime",
+            "value": "Среднее время:"
         },
         {
-            "key": "word.minute.50",
-            "value": "пятьдесят"
+            "key": "STATSAvgMoves",
+            "value": "Среднее количество ходов:"
         },
         {
-            "key": "word.minute.55",
-            "value": "пятьдесят пять"
+            "key": "STATSStreaks",
+            "value": "Серии побед:"
         },
         {
-            "key": "clue.l2.solar_noon",
-            "value": "Дверь откроется, когда солнце достигнет зенита."
+            "key": "STATSCurrentStreak",
+            "value": "Текущая серия побед:"
         },
         {
-            "key": "clue.l2.time.half_past",
-            "value": "Дверь откроется в пол {nextHourWord}."
+            "key": "STATSBestStreak",
+            "value": "Лучшая серия побед:"
         },
         {
-            "key": "clue.l2.time.quarter_past",
-            "value": "Дверь откроется в четверть {nextHourWord}."
+            "key": "STATSHistory",
+            "value": "История игр (Последние 10):"
         },
         {
-            "key": "clue.l2.time.quarter_to",
-            "value": "Дверь откроется без четверти {plushourWord}."
+            "key": "STATSDifficulties",
+            "value": "Статистика по сложности:"
         },
         {
-            "key": "clue.l2.time.minutes_to",
-            "value": "Дверь откроется без {nextminuteWord} {plushourWord}."
+            "key": "STATSEasyStats",
+            "value": "Статистика для Легкой"
         },
         {
-            "key": "clue.l2.time.minutes_past",
-            "value": "Дверь откроется через {minuteWord} минут после {nextHourWord}."
+            "key": "STATSMediumStats",
+            "value": "Статистика для Средней"
         },
         {
-            "key": "word.nextminute.0",
-            "value": "нуля"
+            "key": "STATSHardStats",
+            "value": "Статистика для Сложной"
         },
         {
-            "key": "word.nextminute.5",
-            "value": "пяти"
+            "key": "STATSGlobal",
+            "value": "Общая Статистика"
         },
         {
-            "key": "word.nextminute.10",
-            "value": "десяти"
+            "key": "STATSKlondike",
+            "value": "Статистика Косынки"
         },
         {
-            "key": "word.nextminute.15",
-            "value": "пятнадцати"
+            "key": "STATSSpider",
+            "value": "Статистика Паука"
         },
         {
-            "key": "word.nextminute.20",
-            "value": "двадцати"
+            "key": "STATSFreecell",
+            "value": "Статистика Свободной Ячейки"
         },
         {
-            "key": "word.nextminute.25",
-            "value": "двадцати пяти"
+            "key": "STATSPyramid",
+            "value": "Статистика Пирамиды"
         },
         {
-            "key": "word.nextminute.30",
-            "value": "тридцати"
+            "key": "STATSTripeaks",
+            "value": "Статистика Трех Вершин"
         },
         {
-            "key": "word.nextminute.35",
-            "value": "тридцати пяти"
+            "key": "STATSOctagon",
+            "value": "Статистика Восьмиугольника"
         },
         {
-            "key": "word.nextminute.40",
-            "value": "сорока"
+            "key": "STATSMontana",
+            "value": "Статистика Ковра"
         },
         {
-            "key": "word.nextminute.45",
-            "value": "сорока пяти"
+            "key": "STATSMontecarlo",
+            "value": "Статистика Монте-Карло"
+        },
+        {
+            "key": "STATSSultan",
+            "value": "Статистика Султана"
+        },
+        {
+            "key": "STATSYukon",
+            "value": "Статистика Юкона"
         },
         {
             "key": "word.nextminute.50",
