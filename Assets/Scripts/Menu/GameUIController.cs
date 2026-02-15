@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Reflection;
+using System.Collections;
 
 public class GameUIController : MonoBehaviour
 {
@@ -32,6 +33,8 @@ public class GameUIController : MonoBehaviour
     [Header("References")]
     private ICardGameMode activeGameMode;
     public UndoManager undoManager;
+    [Header("Effects")]
+    public SceneExitAnimator exitAnimator;
 
     private void Start()
     {
@@ -48,7 +51,7 @@ public class GameUIController : MonoBehaviour
         }
 
         if (undoManager == null) undoManager = FindObjectOfType<UndoManager>();
-
+        if (exitAnimator == null) exitAnimator = GetComponent<SceneExitAnimator>() ?? FindObjectOfType<SceneExitAnimator>();
         // Скрываем все панели при старте
         if (winPanel) winPanel.SetActive(false);
         if (settingsPanel) settingsPanel.SetActive(false);
@@ -73,26 +76,94 @@ public class GameUIController : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Универсальный метод для открытия/закрытия панелей с анимацией
+    /// </summary>
+    private void TogglePanelAnimated(GameObject panel, bool show)
+    {
+        if (panel == null) return;
+
+        // Если включаем - сначала активируем объект, потом анимация
+        if (show)
+        {
+            panel.SetActive(true);
+            StartCoroutine(AnimatePanelRoutine(panel, true));
+        }
+        else
+        {
+            // Если выключаем - сначала анимация, потом деактивация
+            StartCoroutine(AnimatePanelRoutine(panel, false));
+        }
+    }
+
+    private IEnumerator AnimatePanelRoutine(GameObject panel, bool show)
+    {
+        RectTransform rt = panel.GetComponent<RectTransform>();
+        if (rt == null) yield break;
+
+        float duration = 0.3f;
+        float elapsed = 0f;
+
+        // Получаем ширину экрана для вычисления позиции "за кадром слева"
+        float screenWidth = typeOfCanvasOverlay(panel) ? Screen.width : 1920f; // Упрощенно
+        float offScreenX = -screenWidth;
+
+        Vector2 centerPos = new Vector2(0, 0); // Предполагаем, что центр панели - это (0,0)
+        // ВАЖНО: Убедитесь, что в префабах панелей Anchors стоят по центру или Stretch, 
+        // и позиция (0,0) действительно означает центр экрана.
+
+        Vector2 startPos, endPos;
+
+        if (show)
+        {
+            // Летим СЛЕВА -> В ЦЕНТР
+            startPos = new Vector2(offScreenX, 0);
+            endPos = centerPos;
+            rt.anchoredPosition = startPos; // Мгновенно ставим влево перед полетом
+        }
+        else
+        {
+            // Летим ИЗ ЦЕНТРА -> ВЛЕВО
+            startPos = rt.anchoredPosition;
+            endPos = new Vector2(offScreenX, 0);
+        }
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = elapsed / duration;
+            // Easing OutCubic (быстро начинается, плавно тормозит)
+            t = 1f - Mathf.Pow(1f - t, 3);
+
+            rt.anchoredPosition = Vector2.Lerp(startPos, endPos, t);
+            yield return null;
+        }
+
+        rt.anchoredPosition = endPos;
+
+        if (!show)
+        {
+            panel.SetActive(false);
+        }
+    }
+
+    // Вспомогательный метод определения типа канваса (не критично, можно просто брать -2000)
+    private bool typeOfCanvasOverlay(GameObject go) => true;
+
     // --- ЛОГИКА ВЫХОДА В МЕНЮ (С ПОДТВЕРЖДЕНИЕМ) ---
 
     // 1. Вызывается кнопкой "Menu" в интерфейсе (или "Home")
     public void OnMenuClicked()
     {
-        // 1. Проверяем, были ли сделаны ходы
-        int moves = 0;
-        if (StatisticsManager.Instance != null)
-        {
-            moves = StatisticsManager.Instance.GetCurrentMoves();
-        }
+        int moves = (StatisticsManager.Instance != null) ? StatisticsManager.Instance.GetCurrentMoves() : 0;
 
-        // 2. Если ходы БЫЛИ (> 0) и панель назначена -> Спрашиваем
         if (moves > 0 && exitConfirmationPanel != null)
         {
-            exitConfirmationPanel.SetActive(true);
+            // Вместо SetActive(true) используем анимацию
+            TogglePanelAnimated(exitConfirmationPanel, true);
         }
         else
         {
-            // 3. Если ходов 0 (или панели нет) -> Выходим сразу
             OnConfirmExitClicked();
         }
     }
@@ -100,36 +171,44 @@ public class GameUIController : MonoBehaviour
     // 2. Вызывается кнопкой "ДА" в панели подтверждения выхода
     public void OnConfirmExitClicked()
     {
-        // --- ИСПРАВЛЕНИЕ: Проверка ходов ---
+        // 1. Убираем панель подтверждения (уезжает влево)
+        if (exitConfirmationPanel != null && exitConfirmationPanel.activeSelf)
+        {
+            TogglePanelAnimated(exitConfirmationPanel, false);
+        }
+
+        // 2. Логика с кэшом (сохраняем/сбрасываем)
         if (DealCacheSystem.Instance != null)
         {
-            // Проверяем, были ли сделаны ходы в текущей игре
-            int moves = 0;
-            if (StatisticsManager.Instance != null)
-            {
-                moves = StatisticsManager.Instance.GetCurrentMoves();
-            }
-
-            if (moves > 0)
-            {
-                // Если играли -> сжигаем расклад (чтобы не повторился)
-                DealCacheSystem.Instance.DiscardActiveDeal();
-            }
-            else
-            {
-                // Если не играли (просто посмотрели) -> возвращаем в очередь
-                DealCacheSystem.Instance.ReturnActiveDealToQueue();
-            }
+            int moves = (StatisticsManager.Instance != null) ? StatisticsManager.Instance.GetCurrentMoves() : 0;
+            if (moves > 0) DealCacheSystem.Instance.DiscardActiveDeal();
+            else DealCacheSystem.Instance.ReturnActiveDealToQueue();
         }
-        // ------------------------------------
 
-        SceneManager.LoadScene("MenuScene");
+        // 3. ЗАПУСК АНИМАЦИИ ВЫХОДА
+        if (exitAnimator != null)
+        {
+            // Блокируем ввод, чтобы игрок не нажал ничего лишнего
+            if (activeGameMode != null) activeGameMode.IsInputAllowed = false;
+
+            exitAnimator.PlayExitSequence(() =>
+            {
+                // 4. Когда анимация закончилась - грузим сцену
+                SceneManager.LoadScene("MenuScene");
+            });
+        }
+        else
+        {
+            // Если аниматора нет - выходим мгновенно (Fallback)
+            SceneManager.LoadScene("MenuScene");
+        }
     }
 
     // 3. Вызывается кнопкой "НЕТ" в панели подтверждения выхода
     public void OnCancelExitClicked()
     {
-        if (exitConfirmationPanel != null) exitConfirmationPanel.SetActive(false);
+        // Уезжает влево
+        if (exitConfirmationPanel != null) TogglePanelAnimated(exitConfirmationPanel, false);
     }
 
     // --- ЛОГИКА НОВОЙ ИГРЫ (С ПОДТВЕРЖДЕНИЕМ) ---
@@ -137,24 +216,20 @@ public class GameUIController : MonoBehaviour
     // 1. Вызывается кнопкой "New Game" (в панели поражения, победы или настроек)
     public void OnNewGameClicked()
     {
-        // 1. Проверяем, выиграл ли игрок (открыта ли панель победы)
         bool isWinState = (winPanel != null && winPanel.activeSelf);
-
-        // 2. Если мы ВЫИГРАЛИ -> Подтверждение НЕ нужно, начинаем сразу
         if (isWinState)
         {
             OnConfirmNewGameClicked();
             return;
         }
 
-        // 3. Если мы ПРОИГРАЛИ (DefeatPanel) или нажали из МЕНЮ (Settings) -> Спрашиваем
         if (newGameConfirmationPanel != null)
         {
-            newGameConfirmationPanel.SetActive(true);
+            // Выезжает слева
+            TogglePanelAnimated(newGameConfirmationPanel, true);
         }
         else
         {
-            // Если панели подтверждения нет, рестартим сразу
             OnConfirmNewGameClicked();
         }
     }
@@ -162,27 +237,17 @@ public class GameUIController : MonoBehaviour
     // 2. Вызывается кнопкой "ДА" в панели подтверждения новой игры
     public void OnConfirmNewGameClicked()
     {
-        // Закрываем панели
-        if (newGameConfirmationPanel) newGameConfirmationPanel.SetActive(false);
+        // Закрываем все панели (анимацией или мгновенно? Для рестарта лучше мгновенно или быстро)
+        if (newGameConfirmationPanel) TogglePanelAnimated(newGameConfirmationPanel, false);
+        
+        // Остальные панели лучше скрыть мгновенно, чтобы не мелькали при рестарте
         if (winPanel) winPanel.SetActive(false);
         if (settingsPanel) settingsPanel.SetActive(false);
         if (defeatPanel) defeatPanel.SetActive(false);
 
-        // --- ИСПРАВЛЕНИЕ 1: Очищаем историю Undo ПЕРЕД созданием новой игры ---
-        // Это удаляет ссылки на старые карты, которые сейчас будут уничтожены
-        if (undoManager != null)
-        {
-            undoManager.ResetHistory();
-        }
-        // ----------------------------------------------------------------------
+        if (undoManager != null) undoManager.ResetHistory();
+        if (DealCacheSystem.Instance != null) DealCacheSystem.Instance.DiscardActiveDeal();
 
-        // Обработка старого расклада перед рестартом
-        if (DealCacheSystem.Instance != null)
-        {
-            DealCacheSystem.Instance.DiscardActiveDeal();
-        }
-
-        // Перезапускаем игру
         if (activeGameMode != null)
         {
             activeGameMode.IsInputAllowed = true;
@@ -193,23 +258,22 @@ public class GameUIController : MonoBehaviour
     // 3. Вызывается кнопкой "НЕТ" в панели подтверждения новой игры
     public void OnCancelNewGameClicked()
     {
-        if (newGameConfirmationPanel != null) newGameConfirmationPanel.SetActive(false);
+        if (newGameConfirmationPanel != null) TogglePanelAnimated(newGameConfirmationPanel, false);
     }
 
     // --------------------------------------------------------
 
     public void OnGameWon(int manualMoves = -1)
     {
-        // 1. Скрываем панель поражения (на всякий случай)
         if (defeatPanel) defeatPanel.SetActive(false);
 
-        // 2. Включаем панель победы
-        if (winPanel) winPanel.SetActive(true);
+        // Win выезжает слева
+        if (winPanel)
+        {
+            UpdateWinPanelStats(manualMoves); // Сначала обновляем данные
+            TogglePanelAnimated(winPanel, true); // Потом показываем
+        }
 
-        // 3. Вызываем метод обновления статистики (который вы искали)
-        UpdateWinPanelStats(manualMoves);
-
-        // 4. Блокируем ввод
         if (activeGameMode != null) activeGameMode.IsInputAllowed = false;
     }
 
@@ -316,7 +380,8 @@ public class GameUIController : MonoBehaviour
         if (winPanel != null && winPanel.activeSelf) return;
         if (defeatPanel != null && !defeatPanel.activeSelf)
         {
-            defeatPanel.SetActive(true);
+            // Defeat выезжает слева
+            TogglePanelAnimated(defeatPanel, true);
             if (activeGameMode != null) activeGameMode.IsInputAllowed = false;
         }
     }
@@ -332,8 +397,10 @@ public class GameUIController : MonoBehaviour
     public void OnSettingsClicked()
     {
         bool isActive = settingsPanel.activeSelf;
-        settingsPanel.SetActive(!isActive);
+        // Если была активна - убираем влево, если нет - достаем слева
+        TogglePanelAnimated(settingsPanel, !isActive);
 
+        // Логику обновления бара оставляем, но вызываем её только если открываем
         if (!isActive && localLevelBar != null && StatisticsManager.Instance != null)
         {
             string gameName = activeGameMode != null ? activeGameMode.GameName : "Klondike";
@@ -348,12 +415,11 @@ public class GameUIController : MonoBehaviour
 
     public void OnStatisticsClicked()
     {
-        if (statisticsPanel != null) statisticsPanel.SetActive(true);
+        if (statisticsPanel != null) TogglePanelAnimated(statisticsPanel, true);
     }
-
     public void OnCloseStatisticsClicked()
     {
-        if (statisticsPanel != null) statisticsPanel.SetActive(false);
+        if (statisticsPanel != null) TogglePanelAnimated(statisticsPanel, false);
     }
 
     public void OnUndoOneClicked()

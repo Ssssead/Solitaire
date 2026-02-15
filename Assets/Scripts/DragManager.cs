@@ -57,6 +57,10 @@ public class DragManager : MonoBehaviour
             if (containers != null) allContainers.AddRange(containers);
         }
     }
+    public ICardContainer GetSourceContainer()
+    {
+        return sourceContainer;
+    }
 
     /// <summary>
     /// Регистрирует события для карты.

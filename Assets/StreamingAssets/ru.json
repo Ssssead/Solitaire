@@ -241,28 +241,28 @@
             "value": "Статистика Юкона"
         },
         {
-            "key": "word.nextminute.50",
-            "value": "пятидесяти"
+            "key": "ConfirmExit1",
+            "value": "Вы уверены что хотите выйти в меню?"
         },
         {
-            "key": "word.nextminute.55",
-            "value": "пятидесяти пяти"
+            "key": "ConfirmExit2",
+            "value": "При выходе будет защитано поражение"
         },
         {
-            "key": "word.nexthour.1",
-            "value": "первого"
+            "key": "Yes",
+            "value": "ДА"
         },
         {
-            "key": "word.nexthour.2",
-            "value": "второго"
+            "key": "No",
+            "value": "НЕТ"
         },
         {
-            "key": "word.nexthour.3",
-            "value": "третьего"
+            "key": "ConfirmNewGame1",
+            "value": "Вы уверены что хотите начать новую игру?"
         },
         {
-            "key": "word.nexthour.4",
-            "value": "четвертого"
+            "key": "ConfirmNewGame2",
+            "value": "При запуске новой игры будет защитано поражение"
         },
         {
             "key": "word.nexthour.5",

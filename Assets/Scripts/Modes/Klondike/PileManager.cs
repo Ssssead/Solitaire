@@ -384,7 +384,47 @@ public class PileManager : MonoBehaviour
     }
 
     #endregion
+    #region Visual Control (Intro)
 
+    /// <summary>
+    /// ”станавливает прозрачность всем слотам (дл€ интро).
+    /// </summary>
+    public void SetAllSlotsAlpha(float alpha)
+    {
+        SetGroupAlpha(tableauSlotsParent, alpha);
+        SetGroupAlpha(foundationSlotsParent, alpha);
+        SetGroupAlpha(stockSlotTransform, alpha);
+        SetGroupAlpha(wasteSlotTransform, alpha);
+    }
+
+    private void SetGroupAlpha(Transform parent, float alpha)
+    {
+        if (parent == null) return;
+
+        // ѕытаемс€ найти CanvasGroup, если нет - добавл€ем
+        CanvasGroup cg = parent.GetComponent<CanvasGroup>();
+        if (cg == null) cg = parent.gameObject.AddComponent<CanvasGroup>();
+
+        cg.alpha = alpha;
+    }
+
+    /// <summary>
+    ///  орутина дл€ плавного по€влени€ слотов.
+    /// </summary>
+    public System.Collections.IEnumerator FadeInSlots(float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float alpha = Mathf.Clamp01(elapsed / duration);
+            SetAllSlotsAlpha(alpha);
+            yield return null;
+        }
+        SetAllSlotsAlpha(1f);
+    }
+
+    #endregion
 #if UNITY_EDITOR
     [ContextMenu("Debug: Count All Cards")]
     private void DebugCountCards()

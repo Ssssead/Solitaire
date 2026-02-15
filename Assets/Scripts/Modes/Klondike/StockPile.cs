@@ -161,7 +161,23 @@ public class StockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
     }
 
     public bool IsEmpty() => cards.Count == 0;
+    /// <summary>
+    /// ¬озвращает мировую позицию, где должна лежать карта с указанным индексом.
+    /// »спользуетс€ DeckManager-ом дл€ анимации точного полета.
+    /// </summary>
+    public Vector3 GetWorldPositionForIndex(int index)
+    {
+        // 1. –ассчитываем локальное смещение так же, как в AddCard
+        float xOffset = index * stackGap;
 
+        // 2. —оздаем локальный вектор (можно добавить небольшой Z, чтобы карты не мерцали)
+        // Z-смещение: кажда€ следующа€ карта чуть ближе к камере (-0.1f)
+        Vector3 localPos = new Vector3(xOffset, 0f, index * -0.02f);
+
+        // 3. ѕереводим локальную точку в глобальные координаты
+        // Ёто учитывает позицию, поворот и масштаб самого StockPile
+        return transform.TransformPoint(localPos);
+    }
     /// <summary>
     /// ”дал€ет и возвращает верхнюю карту из Stock.
     /// </summary>
@@ -176,7 +192,14 @@ public class StockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
         LogDebug($"Popped card {topCard?.name}. Remaining: {cards.Count}");
         return topCard;
     }
-
+    /// <summary>
+    /// ¬озвращает верхнюю карту без удалени€.
+    /// </summary>
+    public CardController GetTopCard()
+    {
+        if (cards.Count == 0) return null;
+        return cards[cards.Count - 1];
+    }
     /// <summary>
     /// ѕровер€ет, принадлежит ли карта этой стопке.
     /// </summary>

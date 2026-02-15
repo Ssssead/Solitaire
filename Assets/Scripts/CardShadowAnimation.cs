@@ -319,12 +319,17 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         shadowRect.localScale = Vector3.one;
         shadowRect.SetAsFirstSibling();
     }
-
+    private void OnDestroy()
+    {
+        // Гарантируем удаление тени при удалении карты
+        DestroyShadow();
+    }
     private void DestroyShadow()
     {
         if (shadowObject != null)
         {
-            Destroy(shadowObject);
+            if (Application.isPlaying) Destroy(shadowObject);
+            else DestroyImmediate(shadowObject); // Для редактора
             shadowObject = null;
         }
     }

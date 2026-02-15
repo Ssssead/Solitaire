@@ -11,30 +11,68 @@ public class KlondikeScoreManager : ScoreManager
         scoreHistory.Clear();
     }
 
-    public override void OnCardMove(ICardContainer target)
+    public void OnCardMove(ICardContainer source, ICardContainer target)
     {
-        int pointsGained = 0;
+        int pointsDelta = 0;
 
-        // Начисляем очки в зависимости от того, куда упала карта
-        if (target is TableauPile) pointsGained = 5;
-        else if (target is FoundationPile) pointsGained = 10;
+        // --- 1. ЛОГИКА ОЧКОВ ---
 
-        if (pointsGained > 0)
+        // Цель: FOUNDATION
+        if (target is FoundationPile)
         {
-            AddScore(pointsGained);
+            if (source is TableauPile) pointsDelta = 10;
+            else if (source is WastePile) pointsDelta = 10;
+        }
+        // Цель: TABLEAU
+        else if (target is TableauPile)
+        {
+            if (source is WastePile) pointsDelta = 5;
+            else if (source is FoundationPile) pointsDelta = -15;
+            // Tableau -> Tableau = 0
+        }
+        // Цель: WASTE (Сброс)
+        else if (target is WastePile)
+        {
+            // Stock -> Waste = 0
+            // Tableau -> Waste = 0 (если вдруг возможно)
+            pointsDelta = 0;
+        }
+        // Цель: STOCK (Колода)
+        else if (target is StockPile)
+        {
+            // Waste -> Stock (Recycle) = 0 (или -100 в строгих правилах, но вы просили 0)
+            pointsDelta = 0;
         }
 
-        // Запоминаем для Undo
-        scoreHistory.Push(pointsGained);
+        // --- 2. ПРИМЕНЕНИЕ ---
+
+        int previousScore = CurrentScore;
+
+        // Начисляем (не уходим в минус)
+        int newScore = Mathf.Max(0, CurrentScore + pointsDelta);
+        CurrentScore = newScore;
+
+        // Считаем реальное изменение для истории
+        int actualChange = newScore - previousScore;
+
+        // --- 3. ВАЖНО: ЗАПИСЫВАЕМ В ИСТОРИЮ (ДАЖЕ 0) ---
+        // Это гарантирует, что при Undo Stock->Waste мы вычтем именно этот 0.
+        scoreHistory.Push(actualChange);
+
+        // Debug.Log($"[Score] {source?.GetType().Name} -> {target?.GetType().Name} | Delta: {pointsDelta} | History: {actualChange}");
     }
 
     public override void OnUndo()
     {
         if (scoreHistory.Count > 0)
         {
-            int pointsToSubtract = scoreHistory.Pop();
-            // Вычитаем очки обратно
-            CurrentScore = Mathf.Max(0, CurrentScore - pointsToSubtract);
+            int changeToRevert = scoreHistory.Pop();
+            CurrentScore = Mathf.Max(0, CurrentScore - changeToRevert);
         }
+    }
+
+    public override void OnCardMove(ICardContainer target)
+    {
+        OnCardMove(null, target);
     }
 }

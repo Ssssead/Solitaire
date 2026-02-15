@@ -1,4 +1,4 @@
-﻿// TableauPile.cs [FINAL: Dynamic Squishing + Strict Gaps]
+﻿// TableauPile.cs [FINAL: Fixed Inheritance + Gizmos]
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -18,15 +18,21 @@ public class TableauPile : MonoBehaviour, ICardContainer
     [SerializeField] private float faceDownGap = 6f;
     [SerializeField] private float faceUpGapMax = 35f;
     [SerializeField] private float faceUpGapMin = 15f;
-    [SerializeField] private float firstOpenGap = 12f; // Чуть увеличил для красоты
+    [SerializeField] private float firstOpenGap = 12f;
 
-    [SerializeField] private float bottomPadding = 200f;
-    // Вместо жесткой public float maxHeight = 450f;
+    [SerializeField] private float bottomPadding = 200f; // Оставлено для совместимости, но не используется если есть boundary
+
+    // --- Dynamic Limits ---
+    [Header("Dynamic Limits")]
+    [Tooltip("Перетащите сюда объект-границу. Для правого слота (над кнопками) используйте отдельный объект, поднятый выше.")]
+    public Transform bottomBoundary;
+    [Tooltip("Дополнительный отступ от границы (в пикселях)")]
+    [SerializeField] private float bottomMargin = 10f;
+
     private float dynamicMaxHeight;
-    // Динамический отступ, который мы будем вычислять
     private float currentFaceUpGap = 35f;
 
-    public float maxHeight = 450f;   // Максимальная высота стопки (подстройте под свой экран)
+    public float maxHeight = 450f;
     public float cardHeight = 125f;
 
     [Header("Animation")]
@@ -42,8 +48,8 @@ public class TableauPile : MonoBehaviour, ICardContainer
         manager = m;
         rect = tf ?? GetComponent<RectTransform>();
 
-        // Рассчитываем высоту: 60% от высоты экрана, чтобы карты не улетали за границы
-        dynamicMaxHeight = Screen.height * 0.6f;
+        // Рассчитываем высоту один раз при старте
+        CalculateDynamicHeight();
 
         if (manager != null) animationService = manager.AnimationService;
         if (animationService == null) animationService = FindObjectOfType<AnimationService>();
@@ -51,31 +57,54 @@ public class TableauPile : MonoBehaviour, ICardContainer
 
     private void Update()
     {
-        // Вместо использования rect.height, мы вычисляем реальное расстояние от стопки до низа экрана.
+        CalculateDynamicHeight();
+    }
 
-        // 1. Получаем канвас (если его нет в кеше manager, ищем)
-        Canvas c = manager?.rootCanvas ?? GetComponentInParent<Canvas>();
-
-        if (c != null && rect != null)
+    // [NEW] Вынесли расчет высоты в отдельный метод для чистоты и использования в Initialize
+    private void CalculateDynamicHeight()
+    {
+        if (bottomBoundary != null)
         {
-            // Получаем Y позицию стопки в пространстве канваса
-            // В большинстве Canvas режимов transform.position.y - это расстояние от низа экрана (или близко к тому)
-            // Но для надежности переведем в локальные координаты канваса
+            // 1. Считаем разницу в МИРОВЫХ координатах
+            float worldHeightAvailable = transform.position.y - bottomBoundary.position.y;
+            if (worldHeightAvailable < 0) worldHeightAvailable = 0;
 
-            float scaleFactor = c.scaleFactor;
-            if (scaleFactor <= 0) scaleFactor = 1f;
+            // 2. Конвертируем в локальные пиксели Канваса
+            float currentScale = transform.lossyScale.y;
+            if (currentScale < 0.0001f) currentScale = 1f;
 
-            // Вариант А: Простой (для Screen Space - Overlay)
-            // Доступная высота = (Текущая позиция Y) - (Нижний отступ * Scale)
-            dynamicMaxHeight = transform.position.y / scaleFactor - bottomPadding;
-
-            // Защита от отрицательных значений (если стопка вдруг ниже плинтуса)
-            if (dynamicMaxHeight < cardHeight * 1.5f) dynamicMaxHeight = cardHeight * 1.5f;
+            dynamicMaxHeight = worldHeightAvailable / currentScale;
+            dynamicMaxHeight -= bottomMargin;
         }
         else
         {
-            // Fallback, если что-то пошло не так
-            dynamicMaxHeight = Screen.height * 0.55f;
+            // Fallback (старая логика)
+            Canvas c = manager?.rootCanvas ?? GetComponentInParent<Canvas>();
+            if (c != null && rect != null)
+            {
+                float scaleFactor = c.scaleFactor;
+                if (scaleFactor <= 0) scaleFactor = 1f;
+                dynamicMaxHeight = transform.position.y / scaleFactor - bottomPadding;
+            }
+            else
+            {
+                dynamicMaxHeight = Screen.height * 0.55f;
+            }
+        }
+
+        if (dynamicMaxHeight < cardHeight * 1.5f) dynamicMaxHeight = cardHeight * 1.5f;
+    }
+
+    // [NEW] Визуализация границ в редакторе (чтобы видеть разные высоты слотов)
+    private void OnDrawGizmos()
+    {
+        if (bottomBoundary != null)
+        {
+            Gizmos.color = Color.red;
+            // Рисуем линию от верха стопки до границы
+            Gizmos.DrawLine(transform.position, new Vector3(transform.position.x, bottomBoundary.position.y, transform.position.z));
+            // Рисуем точку на границе
+            Gizmos.DrawWireSphere(new Vector3(transform.position.x, bottomBoundary.position.y, transform.position.z), 10f);
         }
     }
 
@@ -97,47 +126,55 @@ public class TableauPile : MonoBehaviour, ICardContainer
         isAnimatingCard = false;
     }
 
-    // --- ГЛАВНОЕ ИСПРАВЛЕНИЕ: ДИНАМИЧЕСКИЙ РАСЧЕТ ОТСТУПА ---
     private void ComputeFaceUpGap()
     {
         int faceUpCount = 0;
         int faceDownCount = 0;
+        for (int i = 0; i < faceUp.Count; i++) { if (faceUp[i]) faceUpCount++; else faceDownCount++; }
 
-        for (int i = 0; i < faceUp.Count; i++)
-        {
-            if (faceUp[i]) faceUpCount++;
-            else faceDownCount++;
-        }
-
-        // 1. Сначала ставим МАКСИМАЛЬНЫЙ отступ (по умолчанию)
+        // По умолчанию хотим максимальный отступ
         currentFaceUpGap = faceUpGapMax;
 
         if (faceUpCount > 1)
         {
-            float cardH = (cards.Count > 0 && cards[0] != null) ? cards[0].rectTransform.rect.height : cardHeight;
+            // 1. Получаем реальные размеры карты и её Pivot
+            float currentCardHeight = cardHeight;
+            float pivotY = 0.5f; // Стандартный Pivot в центре
 
-            // 2. Считаем, сколько высоты нужно картам при МАКСИМАЛЬНОМ отступе
+            if (cards.Count > 0 && cards[0] != null)
+            {
+                currentCardHeight = cards[0].rectTransform.rect.height;
+                pivotY = cards[0].rectTransform.pivot.y;
+            }
+
+            // 2. Считаем место, занятое закрытыми картами
             float heightTakenByFaceDown = (faceDownCount * faceDownGap) + (faceDownCount > 0 ? firstOpenGap : 0);
-            float neededHeight = heightTakenByFaceDown + ((faceUpCount - 1) * faceUpGapMax) + cardH;
 
-            // 3. Если нужная высота БОЛЬШЕ, чем доступное место (dynamicMaxHeight) -> начинаем сжимать
+            // 3. Считаем, сколько места карты заняли бы ВНИЗ от начала стопки при максимальном gap.
+            // ВАЖНО: Учитываем Pivot!
+            // Если Pivot = 0.5 (центр), то карта торчит вниз на 0.5 своей высоты от своей точки якоря.
+            // Нижний край последней карты = (Сумма всех отступов) + (Высота * PivotY)
+
+            float totalGapOffset = heightTakenByFaceDown + ((faceUpCount - 1) * faceUpGapMax);
+            float neededHeight = totalGapOffset + (currentCardHeight * pivotY);
+
+            // 4. Проверяем, влезаем ли мы
             if (neededHeight > dynamicMaxHeight)
             {
-                // Сколько места осталось для ОТКРЫТЫХ промежутков?
-                float availableForGaps = dynamicMaxHeight - cardH - heightTakenByFaceDown;
+                // Места мало! Считаем, сколько места доступно чисто для промежутков между открытыми картами.
+                // Доступно = (Все место) - (Закрытые) - (Половина последней карты)
+                float availableForGaps = dynamicMaxHeight - heightTakenByFaceDown - (currentCardHeight * pivotY);
 
                 // Делим на количество промежутков
                 float newGap = availableForGaps / (faceUpCount - 1);
 
-                // Не даем сжаться сильнее минимума (чтобы карты не слиплись в одну точку)
+                // Ограничиваем минимумом
                 currentFaceUpGap = Mathf.Max(newGap, faceUpGapMin);
             }
-            // ИНАЧЕ (если neededHeight <= dynamicMaxHeight)
-            // Мы оставляем currentFaceUpGap = faceUpGapMax. 
-            // Это решает проблему "всегда минимального отступа".
         }
     }
 
+    // [FIX] Добавлено virtual для Spider/FreeCell
     public virtual void AddCard(CardController card, bool faceUpFlag)
     {
         if (card == null) return;
@@ -150,11 +187,10 @@ public class TableauPile : MonoBehaviour, ICardContainer
         if (cardData != null) cardData.SetFaceUp(faceUpFlag, animate: false);
 
         card.rectTransform.SetAsLastSibling();
-
-        // Сначала пересчитываем, потом анимируем
         ForceRecalculateLayout();
     }
 
+    // [FIX] Добавлено virtual для Spider/FreeCell (исправляет ошибку компиляции)
     public virtual void AddCardsBatch(List<CardController> cardsToAdd, bool faceUpFlag)
     {
         if (cardsToAdd == null || cardsToAdd.Count == 0) return;
@@ -178,11 +214,12 @@ public class TableauPile : MonoBehaviour, ICardContainer
         }
         ForceRecalculateLayout();
     }
+
     public void ForceRebuildLayout()
     {
         if (cards.Count == 0) return;
 
-        ComputeFaceUpGap(); // Пересчитываем отступы
+        ComputeFaceUpGap();
 
         float currentY = 0;
         bool prevOpen = false;
@@ -193,25 +230,20 @@ public class TableauPile : MonoBehaviour, ICardContainer
             var card = cards[i];
             if (card == null) continue;
 
-            // Гарантируем иерархию
             if (card.rectTransform.parent != transform) card.rectTransform.SetParent(transform, true);
             card.rectTransform.SetSiblingIndex(i);
 
-            // ВОССТАНОВЛЕНИЕ ВВОДА (Критично для фикса багов)
             if (card.canvasGroup != null)
             {
                 card.canvasGroup.blocksRaycasts = true;
                 card.canvasGroup.alpha = 1f;
             }
 
-            // Установка позиции без анимации
             card.rectTransform.anchoredPosition = new Vector2(0, -currentY);
 
-            // Синхронизация данных
             var data = card.GetComponent<CardData>();
             if (data != null) data.SetFaceUp(faceUp[i], animate: false);
 
-            // Расчет Y для следующей карты
             if (!faceUp[i])
             {
                 currentY += faceDownGap;
@@ -228,13 +260,12 @@ public class TableauPile : MonoBehaviour, ICardContainer
             }
         }
     }
+
+    // [FIX] Добавлено virtual
     public virtual void ForceRecalculateLayout()
     {
-        // Сначала вычисляем, какой должен быть отступ
         ComputeFaceUpGap();
-        // Разблокируем на всякий случай
         isLayoutLocked = false;
-        // Запускаем анимацию на новые позиции
         StartLayoutAnimation();
     }
 
@@ -244,6 +275,7 @@ public class TableauPile : MonoBehaviour, ICardContainer
 
     // --- ICardContainer ---
 
+    // [FIX] Добавлено virtual для Spider/FreeCell (исправляет ошибку компиляции)
     public virtual bool CanAccept(CardController card)
     {
         if (card == null) return false;
@@ -264,29 +296,25 @@ public class TableauPile : MonoBehaviour, ICardContainer
     }
 
     public void OnCardIncoming(CardController card) { }
-    public void AcceptCard(CardController card) => AddCard(card, true);
+
+    // [FIX] Добавлено virtual
+    public virtual void AcceptCard(CardController card) => AddCard(card, true);
+
     public bool IsEmpty() => cards.Count == 0;
     public CardController GetTopCard() => cards.Count == 0 ? null : cards[cards.Count - 1];
 
     public Vector2 GetDropAnchoredPosition(CardController card)
     {
-        // Считаем отступ, как если бы карта уже была там
-        // (Для точности можно временно увеличить count в расчетах, но обычно достаточно текущего)
         ComputeFaceUpGap();
 
         if (cards.Count == 0) return Vector2.zero;
 
         List<Vector2> targets = CalculateTargetAnchors();
-        // Позиция для НОВОЙ карты будет после последней существующей
         Vector2 lastPos = targets[targets.Count - 1];
 
-        // Новая карта всегда FaceUp, значит добавляем currentFaceUpGap
-        // Исключение: если последняя карта была FaceDown
         bool lastWasOpen = faceUp[faceUp.Count - 1];
         float gapToAdd = lastWasOpen ? currentFaceUpGap : (faceDownGap + firstOpenGap);
 
-        // Упрощение: используем логику CalculateTargetAnchors для N+1
-        // Но проще взять последнюю точку и прибавить отступ
         return new Vector2(0f, lastPos.y - gapToAdd);
     }
 
@@ -294,6 +322,7 @@ public class TableauPile : MonoBehaviour, ICardContainer
 
     public int IndexOfCard(CardController card) => cards.IndexOf(card);
 
+    // [FIX] Добавлено virtual
     public virtual List<CardController> GetFaceUpSequenceFrom(int idx)
     {
         var sequence = new List<CardController>();
@@ -383,9 +412,6 @@ public class TableauPile : MonoBehaviour, ICardContainer
     }
     public int Count => cards.Count;
 
-    /// <summary>
-    /// Принудительно разблокирует лейаут (вызывается извне, например из DragManager).
-    /// </summary>
     public void UnlockLayout()
     {
         isLayoutLocked = false;
@@ -405,7 +431,6 @@ public class TableauPile : MonoBehaviour, ICardContainer
 
     public void ForceUpdateFromTransform()
     {
-        // Re-sync logical lists with Transform children
         var newCards = new List<CardController>();
         var newFaceUp = new List<bool>();
 
@@ -432,9 +457,6 @@ public class TableauPile : MonoBehaviour, ICardContainer
         isAnimatingCard = animating;
         isLayoutLocked = animating;
 
-        // --- НОВОЕ: Физически отключаем клики по картам в этой стопке ---
-        // Если идет анимация (animating = true), то blocksRaycasts = false.
-        // Когда анимация закончилась, включаем обратно.
         foreach (var card in cards)
         {
             if (card != null && card.canvasGroup != null)
@@ -460,17 +482,13 @@ public class TableauPile : MonoBehaviour, ICardContainer
             yield break;
         }
 
-        // 1. Вычисляем целевые точки (с учетом нового gap)
         List<Vector2> targets = CalculateTargetAnchors();
-
-        // 2. Запоминаем старт
         List<Vector2> starts = new List<Vector2>(cards.Count);
         for (int i = 0; i < cards.Count; i++)
         {
             var card = cards[i];
             if (card == null) { starts.Add(Vector2.zero); continue; }
 
-            // Если карта чужая (drag), не анимируем ее
             if (card.rectTransform.parent != transform)
             {
                 starts.Add(card.rectTransform.anchoredPosition);
@@ -481,7 +499,6 @@ public class TableauPile : MonoBehaviour, ICardContainer
             card.rectTransform.SetAsLastSibling();
         }
 
-        // 3. Анимация
         float elapsed = 0f;
         while (elapsed < layoutAnimDuration)
         {
@@ -499,7 +516,6 @@ public class TableauPile : MonoBehaviour, ICardContainer
             yield return null;
         }
 
-        // 4. Финал
         for (int i = 0; i < cards.Count; i++)
         {
             if (cards[i] != null && cards[i].rectTransform.parent == transform)
@@ -511,7 +527,6 @@ public class TableauPile : MonoBehaviour, ICardContainer
 
     private List<Vector2> CalculateTargetAnchors()
     {
-        // На всякий случай обновляем gap еще раз, хотя он должен быть уже рассчитан
         ComputeFaceUpGap();
 
         List<Vector2> targets = new List<Vector2>(cards.Count);
@@ -525,24 +540,20 @@ public class TableauPile : MonoBehaviour, ICardContainer
 
             if (!faceUp[i])
             {
-                // Закрытая карта
                 offset = accum;
                 accum += faceDownGap;
                 prevWasOpen = false;
             }
             else
             {
-                // Открытая карта
                 if (!prevWasOpen)
                 {
-                    // Первая открытая после закрытых
                     offset = hasClosedBeforeFirstOpen ? accum + firstOpenGap : accum;
                     prevWasOpen = true;
                     accum = offset + currentFaceUpGap;
                 }
                 else
                 {
-                    // Последующие открытые
                     offset = accum;
                     accum += currentFaceUpGap;
                 }

@@ -2024,6 +2024,7 @@ GameObject:
   - component: {fileID: 116862369}
   - component: {fileID: 116862370}
   - component: {fileID: 116862371}
+  - component: {fileID: 116862373}
   - component: {fileID: 116862372}
   m_Layer: 0
   m_Name: GlobalSystems
@@ -2185,6 +2186,18 @@ MonoBehaviour:
   chunkedUpdateForLocalizedText: 1
   localizedTextChunkSize: 40
   deferredForceMeshUpdate: 1
+--- !u!114 &116862373
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 116862361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b96cfdf6bab77f84f983fce800f56adb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &121356814
 GameObject:
   m_ObjectHideFlags: 0
@@ -24716,6 +24729,7 @@ MonoBehaviour:
   - {fileID: 2073169196}
   - {fileID: 637444691}
   - {fileID: 772647860}
+  - {fileID: 1849908957}
   fallDuration: 0.5
   delayBetweenFalls: 0.05
   fallDistance: 1500

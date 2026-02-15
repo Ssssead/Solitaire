@@ -241,28 +241,28 @@
             "value": "Yukon Stats"
         },
         {
-            "key": "clue.l2.time.start_hour",
-            "value": "The door will open when the {nextHourStartWord} hour begins."
+            "key": "ConfirmExit1",
+            "value": "Are you sure you want to quit to the menu?"
         },
         {
-            "key": "word.hour_start.1",
-            "value": "twelfth"
+            "key": "ConfirmExit2",
+            "value": "This game will count as a loss."
         },
         {
-            "key": "word.hour_start.2",
-            "value": "first"
+            "key": "Yes",
+            "value": "YES"
         },
         {
-            "key": "word.hour_start.3",
-            "value": "second"
+            "key": "No",
+            "value": "NO"
         },
         {
-            "key": "word.hour_start.4",
-            "value": "third"
+            "key": "ConfirmNewGame1",
+            "value": "Are you sure you want to start a new game?"
         },
         {
-            "key": "word.hour_start.5",
-            "value": "fourth"
+            "key": "ConfirmNewGame2",
+            "value": "Starting a new game will count as a loss."
         },
         {
             "key": "word.hour_start.6",
