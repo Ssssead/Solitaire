@@ -399,16 +399,30 @@ public class StatisticsUI : MonoBehaviour
         for (int i = 0; i < historySlots.Length; i++)
         {
             int dataIndex = count - 1 - i;
+
+            // 1. Получаем компонент для наведения (или добавляем, если его вдруг нет)
+            HistorySlotHover hover = historySlots[i].GetComponent<HistorySlotHover>();
+            if (hover == null) hover = historySlots[i].gameObject.AddComponent<HistorySlotHover>();
+
             if (dataIndex >= 0)
             {
                 var entry = history[dataIndex];
                 historySlots[i].sprite = entry.won ? winIcon : lossIcon;
                 historySlots[i].color = Color.white;
+
+                // 2. ПЕРЕДАЕМ ДАННЫЕ
+                // Используем SlotType.GameGlobal, потому что в HistorySlotHover.cs написано:
+                // case SlotType.GameGlobal: GameInfoTooltip.Instance.ShowTooltip(myData);
+                // (Если передать SlotType.Difficulty, тултип не появится из-за 'break' в том скрипте)
+                hover.Setup(entry, HistorySlotHover.SlotType.GameGlobal);
             }
             else
             {
                 historySlots[i].sprite = emptyIcon;
                 historySlots[i].color = (emptyIcon == null) ? Color.clear : new Color(1, 1, 1, 0.5f);
+
+                // 3. Очищаем данные для пустых слотов
+                hover.Setup(null, HistorySlotHover.SlotType.Difficulty);
             }
         }
     }

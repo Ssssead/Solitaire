@@ -45,6 +45,7 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     private bool _isInputAllowed = true;
     private bool _isSetupRunning = false;
     private bool _isUndoing = false;
+    private bool hasGameStarted = false;
 
     // Флаги статистики
     private bool _hasGameStarted = false;
@@ -62,13 +63,17 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public Canvas RootCanvas => rootCanvas;
     public float TableauVerticalGap => 0f;
     public StockDealMode StockDealMode => StockDealMode.Draw1;
+    public GameType GameType => GameType.TriPeaks;
 
     public bool IsInputAllowed
     {
         get => _isInputAllowed && !_isSetupRunning && !_isUndoing && !_isGameEnded;
         set => _isInputAllowed = value;
     }
-
+    public bool IsMatchInProgress()
+    {
+        return hasGameStarted;
+    }
     private void Start()
     {
         if (animationService == null) animationService = GetComponent<TriPeaksAnimationService>();

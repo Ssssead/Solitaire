@@ -24,5 +24,7 @@ public interface ICardGameMode
 
     // --- НОВОЕ: Для GameUIController ---
     string GameName { get; } // Чтобы UI знал имя игры для статистики ("Klondike", "Spider")
+    GameType GameType { get; }
     void RestartGame();      // Универсальный метод перезапуска
+    bool IsMatchInProgress();
 }

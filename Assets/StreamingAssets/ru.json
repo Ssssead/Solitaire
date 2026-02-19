@@ -265,48 +265,45 @@
             "value": "При запуске новой игры будет защитано поражение"
         },
         {
-            "key": "word.nexthour.5",
-            "value": "пятого"
+            "key": "WinText",
+            "value": "ПОБЕДА!!!"
         },
         {
-            "key": "word.nexthour.6",
-            "value": "шестого"
+            "key": "ExpText",
+            "value": "Опыта получено:"
         },
         {
-            "key": "word.nexthour.7",
-            "value": "седьмого"
+            "key": "LossText",
+            "value": "Нет ходов"
         },
         {
-            "key": "word.nexthour.8",
-            "value": "восьмого"
+            "key": "UndoAll",
+            "value": "Отменить все ходы"
         },
         {
-            "key": "word.nexthour.9",
-            "value": "девятого"
+            "key": "ToMenu",
+            "value": "В меню"
         },
         {
-            "key": "word.nexthour.10",
-            "value": "десятого"
+            "key": "Undo",
+            "value": "Отменить ход"
         },
         {
-            "key": "word.nexthour.11",
-            "value": "одиннадцатого"
+            "key": "NewGame",
+            "value": "Новая Игра"
         },
         {
-            "key": "word.nexthour.12",
-            "value": "двенадцатого"
+            "key": "NewGlobalLevelNotification",
+            "value": "Новый глобальный уровень: {newLevel}!"
         },
         {
-            "key": "clue.l2.time.start_hour",
-            "value": "Дверь откроется когда начнётся {nextHourStartWord} час."
+            "key": "Diff2",
+            "value": "Сложность:"
         },
+
         {
-            "key": "word.hour_start.1",
-            "value": "первый"
-        },
-        {
-            "key": "word.hour_start.2",
-            "value": "второй"
+            "key": "NewRecord",
+            "value": "Новый рекорд!"
         },
         {
             "key": "word.hour_start.3",

@@ -52,6 +52,8 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     public float TableauVerticalGap => 0f;
     public StockDealMode StockDealMode => StockDealMode.Draw1;
     public bool IsInputAllowed { get; set; } = true;
+    private bool hasGameStarted = false;
+    public GameType GameType => GameType.Pyramid;
 
     private void Start()
     {
@@ -60,7 +62,10 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
 
         InitializeGame(GameSettings.CurrentDifficulty, GameSettings.RoundsCount);
     }
-
+    public bool IsMatchInProgress()
+    {
+        return hasGameStarted;
+    }
     public void InitializeGame(Difficulty difficulty, int rounds)
     {
         currentDifficulty = difficulty;

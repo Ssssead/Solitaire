@@ -34,11 +34,13 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public RectTransform DragLayer => dragLayer;
     public Canvas RootCanvas => rootCanvas;
     public bool IsInputAllowed { get; set; } = true;
+    private bool hasGameStarted = false;
     public float TableauVerticalGap => 35f;
     public AnimationService AnimationService => null;
     public PileManager PileManager => null;
     public AutoMoveService AutoMoveService => null;
     public StockDealMode StockDealMode => StockDealMode.Draw1;
+    public GameType GameType => GameType.Yukon;
 
     private void Start()
     {
@@ -46,7 +48,10 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode
         if (undoManager != null) undoManager.Initialize(this);
         InitializeMode();
     }
-
+    public bool IsMatchInProgress()
+    {
+        return hasGameStarted;
+    }
     public void InitializeMode()
     {
         currentDifficulty = GameSettings.CurrentDifficulty;

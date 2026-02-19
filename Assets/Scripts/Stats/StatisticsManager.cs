@@ -15,6 +15,9 @@ public class StatisticsManager : MonoBehaviour
     private float gameStartTime;
     private bool isTimerRunning = false;
     private bool hasTimerStarted = false;
+    public bool IsNewScoreRecord { get; private set; }
+    public bool IsNewTimeRecord { get; private set; }
+    public bool IsNewMovesRecord { get; private set; }
     public float LastGameTime { get; private set; }
     public int LastXPGained { get; private set; }
 
@@ -97,7 +100,6 @@ public class StatisticsManager : MonoBehaviour
     {
         if (!hasTimerStarted) return;
 
-        // ... (код сброса таймера и LastGameTime) ...
         isTimerRunning = false;
         hasTimerStarted = false;
         float duration = Time.time - gameStartTime;
@@ -111,7 +113,6 @@ public class StatisticsManager : MonoBehaviour
         // 1. Парсим Enum сложности и Типа игры
         Difficulty diffEnum = (Difficulty)System.Enum.Parse(typeof(Difficulty), difficultyStr);
 
-        // --- ИСПРАВЛЕНИЕ НАЧАЛО ---
         GameType gType;
         try
         {
@@ -122,35 +123,44 @@ public class StatisticsManager : MonoBehaviour
             gType = GameType.Klondike; // Фолбэк на случай ошибки
         }
 
-        string gameGlobalKey = $"{gameName}_Global"; // Klondike_Global
-        string appGlobalKey = "Global";              // Global
+        string gameGlobalKey = $"{gameName}_Global";
+        string appGlobalKey = "Global";
 
-        // 2. Получаем текущие данные игры, чтобы узнать УРОВЕНЬ (для расчета бонуса)
+        // 2. Получаем текущие данные игры для расчетов (Уровень и Рекорды)
         StatData gameData = stats.GetData(gameGlobalKey);
         int currentLevel = (gameData != null) ? gameData.currentLevel : 1;
 
-        // 3. РАСЧЕТ ОПЫТА (Передаем 5 аргументов: Тип, Уровень, Сложность, Вариант, Премиум)
-        int xpGained = LevelingUtils.CalculateXP(gType, currentLevel, diffEnum, variantStr, IsUserPremium);
-        // --- ИСПРАВЛЕНИЕ КОНЕЦ ---
+        // --- ПРОВЕРКА НА РЕКОРДЫ (ДО ТОГО КАК МЫ ИХ ОБНОВИЛИ) ---
+        IsNewScoreRecord = false;
+        IsNewTimeRecord = false;
+        IsNewMovesRecord = false;
 
+        StatData currentModeStats = stats.GetData(currentGameKey); // Берем стату конкретного режима (например Klondike_Hard_Draw3)
+        if (currentModeStats != null)
+        {
+            // Если побед еще не было, или результат лучше предыдущего лучшего
+            if (finalScore > currentModeStats.bestScore) IsNewScoreRecord = true;
+            if (currentModeStats.bestTime == 0 || duration < currentModeStats.bestTime) IsNewTimeRecord = true;
+            if (currentModeStats.fewestMoves == 0 || currentMoves < currentModeStats.fewestMoves) IsNewMovesRecord = true;
+
+            // Защита от спама рекордов при счете 0 (если игра не на очки)
+            if (finalScore == 0 && currentModeStats.bestScore == 0) IsNewScoreRecord = false;
+        }
+        // --------------------------------------------------------
+
+        // 3. РАСЧЕТ ОПЫТА 
+        int xpGained = LevelingUtils.CalculateXP(gType, currentLevel, diffEnum, variantStr, IsUserPremium);
         LastXPGained = xpGained;
 
         Debug.Log($"[XP System] Gained {xpGained} XP. (Diff: {diffEnum}, Var: {variantStr})");
 
-        // --- 4. СОХРАНЕНИЕ СТАТИСТИКИ И ОПЫТА ---
-
-        // А. Обычная запись статистики (победы, очки)
+        // 4. СОХРАНЕНИЕ СТАТИСТИКИ И ОПЫТА
         stats.UpdateData(currentGameKey, true, duration, currentMoves, finalScore, difficultyStr, gameName, variantStr);
         stats.UpdateData(gameGlobalKey, true, duration, currentMoves, finalScore, difficultyStr, gameName, variantStr);
         stats.UpdateData(appGlobalKey, true, duration, currentMoves, finalScore, difficultyStr, gameName, variantStr);
 
         // Б. Начисление опыта
-
-        // 1) Локальный уровень (Игра: Klondike_Global)
-        // Используем переменную gameData, которую получили выше, или берем заново
         StatData localStats = stats.GetData(gameGlobalKey);
-
-        // Важно: первый раз инициализируем цель, если она дефолтная
         if (localStats.currentLevel == 1 && localStats.xpForNextLevel == 0) localStats.xpForNextLevel = 500;
 
         bool localLevelUp = localStats.AddExperience(xpGained, isGlobal: false);
@@ -160,9 +170,7 @@ public class StatisticsManager : MonoBehaviour
             OnLevelUp?.Invoke(gameName, localStats.currentLevel);
         }
 
-        // 2) Глобальный уровень (Аккаунт: Global)
         StatData globalStats = stats.GetData(appGlobalKey);
-        // Важно: инициализация цели для глобала
         if (globalStats.currentLevel == 1 && globalStats.xpForNextLevel == 0) globalStats.xpForNextLevel = 2000;
 
         bool globalLevelUp = globalStats.AddExperience(xpGained, isGlobal: true);
@@ -172,9 +180,7 @@ public class StatisticsManager : MonoBehaviour
             OnLevelUp?.Invoke("Account", globalStats.currentLevel);
         }
 
-        // Уведомляем подписчиков (UI) о получении опыта
         OnXPGained?.Invoke(xpGained);
-
         SaveStats();
         currentMoves = 0;
     }

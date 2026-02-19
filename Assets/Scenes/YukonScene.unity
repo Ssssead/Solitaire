@@ -380,7 +380,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   winPanel: {fileID: 519741498}
-  settingsPanel: {fileID: 1376894962}
   defeatPanel: {fileID: 990441453}
   statisticsPanel: {fileID: 0}
   exitConfirmationPanel: {fileID: 2056597029}
@@ -390,10 +389,24 @@ MonoBehaviour:
   winTimeText: {fileID: 1916612025}
   winMovesText: {fileID: 1134315099}
   winXPText: {fileID: 1931272356}
-  localLevelBar: {fileID: 398158332}
+  winEarnedXPText: {fileID: 0}
+  winCardRect: {fileID: 0}
   winLevelBar: {fileID: 398158332}
+  localLevelBar: {fileID: 398158332}
   globalLevelUpPopup: {fileID: 891830704}
+  btnSelectedColor: {r: 1, g: 0.6901961, b: 0.101960786, a: 1}
+  btnNormalColor: {r: 0.6039216, g: 0.37254903, b: 0.2509804, a: 1}
+  textSelectedColor: {r: 0.14117648, g: 0.078431375, b: 0.047058824, a: 1}
+  textNormalColor: {r: 0.7529412, g: 0.7529412, b: 0.7529412, a: 1}
+  winDifficultyContainer: {fileID: 0}
+  winDrawContainer: {fileID: 0}
+  winSuitContainer: {fileID: 0}
+  winDiffButtons: []
+  winDrawButtons: []
+  xpPreviewText: {fileID: 0}
+  xpPreviewLocKey: xp_reward_preview
   undoManager: {fileID: 959636144}
+  exitAnimator: {fileID: 0}
 --- !u!114 &98261178
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1259,6 +1272,8 @@ MonoBehaviour:
   faceUpGapMin: 15
   firstOpenGap: 12
   bottomPadding: 200
+  bottomBoundary: {fileID: 1058430112}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -2712,6 +2727,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 445288971}
   m_CullTransparentMesh: 1
+--- !u!1 &495961662
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 495961663}
+  m_Layer: 5
+  m_Name: Slot3Border
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &495961663
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 495961662}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2012075387}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.54333335, y: 0.018000001}
+  m_AnchorMax: {x: 0.63425916, y: 0.03860083}
+  m_AnchoredPosition: {x: -1.5, y: -0.39001465}
+  m_SizeDelta: {x: 2, y: 5.552002}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &501013182
 GameObject:
   m_ObjectHideFlags: 0
@@ -2941,6 +2991,8 @@ MonoBehaviour:
   faceUpGapMin: 15
   firstOpenGap: 12
   bottomPadding: 200
+  bottomBoundary: {fileID: 951675688}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -4206,6 +4258,8 @@ MonoBehaviour:
   faceUpGapMin: 15
   firstOpenGap: 12
   bottomPadding: 200
+  bottomBoundary: {fileID: 1361797797}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -4419,6 +4473,8 @@ MonoBehaviour:
   faceUpGapMin: 15
   firstOpenGap: 12
   bottomPadding: 200
+  bottomBoundary: {fileID: 1372622496}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -5089,6 +5145,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 933116508}
   m_CullTransparentMesh: 1
+--- !u!1 &951675687
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 951675688}
+  m_Layer: 5
+  m_Name: Slot6Border
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &951675688
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 951675687}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2012075387}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.75085187, y: 0.018000001}
+  m_AnchorMax: {x: 0.83800006, y: 0.03860083}
+  m_AnchoredPosition: {x: 109.900024, y: 54.5}
+  m_SizeDelta: {x: 6, y: 5.162}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &952637348
 GameObject:
   m_ObjectHideFlags: 0
@@ -5745,6 +5836,41 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!1 &1058430111
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1058430112}
+  m_Layer: 5
+  m_Name: Slot5Border
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1058430112
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1058430111}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2012075387}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.75085187, y: 0.018000001}
+  m_AnchorMax: {x: 0.83800006, y: 0.03860083}
+  m_AnchoredPosition: {x: -1.5, y: -0.19500732}
+  m_SizeDelta: {x: 6, y: 5.162}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1065209324
 GameObject:
   m_ObjectHideFlags: 0
@@ -6755,6 +6881,8 @@ MonoBehaviour:
   faceUpGapMin: 15
   firstOpenGap: 12
   bottomPadding: 200
+  bottomBoundary: {fileID: 1533339716}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -6877,6 +7005,8 @@ MonoBehaviour:
   faceUpGapMin: 15
   firstOpenGap: 12
   bottomPadding: 200
+  bottomBoundary: {fileID: 495961663}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -7129,6 +7259,76 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1310159715}
   m_CullTransparentMesh: 1
+--- !u!1 &1361797796
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1361797797}
+  m_Layer: 5
+  m_Name: Slot4Border
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1361797797
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1361797796}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2012075387}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.6453701, y: 0.018000001}
+  m_AnchorMax: {x: 0.73700005, y: 0.03860083}
+  m_AnchoredPosition: {x: -1.5, y: 0}
+  m_SizeDelta: {x: 1, y: 5.552002}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1372622495
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1372622496}
+  m_Layer: 5
+  m_Name: Slot1Border
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1372622496
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372622495}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2012075387}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.34100002, y: 0.01135391}
+  m_AnchorMax: {x: 0.43400002, y: 0.03860083}
+  m_AnchoredPosition: {x: -2, y: 1.6099854}
+  m_SizeDelta: {x: -1, y: 1.552002}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1376894962
 GameObject:
   m_ObjectHideFlags: 0
@@ -8465,6 +8665,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1515251083}
   m_CullTransparentMesh: 1
+--- !u!1 &1533339715
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1533339716}
+  m_Layer: 5
+  m_Name: Slot0Border
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1533339716
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1533339715}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2012075387}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.23422223, y: 0.01135391}
+  m_AnchorMax: {x: 0.3258148, y: 0.03860083}
+  m_AnchoredPosition: {x: 3.000122, y: 1.6099854}
+  m_SizeDelta: {x: 1, y: 1.552002}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1547169593
 GameObject:
   m_ObjectHideFlags: 0
@@ -8598,6 +8833,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1547169593}
   m_CullTransparentMesh: 1
+--- !u!1 &1555026737
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1555026738}
+  m_Layer: 5
+  m_Name: Slot2Border
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1555026738
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1555026737}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2012075387}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.44511116, y: 0.01135391}
+  m_AnchorMax: {x: 0.53685194, y: 0.03860083}
+  m_AnchoredPosition: {x: -0.5, y: 1.6099854}
+  m_SizeDelta: {x: 2, y: 1.552002}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &1556223675
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10442,6 +10712,13 @@ RectTransform:
   - {fileID: 1065209325}
   - {fileID: 395149922}
   - {fileID: 181615174}
+  - {fileID: 1533339716}
+  - {fileID: 1372622496}
+  - {fileID: 1555026738}
+  - {fileID: 495961663}
+  - {fileID: 1361797797}
+  - {fileID: 1058430112}
+  - {fileID: 951675688}
   - {fileID: 1381169664}
   - {fileID: 408792748}
   - {fileID: 1466279989}
@@ -11159,6 +11436,8 @@ MonoBehaviour:
   faceUpGapMin: 15
   firstOpenGap: 12
   bottomPadding: 200
+  bottomBoundary: {fileID: 1555026738}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18

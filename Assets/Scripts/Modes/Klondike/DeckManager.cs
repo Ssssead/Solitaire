@@ -508,6 +508,11 @@ public class DeckManager : MonoBehaviour
 
         mode.RegisterMoveAndStartIfNeeded();
 
+        if (mode != null && mode.scoreManager is KlondikeScoreManager kScore)
+        {
+            kScore.OnDeckRecycled();
+        }
+
         List<CardController> movedCards = new List<CardController>();
         List<Transform> parents = new List<Transform>();
         List<Vector3> positions = new List<Vector3>();

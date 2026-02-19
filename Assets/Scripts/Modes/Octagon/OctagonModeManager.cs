@@ -25,6 +25,7 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager
     private int recyclesUsed = 0;
     private bool _isGameFinished = false;
     private Difficulty currentDifficulty;
+    public GameType GameType => GameType.Octagon;
 
     private Stack<OctagonMoveRecord> undoStack = new Stack<OctagonMoveRecord>();
     private bool isUndoing = false;
@@ -39,6 +40,7 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager
     public float TableauVerticalGap => 25f;
     public StockDealMode StockDealMode => StockDealMode.Draw1;
     public bool IsInputAllowed { get; set; } = false;
+    private bool hasGameStarted = false;
     public string GameName => "Octagon";
 
     private IEnumerator Start()
@@ -69,7 +71,10 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager
             }
         }
     }
-
+    public bool IsMatchInProgress()
+    {
+        return hasGameStarted;
+    }
     private void Update()
     {
         if (undoButton) undoButton.interactable = undoStack.Count > 0 && !isUndoing;

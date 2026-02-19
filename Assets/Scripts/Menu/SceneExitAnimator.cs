@@ -32,20 +32,36 @@ public class SceneExitAnimator : MonoBehaviour
         StartCoroutine(ExitRoutine(onComplete));
     }
 
+    // --- НОВЫЙ МЕТОД (ПЕРЕЗАПУСК) ---
+    public void PlayRestartSequence(System.Action onComplete)
+    {
+        StartCoroutine(RestartRoutine(onComplete));
+    }
+    private IEnumerator RestartRoutine(System.Action onComplete)
+    {
+        // ВНИМАНИЕ: Мы НЕ убираем UI и НЕ прячем слоты.
+        // Только роняем карты.
+
+        // 1. Запускаем падение карт
+        // destroyAfter = true, так как сцена не перезагружается, мусор надо убрать
+        yield return StartCoroutine(DropAllCards(destroyAfter: true));
+
+        // 2. Небольшая пауза перед прилетом новой колоды
+        yield return new WaitForSeconds(0.5f);
+
+        onComplete?.Invoke();
+    }
+
     private IEnumerator ExitRoutine(System.Action onComplete)
     {
         // 1. Убираем интерфейс
         StartCoroutine(AnimateHUDOut());
-
-        // 2. Запускаем исчезновение слотов
+        // 2. Слоты
         StartCoroutine(FadeOutSlots());
+        // 3. Карты
+        yield return StartCoroutine(DropAllCards(destroyAfter: false)); // При выходе сцену все равно уничтожат
 
-        // 3. Запускаем скатывание карт
-        yield return StartCoroutine(DropAllCards());
-
-        // 4. Пауза
         yield return new WaitForSeconds(0.2f);
-
         onComplete?.Invoke();
     }
 
@@ -133,7 +149,7 @@ public class SceneExitAnimator : MonoBehaviour
         }
     }
 
-    private IEnumerator DropAllCards()
+    private IEnumerator DropAllCards(bool destroyAfter)
     {
         CardController[] allCards = FindObjectsOfType<CardController>();
 
@@ -145,7 +161,6 @@ public class SceneExitAnimator : MonoBehaviour
         {
             if (card == null) continue;
 
-            // Отключаем логику и Raycast
             card.enabled = false;
             var group = card.GetComponent<CanvasGroup>();
             if (group) group.blocksRaycasts = false;
@@ -153,30 +168,16 @@ public class SceneExitAnimator : MonoBehaviour
             FallingCard fc = new FallingCard();
             fc.transform = card.transform;
 
-            // --- НАСТРОЙКИ ДЛЯ "РОВНОГО СКАТЫВАНИЯ" ---
-
-            // 1. Позиция по X: Уменьшаем разброс до минимума.
-            // Было (-50, 50), ставим (-10, 10). 
-            // Карты будут ехать почти строго вниз.
             float driftX = Random.Range(-10f, 10f);
-
-            // 2. Позиция по Y: Чуть-чуть толкаем вниз на старте
             float initialSpeedDown = Random.Range(-10f, -50f);
-
             fc.velocity = new Vector3(driftX, initialSpeedDown, 0);
-
-            // 3. Вращение: Еще медленнее, чтобы не отвлекало
             fc.rotationDir = Random.Range(-1f, 1f) * (maxRotationSpeed * 0.5f);
-
-            // 4. Задержка
             fc.delay = Random.Range(0f, 0.15f);
 
             fallingCards.Add(fc);
         }
 
-        // Увеличим время жизни, так как гравитация слабая (-100), 
-        // карты могут не успеть уехать за экран за 2 секунды.
-        float duration = 4.0f;
+        float duration = 2.0f; // Даем время упасть
         float elapsed = 0f;
 
         while (elapsed < duration)
@@ -194,13 +195,20 @@ public class SceneExitAnimator : MonoBehaviour
                     continue;
                 }
 
-                // Применяем вашу гравитацию (-100)
                 fc.velocity.y += gravity * dt;
-
                 fc.transform.position += fc.velocity * dt;
                 fc.transform.Rotate(0, 0, fc.rotationDir * dt);
             }
             yield return null;
+        }
+
+        // --- ВАЖНО ДЛЯ ПЕРЕЗАПУСКА ---
+        if (destroyAfter)
+        {
+            foreach (var fc in fallingCards)
+            {
+                if (fc.transform != null) Destroy(fc.transform.gameObject);
+            }
         }
     }
 }

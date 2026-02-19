@@ -265,40 +265,36 @@
             "value": "Starting a new game will count as a loss."
         },
         {
-            "key": "word.hour_start.6",
-            "value": "fifth"
+            "key": "WinText",
+            "value": "VICTORY!!!"
         },
         {
-            "key": "word.hour_start.7",
-            "value": "sixth"
+            "key": "ExpText",
+            "value": "Опыта получено:"
         },
         {
-            "key": "word.hour_start.8",
-            "value": "seventh"
+            "key": "LossText",
+            "value": "No Moves"
         },
         {
-            "key": "word.hour_start.9",
-            "value": "eighth"
+            "key": "UndoAll",
+            "value": "Undo All Moves"
         },
         {
-            "key": "word.hour_start.10",
-            "value": "ninth"
+            "key": "ToMenu",
+            "value": "Menu"
         },
         {
-            "key": "word.hour_start.11",
-            "value": "tenth"
+            "key": "Undo",
+            "value": "Undo one move"
         },
         {
-            "key": "word.hour_start.12",
-            "value": "eleventh"
+            "key": "NewGame",
+            "value": "New Game"
         },
         {
-            "key": "clue.l3.time.half_past",
-            "value": "The door will open at half past {nextHourWord} and {SS} seconds."
-        },
-        {
-            "key": "clue.l3.time.quarter_past",
-            "value": "The door will open at quarter past {nextHourWord} and {SS} seconds."
+            "key": "NewGlobalLevelNotification",
+            "value": "New Global Level: {newLevel}!"
         },
         {
             "key": "clue.l3.time.quarter_to",

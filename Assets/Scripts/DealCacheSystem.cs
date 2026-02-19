@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using YG; // Пространство имен плагина
 
 public class DealCacheSystem : MonoBehaviour
 {
@@ -14,41 +15,34 @@ public class DealCacheSystem : MonoBehaviour
     {
         public GameType GameType;
         public Difficulty Difficulty;
-        public int Param; // DrawCount, SuitCount, RoundCount, Variant
+        public int Param;
         public CacheKey(GameType type, Difficulty diff, int param) { GameType = type; Difficulty = diff; Param = param; }
         public override bool Equals(object obj) => obj is CacheKey k && GameType == k.GameType && Difficulty == k.Difficulty && Param == k.Param;
         public override int GetHashCode() => (GameType, Difficulty, Param).GetHashCode();
     }
 
-    // Расширенная конфигурация: теперь знаем, сколько именно раскладов хранить
     private struct CacheConfig
     {
         public Difficulty Diff;
         public int Param;
-        public int TargetBufferSize; // Сколько раскладов держать в кэше (3, 6, 9...)
+        public int TargetBufferSize;
     }
 
-    // Хранит настройки для каждого типа игры
-    private Dictionary<GameType, List<CacheConfig>> cacheRequirements = new Dictionary<GameType, List<CacheConfig>>();
-
-    // Само хранилище
     private Dictionary<CacheKey, Queue<Deal>> dealCache = new Dictionary<CacheKey, Queue<Deal>>();
+    private Dictionary<GameType, List<CacheConfig>> cacheRequirements = new Dictionary<GameType, List<CacheConfig>>();
     private Dictionary<GameType, BaseGenerator> generatorRegistry = new Dictionary<GameType, BaseGenerator>();
 
     [Header("Settings")]
-    [Tooltip("Стандартный размер буфера, если не указано иное")]
     [SerializeField] private int defaultBufferSize = 10;
 
-    [Header("Persistent Database (Starter Pack)")]
+    [Header("Starter Pack")]
     public DealDatabase database;
 
     private Queue<CacheKey> generationQueue = new Queue<CacheKey>();
     private bool isGenerating = false;
 
-    // Список игр, файлы которых нужно обновить/создать
-    private HashSet<GameType> dirtyTypes = new HashSet<GameType>();
+    public bool IsReady { get; private set; } = false;
 
-    // Active Deal State
     private Deal currentActiveDeal = null;
     private CacheKey currentActiveKey;
     private bool dealWasPlayed = false;
@@ -62,138 +56,254 @@ public class DealCacheSystem : MonoBehaviour
 
             InitializeCacheConfigs();
             RegisterGenerators();
-
-            // 1. Пытаемся перенести старый общий файл в новые (если он есть)
-            TryMigrateLegacyCache();
-
-            // 2. Загружаем все существующие файлы режимов
-            LoadAllCacheFiles();
-
-            // 3. Если кэш пуст (первый запуск), грузим базу и помечаем файлы на создание
-            if (IsCacheEmpty())
-            {
-                LoadDatabaseToRuntimeCache();
-            }
-
-            // ГАРАНТИРУЕМ СОЗДАНИЕ ФАЙЛОВ:
-            // Пробегаем по всем настроенным играм. Если файла нет - добавляем в список на сохранение.
-            foreach (var gameType in cacheRequirements.Keys)
-            {
-                if (!File.Exists(GetFilePathForGame(gameType)))
-                {
-                    dirtyTypes.Add(gameType);
-                }
-            }
-
-            // Сохраняем (это создаст пустые JSON файлы для будущих режимов)
-            SaveDirtyFilesSync();
-
-            // Проверяем, нужно ли пополнить запасы (если генераторы есть)
-            CheckBufferHealth();
+            
+            // Вызываем получение данных сразу при старте (как в примере SaverTest)
+            GetData(); 
         }
         else Destroy(gameObject);
     }
 
-    private void OnApplicationQuit() { ReturnActiveDealToQueue(); SaveDirtyFilesSync(); }
-    private void OnApplicationPause(bool pause) { if (pause) SaveDirtyFilesSync(); }
+    // --- ПОДПИСКА НА СОБЫТИЯ YG2 ---
+    private void OnEnable() => YG2.onGetSDKData += GetData;
+    private void OnDisable() => YG2.onGetSDKData -= GetData;
 
-    /// <summary>
-    /// Здесь прописана вся математика количества раскладов для каждого режима.
-    /// </summary>
-    private void InitializeCacheConfigs()
+    private void OnApplicationQuit()
     {
-        // Базовый размер буфера (количество игр в запасе)
-        int baseBuffer = 10;
-
-        // 1. KLONDIKE
-        // 3 diff * 2 params * 10 buffer
-        ConfigureStandardGame(GameType.Klondike, new int[] { 1, 3 }, baseBuffer);
-
-        // 2. SPIDER
-        List<CacheConfig> spiderConfigs = new List<CacheConfig>();
-        // 1 Suit (Easy, Medium)
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Easy, Param = 1, TargetBufferSize = baseBuffer });
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 1, TargetBufferSize = baseBuffer });
-        // 2 Suits (Easy, Medium, Hard)
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Easy, Param = 2, TargetBufferSize = baseBuffer });
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 2, TargetBufferSize = baseBuffer });
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Hard, Param = 2, TargetBufferSize = baseBuffer });
-        // 4 Suits (Medium, Hard)
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 4, TargetBufferSize = baseBuffer });
-        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Hard, Param = 4, TargetBufferSize = baseBuffer });
-        cacheRequirements[GameType.Spider] = spiderConfigs;
-
-        // 3. FREECELL
-        ConfigureStandardGame(GameType.FreeCell, new int[] { 0 }, baseBuffer);
-
-        // 4. PYRAMID (Прогрессивный буфер: 10 игр)
-        // 1 Round -> 10 deals
-        // 2 Rounds -> 20 deals
-        // 3 Rounds -> 30 deals
-        ConfigureProgressiveGame(GameType.Pyramid, baseBuffer);
-
-        // 5. TRIPEAKS
-        ConfigureProgressiveGame(GameType.TriPeaks, baseBuffer);
-
-        // 6. YUKON
-        ConfigureStandardGame(GameType.Yukon, new int[] { 0, 1 }, baseBuffer);
-
-        // 7. MONTE CARLO
-        ConfigureStandardGame(GameType.MonteCarlo, new int[] { 0, 1 }, baseBuffer);
-
-        // 8. ОСТАЛЬНЫЕ
-        ConfigureStandardGame(GameType.Sultan, new int[] { 0 }, baseBuffer);
-        ConfigureStandardGame(GameType.Octagon, new int[] { 0 }, baseBuffer);
-        ConfigureStandardGame(GameType.Montana, new int[] { 0 }, baseBuffer);
+        ReturnActiveDealToQueue();
+        SaveToCloud();
     }
 
-    // Помощник для стандартных игр (фиксированный буфер)
-    private void ConfigureStandardGame(GameType type, int[] paramsList, int buffer)
+    // --- ЛОГИКА ДАННЫХ ---
+
+    // Метод, который вызывается плагином при получении данных
+    public void GetData()
     {
-        List<CacheConfig> configs = new List<CacheConfig>();
-        foreach (Difficulty d in System.Enum.GetValues(typeof(Difficulty)))
+        if (IsReady && dealCache.Count > 0) return; // Уже загружены
+
+        // Читаем строку из сохранений плагина
+        // ВАЖНО: Убедитесь, что добавили public string dealCacheJson; в SavesYG2.cs
+        string cloudJson = YG2.saves.dealCacheJson;
+
+        if (string.IsNullOrEmpty(cloudJson))
         {
-            foreach (int p in paramsList)
+            Debug.Log("[DealCache] Cloud empty/Init. Loading Starter Pack...");
+            LoadStarterPack();
+            // Не сохраняем сразу, чтобы не спамить запросами при старте. 
+            // Сохраним при первом изменении кэша.
+        }
+        else
+        {
+            Debug.Log("[DealCache] Found cloud data. Unpacking...");
+            DeserializeAndUnpack(cloudJson);
+        }
+
+        IsReady = true;
+        CheckBufferHealth();
+    }
+
+    private void SaveToCloud()
+    {
+        try
+        {
+            CompressedWrapper wrapper = new CompressedWrapper();
+            wrapper.entries = new List<CompressedEntry>();
+
+            foreach (var kvp in dealCache)
             {
-                configs.Add(new CacheConfig { Diff = d, Param = p, TargetBufferSize = buffer });
+                if (kvp.Value.Count == 0) continue;
+
+                CompressedEntry entry = new CompressedEntry
+                {
+                    gType = (int)kvp.Key.GameType,
+                    diff = (int)kvp.Key.Difficulty,
+                    param = kvp.Key.Param,
+                    deals = new List<string>()
+                };
+
+                foreach (var deal in kvp.Value)
+                {
+                    if (IsDealValid(deal)) entry.deals.Add(DealSerializer.Serialize(deal));
+                }
+                wrapper.entries.Add(entry);
             }
-        }
-        cacheRequirements[type] = configs;
-    }
 
-    // Помощник для Pyramid/TriPeaks (буфер растет с числом раундов)
-    private void ConfigureProgressiveGame(GameType type, int baseBuffer)
-    {
-        List<CacheConfig> configs = new List<CacheConfig>();
-        foreach (Difficulty d in System.Enum.GetValues(typeof(Difficulty)))
+            string json = JsonUtility.ToJson(wrapper);
+
+            // ЗАПИСЫВАЕМ В ПЛАГИН
+            YG2.saves.dealCacheJson = json;
+            YG2.SaveProgress(); // Отправляем на сервер
+
+            // Debug.Log($"[DealCache] Saved. Size: {json.Length / 1024f:F2} KB");
+        }
+        catch (Exception e)
         {
-            // 1 Round -> храним 10 (на 10 игр)
-            configs.Add(new CacheConfig { Diff = d, Param = 1, TargetBufferSize = baseBuffer * 1 });
-
-            // 2 Rounds -> храним 20 (на 10 игр по 2 расклада)
-            configs.Add(new CacheConfig { Diff = d, Param = 2, TargetBufferSize = baseBuffer * 2 });
-
-            // 3 Rounds -> храним 30 (на 10 игр по 3 расклада)
-            configs.Add(new CacheConfig { Diff = d, Param = 3, TargetBufferSize = baseBuffer * 3 });
+            Debug.LogError($"[DealCache] Save Failed: {e.Message}");
         }
-        cacheRequirements[type] = configs;
     }
 
-    private void RegisterGenerators()
+    // --- API МЕТОДЫ ---
+
+    public Deal GetDeal(GameType type, Difficulty diff, int param)
     {
-        var generators = GetComponentsInChildren<BaseGenerator>();
-        foreach (var gen in generators)
+        ReturnActiveDealToQueue();
+        var key = new CacheKey(type, diff, param);
+
+        if (dealCache.ContainsKey(key) && dealCache[key].Count > 0)
         {
-            if (!generatorRegistry.ContainsKey(gen.GameType))
-                generatorRegistry.Add(gen.GameType, gen);
+            currentActiveDeal = dealCache[key].Dequeue();
+            currentActiveKey = key;
+            dealWasPlayed = false;
+
+            SaveToCloud(); // Сохраняем изменение (расклад забран)
+            CheckBufferHealth();
+
+            Debug.Log($"[DealCache] Served Deal: {type} {diff}. Left: {dealCache[key].Count}");
+            return currentActiveDeal;
         }
+
+        Debug.LogWarning($"[DealCache] Cache Empty for {type} {diff}!");
+        CheckBufferHealth();
+        return null;
     }
+
+    // Метод для GameUIController
     public void DiscardActiveDeal()
     {
-        // Используем правильное имя переменной
         currentActiveDeal = null;
         dealWasPlayed = false;
+        // Не возвращаем в очередь -> он удаляется
     }
+
+    public void ReturnActiveDealToQueue()
+    {
+        if (currentActiveDeal != null && !dealWasPlayed)
+        {
+            if (!dealCache.ContainsKey(currentActiveKey)) dealCache[currentActiveKey] = new Queue<Deal>();
+            dealCache[currentActiveKey].Enqueue(currentActiveDeal);
+            SaveToCloud();
+        }
+        currentActiveDeal = null;
+    }
+
+    // --- ВНУТРЕННЯЯ ЛОГИКА ---
+
+    private void DeserializeAndUnpack(string json)
+    {
+        dealCache.Clear();
+        try
+        {
+            CompressedWrapper wrapper = JsonUtility.FromJson<CompressedWrapper>(json);
+            if (wrapper != null && wrapper.entries != null)
+            {
+                foreach (var entry in wrapper.entries)
+                {
+                    var key = new CacheKey((GameType)entry.gType, (Difficulty)entry.diff, entry.param);
+                    var queue = new Queue<Deal>();
+                    foreach (string sDeal in entry.deals)
+                    {
+                        Deal d = DealSerializer.Deserialize(sDeal);
+                        if (IsDealValid(d)) queue.Enqueue(d);
+                    }
+                    dealCache[key] = queue;
+                }
+            }
+        }
+        catch { LoadStarterPack(); }
+    }
+
+    private void LoadStarterPack()
+    {
+        bool dataFound = false;
+
+        // 1. Пробуем загрузить из ScriptableObject (если назначен)
+        if (database != null && database.dealSets != null)
+        {
+            foreach (var set in database.dealSets)
+            {
+                var key = new CacheKey(set.gameType, set.difficulty, set.param);
+                if (!dealCache.ContainsKey(key)) dealCache[key] = new Queue<Deal>();
+
+                foreach (var sDeal in set.deals)
+                {
+                    Deal d = UnpackLegacyDeal(sDeal);
+                    if (IsDealValid(d)) dealCache[key].Enqueue(d);
+                }
+            }
+            if (database.dealSets.Count > 0) dataFound = true;
+        }
+
+        // 2. ДОБАВЛЕНО: Загрузка JSON файлов из папки Resources/InitialDeals
+        TextAsset[] files = Resources.LoadAll<TextAsset>("InitialDeals");
+        if (files.Length > 0)
+        {
+            Debug.Log($"[DealCache] Found {files.Length} files in Resources. Parsing...");
+            foreach (var file in files)
+            {
+                try
+                {
+                    // Пытаемся распарсить файл сохранения
+                    SaveDataWrapper wrapper = JsonUtility.FromJson<SaveDataWrapper>(file.text);
+
+                    if (wrapper != null && wrapper.queues != null)
+                    {
+                        foreach (var qData in wrapper.queues)
+                        {
+                            var key = new CacheKey(qData.type, qData.diff, qData.param);
+                            if (!dealCache.ContainsKey(key)) dealCache[key] = new Queue<Deal>();
+
+                            foreach (var sDeal in qData.deals)
+                            {
+                                Deal d = UnpackLegacyDeal(sDeal);
+                                if (IsDealValid(d)) dealCache[key].Enqueue(d);
+                            }
+                        }
+                        dataFound = true;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[DealCache] Skipped file {file.name}: {e.Message}");
+                }
+            }
+        }
+
+        if (dataFound)
+        {
+            // Сразу сохраняем загруженное в облако, чтобы в следующий раз грузить оттуда быстрее
+            SaveToCloud();
+            Debug.Log("[DealCache] Starter Pack Loaded & Synced.");
+        }
+        else
+        {
+            Debug.LogError("[DealCache] CRITICAL: No deals found in Database OR Resources/InitialDeals!");
+        }
+    }
+    private Deal UnpackDeal(SerializedDeal sDeal)
+    {
+        // Это копия UnpackLegacyDeal, но с понятным именем, чтобы не путаться
+        return UnpackLegacyDeal(sDeal);
+    }
+    [ContextMenu("DEBUG: WIPE CLOUD CACHE")]
+    public void ClearCloudCache()
+    {
+        // 1. Очищаем локальную память
+        dealCache.Clear();
+        generationQueue.Clear();
+
+        // 2. Очищаем переменную сохранения в плагине
+        YG2.saves.dealCacheJson = "";
+
+        // 3. Отправляем пустоту в облако (перезаписываем старые данные)
+        YG2.SaveProgress();
+
+        // 4. Сбрасываем флаг готовности, чтобы при следующем обращении система загрузила StarterPack
+        IsReady = false;
+
+        Debug.LogError(">>> CLOUD CACHE HAS BEEN WIPED! <<<");
+        Debug.Log("Please restart the game or call GetData() to reload from StarterPack.");
+    }
+    // --- ГЕНЕРАЦИЯ ---
+
     private void Update()
     {
         if (!isGenerating && generationQueue.Count > 0)
@@ -203,132 +313,12 @@ public class DealCacheSystem : MonoBehaviour
         }
     }
 
-    // --- ФАЙЛОВАЯ СИСТЕМА ---
-    private string GetFilePathForGame(GameType type) => Path.Combine(Application.persistentDataPath, $"Deals_{type}.json");
-    private string GetLegacyFilePath() => Path.Combine(Application.persistentDataPath, "deals_cache_v2.json");
-
-    // --- ОСНОВНОЙ API ---
-
-    public Deal GetDeal(GameType type, Difficulty diff, int param)
-    {
-        ReturnActiveDealToQueue();
-        var key = new CacheKey(type, diff, param);
-
-        if (dealCache.ContainsKey(key))
-        {
-            var queue = dealCache[key];
-            while (queue.Count > 0)
-            {
-                Deal candidate = queue.Peek();
-                if (IsDealValid(candidate))
-                {
-                    currentActiveDeal = queue.Dequeue();
-                    currentActiveKey = key;
-                    dealWasPlayed = false;
-
-                    dirtyTypes.Add(type); // Помечаем, что этот файл изменился
-
-                    Debug.Log($"[DealCache] Served Deal for {type} {diff} (P:{param}). Remaining: {queue.Count}");
-                    CheckBufferHealth();
-                    return currentActiveDeal;
-                }
-                else
-                {
-                    Debug.LogWarning($"[DealCache] Found corrupted deal for {type}. Discarding.");
-                    queue.Dequeue();
-                    dirtyTypes.Add(type);
-                }
-            }
-        }
-
-        Debug.LogWarning($"[DealCache] Buffer empty for {type} {diff} (P:{param})! Generator needed.");
-        return null;
-    }
-
-    public void ReturnActiveDealToQueue()
-    {
-        if (currentActiveDeal != null && !dealWasPlayed)
-        {
-            if (IsDealValid(currentActiveDeal))
-            {
-                if (!dealCache.ContainsKey(currentActiveKey)) dealCache[currentActiveKey] = new Queue<Deal>();
-                dealCache[currentActiveKey].Enqueue(currentActiveDeal);
-                dirtyTypes.Add(currentActiveKey.GameType);
-            }
-        }
-        currentActiveDeal = null;
-        dealWasPlayed = false;
-    }
-
-    public void MarkCurrentDealAsPlayed()
-    {
-        if (currentActiveDeal == null || dealWasPlayed) return;
-        dealWasPlayed = true;
-        CheckBufferHealth();
-    }
-
-    private bool IsDealValid(Deal deal)
-    {
-        if (deal == null) return false;
-        int count = 0;
-        if (deal.stock != null) count += deal.stock.Count;
-        if (deal.tableau != null) foreach (var pile in deal.tableau) if (pile != null) count += pile.Count;
-        return count > 10;
-    }
-
-    private bool IsCacheEmpty()
-    {
-        foreach (var kvp in dealCache) if (kvp.Value.Count > 0) return false;
-        return true;
-    }
-
-    // --- ПРОВЕРКА БУФЕРА (С УЧЕТОМ ЦЕЛЕВЫХ РАЗМЕРОВ) ---
-    private void CheckBufferHealth()
-    {
-        foreach (var kvp in cacheRequirements)
-        {
-            GameType gType = kvp.Key;
-            List<CacheConfig> requiredConfigs = kvp.Value;
-            bool hasGenerator = generatorRegistry.ContainsKey(gType);
-
-            foreach (var config in requiredConfigs)
-            {
-                var key = new CacheKey(gType, config.Diff, config.Param);
-
-                // Создаем очередь, если её нет (чтобы она попала в файл сохранения даже пустой)
-                if (!dealCache.ContainsKey(key)) dealCache[key] = new Queue<Deal>();
-
-                // Если генератора нет, мы не можем пополнить, но структура в памяти и файле будет создана
-                if (!hasGenerator) continue;
-
-                int count = dealCache[key].Count;
-                int inQ = CountInGenerationQueue(key);
-
-                // Используем TargetBufferSize из конфига (3, 6 или 9)
-                int needed = config.TargetBufferSize - (count + inQ);
-
-                for (int i = 0; i < needed; i++)
-                {
-                    generationQueue.Enqueue(key);
-                }
-            }
-        }
-    }
-
-    private int CountInGenerationQueue(CacheKey key)
-    {
-        int count = 0;
-        foreach (var k in generationQueue) if (k.Equals(key)) count++;
-        return count;
-    }
-
     private IEnumerator GenerateInBackground(CacheKey key)
     {
         if (!generatorRegistry.ContainsKey(key.GameType)) yield break;
 
         isGenerating = true;
         BaseGenerator generator = generatorRegistry[key.GameType];
-
         Deal generatedDeal = null;
         bool done = false;
 
@@ -344,180 +334,141 @@ public class DealCacheSystem : MonoBehaviour
         {
             if (!dealCache.ContainsKey(key)) dealCache[key] = new Queue<Deal>();
             dealCache[key].Enqueue(generatedDeal);
-
-            dirtyTypes.Add(key.GameType); // Сохраняем только файл этого режима
-            SaveDirtyFilesSync();
+            SaveToCloud();
         }
         isGenerating = false;
+        yield return null;
     }
 
-    // --- СОХРАНЕНИЕ И ЗАГРУЗКА ---
-
-    [System.Serializable] private class SaveDataWrapper { public List<QueueSaveData> queues = new List<QueueSaveData>(); }
-    [System.Serializable] private class QueueSaveData { public GameType type; public Difficulty diff; public int param; public List<SerializedDeal> deals; }
-
-    /// <summary>
-    /// Сохраняет только те файлы, которые изменились или должны быть созданы.
-    /// </summary>
-    private void SaveDirtyFilesSync()
+    private void CheckBufferHealth()
     {
-        if (dirtyTypes.Count == 0) return;
-
-        // Группируем кэш по типу игры
-        var groupedCache = dealCache.GroupBy(kvp => kvp.Key.GameType);
-
-        // Также учитываем типы, которых может не быть в dealCache (если совсем пусто), но они есть в dirtyTypes
-        foreach (var type in dirtyTypes)
+        foreach (var kvp in cacheRequirements)
         {
-            // Находим данные для этого типа
-            var entries = dealCache.Where(kvp => kvp.Key.GameType == type).ToList();
+            GameType gType = kvp.Key;
+            if (!generatorRegistry.ContainsKey(gType)) continue;
 
-            SaveDataWrapper wrapper = new SaveDataWrapper();
-
-            // Даже если entries пуст, мы создадим пустой wrapper, чтобы файл физически существовал
-            foreach (var kvp in entries)
+            foreach (var config in kvp.Value)
             {
-                QueueSaveData qData = new QueueSaveData
-                {
-                    type = kvp.Key.GameType,
-                    diff = kvp.Key.Difficulty,
-                    param = kvp.Key.Param,
-                    deals = new List<SerializedDeal>()
-                };
-
-                // Сохраняем расклады, если есть
-                foreach (var deal in kvp.Value)
-                {
-                    if (IsDealValid(deal)) qData.deals.Add(PackDeal(deal));
-                }
-
-                // Добавляем конфигурацию очереди в файл, даже если она пуста
-                wrapper.queues.Add(qData);
-            }
-
-            // Записываем файл
-            string path = GetFilePathForGame(type);
-            try
-            {
-                string json = JsonUtility.ToJson(wrapper, true);
-                File.WriteAllText(path, json);
-                Debug.Log($"[DealCache] Saved file: {Path.GetFileName(path)}");
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[DealCache] Failed to save {type}: {e.Message}");
-            }
-        }
-
-        dirtyTypes.Clear();
-    }
-
-    private void LoadAllCacheFiles()
-    {
-        dealCache.Clear();
-
-        // Проходим по всем известным типам игр из Enum
-        foreach (GameType type in System.Enum.GetValues(typeof(GameType)))
-        {
-            string path = GetFilePathForGame(type);
-            if (File.Exists(path))
-            {
-                LoadFileIntoCache(path);
-            }
-        }
-    }
-
-    private void LoadFileIntoCache(string path)
-    {
-        try
-        {
-            string json = File.ReadAllText(path);
-            SaveDataWrapper wrapper = JsonUtility.FromJson<SaveDataWrapper>(json);
-            if (wrapper == null || wrapper.queues == null) return;
-
-            foreach (var qData in wrapper.queues)
-            {
-                var key = new CacheKey(qData.type, qData.diff, qData.param);
+                var key = new CacheKey(gType, config.Diff, config.Param);
                 if (!dealCache.ContainsKey(key)) dealCache[key] = new Queue<Deal>();
 
-                foreach (var sDeal in qData.deals)
-                {
-                    Deal d = UnpackDeal(sDeal);
-                    if (IsDealValid(d)) dealCache[key].Enqueue(d);
-                }
+                int currentCount = dealCache[key].Count;
+                int queuedCount = generationQueue.Count(k => k.Equals(key));
+                int needed = config.TargetBufferSize - (currentCount + queuedCount);
+
+                for (int i = 0; i < needed; i++) generationQueue.Enqueue(key);
             }
         }
-        catch (Exception e)
-        {
-            Debug.LogWarning($"[DealCache] Failed to load {Path.GetFileName(path)}: {e.Message}");
-        }
     }
 
-    private void TryMigrateLegacyCache()
+    private bool IsDealValid(Deal deal)
     {
-        string legacyPath = GetLegacyFilePath();
-        if (!File.Exists(legacyPath)) return;
-
-        Debug.Log("[DealCache] Migrating legacy cache file...");
-        LoadFileIntoCache(legacyPath);
-
-        // Помечаем всё что загрузили как грязное, чтобы оно пересохранилось в новые файлы
-        foreach (var kvp in dealCache)
-        {
-            dirtyTypes.Add(kvp.Key.GameType);
-        }
-
-        SaveDirtyFilesSync();
-
-        try { File.Delete(legacyPath); }
-        catch { }
+        if (deal == null) return false;
+        int count = 0;
+        if (deal.stock != null) count += deal.stock.Count;
+        if (deal.tableau != null) foreach (var pile in deal.tableau) if (pile != null) count += pile.Count;
+        return count > 10;
     }
 
-    private void LoadDatabaseToRuntimeCache()
-    {
-        if (database == null) return;
-        foreach (var set in database.dealSets)
-        {
-            var key = new CacheKey(set.gameType, set.difficulty, set.param);
-            if (!dealCache.ContainsKey(key)) dealCache[key] = new Queue<Deal>();
-            foreach (var sDeal in set.deals)
-            {
-                Deal d = UnpackDeal(sDeal);
-                if (IsDealValid(d)) dealCache[key].Enqueue(d);
-            }
-            dirtyTypes.Add(set.gameType); // Если загрузили из базы, сразу сохраним в файлы
-        }
-    }
-
-    // --- CONVERTERS ---
-    private Deal UnpackDeal(SerializedDeal sDeal)
+    private Deal UnpackLegacyDeal(SerializedDeal sDeal)
     {
         Deal d = new Deal();
-        for (int i = 0; i < 10; i++) d.tableau.Add(new List<CardInstance>());
+        d.tableau = new List<List<CardInstance>>();
+        d.foundations = new List<List<CardModel>>();
+        d.waste = new List<CardInstance>();
+        d.stock = new Stack<CardInstance>();
+
+        for (int i = 0; i < 8; i++) d.foundations.Add(new List<CardModel>());
+
         if (sDeal.tableau != null)
         {
-            while (d.tableau.Count < sDeal.tableau.Count) d.tableau.Add(new List<CardInstance>());
-            for (int i = 0; i < sDeal.tableau.Count; i++)
-                foreach (var sCard in sDeal.tableau[i].cards) d.tableau[i].Add(sCard.ToRuntime());
+            foreach (var sPile in sDeal.tableau)
+            {
+                var pile = new List<CardInstance>();
+                foreach (var c in sPile.cards) pile.Add(c.ToRuntime());
+                d.tableau.Add(pile);
+            }
         }
         if (sDeal.stock != null)
         {
-            for (int i = sDeal.stock.Count - 1; i >= 0; i--) d.stock.Push(sDeal.stock[i].ToRuntime());
+            // Внимание: сохраняем порядок стека
+            for (int i = sDeal.stock.Count - 1; i >= 0; i--)
+                d.stock.Push(sDeal.stock[i].ToRuntime());
         }
         return d;
     }
 
-    private SerializedDeal PackDeal(Deal d)
+    private void InitializeCacheConfigs()
     {
-        SerializedDeal sd = new SerializedDeal();
-        foreach (var pile in d.tableau)
+        int baseBuffer = defaultBufferSize;
+        ConfigureStandardGame(GameType.Klondike, new int[] { 1, 3 }, baseBuffer);
+        
+        List<CacheConfig> spiderConfigs = new List<CacheConfig>();
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Easy, Param = 1, TargetBufferSize = baseBuffer });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 1, TargetBufferSize = baseBuffer });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Easy, Param = 2, TargetBufferSize = baseBuffer });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 2, TargetBufferSize = baseBuffer });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Hard, Param = 2, TargetBufferSize = baseBuffer });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 4, TargetBufferSize = baseBuffer });
+        spiderConfigs.Add(new CacheConfig { Diff = Difficulty.Hard, Param = 4, TargetBufferSize = baseBuffer });
+        cacheRequirements[GameType.Spider] = spiderConfigs;
+
+        ConfigureStandardGame(GameType.FreeCell, new int[] { 0 }, baseBuffer);
+        ConfigureProgressiveGame(GameType.Pyramid, baseBuffer);
+        ConfigureProgressiveGame(GameType.TriPeaks, baseBuffer);
+        ConfigureStandardGame(GameType.Yukon, new int[] { 0, 1 }, baseBuffer);
+        ConfigureStandardGame(GameType.MonteCarlo, new int[] { 0, 1 }, baseBuffer);
+        ConfigureStandardGame(GameType.Sultan, new int[] { 0 }, baseBuffer);
+        ConfigureStandardGame(GameType.Octagon, new int[] { 0 }, baseBuffer);
+        ConfigureStandardGame(GameType.Montana, new int[] { 0 }, baseBuffer);
+    }
+
+    private void ConfigureStandardGame(GameType type, int[] paramsList, int buffer)
+    {
+        List<CacheConfig> configs = new List<CacheConfig>();
+        foreach (Difficulty d in Enum.GetValues(typeof(Difficulty)))
+            foreach (int p in paramsList) configs.Add(new CacheConfig { Diff = d, Param = p, TargetBufferSize = buffer });
+        cacheRequirements[type] = configs;
+    }
+    public void MarkCurrentDealAsPlayed()
+    {
+        dealWasPlayed = true;
+        currentActiveDeal = null; // Забываем про него, он сыгран
+        CheckBufferHealth();
+    }
+    private void ConfigureProgressiveGame(GameType type, int baseBuffer)
+    {
+        List<CacheConfig> configs = new List<CacheConfig>();
+        foreach (Difficulty d in Enum.GetValues(typeof(Difficulty)))
         {
-            var sPile = new SerializedPile();
-            if (pile != null) foreach (var card in pile) sPile.cards.Add(new SerializedCard(card));
-            sd.tableau.Add(sPile);
+            configs.Add(new CacheConfig { Diff = d, Param = 1, TargetBufferSize = baseBuffer });
+            configs.Add(new CacheConfig { Diff = d, Param = 2, TargetBufferSize = baseBuffer * 2 });
+            configs.Add(new CacheConfig { Diff = d, Param = 3, TargetBufferSize = baseBuffer * 3 });
         }
-        if (d.stock != null)
-            foreach (var card in d.stock) sd.stock.Add(new SerializedCard(card));
-        return sd;
+        cacheRequirements[type] = configs;
+    }
+
+    private void RegisterGenerators()
+    {
+        foreach (var gen in GetComponentsInChildren<BaseGenerator>())
+            if (!generatorRegistry.ContainsKey(gen.GameType)) generatorRegistry.Add(gen.GameType, gen);
+    }
+
+    [Serializable] private class CompressedWrapper { public List<CompressedEntry> entries; }
+    [Serializable] private class CompressedEntry { public int gType; public int diff; public int param; public List<string> deals; }
+    // --- КЛАССЫ ДЛЯ ЧТЕНИЯ STARTER PACK (JSON ФАЙЛОВ) ---
+    [Serializable]
+    private class SaveDataWrapper
+    {
+        public List<QueueSaveData> queues;
+    }
+
+    [Serializable]
+    private class QueueSaveData
+    {
+        public GameType type;
+        public Difficulty diff;
+        public int param;
+        public List<SerializedDeal> deals;
     }
 }

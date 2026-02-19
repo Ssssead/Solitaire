@@ -21,6 +21,7 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     // --- НОВОЕ: Флаг, началась ли игра реально (был ли ход) ---
     private bool hasGameStarted = false;
 
+
     [Header("FreeCell Specific")]
     public Transform freeCellSlotsParent;
     private List<FreeCellPile> freeCells = new List<FreeCellPile>();
@@ -31,7 +32,7 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     // По умолчанию Medium, но будет перезаписано из GameSettings
     private Difficulty currentDifficulty = Difficulty.Medium;
     private int currentSeed = 0;
-
+    public GameType GameType => GameType.FreeCell;
     private int _cachedLimit = -1;
 
     // --- ICardGameMode Properties ---
@@ -57,7 +58,10 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     {
         StartCoroutine(LateInitialize());
     }
-
+    public bool IsMatchInProgress()
+    {
+        return hasGameStarted;
+    }
     private void Update()
     {
         if (pileManager == null) return;

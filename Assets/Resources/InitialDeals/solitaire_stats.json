@@ -1,0 +1,3134 @@
+{
+    "entries": [
+        {
+            "key": "Global",
+            "data": {
+                "gamesStarted": 678,
+                "gamesWon": 260,
+                "totalTime": 36055.7109375,
+                "totalMoves": 37590,
+                "bestScore": 17600,
+                "bestTime": 72.90815734863281,
+                "fewestMoves": 1,
+                "currentStreak": 1,
+                "bestStreak": 52,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 8,
+                "currentXP": 2250,
+                "xpForNextLevel": 16000,
+                "history": [
+                    {
+                        "won": true,
+                        "score": 565,
+                        "time": 240.3316650390625,
+                        "moves": 222,
+                        "difficulty": "Hard",
+                        "playedAt": "2/18/2026 12:13:41 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 570,
+                        "time": 233.0025634765625,
+                        "moves": 249,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 12:18:13 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 600,
+                        "time": 90.39543914794922,
+                        "moves": 104,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 12:34:30 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 575,
+                        "time": 78.63761901855469,
+                        "moves": 93,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:01:38 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 595,
+                        "time": 88.76493835449219,
+                        "moves": 108,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:04:17 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 605,
+                        "time": 83.11506652832031,
+                        "moves": 92,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:10:46 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 575,
+                        "time": 95.10855865478516,
+                        "moves": 96,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:12:34 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 595,
+                        "time": 98.89619445800781,
+                        "moves": 94,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:14:42 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 112.91448211669922,
+                        "moves": 90,
+                        "difficulty": "Hard",
+                        "playedAt": "2/18/2026 2:46:28 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 595,
+                        "time": 107.8260498046875,
+                        "moves": 114,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 3:11:13 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Klondike_Global",
+            "data": {
+                "gamesStarted": 448,
+                "gamesWon": 235,
+                "totalTime": 31644.70703125,
+                "totalMoves": 33022,
+                "bestScore": 845,
+                "bestTime": 72.90815734863281,
+                "fewestMoves": 1,
+                "currentStreak": 1,
+                "bestStreak": 52,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 14,
+                "currentXP": 5950,
+                "xpForNextLevel": 7000,
+                "history": [
+                    {
+                        "won": true,
+                        "score": 565,
+                        "time": 240.3316650390625,
+                        "moves": 222,
+                        "difficulty": "Hard",
+                        "playedAt": "2/18/2026 12:13:41 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 570,
+                        "time": 233.0025634765625,
+                        "moves": 249,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 12:18:13 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 600,
+                        "time": 90.39543914794922,
+                        "moves": 104,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 12:34:30 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 575,
+                        "time": 78.63761901855469,
+                        "moves": 93,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:01:38 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 595,
+                        "time": 88.76493835449219,
+                        "moves": 108,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:04:17 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 605,
+                        "time": 83.11506652832031,
+                        "moves": 92,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:10:46 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 575,
+                        "time": 95.10855865478516,
+                        "moves": 96,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:12:34 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 595,
+                        "time": 98.89619445800781,
+                        "moves": 94,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:14:42 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 112.91448211669922,
+                        "moves": 90,
+                        "difficulty": "Hard",
+                        "playedAt": "2/18/2026 2:46:28 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 595,
+                        "time": 107.8260498046875,
+                        "moves": 114,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 3:11:13 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Klondike_Easy_Draw1",
+            "data": {
+                "gamesStarted": 145,
+                "gamesWon": 110,
+                "totalTime": 13705.03515625,
+                "totalMoves": 13042,
+                "bestScore": 845,
+                "bestTime": 67.44981384277344,
+                "fewestMoves": 59,
+                "currentStreak": 0,
+                "bestStreak": 53,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": true,
+                        "score": 215,
+                        "time": 109.20785522460938,
+                        "moves": 114,
+                        "difficulty": "Easy",
+                        "playedAt": "1/18/2026 2:32:26 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 200,
+                        "time": 78.72010803222656,
+                        "moves": 84,
+                        "difficulty": "Easy",
+                        "playedAt": "1/18/2026 3:54:25 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 355,
+                        "time": 116.4001235961914,
+                        "moves": 128,
+                        "difficulty": "Easy",
+                        "playedAt": "1/18/2026 3:56:25 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 275,
+                        "time": 77.881591796875,
+                        "moves": 90,
+                        "difficulty": "Easy",
+                        "playedAt": "1/19/2026 12:10:50 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 365,
+                        "time": 102.110107421875,
+                        "moves": 116,
+                        "difficulty": "Easy",
+                        "playedAt": "1/19/2026 12:12:37 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 315,
+                        "time": 99.472412109375,
+                        "moves": 108,
+                        "difficulty": "Easy",
+                        "playedAt": "1/19/2026 12:14:29 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 230,
+                        "time": 91.20811462402344,
+                        "moves": 84,
+                        "difficulty": "Easy",
+                        "playedAt": "1/21/2026 10:30:14 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -9.175853729248047,
+                        "moves": 9,
+                        "difficulty": "Easy",
+                        "playedAt": "1/22/2026 12:21:53 AM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -23.978525161743165,
+                        "moves": 91,
+                        "difficulty": "Easy",
+                        "playedAt": "1/25/2026 10:46:59 AM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 80.23805236816406,
+                        "moves": 33,
+                        "difficulty": "Easy",
+                        "playedAt": "2/7/2026 6:35:40 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Klondike_Medium_Draw1",
+            "data": {
+                "gamesStarted": 177,
+                "gamesWon": 45,
+                "totalTime": 5301.95458984375,
+                "totalMoves": 6920,
+                "bestScore": 775,
+                "bestTime": 72.90815734863281,
+                "fewestMoves": 1,
+                "currentStreak": 11,
+                "bestStreak": 11,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": true,
+                        "score": 585,
+                        "time": 75.6922836303711,
+                        "moves": 86,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 11:56:13 AM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 600,
+                        "time": 86.90719604492188,
+                        "moves": 102,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 11:59:07 AM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 570,
+                        "time": 233.0025634765625,
+                        "moves": 249,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 12:18:13 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 600,
+                        "time": 90.39543914794922,
+                        "moves": 104,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 12:34:30 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 575,
+                        "time": 78.63761901855469,
+                        "moves": 93,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:01:38 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 595,
+                        "time": 88.76493835449219,
+                        "moves": 108,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:04:17 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 605,
+                        "time": 83.11506652832031,
+                        "moves": 92,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:10:46 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 575,
+                        "time": 95.10855865478516,
+                        "moves": 96,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:12:34 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 595,
+                        "time": 98.89619445800781,
+                        "moves": 94,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 1:14:42 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 595,
+                        "time": 107.8260498046875,
+                        "moves": 114,
+                        "difficulty": "Medium",
+                        "playedAt": "2/18/2026 3:11:13 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Klondike_Hard_Draw1",
+            "data": {
+                "gamesStarted": 109,
+                "gamesWon": 70,
+                "totalTime": 8420.0693359375,
+                "totalMoves": 9262,
+                "bestScore": 565,
+                "bestTime": 70.93145751953125,
+                "fewestMoves": 62,
+                "currentStreak": 2,
+                "bestStreak": 15,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": true,
+                        "score": 405,
+                        "time": 238.24163818359376,
+                        "moves": 246,
+                        "difficulty": "Hard",
+                        "playedAt": "1/18/2026 2:00:55 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 70,
+                        "time": 139.08663940429688,
+                        "moves": 163,
+                        "difficulty": "Hard",
+                        "playedAt": "1/18/2026 2:35:00 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 295,
+                        "time": 116.82977294921875,
+                        "moves": 110,
+                        "difficulty": "Hard",
+                        "playedAt": "1/18/2026 2:43:57 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 4.74188232421875,
+                        "moves": 4,
+                        "difficulty": "Hard",
+                        "playedAt": "1/18/2026 2:49:58 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -214.423095703125,
+                        "moves": 4,
+                        "difficulty": "Hard",
+                        "playedAt": "1/18/2026 3:56:36 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 465,
+                        "time": 141.41845703125,
+                        "moves": 131,
+                        "difficulty": "Hard",
+                        "playedAt": "1/19/2026 12:41:50 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 480,
+                        "time": 109.05029296875,
+                        "moves": 114,
+                        "difficulty": "Hard",
+                        "playedAt": "1/19/2026 12:43:43 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 2.1564950942993166,
+                        "moves": 2,
+                        "difficulty": "Hard",
+                        "playedAt": "2/4/2026 2:46:53 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 155,
+                        "time": 191.9494171142578,
+                        "moves": 196,
+                        "difficulty": "Hard",
+                        "playedAt": "2/4/2026 3:01:25 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 565,
+                        "time": 240.3316650390625,
+                        "moves": 222,
+                        "difficulty": "Hard",
+                        "playedAt": "2/18/2026 12:13:41 PM",
+                        "variant": "Draw1",
+                        "gameName": "Klondike"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Spider_Global",
+            "data": {
+                "gamesStarted": 23,
+                "gamesWon": 4,
+                "totalTime": 1479.4100341796875,
+                "totalMoves": 787,
+                "bestScore": 1228,
+                "bestTime": 215.0465087890625,
+                "fewestMoves": 124,
+                "currentStreak": 1,
+                "bestStreak": 1,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 2,
+                "currentXP": 700,
+                "xpForNextLevel": 1000,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -76.64205169677735,
+                        "moves": 1,
+                        "difficulty": "Medium",
+                        "playedAt": "1/13/2026 1:43:03 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 205.82843017578126,
+                        "moves": 78,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 3:08:20 PM",
+                        "variant": "2Suits",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": true,
+                        "score": 1172,
+                        "time": 218.70550537109376,
+                        "moves": 128,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 3:12:05 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -7.948812007904053,
+                        "moves": 46,
+                        "difficulty": "Hard",
+                        "playedAt": "1/14/2026 3:17:19 PM",
+                        "variant": "4Suits",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": true,
+                        "score": 1166,
+                        "time": 215.0465087890625,
+                        "moves": 134,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 3:21:30 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -14.239326477050782,
+                        "moves": 11,
+                        "difficulty": "Medium",
+                        "playedAt": "2/2/2026 2:37:41 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 3.313401699066162,
+                        "moves": 1,
+                        "difficulty": "Medium",
+                        "playedAt": "2/2/2026 2:54:04 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": true,
+                        "score": 1176,
+                        "time": 222.35311889648438,
+                        "moves": 124,
+                        "difficulty": "Medium",
+                        "playedAt": "2/4/2026 9:10:22 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 268.4129943847656,
+                        "moves": 92,
+                        "difficulty": "Hard",
+                        "playedAt": "2/5/2026 12:47:24 PM",
+                        "variant": "4Suits",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": true,
+                        "score": 1228,
+                        "time": 444.580322265625,
+                        "moves": 172,
+                        "difficulty": "Hard",
+                        "playedAt": "2/5/2026 12:55:03 PM",
+                        "variant": "2Suits",
+                        "gameName": "Spider"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Spider_Easy_1Suit",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Spider_Medium_1Suit",
+            "data": {
+                "gamesStarted": 19,
+                "gamesWon": 3,
+                "totalTime": 568.5371704101563,
+                "totalMoves": 399,
+                "bestScore": 1176,
+                "bestTime": 215.0465087890625,
+                "fewestMoves": 124,
+                "currentStreak": 1,
+                "bestStreak": 2,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 0.0,
+                        "moves": 0,
+                        "difficulty": "Medium",
+                        "playedAt": "1/12/2026 2:51:34 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 0.0,
+                        "moves": 0,
+                        "difficulty": "Medium",
+                        "playedAt": "1/12/2026 3:07:31 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 0.0,
+                        "moves": 0,
+                        "difficulty": "Medium",
+                        "playedAt": "1/12/2026 3:24:20 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 0.0,
+                        "moves": 0,
+                        "difficulty": "Medium",
+                        "playedAt": "1/12/2026 3:27:53 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -76.64205169677735,
+                        "moves": 1,
+                        "difficulty": "Medium",
+                        "playedAt": "1/13/2026 1:43:03 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": true,
+                        "score": 1172,
+                        "time": 218.70550537109376,
+                        "moves": 128,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 3:12:05 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": true,
+                        "score": 1166,
+                        "time": 215.0465087890625,
+                        "moves": 134,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 3:21:30 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -14.239326477050782,
+                        "moves": 11,
+                        "difficulty": "Medium",
+                        "playedAt": "2/2/2026 2:37:41 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 3.313401699066162,
+                        "moves": 1,
+                        "difficulty": "Medium",
+                        "playedAt": "2/2/2026 2:54:04 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": true,
+                        "score": 1176,
+                        "time": 222.35311889648438,
+                        "moves": 124,
+                        "difficulty": "Medium",
+                        "playedAt": "2/4/2026 9:10:22 PM",
+                        "variant": "1Suit",
+                        "gameName": "Spider"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Spider_Hard_1Suit",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "FreeCell_Global",
+            "data": {
+                "gamesStarted": 10,
+                "gamesWon": 5,
+                "totalTime": 1238.6658935546875,
+                "totalMoves": 720,
+                "bestScore": 10012,
+                "bestTime": 83.94458770751953,
+                "fewestMoves": 98,
+                "currentStreak": 1,
+                "bestStreak": 3,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 2,
+                "currentXP": 400,
+                "xpForNextLevel": 1000,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 0.0,
+                        "moves": 0,
+                        "difficulty": "Hard",
+                        "playedAt": "1/12/2026 2:09:18 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": true,
+                        "score": 10012,
+                        "time": 104.70254516601563,
+                        "moves": 100,
+                        "difficulty": "Medium",
+                        "playedAt": "1/12/2026 5:10:45 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 527.0050048828125,
+                        "moves": 154,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 1:44:07 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": true,
+                        "score": 5072,
+                        "time": 85.94903564453125,
+                        "moves": 102,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 1:45:38 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": true,
+                        "score": 3267,
+                        "time": 207.29891967773438,
+                        "moves": 124,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:32:32 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": true,
+                        "score": 4772,
+                        "time": 83.94458770751953,
+                        "moves": 98,
+                        "difficulty": "Easy",
+                        "playedAt": "1/16/2026 5:53:59 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -20.533092498779298,
+                        "moves": 3,
+                        "difficulty": "Medium",
+                        "playedAt": "2/2/2026 11:08:13 AM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 98.32695770263672,
+                        "moves": 31,
+                        "difficulty": "Medium",
+                        "playedAt": "2/2/2026 9:42:28 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": true,
+                        "score": 7272,
+                        "time": 151.97201538085938,
+                        "moves": 108,
+                        "difficulty": "Medium",
+                        "playedAt": "2/3/2026 4:04:54 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "FreeCell_Easy_Standard",
+            "data": {
+                "gamesStarted": 2,
+                "gamesWon": 1,
+                "totalTime": 83.94458770751953,
+                "totalMoves": 98,
+                "bestScore": 4772,
+                "bestTime": 83.94458770751953,
+                "fewestMoves": 98,
+                "currentStreak": 1,
+                "bestStreak": 1,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": true,
+                        "score": 4772,
+                        "time": 83.94458770751953,
+                        "moves": 98,
+                        "difficulty": "Easy",
+                        "playedAt": "1/16/2026 5:53:59 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "FreeCell_Medium_Standard",
+            "data": {
+                "gamesStarted": 7,
+                "gamesWon": 4,
+                "totalTime": 1154.7213134765625,
+                "totalMoves": 622,
+                "bestScore": 10012,
+                "bestTime": 85.94903564453125,
+                "fewestMoves": 100,
+                "currentStreak": 1,
+                "bestStreak": 2,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": true,
+                        "score": 10012,
+                        "time": 104.70254516601563,
+                        "moves": 100,
+                        "difficulty": "Medium",
+                        "playedAt": "1/12/2026 5:10:45 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 527.0050048828125,
+                        "moves": 154,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 1:44:07 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": true,
+                        "score": 5072,
+                        "time": 85.94903564453125,
+                        "moves": 102,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 1:45:38 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": true,
+                        "score": 3267,
+                        "time": 207.29891967773438,
+                        "moves": 124,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:32:32 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -20.533092498779298,
+                        "moves": 3,
+                        "difficulty": "Medium",
+                        "playedAt": "2/2/2026 11:08:13 AM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 98.32695770263672,
+                        "moves": 31,
+                        "difficulty": "Medium",
+                        "playedAt": "2/2/2026 9:42:28 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    },
+                    {
+                        "won": true,
+                        "score": 7272,
+                        "time": 151.97201538085938,
+                        "moves": 108,
+                        "difficulty": "Medium",
+                        "playedAt": "2/3/2026 4:04:54 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "FreeCell_Hard_Standard",
+            "data": {
+                "gamesStarted": 1,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 0.0,
+                        "moves": 0,
+                        "difficulty": "Hard",
+                        "playedAt": "1/12/2026 2:09:18 PM",
+                        "variant": "Standard",
+                        "gameName": "FreeCell"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Pyramid_Global",
+            "data": {
+                "gamesStarted": 19,
+                "gamesWon": 4,
+                "totalTime": 492.01312255859377,
+                "totalMoves": 543,
+                "bestScore": 1290,
+                "bestTime": 44.71348571777344,
+                "fewestMoves": 51,
+                "currentStreak": 0,
+                "bestStreak": 2,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 2,
+                "currentXP": 300,
+                "xpForNextLevel": 1000,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 2.986909866333008,
+                        "moves": 1,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:42:36 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 2.129993438720703,
+                        "moves": 1,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:42:46 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 3.0789642333984377,
+                        "moves": 2,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:42:55 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 88.93707275390625,
+                        "moves": 81,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:48:50 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": true,
+                        "score": 1275,
+                        "time": 82.87747955322266,
+                        "moves": 75,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:50:19 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": true,
+                        "score": 1290,
+                        "time": 68.87245178222656,
+                        "moves": 70,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:57:36 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 61.86159133911133,
+                        "moves": 59,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:16:56 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 86.92901611328125,
+                        "moves": 63,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:18:26 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": true,
+                        "score": 1265,
+                        "time": 44.71348571777344,
+                        "moves": 51,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:19:16 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -9.322027206420899,
+                        "moves": 77,
+                        "difficulty": "Medium",
+                        "playedAt": "1/22/2026 3:15:11 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Pyramid_Easy_1",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Pyramid_Medium_1",
+            "data": {
+                "gamesStarted": 17,
+                "gamesWon": 4,
+                "totalTime": 492.01312255859377,
+                "totalMoves": 543,
+                "bestScore": 1290,
+                "bestTime": 44.71348571777344,
+                "fewestMoves": 51,
+                "currentStreak": 0,
+                "bestStreak": 2,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 2.986909866333008,
+                        "moves": 1,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:42:36 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 2.129993438720703,
+                        "moves": 1,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:42:46 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 3.0789642333984377,
+                        "moves": 2,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:42:55 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 88.93707275390625,
+                        "moves": 81,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:48:50 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": true,
+                        "score": 1275,
+                        "time": 82.87747955322266,
+                        "moves": 75,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:50:19 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": true,
+                        "score": 1290,
+                        "time": 68.87245178222656,
+                        "moves": 70,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:57:36 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 61.86159133911133,
+                        "moves": 59,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:16:55 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 86.92901611328125,
+                        "moves": 63,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:18:26 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": true,
+                        "score": 1265,
+                        "time": 44.71348571777344,
+                        "moves": 51,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:19:16 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -9.322027206420899,
+                        "moves": 77,
+                        "difficulty": "Medium",
+                        "playedAt": "1/22/2026 3:15:11 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Pyramid_Hard_1",
+            "data": {
+                "gamesStarted": 1,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 0.0,
+                        "moves": 0,
+                        "difficulty": "Hard",
+                        "playedAt": "1/12/2026 2:09:54 PM",
+                        "variant": "1",
+                        "gameName": "Pyramid"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Pyramid_Medium_3",
+            "data": {
+                "gamesStarted": 1,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 0.0,
+                        "moves": 0,
+                        "difficulty": "Medium",
+                        "playedAt": "1/12/2026 5:22:25 PM",
+                        "variant": "3",
+                        "gameName": "Pyramid"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Klondike_Hard_Draw3",
+            "data": {
+                "gamesStarted": 6,
+                "gamesWon": 2,
+                "totalTime": 2241.26025390625,
+                "totalMoves": 2086,
+                "bestScore": 550,
+                "bestTime": 161.34947204589845,
+                "fewestMoves": 123,
+                "currentStreak": 0,
+                "bestStreak": 2,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 131.021484375,
+                        "moves": 78,
+                        "difficulty": "Hard",
+                        "playedAt": "1/12/2026 6:11:44 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 96.67107391357422,
+                        "moves": 54,
+                        "difficulty": "Hard",
+                        "playedAt": "1/12/2026 6:18:57 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 275,
+                        "time": 1866.91015625,
+                        "moves": 1738,
+                        "difficulty": "Hard",
+                        "playedAt": "1/19/2026 1:15:21 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 550,
+                        "time": 161.34947204589845,
+                        "moves": 123,
+                        "difficulty": "Hard",
+                        "playedAt": "2/3/2026 4:08:13 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -127.6064453125,
+                        "moves": 3,
+                        "difficulty": "Hard",
+                        "playedAt": "2/17/2026 1:51:22 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 112.91448211669922,
+                        "moves": 90,
+                        "difficulty": "Hard",
+                        "playedAt": "2/18/2026 2:46:28 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "TriPeaks_Global",
+            "data": {
+                "gamesStarted": 149,
+                "gamesWon": 12,
+                "totalTime": 632.0989990234375,
+                "totalMoves": 1986,
+                "bestScore": 17600,
+                "bestTime": 27.89453887939453,
+                "fewestMoves": 40,
+                "currentStreak": 0,
+                "bestStreak": 3,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 3,
+                "currentXP": 900,
+                "xpForNextLevel": 1500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -28.89081573486328,
+                        "moves": 113,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:27:55 PM",
+                        "variant": "3Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 4.148963928222656,
+                        "moves": 4,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:38:56 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -13.860828399658204,
+                        "moves": 149,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:53:45 PM",
+                        "variant": "3Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 70.49173736572266,
+                        "moves": 98,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:55:20 PM",
+                        "variant": "3Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 17.27901840209961,
+                        "moves": 31,
+                        "difficulty": "Hard",
+                        "playedAt": "1/14/2026 9:06:50 PM",
+                        "variant": "3Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": true,
+                        "score": 7700,
+                        "time": 50.046974182128909,
+                        "moves": 42,
+                        "difficulty": "Medium",
+                        "playedAt": "1/22/2026 3:19:59 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 43.75621032714844,
+                        "moves": 50,
+                        "difficulty": "Medium",
+                        "playedAt": "2/3/2026 2:38:26 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 38.210540771484378,
+                        "moves": 49,
+                        "difficulty": "Medium",
+                        "playedAt": "2/3/2026 2:39:10 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 42.09478759765625,
+                        "moves": 48,
+                        "difficulty": "Medium",
+                        "playedAt": "2/3/2026 2:39:57 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 48.30291748046875,
+                        "moves": 52,
+                        "difficulty": "Medium",
+                        "playedAt": "2/3/2026 2:40:52 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "TriPeaks_Medium_1Rounds",
+            "data": {
+                "gamesStarted": 74,
+                "gamesWon": 1,
+                "totalTime": 244.02099609375,
+                "totalMoves": 261,
+                "bestScore": 7700,
+                "bestTime": 50.046974182128909,
+                "fewestMoves": 42,
+                "currentStreak": 0,
+                "bestStreak": 1,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 2.89625883102417,
+                        "moves": 2,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 6:43:50 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 14.564334869384766,
+                        "moves": 14,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 6:44:43 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 4.148963928222656,
+                        "moves": 4,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:38:56 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": true,
+                        "score": 7700,
+                        "time": 50.046974182128909,
+                        "moves": 42,
+                        "difficulty": "Medium",
+                        "playedAt": "1/22/2026 3:19:59 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 43.75621032714844,
+                        "moves": 50,
+                        "difficulty": "Medium",
+                        "playedAt": "2/3/2026 2:38:26 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 38.210540771484378,
+                        "moves": 49,
+                        "difficulty": "Medium",
+                        "playedAt": "2/3/2026 2:39:10 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 42.09478759765625,
+                        "moves": 48,
+                        "difficulty": "Medium",
+                        "playedAt": "2/3/2026 2:39:57 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 48.30291748046875,
+                        "moves": 52,
+                        "difficulty": "Medium",
+                        "playedAt": "2/3/2026 2:40:52 PM",
+                        "variant": "1Rounds",
+                        "gameName": "TriPeaks"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "TriPeaks_Easy_1Rounds",
+            "data": {
+                "gamesStarted": 38,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Hard_1Rounds",
+            "data": {
+                "gamesStarted": 1,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Easy_1",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Medium_1",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Hard_1",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Medium_Classic",
+            "data": {
+                "gamesStarted": 23,
+                "gamesWon": 10,
+                "totalTime": 213.80191040039063,
+                "totalMoves": 986,
+                "bestScore": 10700,
+                "bestTime": 27.89453887939453,
+                "fewestMoves": 40,
+                "currentStreak": 0,
+                "bestStreak": 3,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": true,
+                        "score": 10700,
+                        "time": 27.89453887939453,
+                        "moves": 40,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:08:11 PM",
+                        "variant": "Classic",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": true,
+                        "score": 7250,
+                        "time": 83.68758392333985,
+                        "moves": 78,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:15:28 PM",
+                        "variant": "Classic",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 41.07799530029297,
+                        "moves": 50,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:17:47 PM",
+                        "variant": "Classic",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": true,
+                        "score": 6450,
+                        "time": 39.787418365478519,
+                        "moves": 51,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:18:31 PM",
+                        "variant": "Classic",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": true,
+                        "score": 7950,
+                        "time": 28.608755111694337,
+                        "moves": 40,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:20:15 PM",
+                        "variant": "Classic",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": true,
+                        "score": 9350,
+                        "time": 40.005741119384769,
+                        "moves": 49,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:43:45 PM",
+                        "variant": "Classic",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 29.21607208251953,
+                        "moves": 32,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:44:27 PM",
+                        "variant": "Classic",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 41.46510314941406,
+                        "moves": 49,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:45:15 PM",
+                        "variant": "Classic",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 4.4172821044921879,
+                        "moves": 8,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:45:30 PM",
+                        "variant": "Classic",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -206.10018920898438,
+                        "moves": 17,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 2:45:47 PM",
+                        "variant": "Classic",
+                        "gameName": "TriPeaks"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Spider_Medium_2Suits",
+            "data": {
+                "gamesStarted": 1,
+                "gamesWon": 0,
+                "totalTime": 205.82843017578126,
+                "totalMoves": 78,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 205.82843017578126,
+                        "moves": 78,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 3:08:20 PM",
+                        "variant": "2Suits",
+                        "gameName": "Spider"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Spider_Hard_4Suits",
+            "data": {
+                "gamesStarted": 2,
+                "gamesWon": 0,
+                "totalTime": 260.46417236328127,
+                "totalMoves": 138,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -7.948812007904053,
+                        "moves": 46,
+                        "difficulty": "Hard",
+                        "playedAt": "1/14/2026 3:17:19 PM",
+                        "variant": "4Suits",
+                        "gameName": "Spider"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 268.4129943847656,
+                        "moves": 92,
+                        "difficulty": "Hard",
+                        "playedAt": "2/5/2026 12:47:24 PM",
+                        "variant": "4Suits",
+                        "gameName": "Spider"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "TriPeaks_Easy_Classic",
+            "data": {
+                "gamesStarted": 2,
+                "gamesWon": 0,
+                "totalTime": -206.68380737304688,
+                "totalMoves": 2,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -206.68380737304688,
+                        "moves": 2,
+                        "difficulty": "Easy",
+                        "playedAt": "1/14/2026 6:43:01 PM",
+                        "variant": "Classic",
+                        "gameName": "TriPeaks"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "TriPeaks_Easy_2",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Medium_2",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Hard_2",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Easy_3",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Medium_3",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Hard_3",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Medium_2Rounds",
+            "data": {
+                "gamesStarted": 2,
+                "gamesWon": 1,
+                "totalTime": 253.0116424560547,
+                "totalMoves": 281,
+                "bestScore": 17600,
+                "bestTime": 197.89114379882813,
+                "fewestMoves": 227,
+                "currentStreak": 0,
+                "bestStreak": 1,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": true,
+                        "score": 17600,
+                        "time": 197.89114379882813,
+                        "moves": 227,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 6:48:06 PM",
+                        "variant": "2Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 55.12049865722656,
+                        "moves": 54,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 7:52:26 PM",
+                        "variant": "2Rounds",
+                        "gameName": "TriPeaks"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Pyramid_Easy_2",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Pyramid_Medium_2",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Pyramid_Hard_2",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Pyramid_Easy_3",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Pyramid_Hard_3",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Easy_2Rounds",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Hard_2Rounds",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Easy_3Rounds",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "TriPeaks_Medium_3Rounds",
+            "data": {
+                "gamesStarted": 8,
+                "gamesWon": 0,
+                "totalTime": 110.66934204101563,
+                "totalMoves": 425,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 64.0134048461914,
+                        "moves": 47,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 7:56:24 PM",
+                        "variant": "3Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 18.91584014892578,
+                        "moves": 18,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:26:26 PM",
+                        "variant": "3Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -28.89081573486328,
+                        "moves": 113,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:27:55 PM",
+                        "variant": "3Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": -13.860828399658204,
+                        "moves": 149,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:53:45 PM",
+                        "variant": "3Rounds",
+                        "gameName": "TriPeaks"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 70.49173736572266,
+                        "moves": 98,
+                        "difficulty": "Medium",
+                        "playedAt": "1/14/2026 8:55:20 PM",
+                        "variant": "3Rounds",
+                        "gameName": "TriPeaks"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "TriPeaks_Hard_3Rounds",
+            "data": {
+                "gamesStarted": 1,
+                "gamesWon": 0,
+                "totalTime": 17.27901840209961,
+                "totalMoves": 31,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 17.27901840209961,
+                        "moves": 31,
+                        "difficulty": "Hard",
+                        "playedAt": "1/14/2026 9:06:50 PM",
+                        "variant": "3Rounds",
+                        "gameName": "TriPeaks"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Sultan_Global",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Klondike_Easy_Draw3",
+            "data": {
+                "gamesStarted": 8,
+                "gamesWon": 6,
+                "totalTime": 1478.3260498046875,
+                "totalMoves": 1286,
+                "bestScore": 510,
+                "bestTime": 82.99365234375,
+                "fewestMoves": 78,
+                "currentStreak": 1,
+                "bestStreak": 4,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": true,
+                        "score": 280,
+                        "time": 201.08642578125,
+                        "moves": 168,
+                        "difficulty": "Easy",
+                        "playedAt": "1/19/2026 12:18:02 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 200,
+                        "time": 293.09765625,
+                        "moves": 247,
+                        "difficulty": "Easy",
+                        "playedAt": "1/19/2026 12:22:59 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 310,
+                        "time": 82.99365234375,
+                        "moves": 78,
+                        "difficulty": "Easy",
+                        "playedAt": "1/19/2026 12:24:27 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 365,
+                        "time": 167.74359130859376,
+                        "moves": 130,
+                        "difficulty": "Easy",
+                        "playedAt": "1/22/2026 4:37:31 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 91.79400634765625,
+                        "moves": 79,
+                        "difficulty": "Easy",
+                        "playedAt": "2/16/2026 2:18:03 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 510,
+                        "time": 353.832763671875,
+                        "moves": 357,
+                        "difficulty": "Easy",
+                        "playedAt": "2/16/2026 2:24:04 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 5.80322265625,
+                        "moves": 1,
+                        "difficulty": "Easy",
+                        "playedAt": "2/16/2026 2:49:52 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 465,
+                        "time": 281.9747314453125,
+                        "moves": 226,
+                        "difficulty": "Easy",
+                        "playedAt": "2/17/2026 2:13:15 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Klondike_Medium_Draw3",
+            "data": {
+                "gamesStarted": 3,
+                "gamesWon": 2,
+                "totalTime": 498.0592041015625,
+                "totalMoves": 426,
+                "bestScore": 255,
+                "bestTime": 240.9326171875,
+                "fewestMoves": 200,
+                "currentStreak": 0,
+                "bestStreak": 2,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": true,
+                        "score": 255,
+                        "time": 255.3662109375,
+                        "moves": 200,
+                        "difficulty": "Medium",
+                        "playedAt": "1/19/2026 12:35:02 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": true,
+                        "score": 75,
+                        "time": 240.9326171875,
+                        "moves": 225,
+                        "difficulty": "Medium",
+                        "playedAt": "1/19/2026 12:39:10 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 1.7603721618652344,
+                        "moves": 1,
+                        "difficulty": "Medium",
+                        "playedAt": "2/4/2026 2:47:03 PM",
+                        "variant": "Draw3",
+                        "gameName": "Klondike"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Octagon_Global",
+            "data": {
+                "gamesStarted": 29,
+                "gamesWon": 0,
+                "totalTime": 568.8416137695313,
+                "totalMoves": 532,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 31.569644927978517,
+                        "moves": 14,
+                        "difficulty": "Easy",
+                        "playedAt": "1/21/2026 10:01:28 AM",
+                        "variant": "Classic",
+                        "gameName": "Octagon"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 17.007909774780275,
+                        "moves": 15,
+                        "difficulty": "Easy",
+                        "playedAt": "1/21/2026 10:19:49 AM",
+                        "variant": "Classic",
+                        "gameName": "Octagon"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 23.33340072631836,
+                        "moves": 9,
+                        "difficulty": "Easy",
+                        "playedAt": "1/21/2026 10:26:23 AM",
+                        "variant": "Classic",
+                        "gameName": "Octagon"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 252.45999145507813,
+                        "moves": 247,
+                        "difficulty": "Easy",
+                        "playedAt": "1/21/2026 1:04:23 PM",
+                        "variant": "Classic",
+                        "gameName": "Octagon"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 244.4706573486328,
+                        "moves": 247,
+                        "difficulty": "Easy",
+                        "playedAt": "1/21/2026 1:34:34 PM",
+                        "variant": "Classic",
+                        "gameName": "Octagon"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Octagon_Easy_Classic",
+            "data": {
+                "gamesStarted": 29,
+                "gamesWon": 0,
+                "totalTime": 568.8416137695313,
+                "totalMoves": 532,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 31.569644927978517,
+                        "moves": 14,
+                        "difficulty": "Easy",
+                        "playedAt": "1/21/2026 10:01:28 AM",
+                        "variant": "Classic",
+                        "gameName": "Octagon"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 17.007909774780275,
+                        "moves": 15,
+                        "difficulty": "Easy",
+                        "playedAt": "1/21/2026 10:19:49 AM",
+                        "variant": "Classic",
+                        "gameName": "Octagon"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 23.33340072631836,
+                        "moves": 9,
+                        "difficulty": "Easy",
+                        "playedAt": "1/21/2026 10:26:23 AM",
+                        "variant": "Classic",
+                        "gameName": "Octagon"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 252.45999145507813,
+                        "moves": 247,
+                        "difficulty": "Easy",
+                        "playedAt": "1/21/2026 1:04:23 PM",
+                        "variant": "Classic",
+                        "gameName": "Octagon"
+                    },
+                    {
+                        "won": false,
+                        "score": 0,
+                        "time": 244.4706573486328,
+                        "moves": 247,
+                        "difficulty": "Easy",
+                        "playedAt": "1/21/2026 1:34:34 PM",
+                        "variant": "Classic",
+                        "gameName": "Octagon"
+                    }
+                ]
+            }
+        },
+        {
+            "key": "Octagon_Easy_Standard",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Octagon_Medium_Standard",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Octagon_Hard_Standard",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Tripeaks_Global",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Yukon_Global",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "MonteCarlo_Global",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Montana_Global",
+            "data": {
+                "gamesStarted": 0,
+                "gamesWon": 0,
+                "totalTime": 0.0,
+                "totalMoves": 0,
+                "bestScore": 0,
+                "bestTime": 0.0,
+                "fewestMoves": 0,
+                "currentStreak": 0,
+                "bestStreak": 0,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": []
+            }
+        },
+        {
+            "key": "Spider_Hard_2Suits",
+            "data": {
+                "gamesStarted": 1,
+                "gamesWon": 1,
+                "totalTime": 444.580322265625,
+                "totalMoves": 172,
+                "bestScore": 1228,
+                "bestTime": 444.580322265625,
+                "fewestMoves": 172,
+                "currentStreak": 1,
+                "bestStreak": 1,
+                "totalCardsMoved": 0,
+                "totalXP": 0,
+                "questsCompleted": 0,
+                "questStreak": 0,
+                "currentLevel": 1,
+                "currentXP": 0,
+                "xpForNextLevel": 500,
+                "history": [
+                    {
+                        "won": true,
+                        "score": 1228,
+                        "time": 444.580322265625,
+                        "moves": 172,
+                        "difficulty": "Hard",
+                        "playedAt": "2/5/2026 12:55:03 PM",
+                        "variant": "2Suits",
+                        "gameName": "Spider"
+                    }
+                ]
+            }
+        }
+    ]
+}

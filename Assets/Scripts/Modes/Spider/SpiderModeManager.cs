@@ -38,7 +38,9 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
     public float TableauVerticalGap => tableauVerticalGap;
     public StockDealMode StockDealMode => StockDealMode.Draw1;
     public bool IsInputAllowed { get; set; } = true;
+    private bool hasGameStarted = false;
     public string GameName => "Spider";
+    public GameType GameType => GameType.Spider;
 
     // Статистика
     public int CurrentScore => _scoreManager != null ? _scoreManager.CurrentScore : 0;
@@ -51,7 +53,10 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
     {
         InitializeGame();
     }
-
+    public bool IsMatchInProgress()
+    {
+        return hasGameStarted;
+    }
     public void InitializeGame()
     {
         _isGameEnded = false;

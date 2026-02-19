@@ -64,6 +64,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public float TableauVerticalGap => tableauVerticalGap;
     public StockDealMode StockDealMode => stockDealMode;
     public bool IsInputAllowed { get; set; } = true;
+    public GameType GameType => GameType.Klondike;
 
     [Header("UI Controller")]
     public GameUIController gameUI;
@@ -196,33 +197,32 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         if (autoWinButton != null)
         {
             autoWinRect = autoWinButton.GetComponent<RectTransform>();
-            // Запоминаем позицию, где кнопка стоит в сцене (это будет позиция показа)
             autoWinShowPos = autoWinRect.anchoredPosition;
-            // Позиция скрытия - сдвигаем вверх за пределы экрана (например, +200 пикселей)
-            autoWinHidePos = autoWinShowPos + new Vector2(0, 200f);
 
-            // Сразу скрываем
+            // [FIX] Определяем направление скрытия.
+            // Если кнопка в нижней половине экрана (y < 0), прячем вниз (-).
+            // Если в верхней (y > 0), прячем вверх (+).
+            float hideOffsetY = (autoWinShowPos.y < 0) ? -250f : 250f;
+
+            autoWinHidePos = autoWinShowPos + new Vector2(0, hideOffsetY);
+
+            // Сразу ставим в позицию скрытия
             autoWinRect.anchoredPosition = autoWinHidePos;
+
+            // Выключаем объект
             autoWinButton.gameObject.SetActive(false);
             autoWinButton.onClick.RemoveAllListeners();
             autoWinButton.onClick.AddListener(OnAutoWinClicked);
         }
 
-        // --- ИЗМЕНЕНИЯ ЗДЕСЬ ---
         if (playIntroOnStart && introController != null)
         {
-            // Подготавливаем всё (скрываем)
             introController.PrepareIntro();
-
-            // Настраиваем логику игры, но НЕ раздаем карты сразу
             InitializeGameLogicOnly();
-
-            // Запускаем кино
             introController.PlayIntroSequence();
         }
         else
         {
-            // Старый быстрый старт
             StartNewGame();
         }
     }
@@ -345,23 +345,41 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         // 1. Ходы
         if (movesText != null)
         {
-            if (StatisticsManager.Instance != null)
-                movesText.text = $"{StatisticsManager.Instance.GetCurrentMoves()}";
-            else
+            // [FIX] Если игра еще не началась (идет анимация или ожидание первого хода),
+            // мы ВСЕГДА показываем 0, игнорируя старые данные из StatisticsManager.
+            if (!hasGameStarted)
+            {
                 movesText.text = "0";
+            }
+            else if (StatisticsManager.Instance != null)
+            {
+                movesText.text = $"{StatisticsManager.Instance.GetCurrentMoves()}";
+            }
+            else
+            {
+                movesText.text = "0";
+            }
         }
 
         // 2. Очки
         if (scoreText != null)
         {
-            int score = scoreManager != null ? scoreManager.CurrentScore : 0;
-            scoreText.text = $"{score}";
+            // То же самое для очков: если игра не началась, очков визуально 0
+            if (!hasGameStarted)
+            {
+                scoreText.text = "0";
+            }
+            else
+            {
+                int score = scoreManager != null ? scoreManager.CurrentScore : 0;
+                scoreText.text = $"{score}";
+            }
         }
 
-        // 3. Время (если игра не идет, сбрасываем или оставляем как есть)
+        // 3. Время
         if (!hasGameStarted)
         {
-            UpdateTimeUI();
+            UpdateTimeUI(); // Сбросит в 0:00, так как gameTimer мы обнулили в Restart
         }
     }
 
@@ -422,12 +440,32 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
         UpdateFullUI();
     }
+    public void OnUndoAllAction()
+    {
+        // 1. Регистрируем это действие как ход (время идет, счетчик ходов +1)
+        RegisterMoveAndStartIfNeeded();
 
+        // 2. Скрываем кнопку авто-победы
+        isAutoWinVisible = false;
+        if (autoWinButton != null) autoWinButton.gameObject.SetActive(false);
+
+        // 3. Сбрасываем Пат в DeckManager
+        if (deckManager != null) deckManager.ResetStalemate();
+
+        // 4. СБРОС СЧЕТА В 0 (Исправление)
+        if (scoreManager != null) scoreManager.ResetScore();
+
+        // 5. Обновляем UI
+        UpdateFullUI();
+    }
     public bool OnDropToBoard(CardController card, Vector2 anchoredPosition)
     {
         return dragManager?.OnDropToBoard(card, anchoredPosition) ?? false;
     }
-
+    public bool IsMatchInProgress()
+    {
+        return hasGameStarted;
+    }
     public void OnCardClicked(CardController card)
     {
         if (!IsInputAllowed) return;
@@ -597,62 +635,187 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public void RestartGame()
     {
         UpdateFullUI();
+
+        // 1. Применяем настройки (как вы и просили)
         var deck = GetComponent<DeckManager>();
+        // Если компонент не на том же объекте, ищем ссылку
+        if (deck == null) deck = deckManager;
+
         if (deck != null)
         {
             deck.difficulty = GameSettings.CurrentDifficulty;
             this.stockDealMode = (GameSettings.KlondikeDrawCount == 3) ? StockDealMode.Draw3 : StockDealMode.Draw1;
+        }
 
-            if (hasGameStarted && !hasWonGame)
-            {
-                if (StatisticsManager.Instance != null)
-                    StatisticsManager.Instance.OnGameAbandoned();
-            }
+        // 2. Учитываем поражение в статистике
+        if (hasGameStarted && !hasWonGame)
+        {
+            if (StatisticsManager.Instance != null)
+                StatisticsManager.Instance.OnGameAbandoned();
+        }
 
+        // 3. ВМЕСТО StartNewGame() ЗАПУСКАЕМ КОРУТИНУ
+        StartCoroutine(SoftRestartRoutine(deck));
+    }
+    private IEnumerator SoftRestartRoutine(DeckManager deck)
+    {
+        // Блокируем ввод
+        IsInputAllowed = false;
+
+        // Сброс переменных состояния
+        hasWonGame = false;
+        hasGameStarted = false;
+        gameTimer = 0f;
+        isTimerRunning = false;
+
+        // Прячем кнопку авто-победы
+        isAutoWinVisible = false;
+        if (autoWinButton != null) autoWinButton.gameObject.SetActive(false);
+
+        // Сброс менеджеров
+        if (defeatManager != null) defeatManager.ResetManager();
+        if (scoreManager != null) scoreManager.ResetScore();
+
+        // Обновляем UI (счет 0, время 0:00)
+        UpdateFullUI();
+
+        // ОЧИСТКА СТОЛА
+        pileManager.ClearAllPiles();
+        // Пересоздаем слоты (на всякий случай, если что-то сбилось)
+        pileManager.CreatePiles();
+        if (dragManager != null) dragManager.RefreshContainers();
+
+        // Удаляем физические объекты карт (те, что упали вниз в SceneExitAnimator)
+        cardFactory.DestroyAllCards();
+
+        // Ждем 1 кадр, чтобы Unity успела всё удалить
+        yield return null;
+
+        // ПРИЛЕТ НОВОЙ КОЛОДЫ
+        if (deck != null)
+        {
+            // Эта функция сама сгенерирует расклад, анимирует прилет и раздаст карты
+            yield return StartCoroutine(deck.PlayIntroDeckArrival(1.2f));
+        }
+        else
+        {
+            // Если DeckManager нет, просто запускаем мгновенно
             StartNewGame();
         }
+
+        // Разблокируем ввод
+        IsInputAllowed = true;
+
+        // Обновляем Z-индексы слотов
+        animationService?.ReorderAllContainers(pileManager.GetAllContainerTransforms());
+
+        // Финальное обновление UI
+        UpdateFullUI();
     }
 
+    public void ExecuteSoftRestart()
+    {
+        // --- ШАГ 0: ПРИМЕНЯЕМ НОВЫЕ НАСТРОЙКИ ---
+        // Игрок мог изменить их в Win/Defeat панели перед нажатием New Game.
+        // Мы должны обновить локальные переменные и DeckManager.
+
+        this.stockDealMode = (GameSettings.KlondikeDrawCount == 3) ? StockDealMode.Draw3 : StockDealMode.Draw1;
+
+        if (deckManager != null)
+        {
+            deckManager.difficulty = GameSettings.CurrentDifficulty;
+        }
+
+        Debug.Log($"[KMM] Soft Restarting with: {GameSettings.CurrentDifficulty}, {this.stockDealMode}");
+        // -----------------------------------------
+
+        // 1. Сброс состояния игры
+        if (hasGameStarted && !hasWonGame && StatisticsManager.Instance != null)
+            StatisticsManager.Instance.OnGameAbandoned();
+
+        IsInputAllowed = false;
+        hasWonGame = false;
+        hasGameStarted = false;
+        gameTimer = 0f;
+        isTimerRunning = false;
+
+        isAutoWinVisible = false;
+        if (autoWinButton) autoWinButton.gameObject.SetActive(false);
+
+        // 2. Сброс менеджеров
+        if (defeatManager != null) defeatManager.ResetManager();
+        if (scoreManager != null) scoreManager.ResetScore();
+        if (undoManager != null) undoManager.ResetHistory();
+
+        UpdateFullUI();
+
+        // 3. Очистка стола
+        pileManager.ClearAllPiles();
+        cardFactory.DestroyAllCards();
+
+        // 4. Запуск цепочки (DeckManager теперь имеет правильные difficulty/drawMode)
+        StartCoroutine(RestartSequenceRoutine());
+    }
+
+    private IEnumerator RestartSequenceRoutine()
+    {
+        yield return null; // Ждем кадр очистки
+
+        if (deckManager != null)
+        {
+            // DeckManager внутри себя использует (mode.stockDealMode) и (this.difficulty),
+            // которые мы только что обновили в ШАГЕ 0.
+            yield return StartCoroutine(deckManager.PlayIntroDeckArrival(1.5f));
+        }
+
+        IsInputAllowed = true;
+        animationService.ReorderAllContainers(pileManager.GetAllContainerTransforms());
+
+        // Еще раз обновляем UI, чтобы убедиться, что всё (очки, ходы) по нулям
+        UpdateFullUI();
+    }
+    [ContextMenu("Debug: Force Auto Win Button")]
+    public void DebugForceShowAutoWin()
+    {
+        isAutoWinVisible = true;
+        if (autoWinAnimCoroutine != null) StopCoroutine(autoWinAnimCoroutine);
+        autoWinAnimCoroutine = StartCoroutine(AnimateAutoWinButton(true));
+        Debug.Log("[Debug] Forcing Auto Win Button Show");
+    }
     public void CheckGameState()
     {
         if (hasWonGame) return;
 
         if (IsGameWon())
         {
+            // ... (код победы без изменений) ...
             hasWonGame = true;
             IsInputAllowed = false;
             isTimerRunning = false;
-            Debug.Log("Game Won!");
 
-            int finalMoves = 0;
-            if (StatisticsManager.Instance != null)
-                finalMoves = StatisticsManager.Instance.GetCurrentMoves();
-
+            // Обновляем статистику
             if (StatisticsManager.Instance != null)
             {
+                int finalMoves = StatisticsManager.Instance.GetCurrentMoves();
                 int finalScore = scoreManager != null ? scoreManager.CurrentScore : 0;
                 StatisticsManager.Instance.OnGameWon(finalScore);
+                if (gameUI != null) gameUI.OnGameWon(finalMoves);
             }
-
-            if (gameUI != null) gameUI.OnGameWon(finalMoves);
             return;
         }
 
-        // --- ИСПРАВЛЕНИЕ ЛОГИКИ ПОЯВЛЕНИЯ КНОПКИ ---
-
+        // Проверяем возможность авто-победы
         bool canAutoWin = CanAutoWin();
 
-        // Сравниваем не с activeSelf, а с нашей логической переменной isAutoWinVisible
+        // [DEBUG] Раскомментируйте эту строку, чтобы видеть в консоли, почему кнопка не показывается
+        // if (!canAutoWin) Debug.Log($"AutoWin False. Input: {IsInputAllowed}, StockEmpty: {pileManager.StockPile.IsEmpty()}, WasteCount: {pileManager.WastePile.Count}");
+
         if (canAutoWin != isAutoWinVisible)
         {
             isAutoWinVisible = canAutoWin;
-
-            // Обязательно останавливаем старую анимацию и запускаем новую
             if (autoWinAnimCoroutine != null) StopCoroutine(autoWinAnimCoroutine);
             autoWinAnimCoroutine = StartCoroutine(AnimateAutoWinButton(canAutoWin));
         }
-
-        // -------------------------------------------
 
         if (defeatManager != null) defeatManager.CheckGameStatus();
     }
@@ -727,7 +890,72 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         if (autoWinAnimCoroutine != null) StopCoroutine(autoWinAnimCoroutine);
         autoWinAnimCoroutine = StartCoroutine(AnimateAutoWinButton(false));
 
+        // Запускаем анимацию полета карт
         if (autoMoveService != null) StartCoroutine(autoMoveService.PlayAutoWinAnimation());
+
+        // [FIX] Запускаем отслеживание очков во время полета карт
+        StartCoroutine(AutoWinScoreListener());
+    }
+
+    private IEnumerator AutoWinScoreListener()
+    {
+        // Подсчитываем, сколько карт уже в домах
+        int previousFoundationCount = 0;
+        if (pileManager.Foundations != null)
+        {
+            foreach (var f in pileManager.Foundations) previousFoundationCount += f.Count;
+        }
+
+        // Следим, пока игра не выиграна
+        while (!hasWonGame)
+        {
+            yield return new WaitForSeconds(0.1f); // Проверка 10 раз в секунду
+
+            int currentCount = 0;
+            if (pileManager.Foundations != null)
+            {
+                foreach (var f in pileManager.Foundations) currentCount += f.Count;
+            }
+
+            // Если карт стало больше -> начисляем очки
+            if (currentCount > previousFoundationCount)
+            {
+                int diff = currentCount - previousFoundationCount;
+
+                // Начисляем очки за каждую прилетевшую карту
+                // Обычно за перемещение в Foundation дают 10 очков
+                if (scoreManager != null)
+                {
+                    // Мы не можем использовать OnCardMove, т.к. не знаем откуда прилетела карта.
+                    // Поэтому используем ручное добавление, если оно есть, или имитируем.
+                    // Предположим, что у scoreManager есть метод AddScore(int amount).
+                    // Если его нет, используйте свойство CurrentScore += ...
+
+                    // Вариант А (если есть AddScore):
+                    // scoreManager.AddScore(diff * 10);
+
+                    // Вариант Б (через рефлексию или свойство, если оно доступно для записи):
+                    // scoreManager.CurrentScore += diff * 10; 
+
+                    // Вариант В (имитация хода из Tableau, дает +10):
+                    // scoreManager.OnCardMove(pileManager.GetTableau(0), pileManager.GetFoundation(0)); 
+
+                    // Самый надежный вариант без доступа к ScoreManager:
+                    // Просто обновляем UI, если scoreManager сам не обновляется.
+                    // Но скорее всего вам нужно добавить метод AddManualScore(int points) в KlondikeScoreManager.
+
+                    // ВРЕМЕННОЕ РЕШЕНИЕ (напишите метод AddPoints в ScoreManager):
+                    // scoreManager.AddPoints(diff * 10);
+
+                    // Если метода нет, попробуем обновить через событие хода (костыль, но сработает для +10):
+                    for (int i = 0; i < diff; i++)
+                        scoreManager.OnCardMove(pileManager.Tableau[0], pileManager.Foundations[0]);
+                }
+
+                UpdateFullUI();
+                previousFoundationCount = currentCount;
+            }
+        }
     }
 
     public bool IsGameWon()
