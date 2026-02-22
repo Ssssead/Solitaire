@@ -53,26 +53,28 @@ public class StatisticsManager : MonoBehaviour
 
     public void OnGameStarted(string gameName, Difficulty difficulty, string variant)
     {
-        // 1. СБРОС ФЛАГОВ (чтобы не было дубликатов)
+        // 1. СБРОС ФЛАГОВ
         isTimerRunning = false;
         hasTimerStarted = false;
-        LastGameTime = 0f; // Сбрасываем при новой игре
+        LastGameTime = 0f;
         currentMoves = 0;
 
+        LastXPGained = 0; // [FIX] Сброс прошлого опыта
+        IsNewScoreRecord = false; // [FIX] Сброс рекордов
+        IsNewTimeRecord = false;
+        IsNewMovesRecord = false;
+
+        // [FIX] В режиме обучения обнуляем счетчики, но НЕ пишем +1 к запускам игры
+        if (GameSettings.IsTutorialMode) return;
+
         // 2. ФОРМИРОВАНИЕ КЛЮЧЕЙ
-        currentGameKey = $"{gameName}_{difficulty}_{variant}"; // Пример: Klondike_Easy_Draw1
-        string gameGlobalKey = $"{gameName}_Global";           // Пример: Klondike_Global
-        string appGlobalKey = "Global";                        // Общая статистика приложения
+        currentGameKey = $"{gameName}_{difficulty}_{variant}";
+        string gameGlobalKey = $"{gameName}_Global";
+        string appGlobalKey = "Global";
 
-        // 3. ОБНОВЛЕНИЕ СЧЕТЧИКОВ (gamesStarted) ВО ВСЕХ КАТЕГОРИЯХ
-
-        // А. Конкретный режим
+        // 3. ОБНОВЛЕНИЕ СЧЕТЧИКОВ ВО ВСЕХ КАТЕГОРИЯХ
         stats.GetData(currentGameKey).gamesStarted++;
-
-        // Б. Глобальная статистика ЭТОЙ игры (чтобы работала верхняя панель)
         stats.GetData(gameGlobalKey).gamesStarted++;
-
-        // В. Общая статистика приложения (на будущее)
         stats.GetData(appGlobalKey).gamesStarted++;
 
         SaveStats();
@@ -105,6 +107,14 @@ public class StatisticsManager : MonoBehaviour
         float duration = Time.time - gameStartTime;
         LastGameTime = duration;
 
+        // [FIX] Если это обучение, просто выходим. Никакого опыта и сохранений.
+        if (GameSettings.IsTutorialMode)
+        {
+            LastXPGained = 0; // Опыт на экране победы будет 0
+            currentMoves = 0;
+            return;
+        }
+
         // Разбираем ключи
         string gameName = currentGameKey.Split('_')[0];
         string difficultyStr = currentGameKey.Split('_')[1];
@@ -123,33 +133,16 @@ public class StatisticsManager : MonoBehaviour
             gType = GameType.Klondike; // Фолбэк на случай ошибки
         }
 
-        string gameGlobalKey = $"{gameName}_Global";
-        string appGlobalKey = "Global";
+        string gameGlobalKey = $"{gameName}_Global"; // Klondike_Global
+        string appGlobalKey = "Global";              // Global
 
-        // 2. Получаем текущие данные игры для расчетов (Уровень и Рекорды)
+        // 2. Получаем текущие данные игры, чтобы узнать УРОВЕНЬ
         StatData gameData = stats.GetData(gameGlobalKey);
         int currentLevel = (gameData != null) ? gameData.currentLevel : 1;
 
-        // --- ПРОВЕРКА НА РЕКОРДЫ (ДО ТОГО КАК МЫ ИХ ОБНОВИЛИ) ---
-        IsNewScoreRecord = false;
-        IsNewTimeRecord = false;
-        IsNewMovesRecord = false;
-
-        StatData currentModeStats = stats.GetData(currentGameKey); // Берем стату конкретного режима (например Klondike_Hard_Draw3)
-        if (currentModeStats != null)
-        {
-            // Если побед еще не было, или результат лучше предыдущего лучшего
-            if (finalScore > currentModeStats.bestScore) IsNewScoreRecord = true;
-            if (currentModeStats.bestTime == 0 || duration < currentModeStats.bestTime) IsNewTimeRecord = true;
-            if (currentModeStats.fewestMoves == 0 || currentMoves < currentModeStats.fewestMoves) IsNewMovesRecord = true;
-
-            // Защита от спама рекордов при счете 0 (если игра не на очки)
-            if (finalScore == 0 && currentModeStats.bestScore == 0) IsNewScoreRecord = false;
-        }
-        // --------------------------------------------------------
-
         // 3. РАСЧЕТ ОПЫТА 
         int xpGained = LevelingUtils.CalculateXP(gType, currentLevel, diffEnum, variantStr, IsUserPremium);
+
         LastXPGained = xpGained;
 
         Debug.Log($"[XP System] Gained {xpGained} XP. (Diff: {diffEnum}, Var: {variantStr})");
@@ -194,6 +187,16 @@ public class StatisticsManager : MonoBehaviour
         float duration = Time.time - gameStartTime;
         LastGameTime = duration;
 
+        isTimerRunning = false;
+        hasTimerStarted = false;
+
+        // [FIX] В режиме обучения не пишем поражения
+        if (GameSettings.IsTutorialMode)
+        {
+            currentMoves = 0;
+            return;
+        }
+
         string[] keyParts = currentGameKey.Split('_');
         string gameName = keyParts[0];
         string difficultyStr = keyParts[1];
@@ -203,15 +206,11 @@ public class StatisticsManager : MonoBehaviour
         string appGlobalKey = "Global";
 
         // 2. ПЕРЕДАЕМ duration И currentMoves ВМЕСТО 0
-        // (Score при поражении оставляем 0)
         stats.UpdateData(currentGameKey, false, duration, currentMoves, 0, difficultyStr, gameName, variantStr);
         stats.UpdateData(gameGlobalKey, false, duration, currentMoves, 0, difficultyStr, gameName, variantStr);
         stats.UpdateData(appGlobalKey, false, duration, currentMoves, 0, difficultyStr, gameName, variantStr);
 
         SaveStats();
-
-        isTimerRunning = false;
-        hasTimerStarted = false;
         currentMoves = 0;
     }
 

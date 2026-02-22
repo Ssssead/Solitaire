@@ -90,6 +90,7 @@ public class GameUIController : MonoBehaviour
 
     [Header("New Game XP Preview")]
     public TMP_Text newGameXPPreviewText;
+    private Coroutine winSequenceCoroutine;
     private void Start()
     {
         if (activeGameMode == null)
@@ -150,10 +151,12 @@ public class GameUIController : MonoBehaviour
     public void OnGameWon(int manualMoves = -1)
     {
         if (defeatPanel) defeatPanel.SetActive(false);
-        if (settingsPanel) settingsPanel.SetActive(false); // Скрываем настройки, если были открыты
+        if (settingsPanel) settingsPanel.SetActive(false);
         if (activeGameMode != null) activeGameMode.IsInputAllowed = false;
 
-        StartCoroutine(WinSequenceRoutine(manualMoves));
+        // [FIX] Сохраняем ссылку на корутину, чтобы можно было её отменить
+        if (winSequenceCoroutine != null) StopCoroutine(winSequenceCoroutine);
+        winSequenceCoroutine = StartCoroutine(WinSequenceRoutine(manualMoves));
     }
 
     private IEnumerator WinSequenceRoutine(int manualMoves)
@@ -460,14 +463,35 @@ public class GameUIController : MonoBehaviour
         // 4. Выходим в меню
         PerformSceneExit();
     }
+    private void AbortActiveGameAnimations()
+    {
+        // 1. Останавливаем корутины на главном менеджере (например, KlondikeModeManager)
+        if (activeGameMode is MonoBehaviour modeMb)
+        {
+            modeMb.StopAllCoroutines();
 
+            // 2. Ищем и останавливаем раздачу в DeckManager
+            var deck = modeMb.GetComponent("DeckManager") as MonoBehaviour;
+            if (deck != null) deck.StopAllCoroutines();
+
+            // 3. Ищем и глушим AnimationService (если он висит там же)
+            var anim = modeMb.GetComponent("AnimationService") as MonoBehaviour;
+            if (anim != null) anim.StopAllCoroutines();
+        }
+
+        // 4. Жестко останавливаем любые анимации на самих картах
+        var allCards = FindObjectsOfType<CardController>();
+        foreach (var card in allCards)
+        {
+            if (card != null) card.StopAllCoroutines();
+        }
+    }
     private void PerformSceneExit()
     {
         // Логика кэша
         if (DealCacheSystem.Instance != null)
         {
             int moves = (StatisticsManager.Instance != null) ? StatisticsManager.Instance.GetCurrentMoves() : 0;
-            // Если ходы были (или победа), сбрасываем дил.
             if (moves > 0) DealCacheSystem.Instance.DiscardActiveDeal();
             else DealCacheSystem.Instance.ReturnActiveDealToQueue();
         }
@@ -476,6 +500,10 @@ public class GameUIController : MonoBehaviour
         if (exitAnimator != null)
         {
             if (activeGameMode != null) activeGameMode.IsInputAllowed = false;
+
+            // [FIX] Принудительно прерываем начальную раздачу перед выходом
+            AbortActiveGameAnimations();
+
             exitAnimator.PlayExitSequence(() => SceneManager.LoadScene("MenuScene"));
         }
         else
@@ -526,19 +554,20 @@ public class GameUIController : MonoBehaviour
     }
     public void OnConfirmNewGameClicked()
     {
-        // Скрываем диалог подтверждения, если он был
+        GameSettings.IsTutorialMode = false; // [NEW] Сбрасываем туториал
+
         if (newGameConfirmationPanel != null && newGameConfirmationPanel.activeSelf)
         {
             TogglePanelAnimated(newGameConfirmationPanel, false);
         }
-
-        // ЗАПУСКАЕМ ЕДИНУЮ КОРУТИНУ ПЕРЕЗАПУСКА
-        // Именно в ней прописана вся правильная последовательность закрытия окон
         StartCoroutine(RestartSequenceRoutine());
     }
     private IEnumerator RestartSequenceRoutine()
     {
-        // [FIX] Скрываем ОБЕ панели настроек (обычную и для новой игры)
+        // [FIX] Глушим отложенную панель победы, чтобы она не вылезла во время новой раздачи
+        if (winSequenceCoroutine != null) StopCoroutine(winSequenceCoroutine);
+
+        // 1. Скрываем настройки
         if (settingsPanel != null && settingsPanel.activeSelf)
         {
             TogglePanelAnimated(settingsPanel, false);
@@ -548,13 +577,12 @@ public class GameUIController : MonoBehaviour
             TogglePanelAnimated(newGameSettingsPanel, false);
         }
 
-        // Даем время на анимацию закрытия (если хоть что-то было открыто)
         if ((settingsPanel != null && settingsPanel.activeSelf) || (newGameSettingsPanel != null && newGameSettingsPanel.activeSelf))
         {
             yield return new WaitForSeconds(0.3f);
         }
 
-        // 1. UI Exit (Победа/Поражение)
+        // 2. Скрываем UI победы/поражения
         if (winPanel != null && winPanel.activeSelf)
         {
             yield return StartCoroutine(AnimateWinUIExit());
@@ -565,16 +593,23 @@ public class GameUIController : MonoBehaviour
             yield return new WaitForSeconds(0.3f);
         }
 
-        // ... (дальше код без изменений: сброс данных и рестарт) ...
+        // 3. Сброс истории
         if (undoManager != null) undoManager.ResetHistory();
         if (DealCacheSystem.Instance != null) DealCacheSystem.Instance.DiscardActiveDeal();
 
+        // 4. Запуск падения карт и рестарт
         if (exitAnimator != null && activeGameMode != null)
         {
             activeGameMode.IsInputAllowed = false;
+
+            // Принудительно прерываем начальную раздачу перед рестартом
+            AbortActiveGameAnimations();
+
             bool cardsFallen = false;
             exitAnimator.PlayRestartSequence(() => { cardsFallen = true; });
+
             while (!cardsFallen) yield return null;
+
             activeGameMode.RestartGame();
         }
         else
@@ -582,7 +617,6 @@ public class GameUIController : MonoBehaviour
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
     }
-
     // New helper method to distinguish between simple restart and scene reload
     public void OnNewGameSettingsOptionClicked()
     {
@@ -600,10 +634,9 @@ public class GameUIController : MonoBehaviour
     // 2. Вызывается кнопкой "НАЧАТЬ" (Start) в панели настроек новой игры
     public void OnNewGameStartClicked()
     {
-        // Скрываем панель настроек
-        if (newGameSettingsPanel != null) TogglePanelAnimated(newGameSettingsPanel, false);
+        GameSettings.IsTutorialMode = false; // [NEW] Сбрасываем туториал
 
-        // Запускаем рестарт (настройки уже применены в GameSettings при кликах по кнопкам сложности)
+        if (newGameSettingsPanel != null) TogglePanelAnimated(newGameSettingsPanel, false);
         StartCoroutine(RestartSequenceRoutine());
     }
 

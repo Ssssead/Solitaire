@@ -42,10 +42,7 @@ public class MenuExitController : MonoBehaviour
 
     private IEnumerator ExitSequence(GameType selectedGame, Action onComplete)
     {
-        // 1. Выключаем взаимодействие
-        DisableAllInteractions();
-
-        // 2. Сортируем карты: находим выбранную и список остальных
+        // 1. Сортируем карты: находим выбранную и список остальных
         RectTransform selectedCardRect = null;
         List<RectTransform> cardsToFall = new List<RectTransform>();
 
@@ -64,6 +61,9 @@ public class MenuExitController : MonoBehaviour
             }
         }
 
+        // 2. Выключаем взаимодействие и глушим анимации (КРОМЕ ВЫБРАННОЙ КАРТЫ)
+        DisableAllInteractions(selectedCardRect);
+
         // --- ФАЗА 1: Падение карт и улет верха ---
 
         // Запускаем улет верхнего UI
@@ -79,7 +79,7 @@ public class MenuExitController : MonoBehaviour
             yield return new WaitForSeconds(delayBetweenFalls);
         }
 
-        // Ждем пока упадут карты
+        // Ждем пока упадут остальные карты
         yield return new WaitForSeconds(fallDuration);
 
 
@@ -94,6 +94,10 @@ public class MenuExitController : MonoBehaviour
         // Выбранная карта летит ВПРАВО
         if (selectedCardRect != null)
         {
+            // ВОТ ТЕПЕРЬ выключаем покачивание у выбранной карты (чтобы не было призрака перед загрузкой)
+            var hover = selectedCardRect.GetComponent<CardHoverEffect>();
+            if (hover != null) hover.SetSelectedMode(false);
+
             StartCoroutine(MoveUiRoutine(selectedCardRect, new Vector2(exitDistanceX, 0), exitMoveDuration, exitCurve));
         }
 
@@ -150,10 +154,20 @@ public class MenuExitController : MonoBehaviour
         target.anchoredPosition = targetPos;
     }
 
-    private void DisableAllInteractions()
+    private void DisableAllInteractions(RectTransform selectedCard)
     {
         // Выключаем ховеры у всех карт
         var hovers = FindObjectsOfType<CardHoverEffect>();
-        foreach (var h in hovers) h.SetHoverEnabled(false);
+        foreach (var h in hovers)
+        {
+            h.SetHoverEnabled(false);
+
+            // Выключаем "SelectedMode" у всех карт КРОМЕ той, которую мы выбрали.
+            // Благодаря этому она продолжит качаться во время падения остальных.
+            if (h.transform as RectTransform != selectedCard)
+            {
+                h.SetSelectedMode(false);
+            }
+        }
     }
 }

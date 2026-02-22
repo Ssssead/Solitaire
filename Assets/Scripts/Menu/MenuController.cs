@@ -35,6 +35,7 @@ public class MenuController : MonoBehaviour
     public GameObject settingsPanel;
     public GameObject statisticsPanel;
 
+
     [Header("Controllers")]
     public MenuLevelController levelController;
     public CardAnimationController cardAnimator;
@@ -86,6 +87,7 @@ public class MenuController : MonoBehaviour
 
     [Header("Main Action Buttons")]
     public Button startButton; // <--- НОВАЯ ССЫЛКА НА КНОПКУ СТАРТ
+    public Button tutorialButton;
 
     // --- НОВАЯ СЕКЦИЯ: ДВИЖЕНИЕ ПО МАРКЕРАМ ---
     [Header("Dynamic Buttons (Target Objects)")]
@@ -610,6 +612,9 @@ public class MenuController : MonoBehaviour
 
     public void OnStartGameClicked()
     {
+        // [FIX] Гарантируем, что при нажатии "Играть" туториал выключен
+        GameSettings.IsTutorialMode = false;
+
         // 1. Визуальный эффект нажатия
         SetButtonState(startButton, false);
 
@@ -625,10 +630,9 @@ public class MenuController : MonoBehaviour
         // 3. ЗАПУСК АНИМАЦИИ ВЫХОДА
         if (exitController != null)
         {
-            // Блокируем кнопку старт от повторных нажатий
             startButton.interactable = false;
+            if (tutorialButton != null) tutorialButton.interactable = false;
 
-            // Запускаем анимацию, передавая лямбду с загрузкой сцены как callback
             exitController.PlayExitAnimation(currentGame.type, () =>
             {
                 SceneManager.LoadScene(currentGame.sceneName);
@@ -636,7 +640,30 @@ public class MenuController : MonoBehaviour
         }
         else
         {
-            // Если контроллера нет - грузим сразу (fallback)
+            SceneManager.LoadScene(currentGame.sceneName);
+        }
+    }
+    public void OnTutorialButtonClicked()
+    {
+        // [FIX] Включаем режим обучения
+        GameSettings.IsTutorialMode = true;
+
+        if (tutorialButton != null) SetButtonState(tutorialButton, false);
+
+        if (string.IsNullOrEmpty(currentGame.sceneName)) return;
+
+        if (exitController != null)
+        {
+            if (startButton != null) startButton.interactable = false;
+            if (tutorialButton != null) tutorialButton.interactable = false;
+
+            exitController.PlayExitAnimation(currentGame.type, () =>
+            {
+                SceneManager.LoadScene(currentGame.sceneName);
+            });
+        }
+        else
+        {
             SceneManager.LoadScene(currentGame.sceneName);
         }
     }

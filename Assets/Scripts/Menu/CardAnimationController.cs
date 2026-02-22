@@ -11,8 +11,7 @@ public class CardAnimationController : MonoBehaviour
     {
         public GameType type;
         public RectTransform rect;
-        [HideInInspector] public Vector2 initialPos;
-        // initialRot удален, так как мы генерируем его случайно каждый раз
+        [HideInInspector] public Vector2 initialPos; // Запоминаем локальные координаты редактора
         [HideInInspector] public CardHoverEffect hoverEffect;
         [HideInInspector] public Button buttonComp;
     }
@@ -34,6 +33,19 @@ public class CardAnimationController : MonoBehaviour
     [Tooltip("Максимальный угол случайного наклона (например, 3 градуса)")]
     public float randomRotationRange = 3f;
 
+    private void Awake()
+    {
+        // ВАЖНО: Запоминаем позиции в Awake, ДО того как скрипт вылета сцены их сдвинет.
+        // Таким образом их "домом" навсегда останется идеальная расстановка из редактора Unity.
+        foreach (var card in allCards)
+        {
+            if (card.rect != null)
+            {
+                card.initialPos = card.rect.anchoredPosition;
+            }
+        }
+    }
+
     private void Start()
     {
         foreach (var card in allCards)
@@ -48,17 +60,9 @@ public class CardAnimationController : MonoBehaviour
 
     public void SetHomePosition(RectTransform cardRect, Vector2 pos)
     {
-        foreach (var entry in allCards)
-        {
-            if (entry.rect == cardRect)
-            {
-                entry.initialPos = pos;
-                return;
-            }
-        }
+        // Оставляем метод пустым, чтобы другой скрипт анимации не смог 
+        // перезаписать идеальные домашние координаты кривыми значениями.
     }
-
-    // Метод CaptureCurrentRotationsAsHome удален, он больше не нужен
 
     private void SetAllHovers(bool state)
     {
@@ -68,15 +72,6 @@ public class CardAnimationController : MonoBehaviour
                 card.hoverEffect.SetHoverEnabled(state);
         }
     }
-
-  /*  private void ResetRenderPriority()
-    {
-        foreach (var card in allCards)
-        {
-            if (card.hoverEffect != null)
-                card.hoverEffect.SetPriorityRender(false);
-        }
-    }*/
 
     private void RefreshCardVisuals(RectTransform card)
     {
@@ -96,8 +91,6 @@ public class CardAnimationController : MonoBehaviour
     {
         StopAllCoroutines();
         SetAllHovers(false);
-        //ResetRenderPriority();
-
         StartCoroutine(SelectCardRoutine(selectedType));
     }
 
@@ -105,7 +98,6 @@ public class CardAnimationController : MonoBehaviour
     {
         int bottomSlotIndex = 0;
         List<Coroutine> activeAnims = new List<Coroutine>();
-
         CardEntry selectedCardEntry = null;
 
         foreach (var card in allCards)
@@ -115,10 +107,10 @@ public class CardAnimationController : MonoBehaviour
             if (card.type == selectedType)
             {
                 selectedCardEntry = card;
-                // Выбранная карта -> Превью -> Ровно (0 градусов)
+                // ИСПОЛЬЗУЕМ МИРОВЫЕ КООРДИНАТЫ (.position) ВМЕСТО ЛОКАЛЬНЫХ
                 activeAnims.Add(StartCoroutine(AnimateRoutine(
                     card.rect,
-                    previewAnchor.anchoredPosition,
+                    previewAnchor.position, 
                     selectedScale,
                     Quaternion.identity
                 )));
@@ -127,9 +119,9 @@ public class CardAnimationController : MonoBehaviour
             {
                 if (bottomSlotIndex < bottomSlots.Count)
                 {
-                    Vector2 targetPos = bottomSlots[bottomSlotIndex].anchoredPosition;
+                    // ИСПОЛЬЗУЕМ МИРОВЫЕ КООРДИНАТЫ (.position)
+                    Vector3 targetPos = bottomSlots[bottomSlotIndex].position;
 
-                    // ГЕНЕРИРУЕМ НОВЫЙ СЛУЧАЙНЫЙ НАКЛОН ПРИ СПУСКЕ ВНИЗ
                     float randomZ = Random.Range(-randomRotationRange, randomRotationRange);
                     Quaternion randomRot = Quaternion.Euler(0, 0, randomZ);
 
@@ -148,21 +140,13 @@ public class CardAnimationController : MonoBehaviour
         }
 
         foreach (var c in activeAnims) yield return c;
-
         foreach (var card in allCards) RefreshCardVisuals(card.rect);
-
         SetAllHovers(true);
 
         if (selectedCardEntry != null)
         {
-            if (selectedCardEntry.buttonComp != null)
-                selectedCardEntry.buttonComp.interactable = false;
-
-            if (selectedCardEntry.hoverEffect != null)
-            {
-               // selectedCardEntry.hoverEffect.SetPriorityRender(true);
-                selectedCardEntry.hoverEffect.SetSelectedMode(true);
-            }
+            if (selectedCardEntry.buttonComp != null) selectedCardEntry.buttonComp.interactable = false;
+            if (selectedCardEntry.hoverEffect != null) selectedCardEntry.hoverEffect.SetSelectedMode(true);
         }
     }
 
@@ -170,7 +154,6 @@ public class CardAnimationController : MonoBehaviour
     {
         StopAllCoroutines();
         SetAllHovers(false);
-        //ResetRenderPriority();
 
         foreach (var card in allCards)
         {
@@ -189,13 +172,19 @@ public class CardAnimationController : MonoBehaviour
         {
             if (card.rect != null)
             {
-                // ГЕНЕРИРУЕМ НОВЫЙ СЛУЧАЙНЫЙ НАКЛОН ПРИ ВОЗВРАТЕ ДОМОЙ
+                // УМНЫЙ ВОЗВРАТ: Узнаем, где в мировых координатах находится домашняя точка карты,
+                // чтобы она всегда возвращалась точно на свое место независимо от якорей.
+                Vector2 currentAnchored = card.rect.anchoredPosition;
+                card.rect.anchoredPosition = card.initialPos;
+                Vector3 homeWorldPos = card.rect.position; 
+                card.rect.anchoredPosition = currentAnchored;
+
                 float randomZ = Random.Range(-randomRotationRange, randomRotationRange);
                 Quaternion randomRot = Quaternion.Euler(0, 0, randomZ);
 
                 activeAnims.Add(StartCoroutine(AnimateRoutine(
                     card.rect,
-                    card.initialPos,
+                    homeWorldPos, // Возврат в точные мировые координаты
                     Vector3.one,
                     randomRot
                 )));
@@ -203,15 +192,14 @@ public class CardAnimationController : MonoBehaviour
         }
 
         foreach (var c in activeAnims) yield return c;
-
         foreach (var card in allCards) RefreshCardVisuals(card.rect);
-
         SetAllHovers(true);
     }
 
-    private IEnumerator AnimateRoutine(RectTransform target, Vector2 destPos, Vector3 destScale, Quaternion destRot)
+    // ИНТЕРПОЛЯЦИЯ ИДЕТ ПО МИРОВЫМ КООРДИНАТАМ (.position)
+    private IEnumerator AnimateRoutine(RectTransform target, Vector3 destPos, Vector3 destScale, Quaternion destRot)
     {
-        Vector2 startPos = target.anchoredPosition;
+        Vector3 startPos = target.position;
         Vector3 startScale = target.localScale;
         Quaternion startRot = target.localRotation;
 
@@ -223,14 +211,14 @@ public class CardAnimationController : MonoBehaviour
             float t = elapsed / animationDuration;
             float curveT = motionCurve.Evaluate(t);
 
-            target.anchoredPosition = Vector2.Lerp(startPos, destPos, curveT);
+            target.position = Vector3.Lerp(startPos, destPos, curveT);
             target.localScale = Vector3.Lerp(startScale, destScale, curveT);
             target.localRotation = Quaternion.Lerp(startRot, destRot, curveT);
 
             yield return null;
         }
 
-        target.anchoredPosition = destPos;
+        target.position = destPos;
         target.localScale = destScale;
         target.localRotation = destRot;
     }

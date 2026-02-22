@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using TMPro;
 using System.Linq;
+using System.Collections;
 
 public enum YukonVariant { Classic, Russian }
 
@@ -18,23 +19,25 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public RectTransform dragLayer;
     public ScoreManager scoreManager;
     public UndoManager undoManager;
+    public GameUIController gameUI; // Ссылка на контроллер интерфейса
 
     [Header("Containers")]
     public Transform tableauSlotsParent;
     public Transform foundationSlotsParent;
 
-    [Header("UI")]
+    [Header("UI & HUD")]
+    public TMP_Text movesText;
+    public TMP_Text scoreText;
+    public TMP_Text timeText;
     public Button autoWinButton;
 
-    // ВАЖНО: Список теперь типа YukonTableauPile, но т.к. это наследник, всё ок
     [HideInInspector] public List<YukonTableauPile> tableaus = new List<YukonTableauPile>();
     [HideInInspector] public List<FoundationPile> foundations = new List<FoundationPile>();
 
-    public string GameName => CurrentVariant == YukonVariant.Russian ? "Russian Solitaire" : "Yukon";
+    public string GameName => "Yukon";
     public RectTransform DragLayer => dragLayer;
     public Canvas RootCanvas => rootCanvas;
     public bool IsInputAllowed { get; set; } = true;
-    private bool hasGameStarted = false;
     public float TableauVerticalGap => 35f;
     public AnimationService AnimationService => null;
     public PileManager PileManager => null;
@@ -42,16 +45,47 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public StockDealMode StockDealMode => StockDealMode.Draw1;
     public GameType GameType => GameType.Yukon;
 
-    private void Start()
+    // --- СТАТИСТИКА И СОСТОЯНИЕ ИГРЫ ---
+    private bool hasWonGame = false;
+    private bool hasGameStarted = false;
+    private float gameTimer = 0f;
+    private bool isTimerRunning = false;
+
+    private IEnumerator Start()
     {
         if (undoManager == null) undoManager = FindObjectOfType<UndoManager>();
         if (undoManager != null) undoManager.Initialize(this);
+
+        // Ожидаем конца кадра, чтобы UI и CanvasScaler приняли свои финальные размеры.
+        // Это полностью решает баг со сжатыми картами при старте.
+        yield return new WaitForEndOfFrame();
+
         InitializeMode();
     }
     public bool IsMatchInProgress()
     {
         return hasGameStarted;
     }
+    private void Update()
+    {
+        // Обновление локального таймера
+        if (isTimerRunning && !hasWonGame)
+        {
+            gameTimer += Time.deltaTime;
+            UpdateTimeUI();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Засчитываем поражение при выходе, если игра была начата
+        if (hasGameStarted && !hasWonGame)
+        {
+            if (StatisticsManager.Instance != null)
+                StatisticsManager.Instance.OnGameAbandoned();
+        }
+    }
+
     public void InitializeMode()
     {
         currentDifficulty = GameSettings.CurrentDifficulty;
@@ -75,10 +109,26 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void StartNewGame()
     {
+        // Засчитываем поражение, если мы рестартим начатую игру
+        if (hasGameStarted && !hasWonGame)
+        {
+            if (StatisticsManager.Instance != null)
+                StatisticsManager.Instance.OnGameAbandoned();
+        }
+
         IsInputAllowed = false;
+
+        // Сброс состояний
+        hasWonGame = false;
+        hasGameStarted = false;
+        gameTimer = 0f;
+        isTimerRunning = false;
+
         if (scoreManager) scoreManager.ResetScore();
         if (autoWinButton) autoWinButton.gameObject.SetActive(false);
         if (undoManager) undoManager.ResetHistory();
+
+        UpdateFullUI(); // Обнуляем UI
 
         foreach (var t in tableaus) t.Clear();
         foreach (var f in foundations)
@@ -98,6 +148,61 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode
     }
 
     public void RestartGame() => StartNewGame();
+
+    // --- ЛОГИКА РЕГИСТРАЦИИ ХОДОВ ---
+    public void RegisterMoveAndStartIfNeeded()
+    {
+        if (!hasGameStarted)
+        {
+            hasGameStarted = true;
+            isTimerRunning = true; // Запускаем таймер при первом ходе
+
+            if (StatisticsManager.Instance != null)
+            {
+                string variant = CurrentVariant == YukonVariant.Russian ? "Russian" : "Classic";
+                StatisticsManager.Instance.OnGameStarted("Yukon", currentDifficulty, variant);
+            }
+        }
+
+        if (StatisticsManager.Instance != null)
+        {
+            StatisticsManager.Instance.RegisterMove();
+        }
+    }
+
+    // --- UI ОБНОВЛЕНИЕ ---
+    private void UpdateFullUI()
+    {
+        if (movesText != null)
+        {
+            if (!hasGameStarted) movesText.text = "0";
+            else if (StatisticsManager.Instance != null) movesText.text = $"{StatisticsManager.Instance.GetCurrentMoves()}";
+            else movesText.text = "0";
+        }
+
+        if (scoreText != null)
+        {
+            if (!hasGameStarted) scoreText.text = "0";
+            else
+            {
+                int score = scoreManager != null ? scoreManager.CurrentScore : 0;
+                scoreText.text = $"{score}";
+            }
+        }
+
+        if (!hasGameStarted) UpdateTimeUI();
+    }
+
+    private void UpdateTimeUI()
+    {
+        if (timeText != null)
+        {
+            int totalSeconds = Mathf.FloorToInt(gameTimer);
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
+            timeText.text = string.Format("{0}:{1:00}", minutes, seconds);
+        }
+    }
 
     public ICardContainer FindNearestContainer(CardController card, Vector2 unusedPos = default, float unusedDist = 0)
     {
@@ -170,33 +275,32 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode
         // 2. Логика открытия карт
         foreach (var t in tableaus)
         {
-            // Используем метод из базового класса TableauPile
             t.ForceUpdateFromTransform();
 
-            // Проверка на переворот
             if (t.cards.Count > 0)
             {
-                // ВАЖНО: Работаем через индекс, чтобы синхронизировать список faceUp
                 int topIndex = t.cards.Count - 1;
 
-                // Проверяем список faceUp (он есть в базовом классе)
                 if (t.faceUp.Count > topIndex && !t.faceUp[topIndex])
                 {
-                    // Метод TableauPile, который обновляет и список, и визуал
                     t.CheckAndFlipTop();
-
-                    if (undoManager != null)
-                        undoManager.RecordFlipInSource(topIndex);
+                    if (undoManager != null) undoManager.RecordFlipInSource(topIndex);
                 }
             }
         }
 
-        CheckGameState();
+        // 3. РЕГИСТРАЦИЯ ХОДА ДЛЯ СТАТИСТИКИ
+        RegisterMoveAndStartIfNeeded();
+
+        // 4. Очки
         if (scoreManager)
         {
             if (container is FoundationPile) scoreManager.OnCardMove(container);
             else scoreManager.OnCardMove(null);
         }
+
+        CheckGameState();
+        UpdateFullUI();
     }
 
     public void OnCardDoubleClicked(CardController card)
@@ -226,22 +330,49 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void OnUndoAction()
     {
+        // --- ИСПРАВЛЕНИЕ: Предотвращаем срабатывание при старте игры ---
+        // Когда StartNewGame очищает стек Undo, вызывается этот метод.
+        // Если игра еще не начата, мы просто выходим, не начисляя ход.
+        if (!hasGameStarted) return;
+        // ---------------------------------------------------------------
+
+        RegisterMoveAndStartIfNeeded();
+
         if (autoWinButton != null) autoWinButton.gameObject.SetActive(false);
         if (scoreManager != null) scoreManager.OnUndo();
-    }
 
-    private Rect GetWorldRect(RectTransform rt) { Vector3[] c = new Vector3[4]; rt.GetWorldCorners(c); return new Rect(c[0].x, c[0].y, Mathf.Abs(c[2].x - c[0].x), Mathf.Abs(c[2].y - c[0].y)); }
-    private float GetIntersectionArea(Rect r1, Rect r2) { float w = Mathf.Min(r1.xMax, r2.xMax) - Mathf.Max(r1.xMin, r2.xMin); float h = Mathf.Min(r1.yMax, r2.yMax) - Mathf.Max(r1.yMin, r2.yMin); return (w > 0 && h > 0) ? w * h : 0f; }
+        UpdateFullUI();
+    }
 
     public void CheckGameState()
     {
+        if (hasWonGame) return;
+
         int win = foundations.Count(f => f.Count == 13);
         if (win == 4)
         {
             Debug.Log("Yukon Won!");
+            hasWonGame = true;
+            IsInputAllowed = false;
+            isTimerRunning = false;
+
             if (autoWinButton) autoWinButton.gameObject.SetActive(false);
+
+            // ОТПРАВКА СТАТИСТИКИ ПОБЕДЫ
+            if (StatisticsManager.Instance != null)
+            {
+                int finalMoves = StatisticsManager.Instance.GetCurrentMoves();
+                int finalScore = scoreManager != null ? scoreManager.CurrentScore : 0;
+
+                StatisticsManager.Instance.OnGameWon(finalScore);
+
+                if (gameUI != null) gameUI.OnGameWon(finalMoves);
+            }
         }
     }
+
+    private Rect GetWorldRect(RectTransform rt) { Vector3[] c = new Vector3[4]; rt.GetWorldCorners(c); return new Rect(c[0].x, c[0].y, Mathf.Abs(c[2].x - c[0].x), Mathf.Abs(c[2].y - c[0].y)); }
+    private float GetIntersectionArea(Rect r1, Rect r2) { float w = Mathf.Min(r1.xMax, r2.xMax) - Mathf.Max(r1.xMin, r2.xMin); float h = Mathf.Min(r1.yMax, r2.yMax) - Mathf.Max(r1.yMin, r2.yMin); return (w > 0 && h > 0) ? w * h : 0f; }
 
     public bool OnDropToBoard(CardController c, Vector2 p) => false;
     public void OnCardClicked(CardController c) { }

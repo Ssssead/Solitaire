@@ -13,15 +13,27 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     public CardFactory cardFactory;
     public Canvas rootCanvas;
     public RectTransform dragLayer;
-    public TMP_Text moveLimitText;
-    public GameUIController gameUI;
 
+    public GameUIController gameUI;
+    // --- НОВОЕ: Ссылка на интро контроллер и дек менеджер ---
+    public FreeCellIntroController introController;
+    public FreeCellDeckManager deckManager;
+    private bool isRestarting = false;
     private bool isGameWon = false;
 
     // --- НОВОЕ: Флаг, началась ли игра реально (был ли ход) ---
     private bool hasGameStarted = false;
-
-
+    [Header("UI & HUD")]
+    [Tooltip("Лимит карт для перемещения (SuperMove)")]
+    public TMP_Text moveLimitText;
+    [Tooltip("Текст для отображения количества ходов")]
+    public TMP_Text movesText;
+    [Tooltip("Текст для отображения очков")]
+    public TMP_Text scoreText;
+    [Tooltip("Текст для отображения времени")]
+    public TMP_Text timeText;
+    private float gameTimer = 0f;
+    private bool isTimerRunning = false;
     [Header("FreeCell Specific")]
     public Transform freeCellSlotsParent;
     private List<FreeCellPile> freeCells = new List<FreeCellPile>();
@@ -66,15 +78,63 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     {
         if (pileManager == null) return;
 
+        // 1. Обновление SuperMove лимита
         int currentLimit = GetMaxDragSequenceSize();
-
         if (currentLimit != _cachedLimit)
         {
             _cachedLimit = currentLimit;
-            if (moveLimitText != null)
+            if (moveLimitText != null) moveLimitText.text = $"{_cachedLimit}";
+        }
+
+        // 2. Обновление Таймера и HUD
+        if (IsInputAllowed && !isGameWon)
+        {
+            // Если игра началась, но таймер еще не запущен — запускаем
+            if (hasGameStarted && !isTimerRunning)
             {
-                moveLimitText.text = $"{_cachedLimit}";
+                isTimerRunning = true;
             }
+
+            // Тикаем таймером
+            if (isTimerRunning)
+            {
+                gameTimer += Time.deltaTime;
+            }
+
+            UpdateHUD();
+        }
+    }
+    private void UpdateHUD()
+    {
+        // Обновление ходов
+        if (movesText != null && StatisticsManager.Instance != null)
+        {
+            movesText.text = $"{StatisticsManager.Instance.GetCurrentMoves()}";
+        }
+
+        // Обновление времени из локального таймера
+        if (timeText != null)
+        {
+            int timeInSeconds = Mathf.FloorToInt(gameTimer);
+            int minutes = timeInSeconds / 60;
+            int seconds = timeInSeconds % 60;
+            timeText.text = $"{minutes:0}:{seconds:00}"; // Формат MM:SS
+        }
+
+        // Обновление очков
+        if (scoreText != null)
+        {
+            scoreText.text = $"{CurrentScore}";
+        }
+    }
+    private void UpdateTimeUI()
+    {
+        if (timeText != null)
+        {
+            int totalSeconds = Mathf.FloorToInt(gameTimer);
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
+            timeText.text = string.Format("{0}:{1:00}", minutes, seconds);
         }
     }
 
@@ -131,22 +191,12 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
 
     public void RestartGame()
     {
-        // Если рестартим активную игру -> засчитываем поражение предыдущей
-        if (hasGameStarted && !isGameWon)
-        {
-            if (StatisticsManager.Instance != null)
-                StatisticsManager.Instance.OnGameAbandoned();
-        }
-
         isGameWon = false;
-        hasGameStarted = false; // Сброс флага
-        IsInputAllowed = true;
+        IsInputAllowed = false;
+        isRestarting = true; // --- Флаг, что это рестарт ---
 
         pileManager.ClearAllPiles();
-        foreach (var fc in freeCells)
-        {
-            foreach (Transform child in fc.transform) Destroy(child.gameObject);
-        }
+        foreach (var fc in freeCells) foreach (Transform child in fc.transform) Destroy(child.gameObject);
 
         StartNewGame();
         UpdateMoveLimitUI();
@@ -162,33 +212,50 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     private void StartNewGame()
     {
         isGameWon = false;
-        hasGameStarted = false; // Сброс флага
-        IsInputAllowed = true;
+        IsInputAllowed = false;
+        currentDifficulty = GameSettings.CurrentDifficulty;
 
-        // ВАЖНО: Мы НЕ вызываем OnGameStarted здесь. Ждем первого хода.
+        hasGameStarted = false; // Таймер стоит
+        isTimerRunning = false;
+        gameTimer = 0f;
 
-        // --- ИНТЕГРАЦИЯ КЭША ---
+        var scoreMgr = GetComponent<FreeCellScoreManager>();
+        if (scoreMgr != null) scoreMgr.ResetScore();
+
+        if (undoManager != null && undoManager.GetType().GetMethod("ResetHistory") != null)
+            undoManager.GetType().GetMethod("ResetHistory").Invoke(undoManager, null);
+
+        UpdateHUD();
+
+        if (StatisticsManager.Instance != null)
+            StatisticsManager.Instance.OnGameStarted("FreeCell", currentDifficulty, "Standard");
+
+        // ПЕРЕДАЕМ ФЛАГ РЕСТАРТА В INTRO
+        if (introController != null)
+            introController.PrepareIntro(isRestarting);
+
         bool dealLoadedFromCache = false;
 
         if (DealCacheSystem.Instance != null)
         {
             Deal cachedDeal = DealCacheSystem.Instance.GetDeal(GameType.FreeCell, currentDifficulty, currentSeed);
-
             if (cachedDeal != null)
             {
-                Debug.Log($"[FreeCell] Loaded deal from Cache! (Diff: {currentDifficulty})");
-                ApplyDeal(cachedDeal);
                 dealLoadedFromCache = true;
+                StartCoroutine(introController.PlayIntroSequence(cachedDeal, isRestarting));
             }
         }
 
-        // Если кэша нет — генерируем новый расклад
         if (!dealLoadedFromCache)
         {
-            Debug.Log($"[FreeCell] Cache miss. Generating new deal... (Diff: {currentDifficulty})");
             var generator = GetComponent<FreeCellGenerator>() ?? gameObject.AddComponent<FreeCellGenerator>();
-            StartCoroutine(generator.GenerateDeal(currentDifficulty, currentSeed, (deal, m) => ApplyDeal(deal)));
+            StartCoroutine(generator.GenerateDeal(currentDifficulty, currentSeed, (deal, m) =>
+            {
+                StartCoroutine(introController.PlayIntroSequence(deal, isRestarting));
+            }));
         }
+
+        isRestarting = false; // Сбрасываем флаг
     }
 
     private void ApplyDeal(Deal deal)
@@ -301,21 +368,8 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     // --- ИСПРАВЛЕНИЕ: Логика первого хода ---
     public void OnMoveMade()
     {
-        // Если это первый ход - регистрируем начало игры
-        if (!hasGameStarted)
-        {
-            hasGameStarted = true;
-            if (StatisticsManager.Instance != null)
-            {
-                StatisticsManager.Instance.OnGameStarted("FreeCell", currentDifficulty, "Standard");
-            }
-        }
-
-        // Регистрируем сам ход (счетчик ходов)
-        if (StatisticsManager.Instance != null)
-        {
-            StatisticsManager.Instance.RegisterMove();
-        }
+        hasGameStarted = true;
+        if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
     }
 
     public void OnUndoAction()
@@ -335,7 +389,10 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     // --- Остальные методы ---
     public void OnStockClicked() { }
     public void OnCardDoubleClicked(CardController card) { }
-    public void OnCardClicked(CardController card) { }
+    public void OnCardClicked(CardController card)
+    {
+        hasGameStarted = true;
+    }
     public void OnCardLongPressed(CardController card) { }
     public void OnKeyboardPick(CardController card) { }
 

@@ -1,83 +1,150 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Reflection; // Обязательно для принудительного снятия блокировок
 using UnityEngine;
 
 public class FreeCellDeckManager : MonoBehaviour
 {
     [Header("Settings")]
-    public float dealDuration = 0.5f;
-    public float cardFlySpeed = 2000f; // Скорость полета карты
+    public float cardFlyToDeckSpeed = 0.5f;
+    public float dealCardSpeed = 0.1f;
+    public float delayBetweenCards = 0.05f;
 
     [Header("References")]
     public FreeCellPileManager pileManager;
     public CardFactory cardFactory;
     public FreeCellModeManager modeManager;
 
-    public void ApplyDeal(Deal deal)
+    [Tooltip("Точка на экране, куда влетает начальная колода")]
+    public RectTransform deckTargetPoint;
+
+    [Tooltip("Точка за пределами экрана снизу, откуда вылетают карты")]
+    public Vector2 offscreenSpawnPoint = new Vector2(0, -2000f);
+
+    private struct DealAction
     {
-        StartCoroutine(DealRoutine(deal));
+        public int columnIndex;
+        public CardModel model;
     }
 
-    private IEnumerator DealRoutine(Deal deal)
+    public IEnumerator PlayIntroDeal(Deal deal)
     {
-        // 1. Создаем все карты (сразу 52)
-        // В FreeCell карты обычно появляются "из ниоткуда" или летят из центра экрана
-        // Мы сделаем генерацию сразу в столбцах, но с анимацией "проявления" или полета.
-
-        // Очистка стола (на всякий случай)
+        // 1. Очистка стола
         cardFactory.DestroyAllCards();
 
-        // 2. Проходим по столбцам (8 штук)
-        // В FreeCell deal.tableau должно содержать 8 списков
-        int columnsCount = Mathf.Min(8, deal.tableau.Count);
+        // 2. Формируем список раздачи
+        List<DealAction> dealSequence = new List<DealAction>();
+        int maxRows = 7;
 
-        // Чтобы анимация была красивой (по одной карте в каждый столбец по кругу),
-        // нужно преобразовать данные. Но для простоты раздадим по столбцам.
-
-        // Подсчитаем общее кол-во карт для Z-сортировки
-        int totalCards = 0;
-        foreach (var col in deal.tableau) totalCards += col.Count;
-
-        for (int i = 0; i < columnsCount; i++)
+        for (int row = 0; row < maxRows; row++)
         {
-            var pileData = deal.tableau[i];
-            // Получаем ссылку на стопку. Важно: это FreeCellTableauPile
-            var targetPile = pileManager.Tableau[i];
-
-            foreach (var cardData in pileData)
+            for (int col = 0; col < 8; col++)
             {
-                CardModel model = new CardModel(cardData.Card.suit, cardData.Card.rank);
-
-                // Создаем карту (пока скрытую, или в точке старта)
-                // Точка старта - центр экрана или низ
-                Vector2 startPos = Vector2.zero;
-
-                CardController card = cardFactory.CreateCard(model, modeManager.DragLayer, startPos);
-
-                // Настраиваем данные
-                CardData data = card.GetComponent<CardData>();
-                data.SetFaceUp(true, false); // В FreeCell все открыты сразу
-
-                // Добавляем в стопку логически
-                targetPile.AddCard(card, true);
-
-                // Анимация полета
-                // Можно использовать DOTween или корутину. Здесь упрощенно:
-                // Перемещаем карту в иерархию стопки
-                card.transform.SetParent(targetPile.transform, true);
-
-                // Регистрируем события ввода
-                if (modeManager.dragManager != null)
-                    modeManager.dragManager.RegisterCardEvents(card);
+                if (col < deal.tableau.Count && row < deal.tableau[col].Count)
+                {
+                    var cData = deal.tableau[col][row];
+                    dealSequence.Add(new DealAction
+                    {
+                        columnIndex = col,
+                        model = new CardModel(cData.Card.suit, cData.Card.rank)
+                    });
+                }
             }
-
-            // Запускаем пересчет позиций в стопке (Layout Animation)
-            targetPile.StartLayoutAnimationPublic();
-
-            // Небольшая задержка между столбцами (эффект "волны")
-            yield return new WaitForSeconds(0.05f);
         }
 
-        // Завершение
-        modeManager.IsInputAllowed = true;
+        // 3. Создаем все карты за кадром
+        List<CardController> spawnedCards = new List<CardController>();
+
+        for (int i = dealSequence.Count - 1; i >= 0; i--)
+        {
+            var action = dealSequence[i];
+            CardController card = cardFactory.CreateCard(action.model, modeManager.DragLayer, offscreenSpawnPoint);
+
+            card.GetComponent<CardData>().SetFaceUp(true, false);
+            spawnedCards.Add(card);
+        }
+
+        spawnedCards.Reverse();
+
+        // 4. Влет начальной колоды
+        float elapsed = 0f;
+        Vector2 targetPos = deckTargetPoint != null ? deckTargetPoint.anchoredPosition : Vector2.zero;
+
+        while (elapsed < cardFlyToDeckSpeed)
+        {
+            elapsed += Time.deltaTime;
+            float t = AnimationCurve.EaseInOut(0, 0, 1, 1).Evaluate(elapsed / cardFlyToDeckSpeed);
+
+            foreach (var card in spawnedCards)
+            {
+                // ИСПОЛЬЗУЕМ anchoredPosition ВМЕСТО localPosition
+                card.rectTransform.anchoredPosition = Vector2.Lerp(offscreenSpawnPoint, targetPos, t);
+            }
+            yield return null;
+        }
+
+        // 5. Раздача карт по столбцам
+        for (int i = 0; i < dealSequence.Count; i++)
+        {
+            var action = dealSequence[i];
+            var card = spawnedCards[i];
+            var targetPile = pileManager.Tableau[action.columnIndex];
+
+            targetPile.AddCard(card, true);
+            card.transform.SetParent(targetPile.transform, true);
+            card.transform.SetAsLastSibling();
+
+            if (modeManager.dragManager != null)
+                modeManager.dragManager.RegisterCardEvents(card);
+
+            Vector2 finalPos = targetPile.GetDropAnchoredPosition(card);
+
+            // Запускаем полет
+            StartCoroutine(FlyCardToPile(card, card.rectTransform.anchoredPosition, finalPos, dealCardSpeed));
+
+            yield return new WaitForSeconds(delayBetweenCards);
+        }
+
+        // --- ИСПРАВЛЕНИЕ 1: Ждем, пока все карты физически долетят! ---
+        yield return new WaitForSeconds(dealCardSpeed + 0.1f);
+
+        // 6. Выравниваем стопки только когда полет полностью завершен
+        foreach (var tab in pileManager.Tableau)
+        {
+            tab.StartLayoutAnimationPublic();
+        }
+
+        // --- ИСПРАВЛЕНИЕ 2: Даем время внутренней анимации Tableau завершиться ---
+        yield return new WaitForSeconds(0.4f);
+
+        // --- ИСПРАВЛЕНИЕ 3: ПРИНУДИТЕЛЬНАЯ РАЗБЛОКИРОВКА СТОПОК И КАРТ ---
+        foreach (var tab in pileManager.Tableau)
+        {
+            // Снимаем isLayoutLocked через рефлексию
+            var type = typeof(TableauPile);
+            var fieldLocked = type.GetField("isLayoutLocked", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (fieldLocked != null) fieldLocked.SetValue(tab, false);
+
+            // Возвращаем возможность кликать всем картам в стопке
+            foreach (var card in tab.cards)
+            {
+                var cg = card.GetComponent<CanvasGroup>();
+                if (cg != null) cg.blocksRaycasts = true;
+            }
+        }
+    }
+
+    private IEnumerator FlyCardToPile(CardController card, Vector2 from, Vector2 to, float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            // ИСПОЛЬЗУЕМ anchoredPosition ВМЕСТО localPosition
+            card.rectTransform.anchoredPosition = Vector2.Lerp(from, to, t);
+            yield return null;
+        }
+        card.rectTransform.anchoredPosition = to;
     }
 }

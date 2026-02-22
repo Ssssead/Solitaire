@@ -22,6 +22,7 @@ public static class GameSettings
 
     // --- Montana ---
     public static bool MontanaHard = false; // false = Classic, true = Hard
+    public static bool IsTutorialMode = false;
 }
 
 public enum GameType

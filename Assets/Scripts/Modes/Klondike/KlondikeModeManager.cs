@@ -29,6 +29,8 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public AutoMoveService autoMoveService;
     public DefeatManager defeatManager;
     public KlondikeScoreManager scoreManager;
+    [Header("Tutorial")]
+    public KlondikeTutorialManager tutorialManager;
 
     [Header("UI & HUD")]
 
@@ -75,7 +77,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     // [NEW] Локальный таймер
     private float gameTimer = 0f;
     private bool isTimerRunning = false;
-
+    private bool isRestarting = false;
     public string GameName => "Klondike";
 
     [Header("Debug")]
@@ -198,33 +200,16 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         {
             autoWinRect = autoWinButton.GetComponent<RectTransform>();
             autoWinShowPos = autoWinRect.anchoredPosition;
-
-            // [FIX] Определяем направление скрытия.
-            // Если кнопка в нижней половине экрана (y < 0), прячем вниз (-).
-            // Если в верхней (y > 0), прячем вверх (+).
             float hideOffsetY = (autoWinShowPos.y < 0) ? -250f : 250f;
-
             autoWinHidePos = autoWinShowPos + new Vector2(0, hideOffsetY);
-
-            // Сразу ставим в позицию скрытия
             autoWinRect.anchoredPosition = autoWinHidePos;
-
-            // Выключаем объект
             autoWinButton.gameObject.SetActive(false);
             autoWinButton.onClick.RemoveAllListeners();
             autoWinButton.onClick.AddListener(OnAutoWinClicked);
         }
 
-        if (playIntroOnStart && introController != null)
-        {
-            introController.PrepareIntro();
-            InitializeGameLogicOnly();
-            introController.PlayIntroSequence();
-        }
-        else
-        {
-            StartNewGame();
-        }
+        // Вся логика старта теперь централизована здесь
+        StartNewGame();
     }
     /// <summary>
     /// Инициализирует логику, очищает стол, но НЕ запускает DealInitial.
@@ -258,54 +243,78 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void StartNewGame()
     {
-        if (hasGameStarted && !hasWonGame)
-        {
-            if (StatisticsManager.Instance != null)
-                StatisticsManager.Instance.OnGameAbandoned();
-        }
+        if (hasGameStarted && !hasWonGame && StatisticsManager.Instance != null)
+            StatisticsManager.Instance.OnGameAbandoned();
 
-        IsInputAllowed = true;
+        IsInputAllowed = false;
         hasWonGame = false;
         hasGameStarted = false;
-
-        // Сброс таймера
         gameTimer = 0f;
         isTimerRunning = false;
-
-        UpdateFullUI(); // Обновляем весь UI (ходы, очки, время)
+        isAutoWinVisible = false;
+        if (autoWinButton != null) autoWinButton.gameObject.SetActive(false);
 
         if (defeatManager != null) defeatManager.ResetManager();
         if (scoreManager != null) scoreManager.ResetScore();
+        if (undoManager != null && undoManager.GetType().GetMethod("ResetHistory") != null)
+            undoManager.GetType().GetMethod("ResetHistory").Invoke(undoManager, null);
 
-        LogDebug("Starting new game...");
+        UpdateFullUI();
+        pileManager.ClearAllPiles();
         pileManager.CreatePiles();
-
         if (dragManager != null) dragManager.RefreshContainers();
+        cardFactory.DestroyAllCards();
 
-        Difficulty currentDiff = GameSettings.CurrentDifficulty;
-        int drawParam = (stockDealMode == StockDealMode.Draw3) ? 3 : 1;
+        if (introController != null) introController.PrepareIntro(isRestarting);
 
         Deal cachedDeal = null;
         if (DealCacheSystem.Instance != null)
         {
-            cachedDeal = DealCacheSystem.Instance.GetDeal(GameType.Klondike, currentDiff, drawParam);
+            int drawParam = (stockDealMode == StockDealMode.Draw3) ? 3 : 1;
+            cachedDeal = DealCacheSystem.Instance.GetDeal(GameType.Klondike, GameSettings.CurrentDifficulty, drawParam);
         }
 
-        if (cachedDeal != null && deckManager != null)
+        // Запускаем корутину интро, логика ветвится внутри
+        StartCoroutine(IntroSequenceRoutine(cachedDeal));
+    }
+    private IEnumerator IntroSequenceRoutine(Deal deal)
+    {
+        yield return null;
+
+        // --- ВЕТКА ОБУЧЕНИЯ ---
+        if (GameSettings.IsTutorialMode && tutorialManager != null)
         {
-            Debug.Log($"[KMM] Loading cached deal: {currentDiff} Draw{drawParam}");
-            deckManager.LoadDeal(cachedDeal);
+            yield return StartCoroutine(tutorialManager.PlayTutorialIntro(deal));
+            isRestarting = false;
+            IsInputAllowed = true;
+            UpdateFullUI();
         }
+        // --- ОБЫЧНАЯ ИГРА ---
         else
         {
-            Debug.LogWarning("[KMM] No cached deal found! Falling back to random.");
-            deckManager.DealInitial();
+            bool cardsDealtByIntro = false;
+            if (playIntroOnStart && introController != null)
+            {
+                yield return StartCoroutine(introController.PlayIntroSequence(isRestarting));
+                cardsDealtByIntro = true;
+            }
+            else if (deckManager != null && isRestarting)
+            {
+                yield return StartCoroutine(deckManager.PlayIntroDeckArrival(1.2f));
+                cardsDealtByIntro = true;
+            }
+
+            if (!cardsDealtByIntro)
+            {
+                if (deal != null && deckManager != null) deckManager.LoadDeal(deal);
+                else if (deckManager != null) deckManager.DealInitial();
+            }
+
+            animationService?.ReorderAllContainers(pileManager.GetAllContainerTransforms());
+            isRestarting = false;
+            IsInputAllowed = true;
+            UpdateFullUI();
         }
-
-        animationService.ReorderAllContainers(pileManager.GetAllContainerTransforms());
-
-        // Еще раз обновляем UI, чтобы сбросить очки после DealInitial
-        UpdateFullUI();
     }
 
     private void OnDestroy()
@@ -319,16 +328,21 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void RegisterMoveAndStartIfNeeded()
     {
+        // [FIX] Защита от ложных срабатываний:
+        // Если ввод заблокирован (идет анимация раздачи или авто-сбор),
+        // мы игнорируем системные перемещения карт и не считаем их за ход.
+        if (!IsInputAllowed) return;
+
         if (!hasGameStarted)
         {
             hasGameStarted = true;
-            isTimerRunning = true; // Запускаем таймер при первом ходе
+            isTimerRunning = true; // Запускаем таймер при первом реальном ходе
 
             if (StatisticsManager.Instance != null)
             {
                 Difficulty diff = GameSettings.CurrentDifficulty;
                 string variant = (stockDealMode == StockDealMode.Draw3) ? "Draw3" : "Draw1";
-                StatisticsManager.Instance.OnGameStarted("Klondike", diff, variant);
+                StatisticsManager.Instance.OnGameStarted(GameName, diff, variant);
             }
         }
 
@@ -408,12 +422,17 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     {
         if (!IsInputAllowed) return;
 
+        // --- [NEW] Проверка туториала ---
+        if (tutorialManager != null && tutorialManager.IsTutorialActive)
+        {
+            if (!tutorialManager.IsActionAllowed(TutorialActionType.ClickStock)) return;
+        }
+        // --------------------------------
+
         // Регистрируем ход
         RegisterMoveAndStartIfNeeded();
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.StartTimerIfNotStarted();
 
-        // [FIX] Используем IsEmpty() вместо Count == 0, так как это надежнее
-        // и работает, даже если Count - это метод, а не свойство.
         bool isStockEmpty = pileManager.StockPile.IsEmpty();
         bool isWasteHasCards = !pileManager.WastePile.IsEmpty();
 
@@ -426,17 +445,16 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         // Уведомляем ScoreManager о ходе для истории Undo
         if (scoreManager != null)
         {
-            if (isRecycle)
-            {
-                // Карты летят Waste -> Stock
-                scoreManager.OnCardMove(pileManager.WastePile, pileManager.StockPile);
-            }
-            else
-            {
-                // Карты летят Stock -> Waste
-                scoreManager.OnCardMove(pileManager.StockPile, pileManager.WastePile);
-            }
+            if (isRecycle) scoreManager.OnCardMove(pileManager.WastePile, pileManager.StockPile);
+            else scoreManager.OnCardMove(pileManager.StockPile, pileManager.WastePile);
         }
+
+        // --- [NEW] Шаг туториала вперед ---
+        if (tutorialManager != null && tutorialManager.IsTutorialActive)
+        {
+            tutorialManager.AdvanceStep();
+        }
+        // ----------------------------------
 
         UpdateFullUI();
     }
@@ -483,15 +501,18 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     {
         if (!IsInputAllowed) return;
 
-        // [FIX] Явно ищем источник перед тем, как AutoMove начнет двигать карту
-        ICardContainer oldContainer = card.GetComponentInParent<ICardContainer>();
+        // --- [NEW] Проверка туториала ---
+        if (tutorialManager != null && tutorialManager.IsTutorialActive)
+        {
+            if (!tutorialManager.IsActionAllowed(TutorialActionType.DoubleClick, card)) return;
+        }
+        // --------------------------------
 
-        // Запоминаем его и в глобальную переменную (на всякий случай)
+        ICardContainer oldContainer = card.GetComponentInParent<ICardContainer>();
         lastInteractionSource = oldContainer;
 
         autoMoveService?.OnCardRightClicked(card);
 
-        // Передаем НАЙДЕННЫЙ источник в корутину
         StartCoroutine(CheckAutoMoveResult(card, oldContainer));
     }
 
@@ -505,13 +526,15 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         // Если карта переместилась
         if (newContainer != null && newContainer != oldContainer)
         {
-            // [FIX] Передаем сохраненный oldContainer (WastePile) в ScoreManager
-            if (scoreManager != null)
-            {
-                scoreManager.OnCardMove(oldContainer, newContainer);
-            }
-
+            if (scoreManager != null) scoreManager.OnCardMove(oldContainer, newContainer);
             if (deckManager != null) deckManager.OnProductiveMoveMade();
+
+            // --- [NEW] Шаг туториала вперед ---
+            if (tutorialManager != null && tutorialManager.IsTutorialActive)
+            {
+                tutorialManager.AdvanceStep();
+            }
+            // ----------------------------------
 
             CheckGameState();
             UpdateFullUI();
@@ -547,16 +570,18 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
             // Начисляем очки
             if (scoreManager != null)
             {
-                // [FIX] Здесь source должен быть WastePile. 
-                // Если он null, очки не начислятся.
                 scoreManager.OnCardMove(source, container);
             }
 
+            // --- [NEW] Шаг туториала вперед ---
+            if (tutorialManager != null && tutorialManager.IsTutorialActive)
+            {
+                tutorialManager.AdvanceStep();
+            }
+            // ----------------------------------
+
             UpdateFullUI();
         }
-
-        // Не очищаем lastInteractionSource сразу, иногда он нужен для быстрых кликов,
-        // но можно и очистить: lastInteractionSource = null;
     }
 
     public void OnKeyboardPick(CardController card)
@@ -634,28 +659,13 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void RestartGame()
     {
-        UpdateFullUI();
+        isRestarting = true; // Указываем, что это рестарт
+        StopAllCoroutines(); // Останавливаем старые анимации и генерации
 
-        // 1. Применяем настройки (как вы и просили)
-        var deck = GetComponent<DeckManager>();
-        // Если компонент не на том же объекте, ищем ссылку
-        if (deck == null) deck = deckManager;
+        this.stockDealMode = (GameSettings.KlondikeDrawCount == 3) ? StockDealMode.Draw3 : StockDealMode.Draw1;
+        if (deckManager != null) deckManager.difficulty = GameSettings.CurrentDifficulty;
 
-        if (deck != null)
-        {
-            deck.difficulty = GameSettings.CurrentDifficulty;
-            this.stockDealMode = (GameSettings.KlondikeDrawCount == 3) ? StockDealMode.Draw3 : StockDealMode.Draw1;
-        }
-
-        // 2. Учитываем поражение в статистике
-        if (hasGameStarted && !hasWonGame)
-        {
-            if (StatisticsManager.Instance != null)
-                StatisticsManager.Instance.OnGameAbandoned();
-        }
-
-        // 3. ВМЕСТО StartNewGame() ЗАПУСКАЕМ КОРУТИНУ
-        StartCoroutine(SoftRestartRoutine(deck));
+        StartNewGame();
     }
     private IEnumerator SoftRestartRoutine(DeckManager deck)
     {
@@ -822,16 +832,28 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void OnUndoAction()
     {
-        // --- ИСПРАВЛЕНО: Undo теперь считается действием (+1 ход) ---
+        // --- [NEW] Проверка туториала ---
+        if (tutorialManager != null && tutorialManager.IsTutorialActive)
+        {
+            if (!tutorialManager.IsActionAllowed(TutorialActionType.Undo)) return;
+        }
+        // --------------------------------
+
         RegisterMoveAndStartIfNeeded();
-        // ------------------------------------------------------------
 
         if (autoWinButton != null) autoWinButton.gameObject.SetActive(false);
         if (defeatManager != null) defeatManager.OnUndo();
         if (deckManager != null) deckManager.ResetStalemate();
         if (scoreManager != null) scoreManager.OnUndo();
 
-        UpdateFullUI(); // Обновляем очки после Undo
+        // --- [NEW] Шаг туториала вперед ---
+        if (tutorialManager != null && tutorialManager.IsTutorialActive)
+        {
+            tutorialManager.AdvanceStep();
+        }
+        // ----------------------------------
+
+        UpdateFullUI();
     }
 
     private bool CanAutoWin()

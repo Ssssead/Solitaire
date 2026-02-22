@@ -300,14 +300,13 @@
             "key": "Diff2",
             "value": "Сложность:"
         },
-
         {
             "key": "NewRecord",
             "value": "Новый рекорд!"
         },
         {
-            "key": "word.hour_start.3",
-            "value": "третий"
+            "key": "turorial",
+            "value": "Обучение"
         },
         {
             "key": "word.hour_start.4",
