@@ -478,7 +478,29 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     }
     public bool OnDropToBoard(CardController card, Vector2 anchoredPosition)
     {
-        return dragManager?.OnDropToBoard(card, anchoredPosition) ?? false;
+        // --- [FIX] Строгая проверка туториала ---
+        if (tutorialManager != null && tutorialManager.IsTutorialActive)
+        {
+            // Передаем 300f (DragManager сам посчитает пересечение Rect)
+            ICardContainer target = dragManager?.FindNearestContainer(card, anchoredPosition, 300f);
+
+            // Запрещаем бросок, если туториал не разрешает
+            if (!tutorialManager.IsActionAllowed(TutorialActionType.MoveCard, card, target))
+            {
+                return false;
+            }
+        }
+
+        // Физически выполняем бросок на стол
+        bool success = dragManager?.OnDropToBoard(card, anchoredPosition) ?? false;
+
+        // --- [FIX] Если бросок успешен и мы в обучении -> двигаем шаг вперед! ---
+        if (success && tutorialManager != null && tutorialManager.IsTutorialActive)
+        {
+            tutorialManager.AdvanceStep();
+        }
+
+        return success;
     }
     public bool IsMatchInProgress()
     {
@@ -549,25 +571,20 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     }
     public void OnCardDroppedToContainer(CardController card, ICardContainer container)
     {
-        // Берем источник из кэша (сохраненного при OnCardClicked)
         ICardContainer source = lastInteractionSource;
 
-        // Если по какой-то причине кэш пуст, пробуем найти через DragManager
         if (source == null && dragManager != null)
         {
             source = dragManager.GetSourceContainer();
         }
 
-        // Выполняем сброс
         dragManager?.OnCardDroppedToContainer(card, container);
 
         if (container is TableauPile || container is FoundationPile)
         {
             if (deckManager != null) deckManager.OnProductiveMoveMade();
-
             RegisterMoveAndStartIfNeeded();
 
-            // Начисляем очки
             if (scoreManager != null)
             {
                 scoreManager.OnCardMove(source, container);
@@ -576,9 +593,12 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
             // --- [NEW] Шаг туториала вперед ---
             if (tutorialManager != null && tutorialManager.IsTutorialActive)
             {
-                tutorialManager.AdvanceStep();
+                // Проверяем, что это был именно тот ход, который мы ждали
+                if (tutorialManager.IsActionAllowed(TutorialActionType.MoveCard, card, container))
+                {
+                    tutorialManager.AdvanceStep();
+                }
             }
-            // ----------------------------------
 
             UpdateFullUI();
         }
@@ -798,10 +818,13 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
         if (IsGameWon())
         {
-            // ... (код победы без изменений) ...
             hasWonGame = true;
-            IsInputAllowed = false;
+            IsInputAllowed = false; // Отключаем клики игрока
             isTimerRunning = false;
+
+            // --- НОВОЕ: Жестко блокируем Undo ---
+            if (undoManager != null) undoManager.ClearAndLock();
+            // ------------------------------------
 
             // Обновляем статистику
             if (StatisticsManager.Instance != null)
@@ -816,9 +839,6 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
         // Проверяем возможность авто-победы
         bool canAutoWin = CanAutoWin();
-
-        // [DEBUG] Раскомментируйте эту строку, чтобы видеть в консоли, почему кнопка не показывается
-        // if (!canAutoWin) Debug.Log($"AutoWin False. Input: {IsInputAllowed}, StockEmpty: {pileManager.StockPile.IsEmpty()}, WasteCount: {pileManager.WastePile.Count}");
 
         if (canAutoWin != isAutoWinVisible)
         {
@@ -907,6 +927,11 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     {
         RegisterMoveAndStartIfNeeded();
 
+        // --- НОВОЕ: Сразу отключаем ввод и жестко блокируем Undo ---
+        IsInputAllowed = false;
+        if (undoManager != null) undoManager.ClearAndLock();
+        // ---------------------------------------------------------
+
         // Прячем кнопку (анимацией)
         isAutoWinVisible = false;
         if (autoWinAnimCoroutine != null) StopCoroutine(autoWinAnimCoroutine);
@@ -915,7 +940,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         // Запускаем анимацию полета карт
         if (autoMoveService != null) StartCoroutine(autoMoveService.PlayAutoWinAnimation());
 
-        // [FIX] Запускаем отслеживание очков во время полета карт
+        // Запускаем отслеживание очков во время полета карт
         StartCoroutine(AutoWinScoreListener());
     }
 

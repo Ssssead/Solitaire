@@ -11864,6 +11864,7 @@ GameObject:
   - component: {fileID: 1424083638}
   - component: {fileID: 1424083640}
   - component: {fileID: 1424083639}
+  - component: {fileID: 1424083641}
   m_Layer: 5
   m_Name: BG
   m_TagString: Untagged
@@ -11903,14 +11904,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.1254902, g: 0.3019608, b: 0.1254902, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5cc799dc1b344e24688a7b262d720895, type: 3}
+  m_Sprite: {fileID: 21300000, guid: df7686edfe8944241a63eb2aa9cc244d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -11928,6 +11929,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1424083637}
   m_CullTransparentMesh: 1
+--- !u!114 &1424083641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1424083637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b6a949447e320c498f9a6312ee8c22b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  transitionDuration: 0.5
 --- !u!1 &1438722392
 GameObject:
   m_ObjectHideFlags: 0
@@ -12726,6 +12740,8 @@ MonoBehaviour:
   spriteDb: {fileID: 11400000, guid: b13673194ed34f748b29a1202506efac, type: 2}
   rootCanvas: {fileID: 2012075386}
   cardControllerTemplate: {fileID: 0}
+  referenceSlot: {fileID: 1253888659}
+  autoResizeCards: 1
   defaultCardSize: {x: 85, y: 125}
 --- !u!4 &1616333086
 Transform:

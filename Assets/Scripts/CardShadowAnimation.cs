@@ -14,6 +14,7 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
     [Header("Offsets")]
     public Vector2 restingOffset = new Vector2(0.1f, -0.1f);
     public Vector2 dragOffset = new Vector2(0.5f, -0.5f);
+    public Vector2 fallingPixelOffset = new Vector2(20f, -20f);
 
     [Header("Waste Settings")]
     public float wasteSlotGap = 35f; // Шаг между картами в сбросе
@@ -32,7 +33,10 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
     private float currentAlpha;
 
     private RectTransform myRect;
-    private float singleCardWidth;
+
+    // --- НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ ОТСЛЕЖИВАНИЯ ПОЛЕТА ---
+    private Vector3 lastWorldPos;
+    private float currentSpeed;
 
     // Состояния
     private bool isDying = false;
@@ -42,7 +46,6 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
     private void Awake()
     {
         myRect = GetComponent<RectTransform>();
-        singleCardWidth = myRect.rect.width;
 
         if (shadowSprite == null)
         {
@@ -52,6 +55,7 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
 
         currentOffset = restingOffset;
         currentAlpha = shadowAlpha;
+        lastWorldPos = myRect.position;
     }
 
     // Методы интерфейсов нужны для корректной работы EventSystem
@@ -61,51 +65,60 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
 
     private void LateUpdate()
     {
-        AnalyzeContext();
+        if (myRect == null) return;
 
-        // 1. ПРОВЕРКИ СОСТОЯНИЯ
-        bool shouldDraw = false;
-        bool isWideMode = false;
-
-        // Проверяем, летит ли карта сейчас (анимация перемещения)
-        // anchoredPosition стремится к (0,0) при посадке в слот
-        bool isArriving = myRect.anchoredPosition.magnitude > arrivalThreshold;
-
-        if (isInWaste)
+        // --- ОТКЛЮЧЕНИЕ ПРИ ВЫХОДЕ СО СЦЕНЫ ---
+        // Если родитель карты - это сам Canvas, значит карту забрал SceneExitAnimator.
+        // Выключаем геймплейную тень и прекращаем работу скрипта.
+        if (transform.parent != null && transform.parent.GetComponent<Canvas>() != null)
         {
-            // --- ЛОГИКА WASTE ---
-            bool isSlot0Bottom = (transform.parent.name == "Slot_0" && IsBottomCardInStack());
+            DestroyShadow();
+            return;
+        }
 
-            if (isSlot0Bottom)
-            {
-                // Мы - "Главный" (в Slot_0). Рисуем общую тень всегда.
-                shouldDraw = true;
-                isWideMode = true; // Пытаемся растянуться на соседей
-            }
-            else
-            {
-                // Мы в Slot_1 или Slot_2.
-                // Если мы еще летим -> рисуем свою личную маленькую тень.
-                // Если прилетели -> ничего не рисуем (нас покроет тень от Slot_0).
-                if (isArriving)
-                {
-                    shouldDraw = true;
-                    isWideMode = false; // Обычная одиночная тень
-                }
-                else
-                {
-                    shouldDraw = false;
-                }
-            }
+        // --- 1. ВЫЧИСЛЯЕМ СКОРОСТЬ КАРТЫ ---
+        if (Time.deltaTime > 0.0001f)
+        {
+            currentSpeed = (myRect.position - lastWorldPos).magnitude / Time.deltaTime;
         }
         else
         {
-            // --- ЛОГИКА TABLEAU / DRAG ---
-            // Рисуем тень, только если мы нижняя карта в стопке
-            if (IsBottomCardInStack())
+            currentSpeed = 0f;
+        }
+        lastWorldPos = myRect.position;
+
+        bool isFlyingGameplay = currentSpeed > 50f;
+
+        AnalyzeContext();
+
+        bool shouldDraw = false;
+        bool isWideMode = false;
+        bool isArriving = myRect.anchoredPosition.magnitude > arrivalThreshold;
+
+        // --- ЛОГИКА ОТОБРАЖЕНИЯ ---
+        if (isDragging || isFlyingGameplay)
+        {
+            shouldDraw = true;
+            isWideMode = false;
+        }
+        else
+        {
+            if (isInWaste)
             {
-                shouldDraw = true;
-                isWideMode = true; // Растягиваемся вниз
+                bool isSlot0Bottom = (transform.parent.name == "Slot_0" && IsBottomCardInStack());
+                if (isSlot0Bottom)
+                {
+                    shouldDraw = true;
+                    isWideMode = true;
+                }
+            }
+            else
+            {
+                if (IsBottomCardInStack())
+                {
+                    shouldDraw = true;
+                    isWideMode = true;
+                }
             }
         }
 
@@ -120,14 +133,12 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
             currentAlpha = Mathf.MoveTowards(currentAlpha, shadowAlpha, Time.deltaTime * fadeSpeed * 2);
         }
 
-        // Удаление полностью прозрачной тени
         if (isDying && currentAlpha <= 0.01f)
         {
             DestroyShadow();
             return;
         }
 
-        // Создание объекта тени
         if (shadowObject == null)
         {
             if (isDying) return;
@@ -135,14 +146,10 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         }
 
         // 3. СМЕЩЕНИЕ (OFFSET)
-        // Если летим (Drag) или прибываем (Arriving в Waste) -> Большая тень
-        // Иначе -> Маленькая тень
-        bool useDragOffset = (isDragging || (isInWaste && isArriving)) && !isDying;
-
+        bool useDragOffset = (isDragging || isFlyingGameplay) && !isDying;
         Vector2 targetOffset = useDragOffset ? dragOffset : restingOffset;
         currentOffset = Vector2.Lerp(currentOffset, targetOffset, Time.deltaTime * animationSpeed);
 
-        // Анимация исчезновения
         if (isDying) currentAlpha = Mathf.MoveTowards(currentAlpha, 0f, Time.deltaTime * fadeSpeed);
 
         // 4. ОТРИСОВКА
@@ -154,10 +161,33 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         // Привязка к родителю
         if (shadowRect.parent != transform.parent) shadowRect.SetParent(transform.parent, true);
 
-        // Z-Index: Тень всегда первая
-        if (shadowRect.GetSiblingIndex() != 0) shadowRect.SetAsFirstSibling();
+        // --- ИСПРАВЛЕНИЕ Z-INDEX ДЛЯ ПАДАЮЩИХ КАРТ ---
+        if (isWideMode)
+        {
+            // Монолитная тень в слоте всегда лежит в самом низу стопки
+            if (shadowRect.GetSiblingIndex() != 0) shadowRect.SetAsFirstSibling();
+        }
+        else
+        {
+            // Персональная тень (летящая или падающая карта) должна быть строго под картой!
+            // Иначе на главном Canvas она провалится под зеленый фон.
+            int shadowIdx = shadowRect.GetSiblingIndex();
+            int cardIdx = transform.GetSiblingIndex();
 
-        float finalWidth = singleCardWidth;
+            if (shadowIdx < cardIdx - 1)
+            {
+                shadowRect.SetSiblingIndex(cardIdx - 1);
+            }
+            else if (shadowIdx > cardIdx)
+            {
+                shadowRect.SetSiblingIndex(cardIdx);
+            }
+        }
+        // ---------------------------------------------
+
+        // Берем актуальную ширину карты каждый кадр
+        float currentCardWidth = myRect.rect.width;
+        float finalWidth = currentCardWidth;
         float finalHeight = myRect.rect.height;
 
         // Настройки Pivot и Позиции по умолчанию (Центр)
@@ -167,14 +197,10 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         if (isInWaste && isWideMode)
         {
             // === РЕЖИМ WASTE (ШИРОКАЯ) ===
-            // 1. Считаем ширину с учетом ТОЛЬКО прилетевших соседей
             int extraSlots = CountArrivedNeighbors();
-            finalWidth = singleCardWidth + (extraSlots * wasteSlotGap);
+            finalWidth = currentCardWidth + (extraSlots * wasteSlotGap);
 
-            // 2. Pivot в левый верхний угол (чтобы росла вправо)
             targetPivot = new Vector2(0f, 1f);
-
-            // 3. Позиция левого края карты
             float leftEdgeX = myRect.position.x - (myRect.rect.width * myRect.pivot.x * transform.lossyScale.x);
             worldPos = new Vector3(leftEdgeX, GetWorldTopY(myRect), myRect.position.z);
         }
@@ -190,7 +216,6 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
             if (scaleFactor == 0) scaleFactor = 1f;
             finalHeight = totalWorldHeight / scaleFactor;
         }
-        // else: Одиночная тень (Flyer) использует дефолтные параметры (width=single, pivot=center)
 
         // Применение
         if (shadowRect.pivot != targetPivot) shadowRect.pivot = targetPivot;
@@ -200,6 +225,13 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         shadowRect.rotation = transform.rotation;
 
         if (shadowCanvasGroup != null) shadowCanvasGroup.alpha = currentAlpha;
+
+        // --- ДИНАМИЧЕСКИЙ ПЕРЕСЧЕТ 9-SLICE ---
+        if (shadowSprite != null && currentCardWidth > 0)
+        {
+            Image img = shadowObject.GetComponent<Image>();
+            if (img != null) img.pixelsPerUnitMultiplier = shadowSprite.rect.width / currentCardWidth;
+        }
     }
 
     private int CountArrivedNeighbors()
@@ -209,10 +241,7 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         Transform root = transform.parent.parent;
         int count = 0;
 
-        // Проверяем Slot_1
         if (CheckSlotHasArrivedCard(root, "Slot_1")) count++;
-
-        // Проверяем Slot_2
         if (CheckSlotHasArrivedCard(root, "Slot_2")) count++;
 
         return count;
@@ -225,14 +254,10 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
 
         foreach (Transform child in slot)
         {
-            // Пропускаем саму тень
             if (child.name == "Shadow_Monolith") continue;
 
-            // Нашли карту?
             if (child.GetComponent<CardController>() != null)
             {
-                // ВАЖНО: Считаем карту "существующей", только если она уже прилетела (anchored < threshold)
-                // Если она еще летит, мы её игнорируем, чтобы тень не появлялась раньше времени.
                 RectTransform rt = child as RectTransform;
                 if (rt != null && rt.anchoredPosition.magnitude <= arrivalThreshold)
                 {
@@ -247,7 +272,6 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
     {
         if (transform.parent == null) return;
 
-        // Если родитель DragLayer -> Мы точно летим в руке игрока
         if (transform.parent.name == "DragLayer" || transform.parent.GetComponent<DragManager>() != null)
         {
             isDragging = true;
@@ -270,7 +294,6 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         {
             Transform sibling = transform.parent.GetChild(i);
             if (sibling.name == "Shadow_Monolith") continue;
-            // Если нашли другую карту ПЕРЕД собой -> мы не нижние
             if (sibling.GetComponent<CardController>() != null) return false;
         }
         return true;
@@ -303,9 +326,11 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         img.raycastTarget = false;
         img.type = Image.Type.Sliced;
 
-        if (shadowSprite != null && singleCardWidth > 0)
+        // Защищает тень от утолщения при старте
+        float currentCardWidth = myRect.rect.width;
+        if (shadowSprite != null && currentCardWidth > 0)
         {
-            float ratio = shadowSprite.rect.width / singleCardWidth;
+            float ratio = shadowSprite.rect.width / currentCardWidth;
             img.pixelsPerUnitMultiplier = ratio;
         }
         else img.pixelsPerUnitMultiplier = 1f;
@@ -319,17 +344,18 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         shadowRect.localScale = Vector3.one;
         shadowRect.SetAsFirstSibling();
     }
+
     private void OnDestroy()
     {
-        // Гарантируем удаление тени при удалении карты
         DestroyShadow();
     }
+
     private void DestroyShadow()
     {
         if (shadowObject != null)
         {
             if (Application.isPlaying) Destroy(shadowObject);
-            else DestroyImmediate(shadowObject); // Для редактора
+            else DestroyImmediate(shadowObject);
             shadowObject = null;
         }
     }
@@ -338,10 +364,9 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
     {
         return rt.position.y + (rt.rect.height * (1f - rt.pivot.y) * rt.lossyScale.y);
     }
+
     private float GetWorldBottomY(RectTransform rt)
     {
         return rt.position.y - (rt.rect.height * rt.pivot.y * rt.lossyScale.y);
     }
-
-   
 }

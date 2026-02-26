@@ -1,29 +1,70 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 
 public enum TutorialActionType
 {
     MoveCard, ClickStock, Undo, DoubleClick
 }
 
+public enum TutorialPanelAnchorType
+{
+    Bottom, Top, Center
+}
+
+// --- РќРћР’РћР•: РўРёРїС‹ СЃС‚СЂРµР»РѕС‡РµРє ---
+public enum TutorialArrowType
+{
+    None, Down, Up, Left
+}
+
 [System.Serializable]
 public class TutorialStep
 {
-    [TextArea(2, 4)] public string instructionText;
+    public string localizationKey;
+    [TextArea(2, 4)] public string fallbackText;
+
     public TutorialActionType expectedAction;
     public string expectedCardName;
     public string expectedTargetPileName;
+
+    public TutorialPanelAnchorType panelAnchor;
+    public List<string> highlightElements;
+
+    // --- РќРћР’РћР•: РќР°СЃС‚СЂРѕР№РєРё СЃС‚СЂРµР»РѕС‡РєРё РґР»СЏ С€Р°РіР° ---
+    public TutorialArrowType arrowType;
+    public int arrowAnchorIndex = -1; // -1 Р·РЅР°С‡РёС‚ СЃС‚СЂРµР»РєРё РЅРµС‚
 }
 
 public class KlondikeTutorialManager : MonoBehaviour
 {
     [Header("UI")]
-    public GameObject tutorialUIPanel;
+    public RectTransform tutorialUIPanel;
     public TMP_Text instructionText;
+    public TMP_Text stepIndicatorText;
+
+    [Header("Panel Anchors")]
+    public RectTransform topAnchor;
+    public RectTransform centerAnchor;
+    public RectTransform bottomAnchor;
+
+    // --- РќРћР’Р«Р™ Р РђР—Р”Р•Р› Р”Р›РЇ РЎРўР Р•Р›РћРљ ---
+    [Header("Arrows")]
+    public RectTransform arrowDown;
+    public RectTransform arrowUp;
+    public RectTransform arrowLeft;
+
+    [Tooltip("РњР°СЃСЃРёРІ РёР· 10 РїСѓСЃС‚С‹С€РµРє-СЏРєРѕСЂРµР№ РґР»СЏ СЃС‚СЂРµР»РѕРє")]
+    public RectTransform[] arrowAnchors = new RectTransform[10];
+
+    [Header("Arrow Animation Settings")]
+    public float arrowBounceAmplitude = 12f; // Р Р°Р·РјР°С… РєР°С‡Р°РЅРёСЏ
+    public float arrowBounceSpeed = 6f;      // РЎРєРѕСЂРѕСЃС‚СЊ РєР°С‡Р°РЅРёСЏ
+    private Coroutine arrowAnimCoroutine;
+
+    [Header("Highlights")]
+    public List<GameObject> highlightObjects = new List<GameObject>();
 
     [Header("Sequence")]
     public List<TutorialStep> steps = new List<TutorialStep>();
@@ -31,6 +72,16 @@ public class KlondikeTutorialManager : MonoBehaviour
     public bool IsTutorialActive { get; private set; }
     private int currentStepIndex = 0;
     private KlondikeModeManager modeManager;
+    private Coroutine panelMoveCoroutine;
+
+    private ICardContainer initialCardContainer;
+    private int initialStockCount;
+    private bool stepTransitioning = false;
+    private bool autoWinForced = false;
+
+    private Dictionary<RectTransform, Vector2> activeHighlightsOriginalPos = new Dictionary<RectTransform, Vector2>();
+    private Coroutine highlightsAnimCoroutine;
+    private const float HighlightOffscreenYOffset = 1500f;
 
     private void Awake()
     {
@@ -38,101 +89,449 @@ public class KlondikeTutorialManager : MonoBehaviour
 
         if (!IsTutorialActive)
         {
-            if (tutorialUIPanel) tutorialUIPanel.SetActive(false);
-
-            // [ИСПРАВЛЕНО] Отключаем только этот скрипт, а не весь объект!
-            // Иначе, если они висят на одном объекте, выключается вся игра.
+            if (tutorialUIPanel) tutorialUIPanel.gameObject.SetActive(false);
+            DisableAllHighlights();
             this.enabled = false;
-
             return;
         }
 
         modeManager = GetComponent<KlondikeModeManager>();
-        if (steps.Count == 0) InitializeDefaultSteps();
+        if (modeManager != null) modeManager.tutorialManager = this;
+
+        steps.Clear();
+        InitializeDefaultSteps();
     }
 
-    public void AdvanceStep()
+    private void LateUpdate()
+    {
+        if (!IsTutorialActive || stepTransitioning || currentStepIndex >= steps.Count) return;
+
+        TutorialStep step = steps[currentStepIndex];
+        CardController expectedCard = FindCardByName(step.expectedCardName);
+        var allCards = FindObjectsOfType<CardController>();
+
+        // 1. Р‘Р»РѕРєРёСЂРѕРІРєР° РєР»РёРєРѕРІ
+        foreach (var c in allCards)
+        {
+            if (c.canvasGroup != null)
+            {
+                bool isFlying = c.GetComponentInParent<ICardContainer>() == null;
+                if (isFlying) continue;
+
+                if (step.expectedAction == TutorialActionType.MoveCard || step.expectedAction == TutorialActionType.DoubleClick)
+                {
+                    if (string.IsNullOrEmpty(step.expectedCardName)) c.canvasGroup.blocksRaycasts = false;
+                    else c.canvasGroup.blocksRaycasts = (c == expectedCard);
+                }
+                else if (step.expectedAction == TutorialActionType.ClickStock)
+                {
+                    bool isStock = c.GetComponentInParent<StockPile>() != null;
+                    c.canvasGroup.blocksRaycasts = isStock;
+                }
+                else if (step.expectedAction == TutorialActionType.Undo)
+                {
+                    c.canvasGroup.blocksRaycasts = false;
+                }
+            }
+        }
+
+        // 2. РљРЅРѕРїРєР° Р°РІС‚РѕСЃР±РѕСЂР°
+        if (currentStepIndex == steps.Count - 1 && !autoWinForced)
+        {
+            autoWinForced = true;
+            if (modeManager != null) modeManager.DebugForceShowAutoWin();
+        }
+
+        // 3. РџСЂРѕРІРµСЂРєР° РІС‹РїРѕР»РЅРµРЅРёСЏ С€Р°РіР°
+        bool shouldAdvance = false;
+
+        if (step.expectedAction == TutorialActionType.MoveCard || step.expectedAction == TutorialActionType.DoubleClick)
+        {
+            if (expectedCard != null)
+            {
+                ICardContainer current = expectedCard.GetComponentInParent<ICardContainer>();
+                if (current != null && current != initialCardContainer)
+                {
+                    if (step.expectedTargetPileName == "Foundation" && current is FoundationPile) shouldAdvance = true;
+                    else if (step.expectedTargetPileName == "Tableau" && current is TableauPile) shouldAdvance = true;
+                }
+            }
+            else if (string.IsNullOrEmpty(step.expectedCardName))
+            {
+                if (modeManager.IsGameWon()) shouldAdvance = true;
+            }
+        }
+        else if (step.expectedAction == TutorialActionType.ClickStock)
+        {
+            if (modeManager?.pileManager?.StockPile != null)
+            {
+                int currentStockCount = modeManager.pileManager.StockPile.transform.childCount;
+                if (currentStockCount < initialStockCount) shouldAdvance = true;
+            }
+        }
+        else if (step.expectedAction == TutorialActionType.Undo)
+        {
+            if (expectedCard != null)
+            {
+                ICardContainer current = expectedCard.GetComponentInParent<ICardContainer>();
+                if (current != null && current != initialCardContainer) shouldAdvance = true;
+            }
+        }
+
+        if (shouldAdvance)
+        {
+            stepTransitioning = true;
+            StartCoroutine(AdvanceStepRoutine());
+        }
+    }
+
+    private IEnumerator AdvanceStepRoutine()
+    {
+        yield return new WaitForSeconds(0.4f);
+        InternalAdvanceStep();
+        stepTransitioning = false;
+    }
+
+    private CardController FindCardByName(string cardName)
+    {
+        if (string.IsNullOrEmpty(cardName)) return null;
+        var allCards = FindObjectsOfType<CardController>();
+        foreach (var c in allCards)
+            if (c.gameObject.name.Contains(cardName)) return c;
+        return null;
+    }
+
+    public void AdvanceStep() { }
+
+    public bool IsActionAllowed(TutorialActionType action, CardController card = null, ICardContainer target = null)
+    {
+        return true;
+    }
+
+    private void InternalAdvanceStep()
     {
         if (!IsTutorialActive) return;
 
         currentStepIndex++;
         if (currentStepIndex >= steps.Count)
         {
-            instructionText.text = "Поздравляем! Вы освоили все механики. Удачи в игре!";
+            string endText = "РџРѕР·РґСЂР°РІР»СЏРµРј! Р’С‹ РѕСЃРІРѕРёР»Рё РІСЃРµ РјРµС…Р°РЅРёРєРё. РЈРґР°С‡Рё РІ РёРіСЂРµ!";
+            if (LocalizationManager.instance != null && LocalizationManager.instance.IsReady())
+            {
+                string loc = LocalizationManager.instance.GetLocalizedValue("KlondikeTutorialEnd");
+                if (!string.IsNullOrEmpty(loc) && loc != "KlondikeTutorialEnd") endText = loc;
+            }
+            if (instructionText != null) instructionText.text = endText;
+            if (stepIndicatorText != null) stepIndicatorText.text = "";
+            DisableAllHighlights();
             IsTutorialActive = false;
         }
-        else
-        {
-            UpdateUI();
-        }
+        else UpdateUI();
     }
 
     private void UpdateUI()
     {
-        if (instructionText != null && currentStepIndex < steps.Count)
-            instructionText.text = steps[currentStepIndex].instructionText;
-    }
-
-    public bool IsActionAllowed(TutorialActionType action, CardController card = null, ICardContainer target = null)
-    {
-        if (!IsTutorialActive || currentStepIndex >= steps.Count) return true;
+        if (currentStepIndex >= steps.Count) return;
 
         TutorialStep step = steps[currentStepIndex];
-        if (step.expectedAction != action) return false;
 
-        if (action == TutorialActionType.MoveCard || action == TutorialActionType.DoubleClick)
+        CardController expectedCard = FindCardByName(step.expectedCardName);
+        initialCardContainer = expectedCard != null ? expectedCard.GetComponentInParent<ICardContainer>() : null;
+        if (modeManager != null && modeManager.pileManager.StockPile != null)
+            initialStockCount = modeManager.pileManager.StockPile.transform.childCount;
+
+        if (instructionText != null)
         {
-            if (!string.IsNullOrEmpty(step.expectedCardName) && card != null)
-                if (!card.gameObject.name.Contains(step.expectedCardName)) return false;
-
-            if (action == TutorialActionType.MoveCard && !string.IsNullOrEmpty(step.expectedTargetPileName) && target != null)
+            string textToShow = step.fallbackText;
+            if (LocalizationManager.instance != null && LocalizationManager.instance.IsReady())
             {
-                var targetMono = target as MonoBehaviour;
-                if (targetMono == null || !targetMono.gameObject.name.Contains(step.expectedTargetPileName)) return false;
+                string loc = LocalizationManager.instance.GetLocalizedValue(step.localizationKey);
+                if (!string.IsNullOrEmpty(loc) && loc != step.localizationKey) textToShow = loc;
+            }
+            instructionText.text = textToShow;
+        }
+
+        if (stepIndicatorText != null) stepIndicatorText.text = $"{currentStepIndex + 1}/{steps.Count}";
+
+        if (tutorialUIPanel != null)
+        {
+            if (panelMoveCoroutine != null) StopCoroutine(panelMoveCoroutine);
+            RectTransform targetAnchor = GetAnchorRect(step.panelAnchor);
+            panelMoveCoroutine = StartCoroutine(MovePanelRoutine(targetAnchor));
+        }
+
+        // --- РЈРџР РђР’Р›Р•РќРР• РЎРўР Р•Р›РћР§РљРћР™ ---
+        if (arrowAnimCoroutine != null) StopCoroutine(arrowAnimCoroutine);
+        if (arrowDown != null) arrowDown.gameObject.SetActive(false);
+        if (arrowUp != null) arrowUp.gameObject.SetActive(false);
+        if (arrowLeft != null) arrowLeft.gameObject.SetActive(false);
+
+        if (step.arrowType != TutorialArrowType.None && step.arrowAnchorIndex >= 0 && step.arrowAnchorIndex < arrowAnchors.Length)
+        {
+            RectTransform activeArrow = null;
+            if (step.arrowType == TutorialArrowType.Down) activeArrow = arrowDown;
+            else if (step.arrowType == TutorialArrowType.Up) activeArrow = arrowUp;
+            else if (step.arrowType == TutorialArrowType.Left) activeArrow = arrowLeft;
+
+            RectTransform targetArrowAnchor = arrowAnchors[step.arrowAnchorIndex];
+
+            if (activeArrow != null && targetArrowAnchor != null)
+            {
+                activeArrow.gameObject.SetActive(true);
+                // Р”РµР»Р°РµРј СЃС‚СЂРµР»РєСѓ СЂРµР±РµРЅРєРѕРј СЏРєРѕСЂСЏ, С‡С‚РѕР±С‹ РѕРЅР° РёРґРµР°Р»СЊРЅРѕ РїРѕР·РёС†РёРѕРЅРёСЂРѕРІР°Р»Р°СЃСЊ
+                activeArrow.SetParent(targetArrowAnchor, false);
+                activeArrow.anchoredPosition = Vector2.zero;
+
+                arrowAnimCoroutine = StartCoroutine(AnimateArrowBounce(activeArrow, step.arrowType));
             }
         }
-        return true;
+
+        // --- РћР‘РќРћР’Р›Р•РќРќРђРЇ Р›РћР“РРљРђ РҐРђР™Р›РђР™РўРћР’ ---
+        activeHighlightsOriginalPos.Clear();
+        foreach (var highlight in highlightObjects)
+        {
+            if (highlight == null) continue;
+            bool shouldBeActive = step.highlightElements != null && step.highlightElements.Contains(highlight.name);
+            highlight.SetActive(shouldBeActive);
+
+            if (shouldBeActive)
+            {
+                RectTransform rt = highlight.GetComponent<RectTransform>();
+                if (rt != null && !activeHighlightsOriginalPos.ContainsKey(rt))
+                {
+                    activeHighlightsOriginalPos.Add(rt, rt.anchoredPosition);
+                }
+            }
+        }
     }
 
-    // ==========================================================
-    // ГЕНЕРАТОР ОБУЧЕНИЯ (С последовательным падением стопок)
-    // ==========================================================
+    // --- РђРќРРњРђР¦РРЇ РЎРўР Р•Р›РћР§РљР ---
+    private IEnumerator AnimateArrowBounce(RectTransform arrow, TutorialArrowType type)
+    {
+        float elapsed = 0f;
+        while (true)
+        {
+            elapsed += Time.unscaledDeltaTime * arrowBounceSpeed;
+            float offset = Mathf.Sin(elapsed) * arrowBounceAmplitude;
+
+            if (type == TutorialArrowType.Down || type == TutorialArrowType.Up)
+            {
+                arrow.anchoredPosition = new Vector2(0, offset);
+            }
+            else if (type == TutorialArrowType.Left)
+            {
+                arrow.anchoredPosition = new Vector2(offset, 0);
+            }
+            yield return null;
+        }
+    }
+
+    private RectTransform GetAnchorRect(TutorialPanelAnchorType type)
+    {
+        switch (type)
+        {
+            case TutorialPanelAnchorType.Top: return topAnchor;
+            case TutorialPanelAnchorType.Bottom: return bottomAnchor;
+            case TutorialPanelAnchorType.Center: return centerAnchor;
+            default: return centerAnchor;
+        }
+    }
+
+    private IEnumerator MovePanelRoutine(RectTransform targetRect)
+    {
+        if (targetRect == null) yield break;
+
+        Vector3 startWorldPos = tutorialUIPanel.position;
+
+        tutorialUIPanel.anchorMin = targetRect.anchorMin;
+        tutorialUIPanel.anchorMax = targetRect.anchorMax;
+        tutorialUIPanel.pivot = targetRect.pivot;
+        tutorialUIPanel.sizeDelta = targetRect.sizeDelta;
+
+        tutorialUIPanel.position = startWorldPos;
+
+        Vector2 startAnchoredPos = tutorialUIPanel.anchoredPosition;
+        Vector2 targetAnchoredPos = targetRect.anchoredPosition;
+
+        float distance = Vector2.Distance(startAnchoredPos, targetAnchoredPos);
+        float duration = distance > 1000f ? 0.6f : 0.3f;
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = elapsed / duration;
+            t = 1f - Mathf.Pow(1f - t, 3f);
+            tutorialUIPanel.anchoredPosition = Vector2.Lerp(startAnchoredPos, targetAnchoredPos, t);
+            yield return null;
+        }
+        tutorialUIPanel.anchoredPosition = targetAnchoredPos;
+    }
+
+    private void DisableAllHighlights()
+    {
+        foreach (var highlight in highlightObjects) if (highlight != null) highlight.SetActive(false);
+        activeHighlightsOriginalPos.Clear();
+
+        if (arrowAnimCoroutine != null) StopCoroutine(arrowAnimCoroutine);
+        if (arrowDown != null) arrowDown.gameObject.SetActive(false);
+        if (arrowUp != null) arrowUp.gameObject.SetActive(false);
+        if (arrowLeft != null) arrowLeft.gameObject.SetActive(false);
+    }
+
+    public void HidePanelToLeft()
+    {
+        if (tutorialUIPanel != null && tutorialUIPanel.gameObject.activeSelf)
+        {
+            if (panelMoveCoroutine != null) StopCoroutine(panelMoveCoroutine);
+            panelMoveCoroutine = StartCoroutine(MovePanelOffscreenLeft());
+        }
+    }
+
+    public void RestorePanelPosition()
+    {
+        if (!IsTutorialActive) return;
+        UpdateUI();
+    }
+
+    public void HideHighlights()
+    {
+        if (tutorialUIPanel != null && tutorialUIPanel.gameObject.activeSelf)
+        {
+            if (panelMoveCoroutine != null) StopCoroutine(panelMoveCoroutine);
+            panelMoveCoroutine = StartCoroutine(MovePanelOffscreenLeft());
+        }
+
+        // РЈР±РёСЂР°РµРј СЃС‚СЂРµР»РєРё Р¶РµСЃС‚РєРѕ РїРµСЂРµРґ Р°РЅРёРјР°С†РёРµР№ РІС‹С…РѕРґР°
+        if (arrowAnimCoroutine != null) StopCoroutine(arrowAnimCoroutine);
+        if (arrowDown != null) arrowDown.gameObject.SetActive(false);
+        if (arrowUp != null) arrowUp.gameObject.SetActive(false);
+        if (arrowLeft != null) arrowLeft.gameObject.SetActive(false);
+
+        if (activeHighlightsOriginalPos != null && activeHighlightsOriginalPos.Count > 0)
+        {
+            if (highlightsAnimCoroutine != null) StopCoroutine(highlightsAnimCoroutine);
+            highlightsAnimCoroutine = StartCoroutine(AnimateHighlightsOut());
+        }
+        else
+        {
+            foreach (var highlight in highlightObjects)
+                if (highlight != null) highlight.SetActive(false);
+        }
+    }
+
+    private IEnumerator MovePanelOffscreenLeft()
+    {
+        Vector2 startPos = tutorialUIPanel.anchoredPosition;
+        Vector2 targetPos = new Vector2(-2500f, startPos.y);
+
+        float duration = 0.4f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = elapsed / duration;
+            t = 1f - Mathf.Pow(1f - t, 3f);
+            tutorialUIPanel.anchoredPosition = Vector2.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+        tutorialUIPanel.anchoredPosition = targetPos;
+    }
+
+    private IEnumerator AnimateHighlightsOut()
+    {
+        float duration = 0.6f;
+        float elapsed = 0f;
+
+        List<RectTransform> highlightsToAnimate = new List<RectTransform>(activeHighlightsOriginalPos.Keys);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = elapsed / duration;
+            t = 1f - Mathf.Pow(1f - t, 3f);
+
+            foreach (var rt in highlightsToAnimate)
+            {
+                if (rt == null) continue;
+                Vector2 originalPos = activeHighlightsOriginalPos[rt];
+                Vector2 targetPos = originalPos + new Vector2(0, HighlightOffscreenYOffset);
+                rt.anchoredPosition = Vector2.Lerp(originalPos, targetPos, t);
+            }
+            yield return null;
+        }
+
+        foreach (var rt in highlightsToAnimate)
+        {
+            if (rt != null) rt.gameObject.SetActive(false);
+        }
+    }
+
+    private IEnumerator AnimateHighlightsIn()
+    {
+        float duration = 0.7f;
+        float elapsed = 0f;
+
+        List<RectTransform> highlightsToAnimate = new List<RectTransform>(activeHighlightsOriginalPos.Keys);
+
+        foreach (var rt in highlightsToAnimate)
+        {
+            if (rt == null) continue;
+            rt.gameObject.SetActive(true);
+            rt.anchoredPosition = activeHighlightsOriginalPos[rt] + new Vector2(0, HighlightOffscreenYOffset);
+        }
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = elapsed / duration;
+            t = 1f - Mathf.Pow(1f - t, 3f);
+
+            foreach (var rt in highlightsToAnimate)
+            {
+                if (rt == null) continue;
+                Vector2 originalPos = activeHighlightsOriginalPos[rt];
+                Vector2 startPos = originalPos + new Vector2(0, HighlightOffscreenYOffset);
+                rt.anchoredPosition = Vector2.Lerp(startPos, originalPos, t);
+            }
+            yield return null;
+        }
+
+        foreach (var rt in highlightsToAnimate)
+        {
+            if (rt != null) rt.anchoredPosition = activeHighlightsOriginalPos[rt];
+        }
+    }
+
     public IEnumerator PlayTutorialIntro(Deal dummyDeal)
     {
         modeManager.IsInputAllowed = false;
-
-        // 1. Прячем DeckManager от интро, чтобы заблокировать стандартную раздачу!
         var tempDeck = modeManager.deckManager;
         modeManager.deckManager = null;
 
-        // Запускаем UI интро (выезд панелей, появление слотов)
-        if (modeManager.introController != null)
-            yield return StartCoroutine(modeManager.introController.PlayIntroSequence(false));
+        if (modeManager.introController != null) yield return StartCoroutine(modeManager.introController.PlayIntroSequence(false));
 
-        // Возвращаем DeckManager
         modeManager.deckManager = tempDeck;
-
-        // 2. Очищаем стол и физически уничтожаем возможные старые карты
         PileManager pm = modeManager.pileManager;
         pm.ClearAllPiles();
         modeManager.cardFactory.DestroyAllCards();
 
-        // 3. Формируем 52 карты по нашему сценарию
-        string[] F0 = { "Spades_1_up", "Spades_2_up", "Spades_3_up" };
-        string[] F1 = { "Hearts_1_up", "Hearts_2_up", "Hearts_3_up" };
+        string[] F0 = { "Spades_1_up", "Spades_2_up", "Spades_3_up", "Spades_4_up", "Spades_5_up" };
+        string[] F1 = { "Hearts_1_up", "Hearts_2_up", "Hearts_3_up", "Hearts_4_up", "Hearts_5_up" };
         string[] F2 = { "Clubs_1_up", "Clubs_2_up", "Clubs_3_up", "Clubs_4_up", "Clubs_5_up", "Clubs_6_up", "Clubs_7_up", "Clubs_8_up", "Clubs_9_up" };
         string[] F3 = { "Diamonds_1_up", "Diamonds_2_up", "Diamonds_3_up", "Diamonds_4_up", "Diamonds_5_up", "Diamonds_6_up", "Diamonds_7_up", "Diamonds_8_up", "Diamonds_9_up" };
-        string[] Stock = { "Spades_8_down", "Hearts_9_down", "Spades_10_down" };
 
-        string[] T0 = { "Spades_4_up" };
-        string[] T1 = { "Spades_5_down", "Hearts_4_up" };
-        string[] T2 = { "Hearts_5_down", "Clubs_10_up" };
-        string[] T3 = { "Diamonds_13_up", "Clubs_12_up", "Diamonds_11_up" };
-        string[] T4 = { "Hearts_6_down", "Diamonds_10_up" };
-        string[] T5 = { "Spades_13_up", "Hearts_12_up", "Clubs_11_up" };
-        string[] T6 = { "Spades_6_down", "Spades_7_down", "Spades_9_down", "Spades_11_down", "Hearts_8_down", "Hearts_10_down", "Clubs_13_down", "Diamonds_12_down", "Hearts_7_down", "Hearts_13_up", "Spades_12_up", "Hearts_11_up" };
+        string[] Stock = { "Hearts_9_down", "Spades_10_down" };
 
-        // 4. Мгновенно генерируем и расставляем карты
+        string[] T0 = { "Spades_6_up" };
+        string[] T1 = { "Hearts_6_down", "Clubs_10_up" };
+        string[] T2 = { "Spades_13_up", "Hearts_12_up", "Clubs_11_up" };
+        string[] T3 = { "Spades_8_down", "Spades_7_down", "Hearts_13_up", "Clubs_12_up", "Diamonds_11_up" };
+        string[] T4 = { "Diamonds_13_up", "Spades_12_up", "Hearts_11_up" };
+        string[] T5 = { "Hearts_8_down", "Hearts_7_down", "Diamonds_10_up", "Spades_9_up" };
+        string[] T6 = { "Clubs_13_up", "Diamonds_12_up", "Spades_11_up", "Hearts_10_up" };
+
         SpawnAndPlaceCards(F0, pm.Foundations[0]);
         SpawnAndPlaceCards(F1, pm.Foundations[1]);
         SpawnAndPlaceCards(F2, pm.Foundations[2]);
@@ -146,19 +545,10 @@ public class KlondikeTutorialManager : MonoBehaviour
         SpawnAndPlaceCards(T5, pm.Tableau[5]);
         SpawnAndPlaceCards(T6, pm.Tableau[6]);
 
-        // Принудительно обновляем UI-слой, чтобы карты заняли финальные координаты
         Canvas.ForceUpdateCanvases();
-
-        // 5. АНИМАЦИЯ: Сохраняем целевые координаты и прячем карты наверх
         Vector2 offScreenOffset = new Vector2(0, 1500f);
         Dictionary<CardController, Vector2> targetAnchors = new Dictionary<CardController, Vector2>();
-
-        // Очередь анимации: Stock -> Дома -> Поле (слева направо)
-        List<ICardContainer> animSequence = new List<ICardContainer> {
-            pm.Tableau[0], pm.Tableau[1], pm.Tableau[2], pm.Tableau[3], pm.Tableau[4], pm.Tableau[5], pm.Tableau[6],
-            pm.StockPile,
-            pm.Foundations[0], pm.Foundations[1], pm.Foundations[2], pm.Foundations[3]
-        };
+        List<ICardContainer> animSequence = new List<ICardContainer> { pm.Tableau[0], pm.Tableau[1], pm.Tableau[2], pm.Tableau[3], pm.Tableau[4], pm.Tableau[5], pm.Tableau[6], pm.StockPile, pm.Foundations[0], pm.Foundations[1], pm.Foundations[2], pm.Foundations[3] };
 
         foreach (var container in animSequence)
         {
@@ -167,56 +557,51 @@ public class KlondikeTutorialManager : MonoBehaviour
             foreach (Transform child in mono.transform)
             {
                 var card = child.GetComponent<CardController>();
-                if (card != null)
-                {
-                    targetAnchors[card] = card.rectTransform.anchoredPosition;
-                    card.rectTransform.anchoredPosition += offScreenOffset; // Поднимаем за экран
-                }
+                if (card != null) { targetAnchors[card] = card.rectTransform.anchoredPosition; card.rectTransform.anchoredPosition += offScreenOffset; }
             }
         }
-
-        // Запускаем последовательный "сброс" стопок
-        // Запускаем последовательный "сброс" стопок
-        float stackMoveDuration = 0.3f; // Возвращаем приятную скорость полета
-        float stackDelay = 0.05f;       // Очень короткая пауза ДО старта следующей стопки
 
         foreach (var container in animSequence)
         {
             var mono = container as MonoBehaviour;
             if (mono == null) continue;
-
             var cardsInStack = new List<CardController>();
             foreach (Transform child in mono.transform)
             {
                 var card = child.GetComponent<CardController>();
                 if (card != null) cardsInStack.Add(card);
             }
-
-            if (cardsInStack.Count == 0) continue;
-
-            // [ИСПРАВЛЕНИЕ] Запускаем анимацию стопки ПАРАЛЛЕЛЬНО и идем дальше
-            StartCoroutine(AnimateStackDrop(cardsInStack, targetAnchors, offScreenOffset, stackMoveDuration));
-
-            // Ждем долю секунды и сразу запускаем следующую стопку (эффект волны)
-            yield return new WaitForSeconds(stackDelay);
+            if (cardsInStack.Count > 0) StartCoroutine(AnimateStackDrop(cardsInStack, targetAnchors, offScreenOffset, 0.3f));
+            yield return new WaitForSeconds(0.05f);
         }
 
-        // Ждем, пока приземлится самая последняя запущенная стопка
-        yield return new WaitForSeconds(stackMoveDuration);
-
-        // 6. Выравниваем Z-индексы
+        yield return new WaitForSeconds(0.3f);
         modeManager.animationService.ReorderAllContainers(pm.GetAllContainerTransforms());
 
-        // 7. Сбрасываем статистику, чтобы счетчик ходов начался с нуля
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.OnGameStarted("Klondike", Difficulty.Easy, "Tutorial");
         if (modeManager.scoreManager != null) modeManager.scoreManager.ResetScore();
 
-        if (tutorialUIPanel) tutorialUIPanel.SetActive(true);
         currentStepIndex = 0;
-        UpdateUI();
+        DisableAllHighlights();
 
+        if (tutorialUIPanel)
+        {
+            RectTransform targetAnchor = GetAnchorRect(steps.Count > 0 ? steps[0].panelAnchor : TutorialPanelAnchorType.Bottom);
+            if (targetAnchor != null)
+            {
+                tutorialUIPanel.anchorMin = targetAnchor.anchorMin;
+                tutorialUIPanel.anchorMax = targetAnchor.anchorMax;
+                tutorialUIPanel.pivot = targetAnchor.pivot;
+                tutorialUIPanel.sizeDelta = targetAnchor.sizeDelta;
+                tutorialUIPanel.anchoredPosition = targetAnchor.anchoredPosition + new Vector2(2500f, 0);
+            }
+            tutorialUIPanel.gameObject.SetActive(true);
+        }
+
+        UpdateUI();
         modeManager.IsInputAllowed = true;
     }
+
     private IEnumerator AnimateStackDrop(List<CardController> cardsInStack, Dictionary<CardController, Vector2> targetAnchors, Vector2 offScreenOffset, float duration)
     {
         float elapsed = 0f;
@@ -224,117 +609,260 @@ public class KlondikeTutorialManager : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
-            t = 1f - Mathf.Pow(1f - t, 3f); // Плавное торможение (EaseOutCubic)
-
-            foreach (var card in cardsInStack)
-            {
-                if (card != null)
-                {
-                    Vector2 startPos = targetAnchors[card] + offScreenOffset;
-                    card.rectTransform.anchoredPosition = Vector2.Lerp(startPos, targetAnchors[card], t);
-                }
-            }
+            t = 1f - Mathf.Pow(1f - t, 3f);
+            foreach (var card in cardsInStack) if (card != null) card.rectTransform.anchoredPosition = Vector2.Lerp(targetAnchors[card] + offScreenOffset, targetAnchors[card], t);
             yield return null;
         }
-
-        // Точно ставим на место в конце анимации
-        foreach (var card in cardsInStack)
-        {
-            if (card != null)
-            {
-                card.rectTransform.anchoredPosition = targetAnchors[card];
-            }
-        }
+        foreach (var card in cardsInStack) if (card != null) card.rectTransform.anchoredPosition = targetAnchors[card];
     }
+
     private void SpawnAndPlaceCards(string[] cardData, ICardContainer target)
     {
         foreach (var data in cardData)
         {
-            // Парсим строку (пример: "Spades_4_up")
             string[] parts = data.Split('_');
             string suitStr = parts[0];
             int rank = int.Parse(parts[1]);
             bool isFaceUp = parts[2] == "up";
 
-            // Определяем масть
             Suit suit = Suit.Spades;
             if (suitStr == "Hearts") suit = Suit.Hearts;
             else if (suitStr == "Clubs") suit = Suit.Clubs;
             else if (suitStr == "Diamonds") suit = Suit.Diamonds;
 
-            // 1. Создаем карту через официальную фабрику
             CardModel model = new CardModel(suit, rank);
             CardController card = modeManager.cardFactory.CreateCard(model, ((MonoBehaviour)target).transform, Vector2.zero);
 
-            // 2. Называем карту для проверок туториала (например, "Card_Spades_4")
             card.gameObject.name = $"Card_{suitStr}_{rank}";
-
-            // 3. Регистрируем события (Drag, Click) чтобы ее можно было трогать
             modeManager.RegisterCardEvents(card);
 
-            // 4. Добавляем в нужный контейнер через официальные методы
-            if (target is TableauPile tableau)
+            if (target is TableauPile tableau) tableau.AddCard(card, isFaceUp);
+            else if (target is FoundationPile foundation) foundation.AcceptCard(card);
+            else
             {
-                tableau.AddCard(card, isFaceUp);
-            }
-            else if (target is FoundationPile foundation)
-            {
-                foundation.AcceptCard(card);
-            }
-            else // StockPile или WastePile
-            {
-                var type = target.GetType();
-                var add2 = type.GetMethod("AddCard", new System.Type[] { typeof(CardController), typeof(bool) });
+                var add2 = target.GetType().GetMethod("AddCard", new System.Type[] { typeof(CardController), typeof(bool) });
                 if (add2 != null) add2.Invoke(target, new object[] { card, isFaceUp });
-                else
-                {
-                    var add1 = type.GetMethod("AddCard", new System.Type[] { typeof(CardController) });
-                    if (add1 != null) add1.Invoke(target, new object[] { card });
-                }
-
-                var cData = card.GetComponent<CardData>();
-                if (cData != null) cData.SetFaceUp(isFaceUp, false);
+                else target.GetType().GetMethod("AddCard", new System.Type[] { typeof(CardController) })?.Invoke(target, new object[] { card });
+                card.GetComponent<CardData>()?.SetFaceUp(isFaceUp, false);
             }
         }
-
-        // 5. Завершаем настройку для Tableau (останавливаем внутренние анимации и выстраиваем лесенку)
-        if (target is TableauPile tPile)
-        {
-            tPile.StopAllCoroutines();  // Отключаем внутреннюю анимацию раздачи Tableau
-            tPile.ForceRebuildLayout(); // Мгновенно расставляем карты
-
-            // Защита от перетаскивания закрытых карт
-            for (int i = 0; i < tPile.cards.Count; i++)
-            {
-                if (!tPile.faceUp[i] && tPile.cards[i].canvasGroup != null)
-                {
-                    tPile.cards[i].canvasGroup.blocksRaycasts = false;
-                }
-            }
-        }
+        if (target is TableauPile tPile) { tPile.StopAllCoroutines(); tPile.ForceRebuildLayout(); }
     }
-
     private void InitializeDefaultSteps()
     {
-        steps.Add(new TutorialStep { instructionText = "Цель игры — собрать карты в 'Дома' сверху.\nПеретащите открытую Четверку Пик в первый Дом.", expectedAction = TutorialActionType.MoveCard, expectedCardName = "Spades_4", expectedTargetPileName = "Foundation" });
-        steps.Add(new TutorialStep { instructionText = "На поле карты складываются по убыванию с чередованием цвета.\nПеретащите черную Десятку Треф на красного Валета Бубен.", expectedAction = TutorialActionType.MoveCard, expectedCardName = "Clubs_10", expectedTargetPileName = "Tableau" });
-        steps.Add(new TutorialStep { instructionText = "Под картой открылась Пятерка. Карты можно быстро отправлять в Дом двойным кликом.\nДважды кликните по Четверке Червей.", expectedAction = TutorialActionType.DoubleClick, expectedCardName = "Hearts_4" });
-        steps.Add(new TutorialStep { instructionText = "В пустые ячейки на поле можно класть ТОЛЬКО Королей.\nПеретащите стопку с черным Королем Пик в пустую колонку.", expectedAction = TutorialActionType.MoveCard, expectedCardName = "Spades_13", expectedTargetPileName = "Tableau" });
-        steps.Add(new TutorialStep { instructionText = "Вы можете переносить сразу несколько открытых карт.\nПеренесите красную Десятку Бубен на черного Валета Треф.", expectedAction = TutorialActionType.MoveCard, expectedCardName = "Diamonds_10", expectedTargetPileName = "Tableau" });
+        string clrOrg = "<color=#FCA311>";
+        string clrBlk = "<color=#8294FF>";
+        string clrRed = "<color=#FF6B6B>";
+        string endClr = "</color>";
 
-        string deckText = "Используйте колоду (слева сверху). Кликните по ней, положите выпавшую карту на поле. Если ошиблись — нажмите 'Отмена' (Undo).";
-        steps.Add(new TutorialStep { instructionText = deckText, expectedAction = TutorialActionType.ClickStock });
-        steps.Add(new TutorialStep { instructionText = deckText, expectedAction = TutorialActionType.MoveCard, expectedCardName = "Spades_10", expectedTargetPileName = "Tableau" });
-        steps.Add(new TutorialStep { instructionText = deckText, expectedAction = TutorialActionType.Undo });
+        // 1 (РЎС‚СЂРµР»РєР° РІРЅРёР·, РЅР°Рґ 6)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial1",
+            fallbackText = $"Р¦РµР»СЊ РёРіСЂС‹ вЂ” СЃРѕР±СЂР°С‚СЊ РєР°СЂС‚С‹ РІ {clrOrg}'Р”РѕРјР°'{endClr} СЃРІРµСЂС…Сѓ.\nРџРµСЂРµС‚Р°С‰РёС‚Рµ РѕС‚РєСЂС‹С‚СѓСЋ {clrBlk}РЁРµСЃС‚РµСЂРєСѓ РџРёРє(6в™ ){endClr} РІ РїРµСЂРІС‹Р№ {clrOrg}Р”РѕРј{endClr}.",
+            expectedAction = TutorialActionType.MoveCard,
+            expectedCardName = "Spades_6",
+            expectedTargetPileName = "Foundation",
+            panelAnchor = TutorialPanelAnchorType.Center,
+            highlightElements = new List<string> { "Highlight_Foundation" },
+            arrowType = TutorialArrowType.Down,
+            arrowAnchorIndex = 0
+        });
 
-        steps.Add(new TutorialStep { instructionText = "Иногда карту выгодно вернуть из Дома обратно на поле.\nПеретащите Девятку Треф из Дома на красную Десятку Бубен.", expectedAction = TutorialActionType.MoveCard, expectedCardName = "Clubs_9", expectedTargetPileName = "Tableau" });
-        steps.Add(new TutorialStep { instructionText = "В нашей обучающей колоде осталось две карты. Давайте достанем их!\nКликните по колоде.", expectedAction = TutorialActionType.ClickStock });
-        steps.Add(new TutorialStep { instructionText = "Кликните по колоде последний раз.", expectedAction = TutorialActionType.ClickStock });
+        // 2 (РЎС‚СЂРµР»РєР° РІРІРµСЂС…, РїРѕРґ 10)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial2",
+            fallbackText = $"РќР° {clrOrg}РРіСЂРѕРІРѕРј СЃС‚РѕР»Рµ{endClr} РєР°СЂС‚С‹ СЃРєР»Р°РґС‹РІР°СЋС‚СЃСЏ РїРѕ СѓР±С‹РІР°РЅРёСЋ СЃ С‡РµСЂРµРґРѕРІР°РЅРёРµРј С†РІРµС‚Р°.\nРџРµСЂРµС‚Р°С‰РёС‚Рµ {clrBlk}С‡РµСЂРЅСѓСЋ Р”РµСЃСЏС‚РєСѓ РўСЂРµС„(10в™Ј){endClr} РЅР° {clrRed}РєСЂР°СЃРЅРѕРіРѕ Р’Р°Р»РµС‚Р° Р‘СѓР±РµРЅ(Jв™¦){endClr}.",
+            expectedAction = TutorialActionType.MoveCard,
+            expectedCardName = "Clubs_10",
+            expectedTargetPileName = "Tableau",
+            panelAnchor = TutorialPanelAnchorType.Top,
+            highlightElements = new List<string> { "Highlight_Tableau" },
+            arrowType = TutorialArrowType.Up,
+            arrowAnchorIndex = 1
+        });
 
-        steps.Add(new TutorialStep { instructionText = "Колода пуста! Теперь откроем оставшиеся рубашки.\nДважды кликните по Пятерке Пик.", expectedAction = TutorialActionType.DoubleClick, expectedCardName = "Spades_5" });
-        steps.Add(new TutorialStep { instructionText = "Дважды кликните по Пятерке Червей.", expectedAction = TutorialActionType.DoubleClick, expectedCardName = "Hearts_5" });
-        steps.Add(new TutorialStep { instructionText = "Осталось открыть последнюю карту!\nДважды кликните по Шестерке Червей.", expectedAction = TutorialActionType.DoubleClick, expectedCardName = "Hearts_6" });
+        // 3 (РЎС‚СЂРµР»РєР° РІРІРµСЂС…, РєР°Рє РІРѕ 2)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial3",
+            fallbackText = $"РћС‚Р»РёС‡РЅРѕ, РѕС‚РєСЂС‹Р»Р°СЃСЊ СЃРєСЂС‹С‚Р°СЏ РєР°СЂС‚Р°! РС… РјРѕР¶РЅРѕ Р±С‹СЃС‚СЂРѕ РѕС‚РїСЂР°РІР»СЏС‚СЊ РІ {clrOrg}Р”РѕРј{endClr} РґРІРѕР№РЅС‹Рј РєР»РёРєРѕРј.\nР”РІР°Р¶РґС‹ РєР»РёРєРЅРёС‚Рµ РїРѕ {clrRed}РЁРµСЃС‚РµСЂРєРµ Р§РµСЂРІРµР№(6в™Ґ){endClr}.",
+            expectedAction = TutorialActionType.DoubleClick,
+            expectedCardName = "Hearts_6",
+            expectedTargetPileName = "Foundation",
+            panelAnchor = TutorialPanelAnchorType.Top,
+            highlightElements = new List<string>(),
+            arrowType = TutorialArrowType.Up,
+            arrowAnchorIndex = 1
+        });
 
-        steps.Add(new TutorialStep { instructionText = "Поздравляем! Все карты открыты. В таких случаях игра предлагает добить партию за вас.\nНажмите кнопку 'АВТО-СБОР'!", expectedAction = TutorialActionType.DoubleClick });
+        // 4 (РЎС‚СЂРµР»РєР° РІРЅРёР·, РЅР°Рґ РљРѕСЂРѕР»РµРј)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial4",
+            fallbackText = $"Р’ РїСѓСЃС‚С‹Рµ СЏС‡РµР№РєРё РЅР° РїРѕР»Рµ РјРѕР¶РЅРѕ РєР»Р°СЃС‚СЊ {clrOrg}РўРћР›Р¬РљРћ{endClr} РљРѕСЂРѕР»РµР№.\nРџРµСЂРµС‚Р°С‰РёС‚Рµ {clrRed}РљРѕСЂРѕР»СЏ Р§РµСЂРІРµР№(Kв™Ґ){endClr} РІ РїРµСЂРІСѓСЋ РїСѓСЃС‚СѓСЋ РєРѕР»РѕРЅРєСѓ.",
+            expectedAction = TutorialActionType.MoveCard,
+            expectedCardName = "Hearts_13",
+            expectedTargetPileName = "Tableau",
+            panelAnchor = TutorialPanelAnchorType.Top,
+            highlightElements = new List<string> { "Highlight_EmptyTableau" },
+            arrowType = TutorialArrowType.Down,
+            arrowAnchorIndex = 2
+        });
+
+        // 5 (РЎС‚СЂРµР»РєР° РІРЅРёР·, РЅР°Рґ 10в™¦)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial5",
+            fallbackText = $"Р’С‹ РјРѕР¶РµС‚Рµ РїРµСЂРµРЅРѕСЃРёС‚СЊ СЃСЂР°Р·Сѓ РЅРµСЃРєРѕР»СЊРєРѕ РѕС‚РєСЂС‹С‚С‹С… РєР°СЂС‚.\nРџРµСЂРµРЅРµСЃРёС‚Рµ СЃС‚РѕРїРєСѓ СЃ {clrRed}РєСЂР°СЃРЅРѕР№ Р”РµСЃСЏС‚РєРѕР№ Р‘СѓР±РµРЅ(10в™¦){endClr} РЅР° {clrBlk}С‡РµСЂРЅРѕРіРѕ Р’Р°Р»РµС‚Р° РўСЂРµС„(Jв™Ј){endClr}.",
+            expectedAction = TutorialActionType.MoveCard,
+            expectedCardName = "Diamonds_10",
+            expectedTargetPileName = "Tableau",
+            panelAnchor = TutorialPanelAnchorType.Top,
+            highlightElements = new List<string>(),
+            arrowType = TutorialArrowType.Down,
+            arrowAnchorIndex = 3
+        });
+
+        // 6 (РЎС‚СЂРµР»РєР° РІР»РµРІРѕ, СЃРїСЂР°РІР° РѕС‚ РєРѕР»РѕРґС‹)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial6",
+            fallbackText = $"РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… С…РѕРґРѕРІ? РСЃРїРѕР»СЊР·СѓР№С‚Рµ {clrOrg}РєРѕР»РѕРґСѓ{endClr} (СЃР»РµРІР° СЃРІРµСЂС…Сѓ). РљР»РёРєРЅРёС‚Рµ РїРѕ РЅРµР№, С‡С‚РѕР±С‹ РІР·СЏС‚СЊ РєР°СЂС‚Сѓ.",
+            expectedAction = TutorialActionType.ClickStock,
+            expectedCardName = "",
+            expectedTargetPileName = "",
+            panelAnchor = TutorialPanelAnchorType.Bottom,
+            highlightElements = new List<string> { "Highlight_Stock" },
+            arrowType = TutorialArrowType.Left,
+            arrowAnchorIndex = 4
+        });
+
+        // 7 (РЎС‚СЂРµР»РєР° РІР»РµРІРѕ, СЃРїСЂР°РІР° РѕС‚ 10в™ )
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial7",
+            fallbackText = $"РќР°Рј РІС‹РїР°Р»Р° {clrBlk}Р”РµСЃСЏС‚РєР° РџРёРє(10в™ ){endClr}. РџРѕР»РѕР¶РёС‚Рµ РµС‘ РЅР° РѕС‚РєСЂС‹РІС€РµРіРѕСЃСЏ {clrRed}Р’Р°Р»РµС‚Р° Р§РµСЂРІРµР№(Jв™Ґ){endClr}.",
+            expectedAction = TutorialActionType.MoveCard,
+            expectedCardName = "Spades_10",
+            expectedTargetPileName = "Tableau",
+            panelAnchor = TutorialPanelAnchorType.Bottom,
+            highlightElements = new List<string>(),
+            arrowType = TutorialArrowType.Left,
+            arrowAnchorIndex = 5
+        });
+
+        // 8 (РЎС‚СЂРµР»РєР° РІРЅРёР·, РЅР°Рґ Undo)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial8",
+            fallbackText = $"РћС‚Р»РёС‡РЅС‹Р№ С…РѕРґ! РќРѕ РёРЅРѕРіРґР° РґРµР№СЃС‚РІРёРµ РЅСѓР¶РЅРѕ РѕС‚РјРµРЅРёС‚СЊ. Р”Р°РІР°Р№С‚Рµ РїСЂРѕРІРµСЂРёРј РєР°Рє СЂР°Р±РѕС‚Р°РµС‚ РєРЅРѕРїРєР° {clrOrg}'РћС‚РјРµРЅР°'{endClr} РІРЅРёР·Сѓ СЌРєСЂР°РЅР°.",
+            expectedAction = TutorialActionType.Undo,
+            expectedCardName = "Spades_10",
+            expectedTargetPileName = "",
+            panelAnchor = TutorialPanelAnchorType.Bottom,
+            highlightElements = new List<string> { "Highlight_UndoButton" },
+            arrowType = TutorialArrowType.Down,
+            arrowAnchorIndex = 6
+        });
+
+        // 9 (РЎС‚СЂРµР»РєР° РІР»РµРІРѕ, РєР°Рє РІ 7)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial9",
+            fallbackText = $"Р’РµСЂРЅРёС‚Рµ {clrBlk}Р”РµСЃСЏС‚РєСѓ РџРёРє(10в™ ){endClr} РѕР±СЂР°С‚РЅРѕ РЅР° {clrRed}Р’Р°Р»РµС‚Р° Р§РµСЂРІРµР№(Jв™Ґ){endClr}.",
+            expectedAction = TutorialActionType.MoveCard,
+            expectedCardName = "Spades_10",
+            expectedTargetPileName = "Tableau",
+            panelAnchor = TutorialPanelAnchorType.Bottom,
+            highlightElements = new List<string>(),
+            arrowType = TutorialArrowType.Left,
+            arrowAnchorIndex = 5
+        });
+
+        // 10 (РЎС‚СЂРµР»РєР° РІРІРµСЂС…, РїРѕРґ 9в™¦)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial10",
+            fallbackText = $"РРЅРѕРіРґР° РєР°СЂС‚Сѓ РІС‹РіРѕРґРЅРѕ РІРµСЂРЅСѓС‚СЊ РёР· {clrOrg}Р”РѕРјР°{endClr} РѕР±СЂР°С‚РЅРѕ РЅР° РїРѕР»Рµ.\nРџРµСЂРµС‚Р°С‰РёС‚Рµ {clrRed}Р”РµРІСЏС‚РєСѓ Р‘СѓР±РµРЅ(9в™¦){endClr} РёР· {clrOrg}Р”РѕРјР°{endClr} РЅР° {clrBlk}С‡РµСЂРЅСѓСЋ Р”РµСЃСЏС‚РєСѓ РџРёРє(10в™ ){endClr}.",
+            expectedAction = TutorialActionType.MoveCard,
+            expectedCardName = "Diamonds_9",
+            expectedTargetPileName = "Tableau",
+            panelAnchor = TutorialPanelAnchorType.Bottom,
+            highlightElements = new List<string> { "Highlight_Foundation" },
+            arrowType = TutorialArrowType.Up,
+            arrowAnchorIndex = 7
+        });
+
+        // 11 (РЎС‚СЂРµР»РєР° РІР»РµРІРѕ, РєР°Рє РІ 6)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial11",
+            fallbackText = $"Р’ РЅР°С€РµР№ РѕР±СѓС‡Р°СЋС‰РµР№ {clrOrg}РєРѕР»РѕРґРµ{endClr} РѕСЃС‚Р°Р»Р°СЃСЊ РїРѕСЃР»РµРґРЅСЏСЏ РєР°СЂС‚Р°. Р”РѕСЃС‚Р°РЅРµРј РµС‘!\nРљР»РёРєРЅРёС‚Рµ РїРѕ РєРѕР»РѕРґРµ.",
+            expectedAction = TutorialActionType.ClickStock,
+            expectedCardName = "",
+            expectedTargetPileName = "",
+            panelAnchor = TutorialPanelAnchorType.Bottom,
+            highlightElements = new List<string> { "Highlight_Stock" },
+            arrowType = TutorialArrowType.Left,
+            arrowAnchorIndex = 4
+        });
+
+        // 12 (РЎС‚СЂРµР»РєР° РІР»РµРІРѕ, РєР°Рє РІ 7)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial12",
+            fallbackText = $"РџРѕР»РѕР¶РёС‚Рµ {clrRed}Р”РµРІСЏС‚РєСѓ Р§РµСЂРІРµР№(9в™Ґ){endClr} РЅР° {clrBlk}Р”РµСЃСЏС‚РєСѓ РўСЂРµС„(10в™Ј){endClr}.",
+            expectedAction = TutorialActionType.MoveCard,
+            expectedCardName = "Hearts_9",
+            expectedTargetPileName = "Tableau",
+            panelAnchor = TutorialPanelAnchorType.Bottom,
+            highlightElements = new List<string>(),
+            arrowType = TutorialArrowType.Left,
+            arrowAnchorIndex = 5
+        });
+
+        // 13 (РЎС‚СЂРµР»РєР° РІРІРµСЂС…, РїРѕРґ 7в™ )
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial13",
+            fallbackText = $"РљРѕР»РѕРґР° РїСѓСЃС‚Р°! РўРµРїРµСЂСЊ РѕС‚РїСЂР°РІРёРј РѕС‚РєСЂС‹РІС€РёРµСЃСЏ РєР°СЂС‚С‹ РІ {clrOrg}Р”РѕРј{endClr}.\nР”РІР°Р¶РґС‹ РєР»РёРєРЅРёС‚Рµ РїРѕ {clrBlk}РЎРµРјРµСЂРєРµ РџРёРє(7в™ ){endClr}.",
+            expectedAction = TutorialActionType.DoubleClick,
+            expectedCardName = "Spades_7",
+            expectedTargetPileName = "Foundation",
+            panelAnchor = TutorialPanelAnchorType.Bottom,
+            highlightElements = new List<string>(),
+            arrowType = TutorialArrowType.Up,
+            arrowAnchorIndex = 8
+        });
+
+        // 14 (РЎС‚СЂРµР»РєР° РІРІРµСЂС…, РїРѕРґ 7в™Ґ)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial14",
+            fallbackText = $"Р”РІР°Р¶РґС‹ РєР»РёРєРЅРёС‚Рµ РїРѕ {clrRed}РЎРµРјРµСЂРєРµ Р§РµСЂРІРµР№(7в™Ґ){endClr}.",
+            expectedAction = TutorialActionType.DoubleClick,
+            expectedCardName = "Hearts_7",
+            expectedTargetPileName = "Foundation",
+            panelAnchor = TutorialPanelAnchorType.Bottom,
+            highlightElements = new List<string>(),
+            arrowType = TutorialArrowType.Up,
+            arrowAnchorIndex = 9
+        });
+
+        // 15 (РЎС‚СЂРµР»РєР° РІР»РµРІРѕ, РєР°Рє РІ 7 - РЅР° РєРЅРѕРїРєСѓ РђРІС‚РѕСЃР±РѕСЂР°)
+        steps.Add(new TutorialStep
+        {
+            localizationKey = "KlondikeTutorial15",
+            fallbackText = $"Р’СЃРµ РєР°СЂС‚С‹ РѕС‚РєСЂС‹С‚С‹. РќР°Р¶РјРёС‚Рµ РєРЅРѕРїРєСѓ {clrOrg}'РђР’РўРћ'{endClr}!",
+            expectedAction = TutorialActionType.DoubleClick,
+            expectedCardName = "",
+            expectedTargetPileName = "",
+            panelAnchor = TutorialPanelAnchorType.Center,
+            highlightElements = new List<string> { "Highlight_AutoWinButton" },
+            arrowType = TutorialArrowType.Left,
+            arrowAnchorIndex = 5
+        });
     }
 }

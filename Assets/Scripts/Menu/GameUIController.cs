@@ -401,13 +401,17 @@ public class GameUIController : MonoBehaviour
             return;
         }
 
-        // [FIX] Универсальная проверка "Идет ли игра" через интерфейс
         bool needConfirmation = false;
         if (activeGameMode != null && activeGameMode.IsMatchInProgress())
         {
-            // Если игра реально идет (флаг started = true), проверяем ходы
             int moves = (StatisticsManager.Instance != null) ? StatisticsManager.Instance.GetCurrentMoves() : 0;
             if (moves > 0) needConfirmation = true;
+        }
+
+        // 1. Игрок нажал Меню -> Прячем только текстовую панель влево
+        if (activeGameMode is KlondikeModeManager klondikeMode && klondikeMode.tutorialManager != null)
+        {
+            klondikeMode.tutorialManager.HidePanelToLeft();
         }
 
         if (needConfirmation && exitConfirmationPanel != null)
@@ -496,14 +500,16 @@ public class GameUIController : MonoBehaviour
             else DealCacheSystem.Instance.ReturnActiveDealToQueue();
         }
 
-        // Анимация шторки (SceneExitAnimator) и загрузка сцены
+        // 3. Игрок реально выходит -> Отправляем хайлайты в космос
+        if (activeGameMode is KlondikeModeManager klondikeMode && klondikeMode.tutorialManager != null)
+        {
+            klondikeMode.tutorialManager.HideHighlights();
+        }
+
         if (exitAnimator != null)
         {
             if (activeGameMode != null) activeGameMode.IsInputAllowed = false;
-
-            // [FIX] Принудительно прерываем начальную раздачу перед выходом
             AbortActiveGameAnimations();
-
             exitAnimator.PlayExitSequence(() => SceneManager.LoadScene("MenuScene"));
         }
         else
@@ -515,6 +521,12 @@ public class GameUIController : MonoBehaviour
     public void OnCancelExitClicked()
     {
         if (exitConfirmationPanel != null) TogglePanelAnimated(exitConfirmationPanel, false);
+
+        // 2. Игрок нажал "Нет" -> Возвращаем текстовую панель обратно
+        if (activeGameMode is KlondikeModeManager klondikeMode && klondikeMode.tutorialManager != null)
+        {
+            klondikeMode.tutorialManager.RestorePanelPosition();
+        }
     }
 
     // --- NEW GAME LOGIC (CORRECTED) ---
@@ -819,16 +831,29 @@ public class GameUIController : MonoBehaviour
         if (winDifficultyText)
         {
             string diffKey = "DiffMedium";
-            switch (GameSettings.CurrentDifficulty)
+
+            // --- ИЗМЕНЕНИЕ: Проверяем, был ли это туториал ---
+            if (GameSettings.IsTutorialMode)
             {
-                case Difficulty.Easy: diffKey = "DiffEasy"; break;
-                case Difficulty.Medium: diffKey = "DiffMedium"; break;
-                case Difficulty.Hard: diffKey = "DiffHard"; break;
+                diffKey = "tutorial";
             }
+            else
+            {
+                switch (GameSettings.CurrentDifficulty)
+                {
+                    case Difficulty.Easy: diffKey = "DiffEasy"; break;
+                    case Difficulty.Medium: diffKey = "DiffMedium"; break;
+                    case Difficulty.Hard: diffKey = "DiffHard"; break;
+                }
+            }
+
             if (LocalizationManager.instance != null && LocalizationManager.instance.IsReady())
                 winDifficultyText.text = LocalizationManager.instance.GetLocalizedValue(diffKey);
             else
-                winDifficultyText.text = GameSettings.CurrentDifficulty.ToString();
+            {
+                // Fallback, если локализация не загрузилась
+                winDifficultyText.text = GameSettings.IsTutorialMode ? "Обучение" : GameSettings.CurrentDifficulty.ToString();
+            }
         }
 
         // --- ЧТЕНИЕ ФЛАГОВ РЕКОРДОВ ИЗ STATISTICS MANAGER ---

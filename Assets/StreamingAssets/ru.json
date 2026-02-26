@@ -305,60 +305,88 @@
             "value": "Новый рекорд!"
         },
         {
-            "key": "turorial",
+            "key": "tutorial",
             "value": "Обучение"
         },
         {
-            "key": "word.hour_start.4",
-            "value": "четвертый"
+            "key": "Foundaton",
+            "value": "Дома"
         },
         {
-            "key": "word.hour_start.5",
-            "value": "пятый"
+            "key": "Stock",
+            "value": "Колода"
         },
         {
-            "key": "word.hour_start.6",
-            "value": "шестой"
+            "key": "Tableau",
+            "value": "Игровой стол"
         },
         {
-            "key": "word.hour_start.7",
-            "value": "седьмой"
+            "key": "KlondikeTutorial1",
+            "value": "Цель игры — собрать карты в <color=#FCA311>'Дома'</color> сверху.\nПеретащите открытую <color=#8294FF>Шестерку Пик(6♠)</color> в первый <color=#FCA311>Дом</color>."
         },
         {
-            "key": "word.hour_start.8",
-            "value": "восьмой"
+            "key": "KlondikeTutorial2",
+            "value": "На <color=#FCA311>Игровом столе</color> карты складываются по убыванию с чередованием цвета.\nПеретащите <color=#8294FF>черную Десятку Треф(10♣)</color> на <color=#FF6B6B>красного Валета Бубен(J♦)</color>."
         },
         {
-            "key": "word.hour_start.9",
-            "value": "девятый"
+            "key": "KlondikeTutorial3",
+            "value": "Отлично, открылась скрытая карта! Их можно быстро отправлять в <color=#FCA311>Дом</color> двойным кликом.\nДважды кликните по <color=#FF6B6B>Шестерке Червей(6♥)</color>."
         },
         {
-            "key": "word.hour_start.10",
-            "value": "десятый"
+            "key": "KlondikeTutorial4",
+            "value": "В пустые ячейки на поле можно класть <color=#FCA311>ТОЛЬКО</color> Королей.\nПеретащите <color=#FF6B6B>Короля Червей(K♥)</color> в первую пустую колонку."
         },
         {
-            "key": "word.hour_start.11",
-            "value": "одиннадцатый"
+            "key": "KlondikeTutorial5",
+            "value": "Вы можете переносить сразу несколько открытых карт.\nПеренесите стопку с <color=#FF6B6B>красной Десяткой Бубен(10♦)</color> на <color=#8294FF>черного Валета Треф(J♣)</color>."
         },
         {
-            "key": "word.hour_start.12",
-            "value": "двенадцатый"
+            "key": "KlondikeTutorial6",
+            "value": "Нет доступных ходов? Используйте <color=#FCA311>колоду</color> (слева сверху). Кликните по ней, чтобы взять карту."
         },
         {
-            "key": "clue.l3.time.half_past",
-            "value": "Дверь откроется в пол {nextHourWord} и {SS} секунд."
+            "key": "KlondikeTutorial7",
+            "value": "Нам выпала <color=#8294FF>Десятка Пик(10♠)</color>. Положите её на открывшегося <color=#FF6B6B>Валета Червей(J♥)</color>."
         },
         {
-            "key": "clue.l3.time.quarter_past",
-            "value": "Дверь откроется в четверть {nextHourWord} и {SS} секунд."
+            "key": "KlondikeTutorial8",
+            "value": "Отличный ход! Но иногда действие нужно отменить. Давайте проверим как работает кнопка <color=#FCA311>'Отмена'</color> внизу экрана."
         },
         {
-            "key": "clue.l3.time.quarter_to",
-            "value": "Дверь откроется без четверти {plushourWord} и {SS} секунд."
+            "key": "KlondikeTutorial9",
+            "value": "Верните <color=#8294FF>Десятку Пик(10♠)</color> обратно на <color=#FF6B6B>Валета Червей(J♥)</color>."
         },
         {
-            "key": "clue.l3.time.minutes_to",
-            "value": "Дверь откроется без {nextminuteWord} {plushourWord} и {SS} секунд."
+            "key": "KlondikeTutorial10",
+            "value": "Иногда карту выгодно вернуть из <color=#FCA311>Дома</color> обратно на поле.\nПеретащите <color=#FF6B6B>Девятку Бубен(9♦)</color> из <color=#FCA311>Дома</color> на <color=#8294FF>черную Десятку Пик(10♠)</color>."
+        },
+        {
+            "key": "KlondikeTutorial11",
+            "value": "В нашей обучающей <color=#FCA311>колоде</color> осталась последняя карта. Достанем её!\nКликните по колоде."
+        },
+        {
+            "key": "KlondikeTutorial12",
+            "value": "Положите <color=#FF6B6B>Девятку Червей(9♥)</color> на <color=#8294FF>Десятку Треф(10♣)</color>."
+        },
+        {
+            "key": "KlondikeTutorial13",
+            "value": "Колода пуста! Теперь отправим открывшиеся карты в <color=#FCA311>Дом</color>.\nДважды кликните по <color=#8294FF>Семерке Пик(7♠)</color>."
+        },
+        {
+            "key": "KlondikeTutorial14",
+            "value": "Дважды кликните по <color=#FF6B6B>Семерке Червей(7♥)</color>."
+        },
+        {
+            "key": "KlondikeTutorial15",
+            "value": "Все карты открыты. Нажмите кнопку <color=#FCA311>'АВТО'</color>!"
+        },
+        {
+            "key": "KlondikeTutorialEnd",
+            "value": "<color=#FCA311>Поздравляем!</color> Вы освоили все механики. Удачи в игре!"
+        },
+        {
+            "key": "AutoButton",
+            "value": "Авто"
         },
         {
             "key": "clue.l3.time.minutes_past",

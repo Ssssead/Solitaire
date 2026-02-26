@@ -9,5 +9,6 @@ namespace YG
         // --- ДОБАВЛЕНО ---
         public string dealCacheJson = "";
         // -----------------
+        public string statsDataJson = "";
     }
 }

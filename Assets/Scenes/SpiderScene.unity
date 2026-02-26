@@ -369,9 +369,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   winPanel: {fileID: 783757245}
-  settingsPanel: {fileID: 109553204}
   defeatPanel: {fileID: 5854764}
   statisticsPanel: {fileID: 0}
+  settingsPanel: {fileID: 109553204}
   exitConfirmationPanel: {fileID: 525928363}
   newGameConfirmationPanel: {fileID: 1057553753}
   winDifficultyText: {fileID: 481904168}
@@ -379,10 +379,35 @@ MonoBehaviour:
   winTimeText: {fileID: 1503342163}
   winMovesText: {fileID: 1347312167}
   winXPText: {fileID: 1971947840}
-  localLevelBar: {fileID: 464081037}
+  winEarnedXPText: {fileID: 0}
+  winCardRect: {fileID: 0}
   winLevelBar: {fileID: 464081037}
+  localLevelBar: {fileID: 464081037}
   globalLevelUpPopup: {fileID: 1434375724}
+  btnSelectedColor: {r: 1, g: 0.6901961, b: 0.101960786, a: 1}
+  btnNormalColor: {r: 0.6039216, g: 0.37254903, b: 0.2509804, a: 1}
+  textSelectedColor: {r: 0.14117648, g: 0.078431375, b: 0.047058824, a: 1}
+  textNormalColor: {r: 0.7529412, g: 0.7529412, b: 0.7529412, a: 1}
+  winDifficultyContainer: {fileID: 0}
+  winDrawContainer: {fileID: 0}
+  winSuitContainer: {fileID: 0}
+  winDiffButtons: []
+  winDrawButtons: []
+  xpPreviewText: {fileID: 0}
+  xpPreviewLocKey: xp_reward_preview
   undoManager: {fileID: 959636144}
+  exitAnimator: {fileID: 0}
+  settingsDifficultyContainer: {fileID: 0}
+  settingsDrawContainer: {fileID: 0}
+  settingsSuitContainer: {fileID: 0}
+  settingsDiffButtons: []
+  settingsDrawButtons: []
+  newGameSettingsPanel: {fileID: 0}
+  newGameSettingsDiffContainer: {fileID: 0}
+  newGameSettingsDrawContainer: {fileID: 0}
+  newGameSettingsDiffButtons: []
+  newGameSettingsDrawButtons: []
+  newGameXPPreviewText: {fileID: 0}
 --- !u!114 &48830004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -820,6 +845,9 @@ MonoBehaviour:
   faceUpGapMax: 35
   faceUpGapMin: 15
   firstOpenGap: 10
+  bottomPadding: 200
+  bottomBoundary: {fileID: 0}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -1449,6 +1477,9 @@ MonoBehaviour:
   faceUpGapMax: 35
   faceUpGapMin: 15
   firstOpenGap: 10
+  bottomPadding: 200
+  bottomBoundary: {fileID: 0}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -1655,8 +1686,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 1299689324}
+  previewFillImage: {fileID: 0}
   levelText: {fileID: 1065680515}
   xpText: {fileID: 0}
+  tierSprites: []
+  targetImageToChange: {fileID: 0}
 --- !u!224 &464081038
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1727,6 +1761,7 @@ GameObject:
   - component: {fileID: 473154349}
   - component: {fileID: 473154351}
   - component: {fileID: 473154350}
+  - component: {fileID: 473154352}
   m_Layer: 5
   m_Name: BG
   m_TagString: Untagged
@@ -1766,14 +1801,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.1254902, g: 0.3019608, b: 0.1254902, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5cc799dc1b344e24688a7b262d720895, type: 3}
+  m_Sprite: {fileID: 21300000, guid: df7686edfe8944241a63eb2aa9cc244d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1791,6 +1826,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 473154348}
   m_CullTransparentMesh: 1
+--- !u!114 &473154352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 473154348}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b6a949447e320c498f9a6312ee8c22b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  transitionDuration: 0.5
 --- !u!1 &475009617
 GameObject:
   m_ObjectHideFlags: 0
@@ -2289,6 +2337,9 @@ MonoBehaviour:
   faceUpGapMax: 35
   faceUpGapMin: 15
   firstOpenGap: 10
+  bottomPadding: 200
+  bottomBoundary: {fileID: 0}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -2989,6 +3040,9 @@ MonoBehaviour:
   faceUpGapMax: 35
   faceUpGapMin: 15
   firstOpenGap: 10
+  bottomPadding: 200
+  bottomBoundary: {fileID: 0}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -3230,6 +3284,9 @@ MonoBehaviour:
   faceUpGapMax: 35
   faceUpGapMin: 15
   firstOpenGap: 10
+  bottomPadding: 200
+  bottomBoundary: {fileID: 0}
+  bottomMargin: 10
   maxHeight: 375
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -4657,6 +4714,9 @@ MonoBehaviour:
   faceUpGapMax: 35
   faceUpGapMin: 15
   firstOpenGap: 10
+  bottomPadding: 200
+  bottomBoundary: {fileID: 0}
+  bottomMargin: 10
   maxHeight: 375
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -4792,6 +4852,9 @@ MonoBehaviour:
   faceUpGapMax: 35
   faceUpGapMin: 15
   firstOpenGap: 10
+  bottomPadding: 200
+  bottomBoundary: {fileID: 0}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -5949,6 +6012,9 @@ MonoBehaviour:
   faceUpGapMax: 35
   faceUpGapMin: 15
   firstOpenGap: 10
+  bottomPadding: 200
+  bottomBoundary: {fileID: 0}
+  bottomMargin: 10
   maxHeight: 375
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -6352,6 +6418,9 @@ MonoBehaviour:
   faceUpGapMax: 35
   faceUpGapMin: 15
   firstOpenGap: 10
+  bottomPadding: 200
+  bottomBoundary: {fileID: 0}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 125
   layoutAnimDuration: 0.18
@@ -8088,6 +8157,7 @@ MonoBehaviour:
   levelText: {fileID: 1374546409}
   displayTime: 3
   fadeDuration: 0.5
+  localizationKey: NewGlobalLevelNotification
 --- !u!224 &1434375725
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8750,6 +8820,8 @@ MonoBehaviour:
   spriteDb: {fileID: 11400000, guid: b13673194ed34f748b29a1202506efac, type: 2}
   rootCanvas: {fileID: 2012075386}
   cardControllerTemplate: {fileID: 0}
+  referenceSlot: {fileID: 1253888659}
+  autoResizeCards: 1
   defaultCardSize: {x: 85, y: 125}
 --- !u!4 &1616333086
 Transform:
@@ -11110,6 +11182,9 @@ MonoBehaviour:
   faceUpGapMax: 35
   faceUpGapMin: 15
   firstOpenGap: 10
+  bottomPadding: 200
+  bottomBoundary: {fileID: 0}
+  bottomMargin: 10
   maxHeight: 450
   cardHeight: 160
   layoutAnimDuration: 0.18
@@ -11796,6 +11871,9 @@ MonoBehaviour:
   faceUpGapMax: 35
   faceUpGapMin: 15
   firstOpenGap: 10
+  bottomPadding: 200
+  bottomBoundary: {fileID: 0}
+  bottomMargin: 10
   maxHeight: 375
   cardHeight: 125
   layoutAnimDuration: 0.18

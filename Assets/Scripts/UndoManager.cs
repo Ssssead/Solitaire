@@ -19,6 +19,7 @@ public class UndoManager : MonoBehaviour
     [SerializeField] private float stockRapidDelay = 0.05f;
 
     private bool inProgress = false;
+    public bool isLocked = false; // --- НОВОЕ: Флаг жесткой блокировки ---
     public bool IsUndoing => inProgress;
 
     public void Initialize(ICardGameMode mode)
@@ -42,6 +43,9 @@ public class UndoManager : MonoBehaviour
                            List<Transform> origParents = null, List<Vector3> origLocal = null, List<int> origSibling = null,
                            string groupID = null, bool isRapidUndo = false)
     {
+        // --- НОВОЕ: Если система заблокирована (авто-сбор/победа), мы игнорируем любые записи ходов ---
+        if (isLocked) return;
+
         if (undoStack.Count == 0 && DealCacheSystem.Instance != null)
             DealCacheSystem.Instance.MarkCurrentDealAsPlayed();
 
@@ -392,7 +396,26 @@ public class UndoManager : MonoBehaviour
             }
         }
     }
+    public void ClearAndLock()
+    {
+        undoStack.Clear();
+        inProgress = false;
+        isLocked = true;
+        UpdateButtons();
+    }
+    public void ResetHistory() { undoStack.Clear(); inProgress = false; isLocked = false; UpdateButtons(); gameMode?.OnUndoAction(); }
 
-    public void ResetHistory() { undoStack.Clear(); inProgress = false; UpdateButtons(); gameMode?.OnUndoAction(); }
-    private void UpdateButtons() { if (undoButton) undoButton.interactable = undoStack.Count > 0 && !inProgress; if (undoAllButton) undoAllButton.interactable = undoStack.Count > 0 && !inProgress; }
+    // --- НОВЫЙ МЕТОД: Очищает стек и выключает кнопки, не вызывая игровых событий ---
+    public void ClearHistory()
+    {
+        undoStack.Clear();
+        inProgress = false;
+        UpdateButtons();
+    }
+    private void UpdateButtons()
+    {
+        bool canUndo = undoStack.Count > 0 && !inProgress && !isLocked;
+        if (undoButton) undoButton.interactable = canUndo;
+        if (undoAllButton) undoAllButton.interactable = canUndo;
+    }
 }

@@ -22,42 +22,32 @@ public class CardFactory : MonoBehaviour
     [Tooltip("Шаблон CardController для копирования настроек (опционально)")]
     public CardController cardControllerTemplate;
 
+    [Header("Responsive Sizing")]
+    [Tooltip("Перетащите сюда любой пустой слот (например, первый Дом или слот Колоды).")]
+    public RectTransform referenceSlot;
+
+    [Tooltip("Автоматически подстраивать размер карт под ширину referenceSlot, сохраняя пропорции")]
+    public bool autoResizeCards = true;
+
     [Header("Card Settings")]
-    [Tooltip("Размер карты по умолчанию")]
-    public Vector2 defaultCardSize = new Vector2(140f, 190f);
+    [Tooltip("Размер карты по умолчанию (укажите идеальный размер, например 85 на 125, для сохранения пропорций)")]
+    public Vector2 defaultCardSize = new Vector2(85f, 125f);
 
     // Кэш созданных карт для отладки/управления
     private List<CardController> createdCards = new List<CardController>();
 
     private void Reset()
     {
-        // Автоматический поиск Canvas при добавлении компонента
-        if (rootCanvas == null)
-        {
-            rootCanvas = FindObjectOfType<Canvas>();
-        }
+        if (rootCanvas == null) rootCanvas = FindObjectOfType<Canvas>();
     }
 
     private void Awake()
     {
-        // Проверка критических зависимостей
-        if (cardPrefab == null)
-        {
-            Debug.LogError("[CardFactory] cardPrefab is not assigned! Assign it in Inspector.");
-        }
-
-        if (spriteDb == null)
-        {
-            Debug.LogWarning("[CardFactory] spriteDb is not assigned. Cards may not display correctly.");
-        }
-
+        if (cardPrefab == null) Debug.LogError("[CardFactory] cardPrefab is not assigned!");
         if (rootCanvas == null)
         {
             rootCanvas = FindObjectOfType<Canvas>();
-            if (rootCanvas == null)
-            {
-                Debug.LogError("[CardFactory] rootCanvas not found! Make sure there's a Canvas in the scene.");
-            }
+            if (rootCanvas == null) Debug.LogError("[CardFactory] rootCanvas not found!");
         }
     }
 
@@ -82,6 +72,40 @@ public class CardFactory : MonoBehaviour
             parent = rootCanvas != null ? rootCanvas.transform : transform;
         }
 
+        // --- ДИНАМИЧЕСКИЙ РАСЧЕТ РАЗМЕРА С СОХРАНЕНИЕМ ПРОПОРЦИЙ ---
+        // Используем локальную переменную finalSize, чтобы не сломать эталонные пропорции в defaultCardSize
+        Vector2 finalSize = defaultCardSize;
+
+        if (autoResizeCards)
+        {
+            float targetWidth = finalSize.x;
+
+            // 1. Приоритет: берем ТОЛЬКО ширину у специально заданного слота-шаблона
+            if (referenceSlot != null && referenceSlot.rect.width > 10)
+            {
+                targetWidth = referenceSlot.rect.width;
+            }
+            // 2. Если шаблона нет, пытаемся взять ширину у родителя (куда спавним карту)
+            else if (parent != null)
+            {
+                RectTransform parentRect = parent.GetComponent<RectTransform>();
+                // Защита: чтобы не скопировать ширину всего экрана
+                if (parentRect != null && parentRect.rect.width > 10 && parentRect.rect.width < Screen.width * 0.5f)
+                {
+                    targetWidth = parentRect.rect.width;
+                }
+            }
+
+            // Математически высчитываем идеальную высоту на основе ширины слота
+            // Сохраняем пропорции, которые вы задали в инспекторе (например, 85 / 125)
+            if (defaultCardSize.y > 0 && defaultCardSize.x > 0)
+            {
+                float aspectRatio = defaultCardSize.x / defaultCardSize.y;
+                finalSize = new Vector2(targetWidth, targetWidth / aspectRatio);
+            }
+        }
+        // -----------------------------------------------------------
+
         // Создаём экземпляр карты
         GameObject cardObj = Instantiate(cardPrefab, parent, false);
         cardObj.name = $"Card_{model.suit}_{model.rank}";
@@ -89,7 +113,6 @@ public class CardFactory : MonoBehaviour
         // Проверяем что объект активен
         if (!cardObj.activeSelf)
         {
-            Debug.LogWarning($"[CardFactory] Created card {cardObj.name} is inactive! Activating...");
             cardObj.SetActive(true);
         }
 
@@ -101,12 +124,13 @@ public class CardFactory : MonoBehaviour
         }
 
         rect.anchoredPosition = anchoredPos;
-        rect.sizeDelta = defaultCardSize;
+
+        // Устанавливаем рассчитанный размер (идеальные пропорции!)
+        rect.sizeDelta = finalSize;
 
         // КРИТИЧНО: убедимся что scale правильный
         if (rect.localScale != Vector3.one)
         {
-            Debug.LogWarning($"[CardFactory] Card {cardObj.name} has wrong localScale {rect.localScale}, fixing to (1,1,1)");
             rect.localScale = Vector3.one;
         }
 
@@ -122,14 +146,6 @@ public class CardFactory : MonoBehaviour
         if (spriteDb != null)
         {
             cardSprite = spriteDb.GetSprite(model.suit, model.rank);
-            if (cardSprite == null)
-            {
-                Debug.LogWarning($"[CardFactory] No sprite found for {model.suit} {model.rank}");
-            }
-        }
-        else
-        {
-            Debug.LogWarning("[CardFactory] spriteDb is null, cards will have no sprites!");
         }
 
         cardData.SetModel(model, cardSprite);
@@ -158,25 +174,16 @@ public class CardFactory : MonoBehaviour
         }
 
         // Убеждаемся что CanvasGroup видим
-        if (canvasGroup.alpha <= 0f)
-        {
-            Debug.LogWarning($"[CardFactory] Card {cardObj.name} CanvasGroup.alpha is {canvasGroup.alpha}, setting to 1");
-            canvasGroup.alpha = 1f;
-        }
+        if (canvasGroup.alpha <= 0f) canvasGroup.alpha = 1f;
 
         // Проверяем Image компонент
         var image = cardObj.GetComponent<UnityEngine.UI.Image>();
         if (image != null)
         {
-            if (!image.enabled)
-            {
-                Debug.LogWarning($"[CardFactory] Card {cardObj.name} Image is disabled! Enabling...");
-                image.enabled = true;
-            }
+            if (!image.enabled) image.enabled = true;
 
             if (image.color.a <= 0f)
             {
-                Debug.LogWarning($"[CardFactory] Card {cardObj.name} Image.color.a is {image.color.a}, setting to 1");
                 var col = image.color;
                 col.a = 1f;
                 image.color = col;
@@ -185,8 +192,6 @@ public class CardFactory : MonoBehaviour
 
         // Сохраняем в кэш
         createdCards.Add(cardController);
-
-        Debug.Log($"[CardFactory] Created card {cardObj.name}: parent={parent.name}, active={cardObj.activeSelf}, scale={rect.localScale}, alpha={canvasGroup.alpha}");
 
         return cardController;
     }

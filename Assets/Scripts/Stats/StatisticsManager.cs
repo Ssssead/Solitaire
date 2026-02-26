@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.IO;
+using YG;
 
 public class StatisticsManager : MonoBehaviour
 {
@@ -41,14 +42,29 @@ public class StatisticsManager : MonoBehaviour
         }
         else
         {
-            Destroy(gameObject); // Уничтожаем дубликат, если вернулись в меню
+            Destroy(gameObject);
         }
     }
+
+#if !UNITY_EDITOR
+    private void OnEnable() => YG2.onGetSDKData += LoadStatsCloud;
+    private void OnDisable() => YG2.onGetSDKData -= LoadStatsCloud;
+#endif
 
     private void Initialize()
     {
         filePath = Path.Combine(Application.persistentDataPath, "solitaire_stats.json");
-        LoadStats();
+
+#if UNITY_EDITOR
+        // Загрузка в редакторе (через локальный файл JSON)
+        LoadStatsLocal();
+#else
+        // Загрузка в билде (через Яндекс Игры)
+        if (YG2.isSDKEnabled) 
+        {
+            LoadStatsCloud();
+        }
+#endif
     }
 
     public void OnGameStarted(string gameName, Difficulty difficulty, string variant)
@@ -116,9 +132,10 @@ public class StatisticsManager : MonoBehaviour
         }
 
         // Разбираем ключи
-        string gameName = currentGameKey.Split('_')[0];
-        string difficultyStr = currentGameKey.Split('_')[1];
-        string variantStr = currentGameKey.Split('_')[2];
+        string[] keyParts = currentGameKey.Split('_');
+        string gameName = keyParts[0];
+        string difficultyStr = keyParts[1];
+        string variantStr = keyParts[2];
 
         // 1. Парсим Enum сложности и Типа игры
         Difficulty diffEnum = (Difficulty)System.Enum.Parse(typeof(Difficulty), difficultyStr);
@@ -135,6 +152,19 @@ public class StatisticsManager : MonoBehaviour
 
         string gameGlobalKey = $"{gameName}_Global"; // Klondike_Global
         string appGlobalKey = "Global";              // Global
+
+        // --- ДОБАВЛЕНО: ПРОВЕРКА РЕКОРДОВ ---
+        // Получаем текущие данные ДО их обновления, чтобы сравнить с новым результатом
+        StatData modeData = stats.GetData(currentGameKey);
+
+        // Проверяем, были ли победы ранее (чтобы не писать "Новый рекорд" при самой первой игре в режиме)
+        bool hasPreviousWins = modeData.gamesWon > 0;
+
+        // Устанавливаем флаги для GameUIController
+        IsNewScoreRecord = hasPreviousWins && (finalScore > modeData.bestScore);
+        IsNewTimeRecord = hasPreviousWins && (modeData.bestTime == 0 || duration < modeData.bestTime);
+        IsNewMovesRecord = hasPreviousWins && (modeData.fewestMoves == 0 || currentMoves < modeData.fewestMoves);
+        // ------------------------------------
 
         // 2. Получаем текущие данные игры, чтобы узнать УРОВЕНЬ
         StatData gameData = stats.GetData(gameGlobalKey);
@@ -218,11 +248,27 @@ public class StatisticsManager : MonoBehaviour
 
     private void SaveStats()
     {
+#if UNITY_EDITOR
+        // Сохранение в редакторе (стандартный JSON)
         string json = JsonUtility.ToJson(stats, true);
         File.WriteAllText(filePath, json);
+        Log("Stats saved locally.");
+#else
+        // Сохранение в билде (сжимаем в Base64 и пушим в плагин)
+        try
+        {
+            YG2.saves.statsDataJson = StatsSerializer.Serialize(stats);
+            YG2.SaveProgress();
+            Log("Stats saved to cloud.");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[StatsManager] Cloud Save Failed: {e.Message}");
+        }
+#endif
     }
-
-    private void LoadStats()
+#if UNITY_EDITOR
+    private void LoadStatsLocal()
     {
         if (File.Exists(filePath))
         {
@@ -231,21 +277,49 @@ public class StatisticsManager : MonoBehaviour
                 string json = File.ReadAllText(filePath);
                 stats = JsonUtility.FromJson<GameStatistics>(json);
                 stats.BuildLookup();
-                Log("Stats loaded successfully.");
+                Log("Local stats loaded successfully.");
             }
             catch
             {
                 stats = new GameStatistics();
-                Log("Error loading stats, creating new.");
+                Log("Error loading local stats, creating new.");
             }
         }
         else
         {
             stats = new GameStatistics();
-            Log("No stats file found, creating new.");
+            Log("No local stats file found, creating new.");
         }
     }
+#endif
 
+#if !UNITY_EDITOR
+    private void LoadStatsCloud()
+    {
+        string cloudJson = YG2.saves.statsDataJson;
+
+        if (string.IsNullOrEmpty(cloudJson))
+        {
+            stats = new GameStatistics();
+            Log("Cloud stats empty, creating new.");
+        }
+        else
+        {
+            try
+            {
+                StatsSerializer.Deserialize(cloudJson, out stats);
+                stats.BuildLookup();
+                Log("Cloud stats loaded successfully.");
+            }
+            catch (System.Exception e)
+            {
+                stats = new GameStatistics();
+                Debug.LogError($"[StatsManager] Error loading cloud stats, creating new. {e.Message}");
+            }
+        }
+    }
+#endif
+ 
     // --- API для UI ---
 
     // Метод для получения статистики конкретного режима (Easy/Medium/Hard)

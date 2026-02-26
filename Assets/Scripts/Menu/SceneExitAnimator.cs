@@ -97,6 +97,14 @@ public class SceneExitAnimator : MonoBehaviour
             fc.rotationDir = Random.Range(-1f, 1f) * (maxRotationSpeed * 0.5f);
             fc.delay = Random.Range(0f, 0.15f);
 
+            // --- НОВОЕ: Добавляем встроенный компонент тени Unity UI ---
+            Shadow uiShadow = card.gameObject.GetComponent<Shadow>();
+            if (uiShadow == null) uiShadow = card.gameObject.AddComponent<Shadow>();
+
+            uiShadow.effectDistance = new Vector2(5f, -5f);
+            uiShadow.effectColor = new Color(0f, 0f, 0f, 0.65f); // Черный цвет с прозрачностью
+            // -----------------------------------------------------------
+
             fallingCards.Add(fc);
         }
 

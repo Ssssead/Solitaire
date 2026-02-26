@@ -155,9 +155,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   winPanel: {fileID: 519673526}
-  settingsPanel: {fileID: 1443437588}
   defeatPanel: {fileID: 1501874909}
   statisticsPanel: {fileID: 0}
+  settingsPanel: {fileID: 1443437588}
   exitConfirmationPanel: {fileID: 558804132}
   newGameConfirmationPanel: {fileID: 1289103298}
   winDifficultyText: {fileID: 600491959}
@@ -165,10 +165,35 @@ MonoBehaviour:
   winTimeText: {fileID: 1289558062}
   winMovesText: {fileID: 859295512}
   winXPText: {fileID: 1422607257}
-  localLevelBar: {fileID: 339912467}
+  winEarnedXPText: {fileID: 0}
+  winCardRect: {fileID: 0}
   winLevelBar: {fileID: 339912467}
+  localLevelBar: {fileID: 339912467}
   globalLevelUpPopup: {fileID: 738611087}
+  btnSelectedColor: {r: 1, g: 0.6901961, b: 0.101960786, a: 1}
+  btnNormalColor: {r: 0.6039216, g: 0.37254903, b: 0.2509804, a: 1}
+  textSelectedColor: {r: 0.14117648, g: 0.078431375, b: 0.047058824, a: 1}
+  textNormalColor: {r: 0.7529412, g: 0.7529412, b: 0.7529412, a: 1}
+  winDifficultyContainer: {fileID: 0}
+  winDrawContainer: {fileID: 0}
+  winSuitContainer: {fileID: 0}
+  winDiffButtons: []
+  winDrawButtons: []
+  xpPreviewText: {fileID: 0}
+  xpPreviewLocKey: xp_reward_preview
   undoManager: {fileID: 959636144}
+  exitAnimator: {fileID: 0}
+  settingsDifficultyContainer: {fileID: 0}
+  settingsDrawContainer: {fileID: 0}
+  settingsSuitContainer: {fileID: 0}
+  settingsDiffButtons: []
+  settingsDrawButtons: []
+  newGameSettingsPanel: {fileID: 0}
+  newGameSettingsDiffContainer: {fileID: 0}
+  newGameSettingsDrawContainer: {fileID: 0}
+  newGameSettingsDiffButtons: []
+  newGameSettingsDrawButtons: []
+  newGameXPPreviewText: {fileID: 0}
 --- !u!224 &1954010
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2072,8 +2097,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 1285969204}
+  previewFillImage: {fileID: 0}
   levelText: {fileID: 564154585}
   xpText: {fileID: 0}
+  tierSprites: []
+  targetImageToChange: {fileID: 0}
 --- !u!1 &347914178
 GameObject:
   m_ObjectHideFlags: 0
@@ -4378,6 +4406,7 @@ GameObject:
   - component: {fileID: 568968391}
   - component: {fileID: 568968393}
   - component: {fileID: 568968392}
+  - component: {fileID: 568968394}
   m_Layer: 5
   m_Name: BG
   m_TagString: Untagged
@@ -4417,14 +4446,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.1254902, g: 0.3019608, b: 0.1254902, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5cc799dc1b344e24688a7b262d720895, type: 3}
+  m_Sprite: {fileID: 21300000, guid: df7686edfe8944241a63eb2aa9cc244d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4442,6 +4471,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 568968390}
   m_CullTransparentMesh: 1
+--- !u!114 &568968394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 568968390}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b6a949447e320c498f9a6312ee8c22b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  transitionDuration: 0.5
 --- !u!1 &580145963
 GameObject:
   m_ObjectHideFlags: 0
@@ -5488,6 +5530,7 @@ MonoBehaviour:
   levelText: {fileID: 1065781388}
   displayTime: 3
   fadeDuration: 0.5
+  localizationKey: NewGlobalLevelNotification
 --- !u!224 &738611088
 RectTransform:
   m_ObjectHideFlags: 0

@@ -695,6 +695,7 @@ MonoBehaviour:
   levelText: {fileID: 2141064967}
   displayTime: 3
   fadeDuration: 0.5
+  localizationKey: NewGlobalLevelNotification
 --- !u!224 &103929004
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1932,9 +1933,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   winPanel: {fileID: 1302743395}
-  settingsPanel: {fileID: 1901012668}
   defeatPanel: {fileID: 2035493304}
   statisticsPanel: {fileID: 0}
+  settingsPanel: {fileID: 1901012668}
   exitConfirmationPanel: {fileID: 1434560766}
   newGameConfirmationPanel: {fileID: 628303042}
   winDifficultyText: {fileID: 1613261122}
@@ -1942,10 +1943,35 @@ MonoBehaviour:
   winTimeText: {fileID: 534779249}
   winMovesText: {fileID: 1359556520}
   winXPText: {fileID: 77145242}
-  localLevelBar: {fileID: 1894109985}
+  winEarnedXPText: {fileID: 0}
+  winCardRect: {fileID: 0}
   winLevelBar: {fileID: 1894109985}
+  localLevelBar: {fileID: 1894109985}
   globalLevelUpPopup: {fileID: 103929003}
+  btnSelectedColor: {r: 1, g: 0.6901961, b: 0.101960786, a: 1}
+  btnNormalColor: {r: 0.6039216, g: 0.37254903, b: 0.2509804, a: 1}
+  textSelectedColor: {r: 0.14117648, g: 0.078431375, b: 0.047058824, a: 1}
+  textNormalColor: {r: 0.7529412, g: 0.7529412, b: 0.7529412, a: 1}
+  winDifficultyContainer: {fileID: 0}
+  winDrawContainer: {fileID: 0}
+  winSuitContainer: {fileID: 0}
+  winDiffButtons: []
+  winDrawButtons: []
+  xpPreviewText: {fileID: 0}
+  xpPreviewLocKey: xp_reward_preview
   undoManager: {fileID: 0}
+  exitAnimator: {fileID: 0}
+  settingsDifficultyContainer: {fileID: 0}
+  settingsDrawContainer: {fileID: 0}
+  settingsSuitContainer: {fileID: 0}
+  settingsDiffButtons: []
+  settingsDrawButtons: []
+  newGameSettingsPanel: {fileID: 0}
+  newGameSettingsDiffContainer: {fileID: 0}
+  newGameSettingsDrawContainer: {fileID: 0}
+  newGameSettingsDiffButtons: []
+  newGameSettingsDrawButtons: []
+  newGameXPPreviewText: {fileID: 0}
 --- !u!224 &356044403
 RectTransform:
   m_ObjectHideFlags: 0
@@ -10572,6 +10598,7 @@ GameObject:
   - component: {fileID: 1811226145}
   - component: {fileID: 1811226147}
   - component: {fileID: 1811226146}
+  - component: {fileID: 1811226148}
   m_Layer: 5
   m_Name: BG
   m_TagString: Untagged
@@ -10611,14 +10638,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.1254902, g: 0.3019608, b: 0.1254902, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5cc799dc1b344e24688a7b262d720895, type: 3}
+  m_Sprite: {fileID: 21300000, guid: df7686edfe8944241a63eb2aa9cc244d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -10636,6 +10663,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1811226144}
   m_CullTransparentMesh: 1
+--- !u!114 &1811226148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1811226144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b6a949447e320c498f9a6312ee8c22b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  transitionDuration: 0.5
 --- !u!1 &1815411428
 GameObject:
   m_ObjectHideFlags: 0
@@ -10994,8 +11034,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fillImage: {fileID: 1086315240}
+  previewFillImage: {fileID: 0}
   levelText: {fileID: 1450869680}
   xpText: {fileID: 0}
+  tierSprites: []
+  targetImageToChange: {fileID: 0}
 --- !u!1 &1901012668
 GameObject:
   m_ObjectHideFlags: 0
