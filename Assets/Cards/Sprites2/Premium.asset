@@ -12,5 +12,171 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7656c51f5933e02488e72eada9a3947b, type: 3}
   m_Name: Premium
   m_EditorClassIdentifier: 
-  backSprite: {fileID: 21300000, guid: bcb40903787f25c4bbaba832e1636049, type: 3}
-  entries: []
+  entries:
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 21300000, guid: acdf3bc11aaef1d4b825be4e6a0ec0ed, type: 3}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  - suit: 0
+    rank: 0
+    sprite: {fileID: 0}
+  localizedOverrides: []
+  backSprite: {fileID: 21300000, guid: 0e7cff27bf43ac446b448d3c366eee95, type: 3}
+  backSprites:
+  - {fileID: 21300000, guid: 0e7cff27bf43ac446b448d3c366eee95, type: 3}
+  - {fileID: 21300000, guid: 38dfbd70728b38847b5bcba774a5a3b9, type: 3}
+  - {fileID: 21300000, guid: 818dfc17daa43b74aa3e88d576ff9b63, type: 3}
+  - {fileID: 21300000, guid: fb8b332a463211441b073320732aa199, type: 3}
+  - {fileID: 21300000, guid: ebbf711d7e2c51646b19a48e5d9790de, type: 3}
+  - {fileID: 21300000, guid: b632f9be2133d244fab6901c77caf39c, type: 3}
+  - {fileID: 21300000, guid: 73a1fb5b33bcabf4e9bf2c82d25f18e3, type: 3}
+  - {fileID: 21300000, guid: a053d02e09483634cb75aa2641b4286e, type: 3}

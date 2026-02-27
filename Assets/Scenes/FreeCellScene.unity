@@ -2032,7 +2032,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 2
+  m_PixelsPerUnitMultiplier: 3
 --- !u!222 &281180051
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -8049,6 +8049,7 @@ MonoBehaviour:
   undoAllButton: {fileID: 1071440838}
   undoAnimDuration: 0.28
   stockRapidDelay: 0.05
+  isLocked: 0
 --- !u!114 &959636145
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12737,7 +12738,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardPrefab: {fileID: 643552427574577458, guid: 8cbabf014c0b63443af47b8b4817c7ba, type: 3}
-  spriteDb: {fileID: 11400000, guid: b13673194ed34f748b29a1202506efac, type: 2}
+  baseSpriteDb: {fileID: 11400000, guid: b13673194ed34f748b29a1202506efac, type: 2}
+  premiumSpriteDb: {fileID: 11400000, guid: 49e23ee1d8b64e746812808089e226cf, type: 2}
   rootCanvas: {fileID: 2012075386}
   cardControllerTemplate: {fileID: 0}
   referenceSlot: {fileID: 1253888659}

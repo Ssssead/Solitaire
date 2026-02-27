@@ -72,19 +72,35 @@ public class CardAnimationController : MonoBehaviour
                 card.hoverEffect.SetHoverEnabled(state);
         }
     }
-
-    private void RefreshCardVisuals(RectTransform card)
+    public void RefreshAllCards()
+    {
+        foreach (var entry in allCards)
+        {
+            RefreshCardVisuals(entry.rect);
+        }
+    }
+    public void RefreshCardVisuals(RectTransform card)
     {
         if (card == null) return;
-        Vector2 pos = card.anchoredPosition;
-        card.anchoredPosition = new Vector2(Mathf.Round(pos.x), Mathf.Round(pos.y));
 
+        // 1. Принудительно пересчитываем макет (важно для Aspect Ratio Fitter)
+        LayoutRebuilder.ForceRebuildLayoutImmediate(card);
+
+        // 2. Микро-сдвиг позиции для "встряски" графического движка
+        Vector2 pos = card.anchoredPosition;
+        card.anchoredPosition = new Vector2(pos.x + 0.01f, pos.y);
+        card.anchoredPosition = pos;
+
+        // 3. Обновляем все тексты
         var texts = card.GetComponentsInChildren<TMP_Text>();
         foreach (var t in texts)
         {
             t.SetAllDirty();
             t.ForceMeshUpdate();
         }
+
+        // 4. Если на карте есть скрипты, управляющие баром, они должны обновиться сами 
+        // так как LayoutRebuilder вызовет OnRectTransformDimensionsChange.
     }
 
     public void SelectCard(GameType selectedType)
@@ -193,6 +209,7 @@ public class CardAnimationController : MonoBehaviour
 
         foreach (var c in activeAnims) yield return c;
         foreach (var card in allCards) RefreshCardVisuals(card.rect);
+        RefreshAllCards();
         SetAllHovers(true);
     }
 

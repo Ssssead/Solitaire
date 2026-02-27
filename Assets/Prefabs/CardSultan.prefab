@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7977126400838211680}
   - component: {fileID: 114549179672781973}
   - component: {fileID: 5478146234286865280}
-  - component: {fileID: -642249951935869806}
+  - component: {fileID: 2477711331557059997}
   m_Layer: 5
   m_Name: CardSultan
   m_TagString: Untagged
@@ -150,11 +150,12 @@ MonoBehaviour:
   shadowAlpha: 0.6
   restingOffset: {x: 0.1, y: -0.1}
   dragOffset: {x: 0.5, y: -0.5}
+  fallingPixelOffset: {x: 20, y: -20}
   wasteSlotGap: 35
   arrivalThreshold: 50
   animationSpeed: 10
   fadeSpeed: 5
---- !u!114 &-642249951935869806
+--- !u!114 &2477711331557059997
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -163,7 +164,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 643552427574577458}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6e2444d4e593e134fba2c2cea7047e78, type: 3}
+  m_Script: {fileID: 11500000, guid: 4a102b2b99bd43545b25889ff1968a76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   cardModel:

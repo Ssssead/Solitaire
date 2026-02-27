@@ -21,7 +21,8 @@ public class CardSpriteDatabase : ScriptableObject
 
     [Header("Backs and Backgrounds")]
     public Sprite backSprite; // Текущая рубашка
-
+    [Header("Backs Collection")]
+    public List<Sprite> backSprites = new List<Sprite>();
     // Кэш для быстрого поиска
     private Dictionary<string, Sprite> cache;
     private bool useRussianSymbols = false;
@@ -66,5 +67,19 @@ public class CardSpriteDatabase : ScriptableObject
         string key = $"{(int)suit}-{rank}";
         cache.TryGetValue(key, out var sp);
         return sp;
+    }
+    public Sprite GetCurrentBackSprite()
+    {
+        // Читаем индекс из PlayerPrefs (по умолчанию 0 — первая рубашка)
+        int index = PlayerPrefs.GetInt("SelectedBackIndex", 0);
+
+        // Проверка безопасности: если индекс в порядке, отдаем спрайт из списка
+        if (backSprites != null && index >= 0 && index < backSprites.Count)
+        {
+            return backSprites[index];
+        }
+
+        // Если список пуст или индекс неверный, отдаем дефолтную рубашку
+        return backSprite;
     }
 }

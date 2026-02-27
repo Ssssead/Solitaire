@@ -166,4 +166,13 @@ public class CardData : MonoBehaviour
     {
         return isFaceUp;
     }
+    public void UpdateBackVisual(Sprite newBack)
+    {
+        backSprite = newBack;
+        // Если карта сейчас лежит рубашкой вверх, мгновенно обновляем картинку
+        if (!isFaceUp && image != null)
+        {
+            image.sprite = backSprite;
+        }
+    }
 }

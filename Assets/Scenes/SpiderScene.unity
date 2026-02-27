@@ -4139,6 +4139,7 @@ MonoBehaviour:
   undoAllButton: {fileID: 408792745}
   undoAnimDuration: 0.28
   stockRapidDelay: 0.05
+  isLocked: 0
 --- !u!114 &959636147
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8817,7 +8818,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardPrefab: {fileID: 643552427574577458, guid: 8d9b6c485bd0d2943b44f147d8e9e08d, type: 3}
-  spriteDb: {fileID: 11400000, guid: b13673194ed34f748b29a1202506efac, type: 2}
+  baseSpriteDb: {fileID: 11400000, guid: b13673194ed34f748b29a1202506efac, type: 2}
+  premiumSpriteDb: {fileID: 11400000, guid: 49e23ee1d8b64e746812808089e226cf, type: 2}
   rootCanvas: {fileID: 2012075386}
   cardControllerTemplate: {fileID: 0}
   referenceSlot: {fileID: 1253888659}

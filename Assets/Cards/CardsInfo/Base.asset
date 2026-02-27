@@ -207,3 +207,12 @@ MonoBehaviour:
     rank: 12
     sprite: {fileID: 21300000, guid: 09439db6cd468124dae5bb5806c9b01f, type: 3}
   backSprite: {fileID: 21300000, guid: 0ee705834ede55646b0bf2f369ae4d76, type: 3}
+  backSprites:
+  - {fileID: 21300000, guid: 0ee705834ede55646b0bf2f369ae4d76, type: 3}
+  - {fileID: 21300000, guid: 44838f19c41b7164480024698cad2aae, type: 3}
+  - {fileID: 21300000, guid: 8658fec14f8630b479e9d73fb375225a, type: 3}
+  - {fileID: 21300000, guid: 915deacd5da46b245b3baae64aa377c5, type: 3}
+  - {fileID: 21300000, guid: 11e175b6567040b43b8f1ccb4e51add3, type: 3}
+  - {fileID: 21300000, guid: cd299f6907380404089a65fac7cb6f50, type: 3}
+  - {fileID: 21300000, guid: e3b6bead6e54cfa4ab73f67275b77d18, type: 3}
+  - {fileID: 21300000, guid: 889a066764a885143a94d1e2092c3067, type: 3}

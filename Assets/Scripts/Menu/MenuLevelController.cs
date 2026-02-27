@@ -31,7 +31,7 @@ public class MenuLevelController : MonoBehaviour
         UpdateSingleBar(spiderBar, StatisticsManager.Instance.GetGameGlobalStats("Spider"));
         UpdateSingleBar(freeCellBar, StatisticsManager.Instance.GetGameGlobalStats("FreeCell"));
         UpdateSingleBar(pyramidBar, StatisticsManager.Instance.GetGameGlobalStats("Pyramid"));
-        UpdateSingleBar(tripeaksBar, StatisticsManager.Instance.GetGameGlobalStats("Tripeaks"));
+        UpdateSingleBar(tripeaksBar, StatisticsManager.Instance.GetGameGlobalStats("TriPeaks"));
         UpdateSingleBar(yukonBar, StatisticsManager.Instance.GetGameGlobalStats("Yukon"));
         UpdateSingleBar(sultanBar, StatisticsManager.Instance.GetGameGlobalStats("Sultan"));
         UpdateSingleBar(octagonBar, StatisticsManager.Instance.GetGameGlobalStats("Octagon"));
