@@ -42,6 +42,7 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     private bool hasWonGame = false;
     private bool hasGameStarted = false;
+    [HideInInspector] public bool isRestarting = false;
 
     private float gameTimer = 0f;
     private bool isTimerRunning = false;
@@ -398,6 +399,11 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode
     }
 
     public void OnKeyboardPick(CardController card) { }
-    public void RestartGame() { StartNewGame(); }
+    public void RestartGame()
+    {
+        isRestarting = true; // Сообщаем, что это перезапуск
+        StopAllCoroutines();
+        StartNewGame();
+    }
     public bool IsMatchInProgress() => hasGameStarted;
 }

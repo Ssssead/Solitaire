@@ -39,7 +39,7 @@ public class SultanDeckManager : MonoBehaviour
         modeManager.IsInputAllowed = false;
 
         var intro = GetComponent<SultanIntroController>();
-        if (intro != null) intro.PrepareIntro();
+        if (intro != null) intro.PrepareIntro(modeManager.isRestarting);
 
         Deal deal = null;
 
@@ -67,7 +67,7 @@ public class SultanDeckManager : MonoBehaviour
             }
         }
 
-        if (intro != null) yield return StartCoroutine(intro.AnimateUIAndSlots());
+        if (intro != null) yield return StartCoroutine(intro.AnimateUIAndSlots(modeManager.isRestarting));
 
         Vector3 spawnPos = offScreenSpawnPoint != null ? offScreenSpawnPoint.position : new Vector3(0, -2000, 0);
         Vector3 stockPos = pileManager.StockPile.transform.position;
@@ -78,10 +78,27 @@ public class SultanDeckManager : MonoBehaviour
         for (int i = stockArray.Length - 1; i >= 0; i--)
         {
             var card = SpawnCard(stockArray[i].Card, modeManager.DragLayer, false);
-            card.transform.position = spawnPos;
             stockCards.Add(card);
         }
 
+        // ⚡ ТРЮК С ПРЕДРАСЧЕТОМ ПОЗИЦИЙ ⚡
+        // Мгновенно кладем карты в стопку, чтобы она сама рассчитала идеальные отступы
+        pileManager.StockPile.ClearWithoutUpdate();
+        foreach (var c in stockCards) pileManager.StockPile.AddCard(c, false);
+        pileManager.StockPile.UpdateOffsets();
+
+        // Запоминаем эти идеальные финальные позиции лесенки
+        List<Vector3> targetPositions = new List<Vector3>();
+        foreach (var c in stockCards)
+        {
+            targetPositions.Add(c.transform.position);
+
+            // Забираем их обратно в DragLayer для красивого полета поверх всех UI элементов
+            c.transform.SetParent(modeManager.DragLayer, true);
+            c.transform.position = spawnPos; // Перемещаем на точку старта (за экран)
+        }
+
+        // --- АНИМАЦИЯ ПОЛЕТА ---
         float stockDuration = 0.45f;
         float elapsed = 0f;
         while (elapsed < stockDuration)
@@ -90,12 +107,16 @@ public class SultanDeckManager : MonoBehaviour
             float t = elapsed / stockDuration;
             float curvedT = t * t * (3f - 2f * t);
 
-            foreach (var c in stockCards)
-                c.transform.position = Vector3.Lerp(spawnPos, stockPos, curvedT);
+            // Теперь каждая карта летит в свою УНИКАЛЬНУЮ точку назначения
+            for (int i = 0; i < stockCards.Count; i++)
+            {
+                stockCards[i].transform.position = Vector3.Lerp(spawnPos, targetPositions[i], curvedT);
+            }
 
             yield return null;
         }
 
+        // По завершении полета физически возвращаем их в стопку
         pileManager.StockPile.ClearWithoutUpdate();
         foreach (var c in stockCards) pileManager.StockPile.AddCard(c, false);
         pileManager.StockPile.UpdateOffsets();
@@ -133,6 +154,7 @@ public class SultanDeckManager : MonoBehaviour
         }
 
         yield return new WaitForSeconds(0.3f);
+        modeManager.isRestarting = false;
         modeManager.IsInputAllowed = true;
         modeManager.CheckGameState();
     }

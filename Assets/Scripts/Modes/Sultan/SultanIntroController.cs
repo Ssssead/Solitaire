@@ -45,31 +45,52 @@ public class SultanIntroController : MonoBehaviour, IIntroController
     }
 
     // Вызывается из DeckManager, когда слоты уже точно существуют
-    public void PrepareIntro()
+    public void PrepareIntro(bool isRestart)
     {
-        SetSlotsAlpha(0f);
-    }
-
-    public IEnumerator AnimateUIAndSlots()
-    {
-        // 1. Проявляем слоты на столе
-        StartCoroutine(FadeInSlots(slotsFadeDuration));
-
-        // 2. Выдвигаем верхнюю панель
-        if (topPanel != null)
-            StartCoroutine(AnimateUIElement(topPanel, topPanel.anchoredPosition, topPanelStartPos, uiSlideDuration));
-
-        // 3. Выдвигаем нижние кнопки
-        for (int i = 0; i < bottomButtons.Count; i++)
+        // Прячем слоты ТОЛЬКО если это не рестарт
+        if (!isRestart)
         {
-            if (bottomButtons[i] != null)
+            SetSlotsAlpha(0f);
+
+            // Если нужно, чтобы UI тоже не уезжал при рестарте, оберните и его:
+            if (topPanel != null) topPanel.anchoredPosition = topPanelStartPos + new Vector2(0, 300f);
+            for (int i = 0; i < bottomButtons.Count; i++)
             {
-                StartCoroutine(AnimateUIElement(bottomButtons[i], bottomButtons[i].anchoredPosition, bottomButtonsStartPos[i], uiSlideDuration));
-                yield return new WaitForSeconds(0.05f);
+                if (bottomButtons[i] != null)
+                    bottomButtons[i].anchoredPosition = bottomButtonsStartPos[i] + new Vector2(0, -300f);
             }
         }
+    }
 
-        yield return new WaitForSeconds(Mathf.Max(0f, slotsFadeDuration - (bottomButtons.Count * 0.05f)));
+    public IEnumerator AnimateUIAndSlots(bool isRestart)
+    {
+        if (!isRestart)
+        {
+            // 1. Проявляем слоты на столе
+            StartCoroutine(FadeInSlots(slotsFadeDuration));
+
+            // 2. Выдвигаем верхнюю панель
+            if (topPanel != null)
+                StartCoroutine(AnimateUIElement(topPanel, topPanel.anchoredPosition, topPanelStartPos, uiSlideDuration));
+
+            // 3. Выдвигаем нижние кнопки
+            for (int i = 0; i < bottomButtons.Count; i++)
+            {
+                if (bottomButtons[i] != null)
+                {
+                    StartCoroutine(AnimateUIElement(bottomButtons[i], bottomButtons[i].anchoredPosition, bottomButtonsStartPos[i], uiSlideDuration));
+                    yield return new WaitForSeconds(0.05f);
+                }
+            }
+
+            yield return new WaitForSeconds(Mathf.Max(0f, slotsFadeDuration - (bottomButtons.Count * 0.05f)));
+        }
+        else
+        {
+            // Если это рестарт, анимация интерфейса и слотов не нужна, 
+            // просто ждем 1 кадр для надежности
+            yield return null;
+        }
     }
 
     private IEnumerator AnimateUIElement(RectTransform target, Vector2 from, Vector2 to, float duration)

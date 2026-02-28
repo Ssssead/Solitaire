@@ -8,6 +8,10 @@ public class SultanAutoMoveService : MonoBehaviour
     private UndoManager _undoManager;
     private RectTransform _dragLayer;
 
+    [Header("Animation Settings")]
+    [SerializeField] private float shakeDuration = 0.22f;
+    [SerializeField] private float shakeAmplitude = 5f;
+
     public void Initialize(SultanModeManager m, SultanPileManager pm, UndoManager undo, AnimationService anim, RectTransform dragLayer)
     {
         _mode = m;
@@ -20,21 +24,41 @@ public class SultanAutoMoveService : MonoBehaviour
     {
         if (card == null || _mode == null || !_mode.IsInputAllowed) return;
 
+        var sultanCard = card.GetComponent<SultanCardController>();
+
+        // 1. ПРИОРИТЕТ 1: Проверяем Дома (Foundations)
         foreach (var foundation in _pileManager.Foundations)
         {
             if (foundation.CanAccept(card))
             {
-                // --- ЗАХВАТЫВАЕМ СОСТОЯНИЕ ДЛЯ UNDO ---
-                var sultanCard = card.GetComponent<SultanCardController>();
                 if (sultanCard != null) sultanCard.CaptureStateForUndo();
-
                 StartCoroutine(PerformMoveRoutine(card, foundation));
                 return;
             }
         }
+
+        // 2. ПРИОРИТЕТ 2: Проверяем Резервы (Reserve Slots)
+        // Не позволяем карте прыгать из резерва в резерв по двойному клику
+        ICardContainer source = card.transform.parent?.GetComponent<ICardContainer>();
+        if (!(source is SultanReserveSlot))
+        {
+            foreach (var reserve in _pileManager.Reserves)
+            {
+                if (reserve.CanAccept(card))
+                {
+                    if (sultanCard != null) sultanCard.CaptureStateForUndo();
+                    StartCoroutine(PerformMoveRoutine(card, reserve));
+                    return;
+                }
+            }
+        }
+
+        // 3. ЕСЛИ НЕТ ХОДОВ: Запускаем анимацию тряски
+        StartCoroutine(ShakeCardRoutine(card));
     }
 
-    private IEnumerator PerformMoveRoutine(CardController card, SultanFoundationPile targetPile)
+    // Обратите внимание: теперь метод принимает ICardContainer, чтобы работать и с Домами, и с Резервами
+    private IEnumerator PerformMoveRoutine(CardController card, ICardContainer targetPile)
     {
         var sultanCard = card.GetComponent<SultanCardController>();
         if (sultanCard != null) sultanCard.SetAnimating(true);
@@ -48,7 +72,7 @@ public class SultanAutoMoveService : MonoBehaviour
 
         while (elapsed < duration)
         {
-            card.transform.position = Vector3.Lerp(startPos, targetPile.transform.position, elapsed / duration);
+            card.transform.position = Vector3.Lerp(startPos, targetPile.Transform.position, elapsed / duration);
             elapsed += Time.deltaTime;
             yield return null;
         }
@@ -57,7 +81,30 @@ public class SultanAutoMoveService : MonoBehaviour
 
         if (sultanCard != null) sultanCard.SetAnimating(false);
 
-        // --- ИЗМЕНЕНИЕ: Вызываем метод менеджера, чтобы он засчитал очки и ход ---
+        // Вызываем метод менеджера, чтобы засчитать очки, ход и отправить запись в Undo
         _mode.OnCardDroppedToContainer(card, targetPile);
+    }
+
+    // Анимация отрицания (тряска), перенесенная из Klondike
+    private IEnumerator ShakeCardRoutine(CardController card)
+    {
+        Vector3 startPos = card.rectTransform.anchoredPosition;
+        float elapsed = 0f;
+
+        while (elapsed < shakeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+
+            // Расчет физики затухающего колебания
+            float phase = Mathf.Sin(elapsed * 40f) * (1f - elapsed / shakeDuration);
+            float offsetX = Mathf.Sin(elapsed * 60f) * shakeAmplitude * phase;
+
+            card.rectTransform.anchoredPosition = startPos + new Vector3(offsetX, 0f, 0f);
+
+            yield return null;
+        }
+
+        // Гарантированно возвращаем карту на идеальную исходную позицию
+        card.rectTransform.anchoredPosition = startPos;
     }
 }
