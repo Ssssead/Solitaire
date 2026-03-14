@@ -22,14 +22,21 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     [Header("HUD (On Scene Texts)")]
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text movesText;
+    [SerializeField] private TMP_Text timeText;
 
     [Header("Animation Settings")]
     [SerializeField] private float dealAnimDuration = 0.3f;
     [SerializeField] private float removeAnimDuration = 0.5f;
     [SerializeField] private float recycleDelay = 0.05f;
+    [SerializeField] private float undoAnimDuration = 0.1f;
 
     [Header("Game Rules")]
     [SerializeField] private int maxRecycles = 2;
+
+    [Header("Intro & Exit Animation")]
+    public bool playIntroOnStart = true;
+    public PyramidIntroController introController;
+    public SceneExitAnimator exitAnimator;
 
     private CardController selectedA;
     private int currentRound = 1;
@@ -39,9 +46,15 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     private int recyclesRemaining;
     private Coroutine defeatRoutine;
 
+    private Dictionary<CardController, Coroutine> activeCardRoutines = new Dictionary<CardController, Coroutine>();
+
     // --- State Flags ---
-    private bool _hasGameStarted = false; // Был ли сделан первый ход?
-    private bool _isGameWon = false;      // Была ли игра выиграна?
+    private bool _hasGameStarted = false;
+    private bool _isGameWon = false;
+    private bool isRestarting = false;
+
+    private float gameTimer = 0f;
+    private bool isTimerRunning = false;
 
     public string GameName => "Pyramid";
     public RectTransform DragLayer => animManager ? animManager.dragLayerRect : null;
@@ -52,7 +65,6 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     public float TableauVerticalGap => 0f;
     public StockDealMode StockDealMode => StockDealMode.Draw1;
     public bool IsInputAllowed { get; set; } = true;
-    private bool hasGameStarted = false;
     public GameType GameType => GameType.Pyramid;
 
     private void Start()
@@ -62,47 +74,77 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
 
         InitializeGame(GameSettings.CurrentDifficulty, GameSettings.RoundsCount);
     }
+
     public bool IsMatchInProgress()
     {
-        return hasGameStarted;
+        return _hasGameStarted && !_isGameWon;
     }
+
+    private void Update()
+    {
+        if (isTimerRunning && !_isGameWon)
+        {
+            gameTimer += Time.deltaTime;
+            UpdateTimerUI();
+        }
+    }
+
+    private void UpdateTimerUI()
+    {
+        if (timeText != null)
+        {
+            System.TimeSpan t = System.TimeSpan.FromSeconds(gameTimer);
+            timeText.text = t.ToString(@"m\:ss");
+        }
+    }
+
     public void InitializeGame(Difficulty difficulty, int rounds)
     {
         currentDifficulty = difficulty;
         totalRounds = rounds;
         currentRound = 1;
         undoStack.Clear();
+        activeCardRoutines.Clear();
         recyclesRemaining = maxRecycles;
         if (defeatRoutine != null) StopCoroutine(defeatRoutine);
 
-        // Сброс флагов
         _hasGameStarted = false;
         _isGameWon = false;
+
+        gameTimer = 0f;
+        isTimerRunning = false;
+        UpdateTimerUI();
 
         if (scoreManager) scoreManager.ResetScore();
 
         SetupButtons();
 
-        // ВАЖНО: Мы НЕ вызываем OnGameStarted здесь, чтобы не накручивать счетчик игр без ходов.
-        // Мы сохраняем параметры, но вызовем старт позже.
-
         StartRound(true);
     }
 
-    // --- НОВЫЙ МЕТОД: Регистрирует начало игры при первом действии ---
+    private void StopCardRoutine(CardController card)
+    {
+        if (card == null) return;
+        if (activeCardRoutines.TryGetValue(card, out Coroutine routine))
+        {
+            if (routine != null) StopCoroutine(routine);
+            activeCardRoutines.Remove(card);
+        }
+        card.StopAllCoroutines();
+    }
+
     private void EnsureGameStarted()
     {
         if (!_hasGameStarted)
         {
             _hasGameStarted = true;
+            isTimerRunning = true;
             StatisticsManager.Instance.OnGameStarted("Pyramid", currentDifficulty, totalRounds.ToString());
         }
     }
 
-    // --- НОВЫЙ МЕТОД: Обработка выхода со сцены (меню/закрытие) ---
     private void OnDestroy()
     {
-        // Если ходы были сделаны, но игра не выиграна -> Засчитываем поражение
         if (_hasGameStarted && !_isGameWon)
         {
             StatisticsManager.Instance.OnGameAbandoned();
@@ -123,6 +165,7 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         IsInputAllowed = false;
         selectedA = null;
         undoStack.Clear();
+        activeCardRoutines.Clear();
         recyclesRemaining = maxRecycles;
         if (pileManager != null) pileManager.ResetRowFlags();
         if (defeatRoutine != null) StopCoroutine(defeatRoutine);
@@ -130,9 +173,14 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         StartCoroutine(GenerateAndStartSequence(isFirstRound));
     }
 
+    // --- ОБНОВЛЕНО: Чистый старт без временных объектов ---
     private IEnumerator GenerateAndStartSequence(bool isFirstRound)
     {
-        if (!isFirstRound)
+        if (isRestarting)
+        {
+            deckManager.ClearBoard();
+        }
+        else if (!isFirstRound)
         {
             List<CardController> leftovers = new List<CardController>();
             if (pileManager.Stock != null) while (!pileManager.Stock.IsEmpty) leftovers.Add(pileManager.Stock.Draw());
@@ -148,23 +196,76 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
 
         var cardsToAnimate = deckManager.InstantiateDeal(deal);
 
-        if (!isFirstRound && animManager != null) yield return StartCoroutine(animManager.PlayNewRoundEntry(deckManager.stockRoot));
-        if (animManager != null) yield return StartCoroutine(animManager.PlayDealAnimation(cardsToAnimate));
-        else pileManager.UpdateLocks();
+        // --- ИСПРАВЛЕНИЕ 1: Мгновенно убираем карты за экран, чтобы они не мелькали ---
+        bool isFullIntro = isFirstRound && playIntroOnStart && introController != null && !isRestarting;
+        if (isFullIntro || isRestarting)
+        {
+            foreach (Transform child in deckManager.stockRoot) child.localPosition = new Vector3(0, -2000f, 0); // Прячем вниз
+        }
+        else if (!isFirstRound)
+        {
+            foreach (Transform child in deckManager.stockRoot) child.localPosition = new Vector3(-2000f, 0, 0); // Прячем влево
+        }
+        // -------------------------------------------------------------------------------
 
+        if (isFullIntro)
+        {
+            introController.PrepareIntro(false);
+            yield return StartCoroutine(introController.PlayIntroSequence());
+
+            if (animManager != null)
+                yield return StartCoroutine(animManager.PlayIntroDeckArrival(deckManager.stockRoot, () => introController.IsSkipping));
+        }
+        else
+        {
+            if (introController != null) introController.PrepareIntro(true);
+
+            if (isRestarting && animManager != null)
+            {
+                yield return StartCoroutine(animManager.PlayIntroDeckArrival(deckManager.stockRoot, () => introController != null && introController.IsSkipping));
+            }
+            else if (!isFirstRound && animManager != null)
+            {
+                yield return StartCoroutine(animManager.PlayNewRoundEntry(deckManager.stockRoot));
+            }
+        }
+
+        if (animManager != null)
+            yield return StartCoroutine(animManager.PlayDealAnimation(cardsToAnimate, () => introController != null && introController.IsSkipping));
+        else
+            pileManager.UpdateLocks();
+
+        isRestarting = false;
         IsInputAllowed = true;
         UpdateUIState();
         CheckGameState();
     }
 
-    // --- GAMEPLAY ACTIONS ---
+    public void RestartGame()
+    {
+        if (_hasGameStarted && !_isGameWon)
+        {
+            StatisticsManager.Instance.OnGameAbandoned();
+        }
+
+        isRestarting = true;
+        StopAllCoroutines();
+        IsInputAllowed = false;
+
+        if (exitAnimator != null)
+        {
+            exitAnimator.PlayRestartSequence(() => { InitializeGame(currentDifficulty, totalRounds); });
+        }
+        else
+        {
+            InitializeGame(currentDifficulty, totalRounds);
+        }
+    }
 
     public void OnDealButtonClicked()
     {
         if (!IsInputAllowed) return;
         DeselectCard();
-
-        // Регистрируем старт игры перед любым действием
         EnsureGameStarted();
 
         if (pileManager.Stock.IsEmpty)
@@ -182,7 +283,16 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     {
         IsInputAllowed = false;
         CardController card = pileManager.Stock.Draw();
-        yield return StartCoroutine(animManager.MoveCardLinear(card, deckManager.wasteRoot.position, dealAnimDuration, () => { pileManager.Waste.Add(card); }));
+
+        StopCardRoutine(card);
+        int futureWasteIndex = pileManager.Waste.GetCards().Count;
+        Vector3 targetPos = pileManager.Waste.transform.TransformPoint(new Vector3(futureWasteIndex * pileManager.Waste.stackGap, 0f, 0f));
+
+        Coroutine dealRoutine = StartCoroutine(animManager.MoveCardLinear(card, targetPos, dealAnimDuration, () => { pileManager.Waste.Add(card); }));
+        activeCardRoutines[card] = dealRoutine;
+
+        yield return dealRoutine;
+
         var move = new PyramidMoveRecord { Type = PyramidMoveRecord.MoveType.Deal, DealtCard = card };
         undoStack.Push(move);
         StatisticsManager.Instance.RegisterMove();
@@ -196,8 +306,19 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         IsInputAllowed = false;
         List<CardController> wasteCards = pileManager.Waste.DrawAll();
         wasteCards.Reverse();
-        Vector3 targetPos = deckManager.stockRoot.position;
-        foreach (var card in wasteCards) { StartCoroutine(animManager.MoveCardToStockAndDisable(card, targetPos, dealAnimDuration)); yield return new WaitForSeconds(recycleDelay); }
+
+        for (int i = 0; i < wasteCards.Count; i++)
+        {
+            var card = wasteCards[i];
+            StopCardRoutine(card);
+
+            Vector3 targetPos = pileManager.Stock.transform.TransformPoint(new Vector3(i * pileManager.Stock.stackGap, 0f, 0f));
+
+            Coroutine recRoutine = StartCoroutine(animManager.MoveCardToStockAndDisable(card, targetPos, dealAnimDuration));
+            activeCardRoutines[card] = recRoutine;
+            yield return new WaitForSeconds(recycleDelay);
+        }
+
         yield return new WaitForSeconds(dealAnimDuration);
         pileManager.Stock.AddRange(wasteCards);
         var move = new PyramidMoveRecord { Type = PyramidMoveRecord.MoveType.Recycle, RecycledCards = new List<CardController>(wasteCards) };
@@ -212,7 +333,6 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         if (!IsInputAllowed) return;
         if (!IsInteractable(card)) return;
 
-        // Клик по карте - потенциальное действие
         EnsureGameStarted();
 
         if (card.cardModel.rank == 13) { StartCoroutine(RemoveSequence(card, null)); return; }
@@ -229,9 +349,8 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
 
     private IEnumerator RemoveSequence(CardController cardA, CardController cardB)
     {
-        IsInputAllowed = false; DeselectCard();
-
-        // Убеждаемся, что старт засчитан (на всякий случай)
+        IsInputAllowed = false;
+        DeselectCard(true);
         EnsureGameStarted();
 
         var move = new PyramidMoveRecord { Type = (cardB == null) ? PyramidMoveRecord.MoveType.RemoveKing : PyramidMoveRecord.MoveType.RemovePair };
@@ -262,8 +381,19 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         if (scoreManager) scoreManager.AddPoints(pointsToAdd);
         StatisticsManager.Instance.RegisterMove();
 
-        StartCoroutine(animManager.AnimateRemoveBallistic(cardA, targetA, () => { if (cardA) { cardA.transform.SetParent(targetA); cardA.gameObject.SetActive(false); } }));
-        if (cardB != null) StartCoroutine(animManager.AnimateRemoveBallistic(cardB, targetB, () => { if (cardB) { cardB.transform.SetParent(targetB); cardB.gameObject.SetActive(false); } }));
+        if (scoreText != null && scoreManager != null) scoreText.text = scoreManager.Score.ToString();
+        if (movesText != null && StatisticsManager.Instance != null) movesText.text = StatisticsManager.Instance.GetCurrentMoves().ToString();
+
+        StopCardRoutine(cardA);
+        Coroutine routineA = StartCoroutine(animManager.AnimateRemoveBallistic(cardA, targetA, () => { if (cardA) { cardA.transform.SetParent(targetA); cardA.gameObject.SetActive(false); } }));
+        activeCardRoutines[cardA] = routineA;
+
+        if (cardB != null)
+        {
+            StopCardRoutine(cardB);
+            Coroutine routineB = StartCoroutine(animManager.AnimateRemoveBallistic(cardB, targetB, () => { if (cardB) { cardB.transform.SetParent(targetB); cardB.gameObject.SetActive(false); } }));
+            activeCardRoutines[cardB] = routineB;
+        }
 
         if (pileManager.IsPyramidCleared())
         {
@@ -277,18 +407,16 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
             }
             else
             {
-                _isGameWon = true; // Ставим флаг
+                _isGameWon = true;
+                isTimerRunning = false;
 
-                // 1. Запоминаем ходы ДО сброса
                 int finalMoves = 0;
                 if (StatisticsManager.Instance != null)
                     finalMoves = StatisticsManager.Instance.GetCurrentMoves();
 
-                // 2. Отправляем в статистику
                 if (StatisticsManager.Instance != null)
                     StatisticsManager.Instance.OnGameWon(scoreManager ? scoreManager.Score : 0);
 
-                // 3. Открываем UI с сохраненными ходами
                 if (gameUI != null)
                     gameUI.OnGameWon(finalMoves);
             }
@@ -305,10 +433,7 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     public void OnUndoAction()
     {
         if (undoStack.Count == 0 || !IsInputAllowed) return;
-
-        // Undo тоже может считаться активностью, если вдруг нажали до первого хода (хотя вряд ли)
         EnsureGameStarted();
-
         StartCoroutine(UndoSequence(undoStack.Pop(), false));
     }
 
@@ -321,10 +446,18 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
 
     private IEnumerator UndoAllRoutine()
     {
-        IsInputAllowed = false; DeselectCard();
+        IsInputAllowed = false; DeselectCard(true);
         if (defeatRoutine != null) StopCoroutine(defeatRoutine);
         if (gameUI != null && gameUI.defeatPanel.activeSelf) gameUI.defeatPanel.SetActive(false);
+
+        // --- ИСПРАВЛЕНИЕ: Запускаем таймер заново, если мы отменили поражение ---
+        if (!_isGameWon) isTimerRunning = true;
+
         while (undoStack.Count > 0) { var move = undoStack.Pop(); ApplyUndoImmediate(move); }
+
+        if (pileManager.Stock != null) pileManager.Stock.UpdateLayout();
+        if (pileManager.Waste != null) pileManager.Waste.UpdateLayout();
+
         IsInputAllowed = true; UpdateUIState(); yield return null;
     }
 
@@ -332,26 +465,79 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     {
         if (move.Type == PyramidMoveRecord.MoveType.Deal)
         {
-            CardController cDeal = move.DealtCard; pileManager.Waste.Remove(cDeal);
-            cDeal.transform.SetParent(deckManager.stockRoot); cDeal.transform.localPosition = Vector3.zero; cDeal.transform.SetAsLastSibling(); cDeal.transform.localRotation = Quaternion.identity;
-            pileManager.Stock.Add(cDeal); cDeal.GetComponent<CardData>().SetFaceUp(true);
+            CardController cDeal = move.DealtCard;
+            StopCardRoutine(cDeal);
+            pileManager.Waste.Remove(cDeal);
+
+            cDeal.transform.SetParent(deckManager.stockRoot);
+            // ИСПРАВЛЕНИЕ: Возвращаем правильный локальный отступ
+            cDeal.transform.localPosition = new Vector3(pileManager.Stock.Count * pileManager.Stock.stackGap, 0, 0);
+            cDeal.transform.SetAsLastSibling();
+            cDeal.transform.localRotation = Quaternion.identity;
+
+            pileManager.Stock.Add(cDeal);
+            cDeal.GetComponent<CardData>().SetFaceUp(true);
         }
         else if (move.Type == PyramidMoveRecord.MoveType.Recycle)
         {
             recyclesRemaining++; pileManager.Stock.Clear();
             var cardsToWaste = new List<CardController>(move.RecycledCards); cardsToWaste.Reverse();
-            foreach (var c in cardsToWaste) { c.GetComponent<CardData>().SetFaceUp(true); c.transform.SetParent(deckManager.wasteRoot); c.transform.localPosition = Vector3.zero; c.transform.SetAsLastSibling(); c.transform.localRotation = Quaternion.identity; pileManager.Waste.Add(c); }
+            foreach (var c in cardsToWaste)
+            {
+                StopCardRoutine(c);
+                c.GetComponent<CardData>().SetFaceUp(true);
+                c.transform.SetParent(deckManager.wasteRoot);
+
+                // ИСПРАВЛЕНИЕ: Отступ для сброса
+                c.transform.localPosition = new Vector3(pileManager.Waste.GetCards().Count * pileManager.Waste.stackGap, 0, 0);
+                c.transform.SetAsLastSibling();
+                c.transform.localRotation = Quaternion.identity;
+
+                pileManager.Waste.Add(c);
+            }
         }
         else
         {
             foreach (var info in move.RemovedCards)
             {
-                var c = info.Card; c.gameObject.SetActive(true); c.GetComponent<CardData>().image.color = Color.white; c.transform.localRotation = Quaternion.identity;
+                var c = info.Card;
+                StopCardRoutine(c);
+
+                c.gameObject.SetActive(true); c.GetComponent<CardData>().image.color = Color.white; c.transform.localRotation = Quaternion.identity;
+
                 Transform targetParent = null;
-                if (info.SourceSlot != null) { targetParent = info.SourceSlot.transform; info.SourceSlot.Card = c; }
-                else if (info.WasInWaste) { targetParent = deckManager.wasteRoot; pileManager.Waste.Add(c); }
-                else if (info.WasInStock) { targetParent = deckManager.stockRoot; pileManager.Stock.Add(c); }
-                if (targetParent != null) { c.transform.SetParent(targetParent); c.transform.localPosition = Vector3.zero; if (cardIsTop(targetParent, c)) c.transform.SetAsLastSibling(); if (c.canvasGroup) c.canvasGroup.interactable = true; }
+                Vector3 targetLocalPos = Vector3.zero;
+
+                if (info.SourceSlot != null)
+                {
+                    targetParent = info.SourceSlot.transform;
+                    info.SourceSlot.Card = c;
+                    targetLocalPos = Vector3.zero; // В самой пирамиде отступ не нужен (карты центрируются)
+                }
+                else if (info.WasInWaste)
+                {
+                    targetParent = deckManager.wasteRoot;
+                    targetLocalPos = new Vector3(pileManager.Waste.GetCards().Count * pileManager.Waste.stackGap, 0, 0);
+                    pileManager.Waste.Add(c);
+                }
+                else if (info.WasInStock)
+                {
+                    targetParent = deckManager.stockRoot;
+                    targetLocalPos = new Vector3(pileManager.Stock.Count * pileManager.Stock.stackGap, 0, 0);
+                    pileManager.Stock.Add(c);
+                }
+
+                if (targetParent != null)
+                {
+                    c.transform.SetParent(targetParent);
+                    c.transform.localPosition = targetLocalPos; // ИСПРАВЛЕНИЕ: Используем вычисленный отступ
+                    if (cardIsTop(targetParent, c)) c.transform.SetAsLastSibling();
+                    if (c.canvasGroup) c.canvasGroup.interactable = true;
+
+                    // Успокаиваем тень
+                    var shadowCtrl = c.GetComponent<PyramidShadowController>();
+                    if (shadowCtrl != null) shadowCtrl.SetState(PyramidShadowController.ShadowState.Resting);
+                }
             }
             if (scoreManager) scoreManager.AddPoints(-move.ScoreGained);
             if (move.ClearedRows != null) foreach (int row in move.ClearedRows) pileManager.RestoreRowFlag(row);
@@ -360,42 +546,122 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
 
     private IEnumerator UndoSequence(PyramidMoveRecord move, bool immediate)
     {
-        if (!immediate) IsInputAllowed = false; DeselectCard();
+        if (!immediate) IsInputAllowed = false; DeselectCard(true);
         if (defeatRoutine != null) StopCoroutine(defeatRoutine);
         if (gameUI != null && gameUI.defeatPanel.activeSelf) gameUI.defeatPanel.SetActive(false);
-        float dur = immediate ? 0f : 0.3f;
+
+        // --- ИСПРАВЛЕНИЕ: Запускаем таймер заново ---
+        if (!_isGameWon) isTimerRunning = true;
+
+        float dur = immediate ? 0f : undoAnimDuration;
 
         if (!immediate && StatisticsManager.Instance != null)
             StatisticsManager.Instance.RegisterMove();
 
         if (move.Type == PyramidMoveRecord.MoveType.Deal)
         {
-            CardController cDeal = move.DealtCard; pileManager.Waste.Remove(cDeal); cDeal.transform.localRotation = Quaternion.identity;
-            if (!immediate) yield return StartCoroutine(animManager.MoveCardLinear(cDeal, deckManager.stockRoot.position, dur, () => pileManager.Stock.Add(cDeal))); else pileManager.Stock.Add(cDeal);
+            CardController cDeal = move.DealtCard;
+            StopCardRoutine(cDeal);
+            pileManager.Waste.Remove(cDeal); cDeal.transform.localRotation = Quaternion.identity;
+
+            int futureStockIndex = pileManager.Stock.Count;
+            Vector3 targetPos = pileManager.Stock.transform.TransformPoint(new Vector3(futureStockIndex * pileManager.Stock.stackGap, 0f, 0f));
+
+            if (!immediate)
+            {
+                Coroutine r = StartCoroutine(animManager.MoveCardLinear(cDeal, targetPos, dur, () => pileManager.Stock.Add(cDeal)));
+                activeCardRoutines[cDeal] = r;
+                yield return r;
+            }
+            else
+            {
+                cDeal.transform.position = targetPos;
+                pileManager.Stock.Add(cDeal);
+            }
             cDeal.GetComponent<CardData>().SetFaceUp(true);
         }
         else if (move.Type == PyramidMoveRecord.MoveType.Recycle)
         {
             recyclesRemaining++; pileManager.Stock.Clear();
             var cardsToWaste = new List<CardController>(move.RecycledCards); cardsToWaste.Reverse();
-            foreach (var c in cardsToWaste) { c.transform.localRotation = Quaternion.identity; if (!immediate) { c.transform.position = deckManager.stockRoot.position; StartCoroutine(animManager.MoveCardLinear(c, deckManager.wasteRoot.position, dur, () => pileManager.Waste.Add(c))); yield return new WaitForSeconds(0.05f); } else { c.GetComponent<CardData>().SetFaceUp(true); pileManager.Waste.Add(c); } }
+
+            float delayBetweenCards = immediate ? 0f : 0.01f;
+            int initialWasteCount = pileManager.Waste.GetCards().Count;
+
+            for (int i = 0; i < cardsToWaste.Count; i++)
+            {
+                var c = cardsToWaste[i];
+                StopCardRoutine(c);
+                c.transform.localRotation = Quaternion.identity;
+
+                int futureWasteIndex = initialWasteCount + i;
+                Vector3 targetPos = pileManager.Waste.transform.TransformPoint(new Vector3(futureWasteIndex * pileManager.Waste.stackGap, 0f, 0f));
+
+                if (!immediate)
+                {
+                    Coroutine r = StartCoroutine(animManager.MoveCardLinear(c, targetPos, dur, () => pileManager.Waste.Add(c)));
+                    activeCardRoutines[c] = r;
+                    yield return new WaitForSeconds(delayBetweenCards);
+                }
+                else
+                {
+                    c.transform.position = targetPos;
+                    c.GetComponent<CardData>().SetFaceUp(true);
+                    pileManager.Waste.Add(c);
+                }
+            }
             if (!immediate) yield return new WaitForSeconds(dur);
         }
         else
         {
-            List<Coroutine> activeAnims = new List<Coroutine>();
+            List<Coroutine> waitAnims = new List<Coroutine>();
             foreach (var info in move.RemovedCards)
             {
-                var c = info.Card; c.gameObject.SetActive(true); c.transform.localRotation = Quaternion.identity;
+                var c = info.Card;
+                StopCardRoutine(c);
+
+                c.gameObject.SetActive(true); c.transform.localRotation = Quaternion.identity;
                 Transform startT = info.WentToLeftFoundation ? deckManager.leftFoundation : deckManager.rightFoundation; if (startT == null) startT = deckManager.stockRoot;
+
                 Vector3 targetPos = Vector3.zero; Transform targetParent = null;
-                if (info.SourceSlot != null) { targetPos = info.SourceSlot.transform.position; targetParent = info.SourceSlot.transform; info.SourceSlot.Card = c; }
-                else if (info.WasInWaste) { targetPos = deckManager.wasteRoot.position; targetParent = deckManager.wasteRoot; pileManager.Waste.Add(c); }
-                else if (info.WasInStock) { targetPos = deckManager.stockRoot.position; targetParent = deckManager.stockRoot; pileManager.Stock.Add(c); }
+
+                if (info.SourceSlot != null)
+                {
+                    targetPos = info.SourceSlot.transform.position; targetParent = info.SourceSlot.transform; info.SourceSlot.Card = c;
+                }
+                else if (info.WasInWaste)
+                {
+                    int futureIndex = pileManager.Waste.GetCards().Count;
+                    targetPos = pileManager.Waste.transform.TransformPoint(new Vector3(futureIndex * pileManager.Waste.stackGap, 0f, 0f));
+                    targetParent = deckManager.wasteRoot;
+                    pileManager.Waste.Add(c);
+                }
+                else if (info.WasInStock)
+                {
+                    int futureIndex = pileManager.Stock.Count;
+                    targetPos = pileManager.Stock.transform.TransformPoint(new Vector3(futureIndex * pileManager.Stock.stackGap, 0f, 0f));
+                    targetParent = deckManager.stockRoot;
+                    pileManager.Stock.Add(c);
+                }
+
                 c.GetComponent<CardData>().image.color = Color.white;
-                if (immediate) { c.transform.SetParent(targetParent); c.transform.localPosition = Vector3.zero; if (cardIsTop(targetParent, c)) c.transform.SetAsLastSibling(); if (c.canvasGroup) c.canvasGroup.interactable = true; } else activeAnims.Add(StartCoroutine(animManager.ReturnCardFromFoundation(c, startT.position, targetPos, targetParent, removeAnimDuration)));
+
+                if (immediate)
+                {
+                    c.transform.SetParent(targetParent);
+                    c.transform.position = targetPos;
+                    if (cardIsTop(targetParent, c)) c.transform.SetAsLastSibling();
+                    if (c.canvasGroup) c.canvasGroup.interactable = true;
+                }
+                else
+                {
+                    Coroutine returnRoutine = StartCoroutine(animManager.ReturnCardFromFoundation(c, startT.position, targetPos, targetParent, dur));
+                    activeCardRoutines[c] = returnRoutine;
+                    waitAnims.Add(returnRoutine);
+                }
             }
-            if (!immediate) foreach (var anim in activeAnims) yield return anim;
+            if (!immediate) foreach (var anim in waitAnims) yield return anim;
+
             if (scoreManager) scoreManager.AddPoints(-move.ScoreGained);
             if (move.ClearedRows != null) foreach (int row in move.ClearedRows) pileManager.RestoreRowFlag(row);
         }
@@ -403,12 +669,46 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         UpdateUIState();
     }
 
+    private void SelectCard(CardController c)
+    {
+        selectedA = c;
+        animManager.SelectCard(c);
+    }
+
+    private void DeselectCard(bool immediate = false)
+    {
+        if (selectedA != null)
+        {
+            Transform originalParent = GetCardParent(selectedA);
+            Vector3 targetWorldPos = GetCardWorldPosition(selectedA);
+            animManager.DeselectCard(selectedA, originalParent, targetWorldPos, immediate);
+            selectedA = null;
+        }
+    }
+
+    private Transform GetCardParent(CardController c)
+    {
+        var slot = pileManager.TableauSlots.Find(s => s.Card == c);
+        if (slot != null) return slot.transform;
+        if (pileManager.Waste.HasCard(c)) return deckManager.wasteRoot;
+        if (pileManager.Stock.HasCard(c)) return deckManager.stockRoot;
+        return deckManager.stockRoot;
+    }
+
+    private Vector3 GetCardWorldPosition(CardController c)
+    {
+        var slot = pileManager.TableauSlots.Find(s => s.Card == c);
+        if (slot != null) return slot.transform.position;
+        if (pileManager.Waste.HasCard(c)) return pileManager.Waste.GetCardWorldPosition(c);
+        if (pileManager.Stock.HasCard(c)) return pileManager.Stock.GetCardWorldPosition(c);
+        return deckManager.stockRoot.position;
+    }
+
     private bool cardIsTop(Transform parent, CardController c) { return parent == deckManager.wasteRoot || parent == deckManager.stockRoot; }
     private Transform GetClosestFoundation(CardController card) { if (!deckManager.leftFoundation || !deckManager.rightFoundation) return deckManager.stockRoot; float d1 = Vector3.Distance(card.transform.position, deckManager.leftFoundation.position); float d2 = Vector3.Distance(card.transform.position, deckManager.rightFoundation.position); return d1 < d2 ? deckManager.leftFoundation : deckManager.rightFoundation; }
     private void SaveCardInfo(PyramidMoveRecord move, CardController c, Transform targetFoundation) { var info = new PyramidMoveRecord.RemovedCardInfo { Card = c }; var slot = pileManager.TableauSlots.Find(s => s.Card == c); if (slot != null) info.SourceSlot = slot; else if (pileManager.Stock.HasCard(c)) info.WasInStock = true; else if (pileManager.Waste.HasCard(c)) info.WasInWaste = true; info.WentToLeftFoundation = (targetFoundation == deckManager.leftFoundation); move.RemovedCards.Add(info); }
-    private void SelectCard(CardController c) { selectedA = c; deckManager.SetCardHighlight(c, true); }
-    private void DeselectCard() { if (selectedA != null) { deckManager.SetCardHighlight(selectedA, false); selectedA = null; } }
     private bool IsInteractable(CardController c) => c.canvasGroup != null && c.canvasGroup.interactable && c.gameObject.activeInHierarchy;
+
     private void UpdateUIState()
     {
         pileManager.UpdateLocks();
@@ -419,6 +719,7 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         if (scoreText != null && scoreManager != null) scoreText.text = scoreManager.Score.ToString();
         if (movesText != null && StatisticsManager.Instance != null) movesText.text = StatisticsManager.Instance.GetCurrentMoves().ToString();
     }
+
     public void CheckGameState()
     {
         if (pileManager.IsPyramidCleared()) return;
@@ -426,7 +727,18 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         if (recyclesRemaining > 0 && !pileManager.Waste.GetCards().Count.Equals(0)) return;
         if (!pileManager.HasValidMove()) { if (defeatRoutine != null) StopCoroutine(defeatRoutine); defeatRoutine = StartCoroutine(ShowDefeatRoutine()); }
     }
-    private IEnumerator ShowDefeatRoutine() { yield return new WaitForSeconds(1.0f); bool stillNoMoves = !pileManager.HasValidMove() && pileManager.Stock.IsEmpty && (recyclesRemaining <= 0 || pileManager.Waste.GetCards().Count == 0); if (stillNoMoves && gameUI != null) gameUI.OnGameLost(); defeatRoutine = null; }
-    public void RestartGame() { StatisticsManager.Instance.OnGameAbandoned(); InitializeGame(currentDifficulty, totalRounds); }
+
+    private IEnumerator ShowDefeatRoutine()
+    {
+        yield return new WaitForSeconds(1.0f);
+        bool stillNoMoves = !pileManager.HasValidMove() && pileManager.Stock.IsEmpty && (recyclesRemaining <= 0 || pileManager.Waste.GetCards().Count == 0);
+        if (stillNoMoves && gameUI != null)
+        {
+            isTimerRunning = false;
+            gameUI.OnGameLost();
+        }
+        defeatRoutine = null;
+    }
+
     public void OnCardDoubleClicked(CardController card) => OnCardClicked(card);
 }

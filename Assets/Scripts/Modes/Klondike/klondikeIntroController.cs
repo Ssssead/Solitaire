@@ -22,12 +22,24 @@ public class GameIntroController : MonoBehaviour, IIntroController
     private List<Vector2> buttonsStartPos = new List<Vector2>();
     private List<Vector2> buttonsHiddenPos = new List<Vector2>();
 
+    // Флаг ускорения анимации
+    private bool isSkipping = false;
+
     private void Awake()
     {
         if (modeManager == null) modeManager = GetComponent<KlondikeModeManager>();
         Canvas.ForceUpdateCanvases();
         SaveInitialPositions();
         PrepareIntro(false);
+    }
+
+    private void Update()
+    {
+        // Отслеживаем клик мыши или тап по экрану для ускорения
+        if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+        {
+            isSkipping = true;
+        }
     }
 
     private void SaveInitialPositions()
@@ -63,6 +75,7 @@ public class GameIntroController : MonoBehaviour, IIntroController
 
     public void PrepareIntro(bool isRestart)
     {
+        isSkipping = false; // Сбрасываем флаг пропуска перед началом
         if (!isRestart)
         {
             modeManager.PileManager.SetAllSlotsAlpha(0f);
@@ -76,7 +89,7 @@ public class GameIntroController : MonoBehaviour, IIntroController
     {
         if (!isRestart)
         {
-            yield return new WaitForSeconds(startDelay);
+            yield return StartCoroutine(SkippableWait(startDelay));
             yield return StartCoroutine(FadeInSlots(slotsFadeDuration));
 
             if (topPanel != null) StartCoroutine(AnimateUIElement(topPanel, topPanelHiddenPos, topPanelStartPos, uiSlideDuration));
@@ -84,14 +97,26 @@ public class GameIntroController : MonoBehaviour, IIntroController
                 if (bottomButtons[i] != null)
                 {
                     StartCoroutine(AnimateUIElement(bottomButtons[i], buttonsHiddenPos[i], buttonsStartPos[i], uiSlideDuration));
-                    yield return new WaitForSeconds(buttonStaggerDelay);
+                    yield return StartCoroutine(SkippableWait(buttonStaggerDelay));
                 }
         }
 
         if (modeManager.deckManager != null)
         {
-            // Здесь запускаем полет колоды Клондайка
+            // Запускаем полет колоды Клондайка
             yield return StartCoroutine(modeManager.deckManager.PlayIntroDeckArrival(deckFlyDuration));
+        }
+    }
+
+    // Кастомный таймер, который проматывается в 15 раз быстрее при клике
+    private IEnumerator SkippableWait(float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            yield return null;
         }
     }
 
@@ -101,8 +126,10 @@ public class GameIntroController : MonoBehaviour, IIntroController
         AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            if (target != null) target.anchoredPosition = Vector2.Lerp(from, to, curve.Evaluate(elapsed / duration));
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(elapsed / duration);
+            if (target != null) target.anchoredPosition = Vector2.Lerp(from, to, curve.Evaluate(t));
             yield return null;
         }
         if (target != null) target.anchoredPosition = to;
@@ -113,8 +140,10 @@ public class GameIntroController : MonoBehaviour, IIntroController
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            modeManager.PileManager.SetAllSlotsAlpha(elapsed / duration);
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(elapsed / duration);
+            modeManager.PileManager.SetAllSlotsAlpha(t);
             yield return null;
         }
         modeManager.PileManager.SetAllSlotsAlpha(1f);

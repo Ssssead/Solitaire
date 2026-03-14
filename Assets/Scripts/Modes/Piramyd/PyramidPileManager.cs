@@ -3,7 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PyramidPileManager : MonoBehaviour
+// --- ОБЕРТКА ДЛЯ SCENE EXIT ANIMATOR (чтобы не сломался выход из сцены) ---
+public class PyramidContainerWrapper : MonoBehaviour, ICardContainer
+{
+    public Transform Transform => transform;
+    public bool CanAccept(CardController card) => false;
+    public void OnCardIncoming(CardController card) { }
+    public Vector2 GetDropAnchoredPosition(CardController card) => Vector2.zero;
+    public void AcceptCard(CardController card) { }
+}
+
+// --- НАСЛЕДУЕМСЯ ОТ PileManager ---
+public class PyramidPileManager : PileManager
 {
     public PyramidStockPile Stock;
     public PyramidWastePile Waste;
@@ -12,12 +23,39 @@ public class PyramidPileManager : MonoBehaviour
     // Флаги очищенных рядов (0 - верхушка, 6 - низ)
     private bool[] rowClearedFlags = new bool[7];
 
-    private Dictionary<CardController, Coroutine> colorRoutines = new Dictionary<CardController, Coroutine>();
+    // --- ПЕРЕОПРЕДЕЛЕНИЕ ДЛЯ SCENE EXIT ANIMATOR ---
+    public override List<ICardContainer> GetAllContainers()
+    {
+        List<ICardContainer> list = new List<ICardContainer>();
+
+        void AddWrapper(Component comp)
+        {
+            if (comp == null) return;
+            var wrapper = comp.GetComponent<PyramidContainerWrapper>();
+            if (wrapper == null) wrapper = comp.gameObject.AddComponent<PyramidContainerWrapper>();
+            list.Add(wrapper);
+        }
+
+        AddWrapper(Stock);
+        AddWrapper(Waste);
+        foreach (var slot in TableauSlots) AddWrapper(slot);
+
+        var deckManager = FindObjectOfType<PyramidDeckManager>();
+        if (deckManager != null)
+        {
+            AddWrapper(deckManager.stockRoot);
+            AddWrapper(deckManager.wasteRoot);
+            AddWrapper(deckManager.leftFoundation);
+            AddWrapper(deckManager.rightFoundation);
+        }
+
+        return list;
+    }
 
     public void Initialize(List<Transform> rows)
     {
         TableauSlots.Clear();
-        ResetRowFlags(); // Используем метод сброса
+        ResetRowFlags();
 
         Dictionary<string, PyramidTableauSlot> map = new Dictionary<string, PyramidTableauSlot>();
 
@@ -52,13 +90,11 @@ public class PyramidPileManager : MonoBehaviour
         }
     }
 
-    // --- НОВЫЙ МЕТОД: Сброс флагов рядов (вызывать при новом раунде) ---
     public void ResetRowFlags()
     {
         for (int i = 0; i < rowClearedFlags.Length; i++)
             rowClearedFlags[i] = false;
     }
-    // -------------------------------------------------------------------
 
     public List<int> CheckForNewClearedRows()
     {
@@ -107,22 +143,36 @@ public class PyramidPileManager : MonoBehaviour
                     slot.Card.canvasGroup.interactable = !blocked;
                     slot.Card.canvasGroup.blocksRaycasts = true;
                 }
-                SetCardColorSmoothly(slot.Card, blocked ? new Color(0.6f, 0.6f, 0.6f) : Color.white);
+
+                var data = slot.Card.GetComponent<CardData>();
+                if (data && data.image) data.image.color = Color.white;
+
+                // --- НОВОЕ: В пирамиде у всех карт всегда есть тень ---
+                var shadow = slot.Card.GetComponent<UnityEngine.UI.Shadow>();
+                if (shadow != null) shadow.enabled = true;
             }
         }
+
         Stock.UpdateInteractability();
+
         var wasteCards = Waste.GetCards();
         for (int i = 0; i < wasteCards.Count; i++)
         {
             bool isTop = (i == wasteCards.Count - 1);
             CardController card = wasteCards[i];
+
             if (card.canvasGroup)
             {
                 card.canvasGroup.interactable = isTop;
                 card.canvasGroup.blocksRaycasts = true;
             }
+
             var data = card.GetComponent<CardData>();
             if (data && data.image) data.image.color = Color.white;
+
+            // --- НОВОЕ: Тень только у самой нижней карты сброса (индекс 0) ---
+            var shadow = card.GetComponent<UnityEngine.UI.Shadow>();
+            if (shadow != null) shadow.enabled = (i == 0);
         }
     }
 
@@ -156,38 +206,6 @@ public class PyramidPileManager : MonoBehaviour
         return false;
     }
 
-    private void SetCardColorSmoothly(CardController card, Color targetColor)
-    {
-        var data = card.GetComponent<CardData>();
-        if (data == null || data.image == null) return;
-        if (IsColorClose(data.image.color, targetColor)) return;
-
-        if (colorRoutines.ContainsKey(card))
-        {
-            if (colorRoutines[card] != null) StopCoroutine(colorRoutines[card]);
-            colorRoutines.Remove(card);
-        }
-        Coroutine routine = StartCoroutine(FadeColorRoutine(data, targetColor));
-        colorRoutines[card] = routine;
-    }
-
-    private IEnumerator FadeColorRoutine(CardData data, Color target)
-    {
-        float duration = 0.3f; float elapsed = 0f; Color start = data.image.color;
-        while (elapsed < duration)
-        {
-            if (data == null || data.image == null) yield break;
-            elapsed += Time.deltaTime;
-            data.image.color = Color.Lerp(start, target, elapsed / duration);
-            yield return null;
-        }
-        if (data != null && data.image != null) data.image.color = target;
-        var controller = data.GetComponent<CardController>();
-        if (controller != null && colorRoutines.ContainsKey(controller)) colorRoutines.Remove(controller);
-    }
-
-    private bool IsColorClose(Color a, Color b) => Mathf.Abs(a.r - b.r) < 0.01f && Mathf.Abs(a.g - b.g) < 0.01f && Mathf.Abs(a.b - b.b) < 0.01f;
-
     public void RemoveCardFromSystem(CardController card)
     {
         foreach (var slot in TableauSlots)
@@ -195,7 +213,6 @@ public class PyramidPileManager : MonoBehaviour
             if (slot.Card == card)
             {
                 slot.Card = null;
-                if (colorRoutines.ContainsKey(card)) colorRoutines.Remove(card);
                 return;
             }
         }

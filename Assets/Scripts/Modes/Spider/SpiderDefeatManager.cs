@@ -9,7 +9,7 @@ public class SpiderDefeatManager : MonoBehaviour
     private SpiderModeManager modeManager;
 
     [Header("Settings")]
-    [SerializeField] private float defeatDelay = 1.0f; // Задержка перед показом поражения
+    [SerializeField] private float defeatDelay = 1.0f;
 
     [Header("Undo Grace")]
     [SerializeField] private float undoGracePeriod = 2.0f;
@@ -34,21 +34,35 @@ public class SpiderDefeatManager : MonoBehaviour
     {
         if (Time.time < ignoreChecksUntil) return;
 
-        // 1. Если в колоде еще есть карты — мы живы
+        // --- ЗАЩИТА 1: Если сейчас летит стопка в дом, мы точно не проиграли ---
+        if (modeManager != null && modeManager.ActiveFoundationAnimations > 0)
+        {
+            StopDefeatTimer();
+            return;
+        }
+
+        // --- ЗАЩИТА 2: Если есть сток - играем дальше ---
         if (pileManager.StockPile.GetCardCount() > 0)
         {
             StopDefeatTimer();
             return;
         }
 
-        // 2. Если есть полезные ходы — мы живы
+        // --- ЗАЩИТА 3: Если весь стол пустой (это победа, а не поражение) ---
+        if (IsTableauCompletelyEmpty())
+        {
+            StopDefeatTimer();
+            return;
+        }
+
+        // --- ЗАЩИТА 4: Если есть хоть один полезный ход - играем дальше ---
         if (HasAnyUsefulMove())
         {
             StopDefeatTimer();
             return;
         }
 
-        // 3. Если сток пуст и ходов нет — запускаем таймер поражения
+        // Тупик
         if (pendingDefeatCoroutine == null)
         {
             pendingDefeatCoroutine = StartCoroutine(DefeatRoutine());
@@ -68,45 +82,50 @@ public class SpiderDefeatManager : MonoBehaviour
     {
         yield return new WaitForSeconds(defeatDelay);
 
-        // Финальная проверка перед смертью (вдруг игрок успел что-то сделать)
-        if (pileManager.StockPile.GetCardCount() == 0 && !HasAnyUsefulMove())
+        // Повторная финальная проверка перед тем как показать экран
+        if (pileManager.StockPile.GetCardCount() == 0 && !HasAnyUsefulMove() && !IsTableauCompletelyEmpty() && modeManager.ActiveFoundationAnimations == 0)
         {
-            Debug.Log("Spider Defeat: No moves left.");
+            Debug.Log("Spider Defeat: True mathematical dead-end reached.");
             if (gameUI != null) gameUI.OnGameLost();
         }
         pendingDefeatCoroutine = null;
     }
 
-    // --- ЛОГИКА ПОЛЕЗНОСТИ ХОДОВ ---
+    private bool IsTableauCompletelyEmpty()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            if (pileManager.TableauPiles[i].cards.Count > 0) return false;
+        }
+        return true;
+    }
+
+    // --- УМНЫЙ АНАЛИЗ ХОДОВ ---
 
     private bool HasAnyUsefulMove()
     {
-        // Проходим по всем колонкам
         for (int i = 0; i < 10; i++)
         {
-            SpiderTableauPile sourcePile = pileManager.TableauPiles[i];
-            if (sourcePile.cards.Count == 0) continue;
+            var sourcePile = pileManager.TableauPiles[i];
 
-            // Получаем список карт, которые можно взять (одной масти по порядку)
-            List<CardController> movableSequence = GetMovableSequence(sourcePile);
-            if (movableSequence.Count == 0) continue;
+            // Получаем ВСЕ возможные комбинации (всю стопку и любые её части)
+            var sequences = GetAllMovableSequences(sourcePile);
 
-            // Пытаемся примерить эту пачку ко всем остальным колонкам
-            foreach (var cardToMove in movableSequence)
+            foreach (var seq in sequences)
             {
+                var topOfSeq = seq[0];
+                int sourceIdx = sourcePile.cards.IndexOf(topOfSeq);
+
                 for (int j = 0; j < 10; j++)
                 {
                     if (i == j) continue;
+                    var targetPile = pileManager.TableauPiles[j];
 
-                    SpiderTableauPile targetPile = pileManager.TableauPiles[j];
-
-                    // Технически ход возможен?
-                    if (targetPile.CanAccept(cardToMove))
+                    if (targetPile.CanAccept(topOfSeq))
                     {
-                        // Проверяем, ПОЛЕЗЕН ли он
-                        if (IsMoveUseful(sourcePile, cardToMove, targetPile))
+                        if (IsMoveProductive(sourcePile, sourceIdx, targetPile, seq))
                         {
-                            return true; // Нашли хотя бы один полезный ход
+                            return true;
                         }
                     }
                 }
@@ -115,61 +134,109 @@ public class SpiderDefeatManager : MonoBehaviour
         return false;
     }
 
-    private bool IsMoveUseful(SpiderTableauPile sourcePile, CardController cardToMove, SpiderTableauPile targetPile)
+    private bool IsMoveProductive(SpiderTableauPile sourcePile, int sourceIdx, SpiderTableauPile targetPile, List<CardController> draggedSeq)
     {
-        // 1. Если мы освобождаем пустую ячейку (под картой ничего нет)
-        // В Пауке пустая ячейка всегда полезна.
-        int cardIndex = sourcePile.cards.IndexOf(cardToMove);
-        if (cardIndex == 0) return true;
+        var topOfSeq = draggedSeq[0];
 
-        // Смотрим, что лежит ПОД картой, которую мы хотим убрать
-        CardController cardBelow = sourcePile.cards[cardIndex - 1];
-        CardData dataBelow = cardBelow.GetComponent<CardData>();
+        // 1. Освобождение пустой колонки всегда полезно
+        if (sourceIdx == 0) return true;
 
-        // 2. Если карта снизу ЗАКРЫТА — ход полезен (мы её откроем)
-        if (!dataBelow.IsFaceUp()) return true;
+        var cardBelow = sourcePile.cards[sourceIdx - 1];
 
-        // 3. Если карта снизу ОТКРЫТА — проверяем на "бесполезный цикл"
-        // Пример: переносим 3H с 4D на другую 4D. Это бесполезно, если 4D снизу открыта.
+        // 2. Открытие рубашки всегда полезно
+        if (!cardBelow.GetComponent<CardData>().IsFaceUp()) return true;
 
-        // Получаем, на что мы кладем (Топ целевой стопки или пустота)
-        if (targetPile.cards.Count == 0) return true; // Перенос на пустое место полезен
+        bool isCurrentMatch = cardBelow.cardModel.suit == topOfSeq.cardModel.suit;
 
-        CardController targetTop = targetPile.cards[targetPile.cards.Count - 1];
-
-        // Сравниваем Ранг карты ПОД нами и Ранг карты, НА которую кладем.
-        // В Пауке масть основания не важна для валидности, важен только Ранг.
-        // Если Ранги совпадают, мы просто перекладываем "шило на мыло".
-        if (cardBelow.cardModel.rank == targetTop.cardModel.rank)
+        if (targetPile.cards.Count > 0)
         {
-            return false; // Бесполезный ход
+            var targetTop = targetPile.cards[targetPile.cards.Count - 1];
+            bool isTargetMatch = targetTop.cardModel.suit == topOfSeq.cardModel.suit;
+
+            // 3. Сборка масти (была разная, стала одинаковая)
+            if (isTargetMatch && !isCurrentMatch) return true;
+
+            // Разрывать масть ради другой масти нет смысла
+            if (isCurrentMatch && !isTargetMatch) return false;
+
+            // Перекладывание "Шило на мыло" (та же масть и тот же ранг)
+            if (targetTop.cardModel.suit == cardBelow.cardModel.suit &&
+                targetTop.cardModel.rank == cardBelow.cardModel.rank)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            // 4. Перенос на пустую ячейку (полезно для мусора, вредно для собранной масти)
+            if (isCurrentMatch) return false;
+            return true;
         }
 
-        return true;
+        // --- 5. МНОГОХОДОВКА (Перенос мусора на мусор) ---
+        // Ищем любую косвенную выгоду на столе
+        for (int k = 0; k < 10; k++)
+        {
+            var p = pileManager.TableauPiles[k];
+            if (p == sourcePile || p == targetPile) continue;
+
+            // Если на столе есть пустая колонка, игра не может быть проиграна
+            // Пустая колонка дает место для любых маневров
+            if (p.cards.Count == 0) return true;
+
+            var pTop = p.cards[p.cards.Count - 1];
+
+            // Выгода А: Сможет ли освободившаяся карта лечь по масти куда-то еще?
+            if (pTop.cardModel.suit == cardBelow.cardModel.suit &&
+                pTop.cardModel.rank == cardBelow.cardModel.rank + 1) return true;
+
+            var otherSeqs = GetAllMovableSequences(p);
+            foreach (var oSeq in otherSeqs)
+            {
+                var oTop = oSeq[0];
+
+                // Выгода Б: Сможет ли кто-то лечь по масти на освободившуюся карту?
+                if (oTop.cardModel.suit == cardBelow.cardModel.suit &&
+                    oTop.cardModel.rank == cardBelow.cardModel.rank - 1) return true;
+
+                // Выгода В: Сможет ли перемещенная стопка принять на себя карту по масти?
+                var bottomOfDraggedSeq = draggedSeq[draggedSeq.Count - 1];
+                if (oTop.cardModel.suit == bottomOfDraggedSeq.cardModel.suit &&
+                    oTop.cardModel.rank == bottomOfDraggedSeq.cardModel.rank - 1) return true;
+            }
+        }
+
+        return false; // Это абсолютный тупик
     }
 
-    private List<CardController> GetMovableSequence(SpiderTableauPile pile)
+    // --- Находит все доступные для отрыва части цепочки ---
+    private List<List<CardController>> GetAllMovableSequences(SpiderTableauPile pile)
     {
-        List<CardController> result = new List<CardController>();
-        if (pile.cards.Count == 0) return result;
+        List<List<CardController>> sequences = new List<List<CardController>>();
+        if (pile.cards.Count == 0) return sequences;
 
         int lastIdx = pile.cards.Count - 1;
-        result.Add(pile.cards[lastIdx]);
+
+        List<CardController> currentSeq = new List<CardController>();
+        currentSeq.Add(pile.cards[lastIdx]);
+        sequences.Add(new List<CardController>(currentSeq));
 
         for (int i = lastIdx - 1; i >= 0; i--)
         {
             var current = pile.cards[i];
-            var next = pile.cards[i + 1];
+            var prev = pile.cards[i + 1];
 
             if (!current.GetComponent<CardData>().IsFaceUp()) break;
 
-            // В Пауке тащить можно только ОДНОМАСТНЫЕ последовательности
-            bool suitOk = current.cardModel.suit == next.cardModel.suit;
-            bool rankOk = current.cardModel.rank == next.cardModel.rank + 1;
-
-            if (suitOk && rankOk) result.Add(current);
+            if (current.cardModel.suit == prev.cardModel.suit &&
+                current.cardModel.rank == prev.cardModel.rank + 1)
+            {
+                currentSeq.Insert(0, current);
+                sequences.Add(new List<CardController>(currentSeq));
+            }
             else break;
         }
-        return result; // Возвращает в порядке с конца (K, Q...), нам для итерации подойдет
+
+        return sequences;
     }
 }

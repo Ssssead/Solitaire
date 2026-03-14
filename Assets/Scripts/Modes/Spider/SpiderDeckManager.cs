@@ -10,24 +10,23 @@ public class SpiderDeckManager : MonoBehaviour
     public SpiderPileManager pileManager;
     public SpiderModeManager modeManager;
     public UndoManager undoManager;
-    public SpiderLevelGenerator levelGenerator;
+  
 
-    // Список для первичной анимации раздачи
+    [Header("Error Feedback")]
+    [Tooltip("Объект стрелочки (UI Image), который будет появляться при ошибке раздачи")]
+    public GameObject emptyPileArrow;
+    private bool isErrorAnimating = false;
+
     private List<CardController> deckCards = new List<CardController>();
 
     public void CreateAndDeal(int suitsCount, Difficulty difficulty)
     {
-        // Инициализация генератора если нужно
-        if (levelGenerator == null)
-            levelGenerator = gameObject.AddComponent<SpiderLevelGenerator>();
-
+       
         cardFactory.DestroyAllCards();
         deckCards.Clear();
 
-        // 1. Пробуем загрузить из КЭША
         if (DealCacheSystem.Instance != null)
         {
-            // Используем переданную сложность для поиска в кэше
             Deal cachedDeal = DealCacheSystem.Instance.GetDeal(GameType.Spider, difficulty, suitsCount);
 
             if (cachedDeal != null)
@@ -38,24 +37,15 @@ public class SpiderDeckManager : MonoBehaviour
                 return;
             }
         }
-
-        // 2. Если кэша нет - ГЕНЕРИРУЕМ ЧЕРЕЗ НОВЫЙ СКРИПТ
-        StartCoroutine(levelGenerator.GenerateDeal(difficulty, suitsCount, (deal, metrics) =>
-        {
-            // Преобразуем объект Deal обратно в плоский список моделей для спавна
-            var models = ReconstructDeckFromDeal(deal);
-            SpawnCardsAndDeal(models);
-        }));
     }
 
     private void SpawnCardsAndDeal(List<CardModel> models)
     {
         foreach (var model in models)
         {
-            CardController card = cardFactory.CreateCard(model, pileManager.StockPile.transform, Vector2.zero);
+            CardController card = cardFactory.CreateCard(model, modeManager.dragLayer, Vector2.zero);
             FindObjectOfType<DragManager>()?.RegisterCardEvents(card);
 
-            // Все карты изначально закрыты
             card.GetComponent<CardData>().SetFaceUp(false, false);
             if (card.canvasGroup != null)
             {
@@ -65,17 +55,70 @@ public class SpiderDeckManager : MonoBehaviour
             deckCards.Add(card);
         }
 
-        pileManager.StockPile.ForceRecalculateLayout();
-        StartCoroutine(DealInitialLayout());
+        if (modeManager.introController != null)
+        {
+            bool skipUI = modeManager.isRestarting;
+            modeManager.isRestarting = false;
+
+            Vector3 targetPos = pileManager.StockPile.transform.position;
+            float canvasScale = modeManager.rootCanvas.transform.localScale.x;
+            Vector3 offScreenPos = targetPos + new Vector3(1500f * canvasScale, 0, 0);
+
+            foreach (var card in deckCards)
+            {
+                card.transform.position = offScreenPos;
+            }
+
+            modeManager.introController.SetupIntro(skipUI);
+            StartCoroutine(modeManager.introController.PlayIntro(skipUI));
+        }
+        else
+        {
+            StartCoroutine(PlayIntroDeckArrival(0f));
+        }
     }
 
-    // Распаковка Deal в плоский список для анимации
+    public IEnumerator PlayIntroDeckArrival(float duration)
+    {
+        modeManager.IsInputAllowed = false;
+
+        Vector3 targetPos = pileManager.StockPile.transform.position;
+        float canvasScale = modeManager.rootCanvas.transform.localScale.x;
+        Vector3 offScreenPos = targetPos + new Vector3(1500f * canvasScale, 0, 0);
+
+        if (duration > 0f)
+        {
+            float elapsed = 0f;
+            AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = curve.Evaluate(elapsed / duration);
+                foreach (var card in deckCards)
+                {
+                    card.transform.position = Vector3.Lerp(offScreenPos, targetPos, t);
+                }
+                yield return null;
+            }
+        }
+
+        foreach (var card in deckCards)
+        {
+            card.transform.SetParent(pileManager.StockPile.transform, false);
+            card.transform.localScale = Vector3.one;
+        }
+
+        pileManager.StockPile.ForceRecalculateLayout();
+        yield return new WaitForSeconds(0.1f);
+
+        yield return StartCoroutine(DealInitialLayout());
+    }
+
     private List<CardModel> ReconstructDeckFromDeal(Deal deal)
     {
         List<CardModel> list = new List<CardModel>();
 
-        // Tableau: Собираем построчно (ряд 0, ряд 1...), чтобы анимация шла слева-направо
-        // Проверяем реальную высоту колонок из кэша
         int maxRow = 0;
         foreach (var col in deal.tableau) if (col.Count > maxRow) maxRow = col.Count;
 
@@ -88,7 +131,6 @@ public class SpiderDeckManager : MonoBehaviour
             }
         }
 
-        // Stock: Карты запаса кладем в конец списка
         var stockList = deal.stock.ToList();
         stockList.Reverse();
         foreach (var c in stockList) list.Add(c.Card);
@@ -99,14 +141,7 @@ public class SpiderDeckManager : MonoBehaviour
     private IEnumerator DealInitialLayout()
     {
         modeManager.IsInputAllowed = false;
-
-        // Определяем структуру стола по фактическому количеству карт
-        // (Обычно это 6-6-6-6-5-5-5-5-5-5, но кэш может дать другое)
         int dealtCount = 0;
-        // 54 карты на столе
-        int totalTableauCards = 54;
-
-        // Используем стандартную структуру Паука для анимации, если в deckCards достаточно карт
         int[] cardsPerCol = { 6, 6, 6, 6, 5, 5, 5, 5, 5, 5 };
 
         for (int row = 0; row < 6; row++)
@@ -124,10 +159,20 @@ public class SpiderDeckManager : MonoBehaviour
                 yield return new WaitForSeconds(0.02f);
             }
         }
+
+        // Ждем пока самые последние карты долетят до слотов
+        yield return new WaitForSeconds(0.4f);
+
+        // Открываем ввод - это позволит слотам принять наши отступы
         modeManager.IsInputAllowed = true;
+
+        // НОВОЕ: Дергаем пересчет макета, чтобы карты мгновенно приняли "умное сжатие"
+        if (modeManager != null)
+        {
+            modeManager.UpdateTableauLayouts();
+        }
     }
 
-    // --- ИСПРАВЛЕННАЯ РАЗДАЧА ИЗ КОЛОДЫ ---
     public void TryDealRow()
     {
         if (!modeManager.IsInputAllowed) return;
@@ -135,23 +180,96 @@ public class SpiderDeckManager : MonoBehaviour
         var stockPile = pileManager.StockPile;
         if (stockPile.cards.Count < 10) return;
 
+        SpiderTableauPile firstEmptyPile = null;
         foreach (var pile in pileManager.TableauPiles)
         {
-            if (pile.cards.Count == 0) return;
+            if (pile.cards.Count == 0)
+            {
+                firstEmptyPile = pile;
+                break;
+            }
         }
 
-        // --- ДОБАВИТЬ ЭТУ СТРОКУ ---
+        if (firstEmptyPile != null)
+        {
+            if (!isErrorAnimating)
+            {
+                StartCoroutine(PlayErrorFeedback(firstEmptyPile));
+            }
+            return;
+        }
+
         modeManager.OnStockClicked();
-        // ---------------------------
 
         List<CardController> cardsToDeal = new List<CardController>();
         int totalInStock = stockPile.cards.Count;
-        for (int i = totalInStock - 10; i < totalInStock; i++)
+
+        // --- ИЗМЕНЕНИЕ 1: Собираем карты СВЕРХУ ВНИЗ (от верхней карты к десятой сверху) ---
+        for (int i = totalInStock - 1; i >= totalInStock - 10; i--)
         {
             cardsToDeal.Add(stockPile.cards[i]);
         }
 
+        bool willBeEmpty = (totalInStock <= 10);
+        modeManager.UpdateTableauLayouts(willBeEmpty);
+
         StartCoroutine(DealRowRoutine(cardsToDeal));
+    }
+
+    private IEnumerator PlayErrorFeedback(SpiderTableauPile emptyPile)
+    {
+        isErrorAnimating = true;
+
+        StartCoroutine(ShakeStockPile());
+
+        if (emptyPileArrow != null)
+        {
+            emptyPileArrow.SetActive(true);
+
+            Transform targetParent = emptyPile.emptySlotArrowAnchor != null ? emptyPile.emptySlotArrowAnchor : emptyPile.transform;
+            emptyPileArrow.transform.SetParent(targetParent, false);
+
+            emptyPileArrow.transform.localPosition = Vector3.zero;
+
+            float duration = 1.0f;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float yOffset = Mathf.Sin(elapsed * Mathf.PI * 4f) * 20f;
+                emptyPileArrow.transform.localPosition = new Vector3(0, yOffset, 0);
+                yield return null;
+            }
+
+            emptyPileArrow.SetActive(false);
+        }
+        else
+        {
+            yield return new WaitForSeconds(1.0f);
+        }
+
+        isErrorAnimating = false;
+    }
+
+    private IEnumerator ShakeStockPile()
+    {
+        if (pileManager.StockPile == null) yield break;
+
+        Transform stockTransform = pileManager.StockPile.transform;
+        Vector3 originalPos = stockTransform.localPosition;
+        float duration = 0.4f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float xOffset = Mathf.Sin(elapsed * 40f) * 10f;
+            stockTransform.localPosition = originalPos + new Vector3(xOffset, 0, 0);
+            yield return null;
+        }
+
+        stockTransform.localPosition = originalPos;
     }
 
     private IEnumerator DealRowRoutine(List<CardController> cardsToDeal)
@@ -159,17 +277,46 @@ public class SpiderDeckManager : MonoBehaviour
         modeManager.IsInputAllowed = false;
         string batchID = System.Guid.NewGuid().ToString();
 
+        if (undoManager != null)
+        {
+            // --- ИЗМЕНЕНИЕ 2: Записываем ходы от 0-го слота к 9-му. 
+            // При отмене они будут возвращаться с 9-го по 0-й, что идеально восстановит иерархию (SiblingIndex) ---
+            for (int i = 0; i < 10; i++)
+            {
+                var card = cardsToDeal[i];
+                var pile = pileManager.TableauPiles[i];
+
+                undoManager.RecordMove(
+                    new List<CardController> { card },
+                    pileManager.StockPile,
+                    pile,
+                    new List<Transform> { card.transform.parent },
+                    new List<Vector3> { card.rectTransform.anchoredPosition },
+                    new List<int> { card.transform.GetSiblingIndex() },
+                    batchID,
+                    isRapidUndo: true
+                );
+            }
+        }
+
         for (int i = 0; i < 10; i++)
         {
             var card = cardsToDeal[i];
             var pile = pileManager.TableauPiles[i];
 
-            MoveCardToPile(card, pile, true, recordUndo: true, groupID: batchID);
+            MoveCardToPile(card, pile, true, recordUndo: false, groupID: batchID);
             yield return new WaitForSeconds(0.05f);
         }
 
+        yield return new WaitForSeconds(0.4f);
+
         modeManager.IsInputAllowed = true;
-        modeManager.UpdateTableauLayouts();
+
+        if (modeManager != null)
+        {
+            modeManager.CheckGameState();
+            modeManager.UpdateTableauLayouts();
+        }
     }
 
     private void MoveCardToPile(CardController card, SpiderTableauPile targetPile, bool faceUp, bool recordUndo, string groupID = null)
@@ -198,42 +345,12 @@ public class SpiderDeckManager : MonoBehaviour
         targetPile.ForceRecalculateLayout();
     }
 
-    // --- Вспомогательные методы ---
-    private List<CardModel> GenerateModels(int level)
-    {
-        List<CardModel> list = new List<CardModel>();
-        List<Suit> suitsToUse = new List<Suit>();
-        if (level == 1) suitsToUse.Add(Suit.Spades);
-        else if (level == 2) { suitsToUse.Add(Suit.Spades); suitsToUse.Add(Suit.Hearts); }
-        else { suitsToUse.Add(Suit.Spades); suitsToUse.Add(Suit.Hearts); suitsToUse.Add(Suit.Clubs); suitsToUse.Add(Suit.Diamonds); }
-
-        int setsPerSuit = 8 / suitsToUse.Count;
-        foreach (var suit in suitsToUse)
-            for (int k = 0; k < setsPerSuit; k++)
-                for (int r = 1; r <= 13; r++) list.Add(new CardModel(suit, r));
-        return list;
-    }
-
     public void RestartGame()
     {
         int suits = GameSettings.SpiderSuitCount;
-        Difficulty diff = GameSettings.CurrentDifficulty; // Берем из настроек
-
-        // Валидация
+        Difficulty diff = GameSettings.CurrentDifficulty;
         if (suits != 1 && suits != 2 && suits != 4) suits = 1;
 
         CreateAndDeal(suits, diff);
-    }
-
-    private void Shuffle<T>(List<T> list)
-    {
-        System.Random rng = new System.Random();
-        int n = list.Count;
-        while (n > 1)
-        {
-            n--;
-            int k = rng.Next(n + 1);
-            T value = list[k]; list[k] = list[n]; list[n] = value;
-        }
     }
 }

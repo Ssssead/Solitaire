@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class PyramidDeckManager : MonoBehaviour
 {
@@ -19,13 +18,6 @@ public class PyramidDeckManager : MonoBehaviour
     public Transform leftFoundation;
     public Transform rightFoundation;
 
-    [Header("Visual Settings")]
-    public Sprite selectionFrameSprite;
-    public Vector2 selectionFrameScale = Vector2.one;
-    public float selectionScaleAmount = 1.05f;
-
-    private GameObject highlightObject;
-
     private void Awake()
     {
         if (!cardFactory) cardFactory = FindObjectOfType<CardFactory>();
@@ -35,7 +27,6 @@ public class PyramidDeckManager : MonoBehaviour
         if (pileManager.Waste == null) pileManager.Waste = wasteRoot.gameObject.AddComponent<PyramidWastePile>();
 
         pileManager.Initialize(rowParents);
-        CreateHighlightObject();
     }
 
     public List<CardController> InstantiateDeal(Deal deal)
@@ -54,9 +45,7 @@ public class PyramidDeckManager : MonoBehaviour
 
                 if (slot)
                 {
-                    // Создаем в Stock (визуально)
                     var cardObj = cardFactory.CreateCard(instance.Card, stockRoot, Vector2.zero);
-
                     cardObj.CardmodeManager = modeManager;
                     cardObj.OnClicked += modeManager.OnCardClicked;
 
@@ -64,12 +53,10 @@ public class PyramidDeckManager : MonoBehaviour
                     if (data)
                     {
                         data.SetFaceUp(true, true);
-                        if (data.image) data.image.color = Color.white; // Белая
+                        if (data.image) data.image.color = Color.white;
                     }
 
                     slot.Card = cardObj;
-
-                    // Сохраняем цель
                     var info = cardObj.gameObject.AddComponent<CardInfoStorage>();
                     info.LinkedSlot = slot.transform;
 
@@ -92,56 +79,17 @@ public class PyramidDeckManager : MonoBehaviour
             if (data)
             {
                 data.SetFaceUp(instance.FaceUp, false);
-                if (data.image) data.image.color = Color.white; // Белая
+                if (data.image) data.image.color = Color.white;
             }
 
             pileManager.Stock.Add(cardObj);
         }
 
-        // Замки НЕ обновляем здесь, это сделает AnimationManager в конце раздачи
-
         return cardsToAnimate;
-    }
-
-    // ... [CreateHighlightObject, SetCardHighlight, ClearBoard - как в прошлом ответе] ...
-    private void CreateHighlightObject()
-    {
-        if (selectionFrameSprite == null) return;
-        highlightObject = new GameObject("SelectionFrame");
-        highlightObject.transform.SetParent(transform);
-        Image img = highlightObject.AddComponent<Image>();
-        img.sprite = selectionFrameSprite;
-        img.raycastTarget = false;
-        img.type = Image.Type.Sliced;
-        RectTransform rt = highlightObject.GetComponent<RectTransform>();
-        rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
-        rt.localScale = new Vector3(selectionFrameScale.x, selectionFrameScale.y, 1f);
-        highlightObject.SetActive(false);
-    }
-
-    public void SetCardHighlight(CardController card, bool active)
-    {
-        if (highlightObject == null) return;
-        if (active && card != null)
-        {
-            highlightObject.transform.SetParent(card.transform, false);
-            highlightObject.transform.localPosition = Vector3.zero;
-            highlightObject.transform.localScale = new Vector3(selectionFrameScale.x, selectionFrameScale.y, 1f);
-            highlightObject.transform.SetAsLastSibling();
-            highlightObject.SetActive(true);
-            card.transform.localScale = Vector3.one * selectionScaleAmount;
-        }
-        else
-        {
-            highlightObject.SetActive(false);
-            highlightObject.transform.SetParent(transform, false);
-            if (card != null) card.transform.localScale = Vector3.one;
-        }
     }
 
     public void ClearBoard()
     {
-        if (highlightObject != null) { highlightObject.SetActive(false); highlightObject.transform.SetParent(transform, false); }
         foreach (var slot in pileManager.TableauSlots) { if (slot.Card) Destroy(slot.Card.gameObject); slot.Card = null; }
         foreach (Transform t in stockRoot) Destroy(t.gameObject);
         pileManager.Stock.Clear();

@@ -6,4 +6,7 @@ public class MonteCarloMoveRecord
     public CardController Card2;
     public CardController[] PreviousBoardState;
     public List<CardController> CardsDealtFromStock = new List<CardController>();
+
+    // --- НОВОЕ: Сохраняем полученные очки, чтобы точно их отнять при Undo ---
+    public int PointsEarned;
 }

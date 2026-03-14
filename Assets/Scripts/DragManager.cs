@@ -297,16 +297,7 @@ public class DragManager : MonoBehaviour
         {
             sequence.Add(card);
         }
-        if (mode is FreeCellModeManager freeCellMode)
-        {
-            int limit = freeCellMode.GetMaxDragSequenceSize();
-            // ≈сли пачка больше лимита, берем только верхнюю карту или запрещаем
-            if (sequence.Count > limit)
-            {
-                // ¬озвращаем только одну карту (самую верхнюю), либо null чтобы запретить совсем
-                return null;
-            }
-        }
+        
         return sequence;
     }
 

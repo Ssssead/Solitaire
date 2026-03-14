@@ -4,232 +4,307 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using System.Diagnostics;
 
 public class SpiderLevelGenerator : BaseGenerator
 {
     public override GameType GameType => GameType.Spider;
 
-    private class GenCard
+    [Header("Generation Strategy")]
+    public bool calibrationMode = true;
+    public Difficulty targetDifficulty;
+    public int targetSuitsCount = 2;
+
+    [Header("Optimization")]
+    [Range(1, 16)]
+    public float frameBudgetMs = 8.0f;
+    public int maxMutations = 50000;
+
+    private int targetMinScore;
+    private int targetMaxScore;
+
+    // Новые лимиты: Сколько состояний Солвер должен проверить, чтобы мы поверили в сложность
+    private int targetMinStates;
+    private int targetMaxStates;
+
+    private readonly int[] topIndices = new int[] { 5, 11, 17, 23, 28, 33, 38, 43, 48, 53 };
+
+    private void Start()
     {
-        public int Suit;
-        public int Rank;
-        public GenCard(int s, int r) { Suit = s; Rank = r; }
-
-        public CardInstance ToCardInstance(bool faceUp)
+        if (calibrationMode)
         {
-            return new CardInstance(new CardModel((Suit)Suit, Rank), faceUp);
+            UnityEngine.Debug.Log($"[SpiderGen] Starting Evolution Mutator for {targetDifficulty} ({targetSuitsCount} Suits)...");
+            StartCoroutine(GenerateDeal(targetDifficulty, targetSuitsCount, (deal, metrics) =>
+            {
+                UnityEngine.Debug.Log("<color=yellow>[SpiderGen] DONE! Targeted deal generated and verified.</color>");
+            }));
         }
-
-        // Для отладки
-        public override string ToString() => $"{((Suit)Suit).ToString()[0]}{Rank}";
     }
 
     public override IEnumerator GenerateDeal(Difficulty difficulty, int suitsCount, Action<Deal, DealMetrics> onComplete)
     {
-        // 1. Получаем коэффициент смещения на основе ваших критериев
-        float bias = GetSameSuitBias(suitsCount, difficulty);
+        SetTargets(difficulty, suitsCount);
 
-        // 2. Создаем и тасуем колоду с учетом смещения
-        List<List<GenCard>> tableau;
-        List<GenCard> stock;
+        Deal validDeal = null;
+        int totalAttempts = 0;
+        int solverRejects = 0;
+        bool found = false;
 
-        GenerateBiasedDeal(suitsCount, bias, out tableau, out stock);
+        Stopwatch frameWatch = Stopwatch.StartNew();
 
-        // 3. Формируем объект Deal для игры
-        Deal finalDeal = new Deal();
-        finalDeal.tableau = new List<List<CardInstance>>();
-        finalDeal.stock = new Stack<CardInstance>();
-
-        for (int i = 0; i < 10; i++)
+        while (!found)
         {
-            List<CardInstance> colList = new List<CardInstance>();
-            for (int k = 0; k < tableau[i].Count; k++)
+            totalAttempts++;
+            if (frameWatch.ElapsedMilliseconds > frameBudgetMs) { yield return null; frameWatch.Restart(); }
+
+            List<CardModel> evolvedDeck = MutateDeckToTarget(suitsCount);
+            Deal candidate = BuildDealFromDeck(evolvedDeck);
+
+            SpiderSolver.ExtendedSolverResult result = new SpiderSolver.ExtendedSolverResult();
+            yield return StartCoroutine(SpiderSolver.SolveAsync(candidate, suitsCount, frameBudgetMs, result));
+            frameWatch.Restart();
+
+            if (result.IsSolved)
             {
-                // В Пауке обычно последняя карта открыта, остальные закрыты
-                bool isTop = (k == tableau[i].Count - 1);
-                colList.Add(tableau[i][k].ToCardInstance(isTop));
+                // ФИНАЛЬНАЯ ПРОВЕРКА СЛОЖНОСТИ СОЛВЕРОМ
+                if (result.StatesVisited >= targetMinStates && result.StatesVisited <= targetMaxStates)
+                {
+                    validDeal = candidate;
+                    int finalScore = CalculateFlatSDS(evolvedDeck, suitsCount);
+
+                    UnityEngine.Debug.Log($"<color=green>[SpiderGen] FOUND! Diff:{difficulty}. SDS:{finalScore}. States:{result.StatesVisited}. Mutations:{totalAttempts}, Rejects:{solverRejects}</color>");
+
+                    DealMetrics outMetrics = new DealMetrics
+                    {
+                        Solved = true,
+                        MoveEstimate = result.Moves
+                    };
+
+                    onComplete?.Invoke(validDeal, outMetrics);
+                    found = true;
+                    break;
+                }
+                else
+                {
+                    // Расклад оказался слишком легким или слишком сложным для нужной категории
+                    solverRejects++;
+                }
             }
-            finalDeal.tableau.Add(colList);
+
+            if (totalAttempts % 5 == 0) yield return null;
         }
-
-        foreach (var c in stock)
-        {
-            finalDeal.stock.Push(c.ToCardInstance(false));
-        }
-
-        Debug.Log($"[SpiderGenerator] Generated {suitsCount} Suits, {difficulty}. Bias: {bias}");
-
-        yield return null;
-        onComplete?.Invoke(finalDeal, new DealMetrics { Solved = true });
     }
 
-    // --- НАСТРОЙКА КОЭФФИЦИЕНТОВ (Ваши критерии) ---
-    private float GetSameSuitBias(int suits, Difficulty diff)
+    private void SetTargets(Difficulty diff, int suits)
     {
         if (suits == 1)
         {
-            // Easy: 0.8 (Sequences), Medium: 0.5 (Random)
-            return (diff == Difficulty.Easy) ? 0.8f : 0.5f;
+            if (diff == Difficulty.Easy) { targetMinScore = 10; targetMaxScore = 30; targetMinStates = 0; targetMaxStates = 600; }
+            else if (diff == Difficulty.Medium) { targetMinScore = 35; targetMaxScore = 45; targetMinStates = 600; targetMaxStates = 2500; }
+            else { targetMinScore = 50; targetMaxScore = 200; targetMinStates = 2500; targetMaxStates = 1500000; }
         }
         else if (suits == 2)
         {
-            // Easy: 0.9 (Segregated)
-            if (diff == Difficulty.Easy) return 0.9f;
-            // Hard: 0.2 (Interleaved / Blocking)
-            if (diff == Difficulty.Hard) return 0.2f;
-            // Medium: 0.5 (Mixed)
-            return 0.5f;
+            if (diff == Difficulty.Easy) { targetMinScore = 30; targetMaxScore = 55; targetMinStates = 0; targetMaxStates = 4000; }
+            else if (diff == Difficulty.Medium) { targetMinScore = 60; targetMaxScore = 80; targetMinStates = 4000; targetMaxStates = 20000; }
+            else
+            {
+                // === ЖЕСТКИЙ HARD ДЛЯ 2 МАСТЕЙ ===
+                // Увеличили стартовый хаос (95) и заставили солвер перебирать минимум 60 000 состояний!
+                targetMinScore = 95; targetMaxScore = 200; targetMinStates = 60000; targetMaxStates = 1500000;
+            }
         }
         else // 4 Suits
         {
-            // Hard: 0.05 (Chaos)
-            if (diff == Difficulty.Hard) return 0.05f;
-            // Medium: 0.4 (Fair) - Easy отключен, но на всякий случай вернем 0.4
-            return 0.4f;
+            if (diff == Difficulty.Easy) { targetMinScore = 70; targetMaxScore = 95; targetMinStates = 0; targetMaxStates = 15000; }
+            else if (diff == Difficulty.Medium) { targetMinScore = 96; targetMaxScore = 115; targetMinStates = 15000; targetMaxStates = 50000; }
+            else { targetMinScore = 116; targetMaxScore = 300; targetMinStates = 50000; targetMaxStates = 1500000; }
         }
     }
 
-    // --- АЛГОРИТМ BIASED SHUFFLE ---
-    private void GenerateBiasedDeal(int suitsCount, float bias, out List<List<GenCard>> tableau, out List<GenCard> stock)
+    private List<CardModel> MutateDeckToTarget(int suitsCount)
     {
-        // 1. Создаем колоду (104 карты)
-        var deck = CreateDeck(suitsCount);
-
-        // 2. Первичная полная перемешка (Честный рандом как база)
-        Shuffle(deck);
-
-        // 3. Применяем смещение (Bias) к картам, которые попадут на стол (Tableau)
-        // В Пауке первые 54 карты идут на стол.
-        // Раздача идет по рядам: 1-я карта в 1-ю колонку, 2-я во 2-ю... 11-я снова в 1-ю (поверх 1-й).
-        // Значит, карта с индексом i лежит на карте с индексом (i - 10).
-
-        int tableauSize = 54;
-
-        for (int i = 10; i < tableauSize; i++)
-        {
-            int parentIndex = i - 10; // Индекс карты, на которую ляжет текущая
-            GenCard parentCard = deck[parentIndex];
-
-            float roll = Random.value;
-
-            // Логика:
-            // Если roll < bias -> Ищем "Идеальную пару" (Rank-1, Та же масть). Это создает последовательности.
-            // Если roll > bias И сложность Hard (bias низкий) -> Ищем "Блокирующую пару" (Rank-1, Другая масть).
-
-            bool forceGoodMatch = (roll < bias);
-
-            // Для Харда 2 масти (bias 0.2): если не выпал GoodMatch, с вероятностью 80% попробуем сделать "Гадость" (BadMatch)
-            // Но только если ранг позволяет (не Туз)
-            bool forceBadMatch = !forceGoodMatch && (bias <= 0.25f) && (suitsCount > 1);
-
-            if (forceGoodMatch && parentCard.Rank > 1)
-            {
-                // Ищем карту (Rank-1, Suit == Parent.Suit) в оставшейся части колоды (от i до конца)
-                int swapTarget = FindCardIndex(deck, i, parentCard.Rank - 1, parentCard.Suit);
-                if (swapTarget != -1)
-                {
-                    Swap(deck, i, swapTarget);
-                }
-            }
-            else if (forceBadMatch && parentCard.Rank > 1)
-            {
-                // Ищем карту (Rank-1, Suit != Parent.Suit) чтобы заблокировать стопку
-                // -1 в suit означает "любая другая масть"
-                int swapTarget = FindCardIndex(deck, i, parentCard.Rank - 1, -1, parentCard.Suit);
-                if (swapTarget != -1)
-                {
-                    Swap(deck, i, swapTarget);
-                }
-            }
-            // Иначе оставляем карту как есть (Random)
-        }
-
-        // 4. Раскладываем обработанную колоду по спискам
-        tableau = new List<List<GenCard>>();
-        for (int i = 0; i < 10; i++) tableau.Add(new List<GenCard>());
-
-        int cardIdx = 0;
-        // 54 карты на стол
-        // Ряды 0-4 (по 10 карт)
-        for (int row = 0; row < 5; row++)
-        {
-            for (int col = 0; col < 10; col++) tableau[col].Add(deck[cardIdx++]);
-        }
-        // Ряд 5 (4 карты)
-        for (int col = 0; col < 4; col++) tableau[col].Add(deck[cardIdx++]);
-
-        // Остальное в сток
-        stock = new List<GenCard>();
-        while (cardIdx < deck.Count)
-        {
-            stock.Add(deck[cardIdx++]);
-        }
-
-        // Сток в этом алгоритме мы не трогаем (оставляем рандомным), 
-        // так как Bias влияет на стартовую ситуацию на столе.
-    }
-
-    // --- ПОМОЩНИКИ ---
-
-    private int FindCardIndex(List<GenCard> deck, int startIndex, int targetRank, int targetSuit, int excludeSuit = -1)
-    {
-        // Ищем подходящую карту в диапазоне [startIndex, End]
-        // Мы перемешиваем индексы поиска, чтобы не брать всегда первую попавшуюся (сохраняем энтропию)
-        List<int> searchIndices = Enumerable.Range(startIndex, deck.Count - startIndex).ToList();
-        Shuffle(searchIndices); // Локальная мешалка для поиска
-
-        foreach (int idx in searchIndices)
-        {
-            GenCard c = deck[idx];
-            if (c.Rank == targetRank)
-            {
-                // Если ищем конкретную масть
-                if (targetSuit != -1 && c.Suit == targetSuit) return idx;
-
-                // Если ищем ЛЮБУЮ масть, КРОМЕ excludeSuit (для блокировки)
-                if (targetSuit == -1 && excludeSuit != -1 && c.Suit != excludeSuit) return idx;
-            }
-        }
-        return -1;
-    }
-
-    private void Swap(List<GenCard> list, int a, int b)
-    {
-        GenCard temp = list[a];
-        list[a] = list[b];
-        list[b] = temp;
-    }
-
-    private List<GenCard> CreateDeck(int suitsCount)
-    {
-        List<GenCard> deck = new List<GenCard>();
+        List<CardModel> deck = new List<CardModel>();
         int[] suitsMap = GetSuitsMap(suitsCount);
-
         foreach (int s in suitsMap)
+            for (int r = 1; r <= 13; r++) deck.Add(new CardModel((Suit)s, r));
+
+        Shuffle(deck); // Естественная стартовая база
+
+        int currentScore = CalculateFlatSDS(deck, suitsCount);
+
+        for (int m = 0; m < maxMutations; m++)
         {
-            for (int r = 1; r <= 13; r++)
+            if (currentScore >= targetMinScore && currentScore <= targetMaxScore)
+                break;
+
+            // Только 100% чистые случайные перестановки (никаких искусственных "склеек")
+            int idxA = Random.Range(0, 104);
+            int idxB = Random.Range(0, 104);
+
+            var temp = deck[idxA];
+            deck[idxA] = deck[idxB];
+            deck[idxB] = temp;
+
+            int newScore = CalculateFlatSDS(deck, suitsCount);
+
+            int currentDist = GetDistanceToRange(currentScore, targetMinScore, targetMaxScore);
+            int newDist = GetDistanceToRange(newScore, targetMinScore, targetMaxScore);
+
+            if (newDist <= currentDist)
             {
-                deck.Add(new GenCard(s, r));
+                currentScore = newScore;
+            }
+            else
+            {
+                // Откат
+                temp = deck[idxA];
+                deck[idxA] = deck[idxB];
+                deck[idxB] = temp;
             }
         }
+
         return deck;
+    }
+
+    private int GetDistanceToRange(int val, int min, int max)
+    {
+        if (val < min) return min - val;
+        if (val > max) return val - max;
+        return 0;
+    }
+
+    private int CalculateFlatSDS(List<CardModel> deck, int suitsCount)
+    {
+        int score = 0;
+        if (suitsCount == 1) score += 15;
+        else if (suitsCount == 2) score += 45;
+        else if (suitsCount == 4) score += 80;
+
+        int initialMoves = 0;
+        for (int i = 0; i < 10; i++)
+        {
+            for (int j = 0; j < 10; j++)
+            {
+                if (i == j) continue;
+                if (deck[topIndices[j]].rank == deck[topIndices[i]].rank - 1) initialMoves++;
+            }
+        }
+        score -= (initialMoves * 2);
+
+        int kingsOnHidden = 0;
+        int deepestKing = 0;
+        int buriedAces = 0;
+        int highBlockers = 0;
+        int hiddenRankBreaks = 0;
+        int unnaturalSuitClumps = 0; // Новая метрика: неестественные скопления одной масти
+
+        int idx = 0;
+        for (int i = 0; i < 10; i++)
+        {
+            int colSize = (i < 4) ? 6 : 5;
+            int hiddenCount = colSize - 1;
+            var topCard = deck[idx + hiddenCount];
+
+            if (topCard.rank == 13) kingsOnHidden++;
+            if (topCard.rank >= 11) highBlockers += (topCard.rank - 10) * hiddenCount * 50;
+
+            int currentSuitClump = 1;
+
+            for (int j = 0; j < hiddenCount; j++)
+            {
+                if (deck[idx + j].rank <= 2) buriedAces += (hiddenCount - j);
+
+                // Проверка на неестественные скопления одной масти под рубашками (если мастей > 1)
+                if (suitsCount > 1 && j > 0)
+                {
+                    if (deck[idx + j].suit == deck[idx + j - 1].suit) currentSuitClump++;
+                    else currentSuitClump = 1;
+
+                    // Если 4 закрытые карты подряд одной масти — это выглядит подозрительно искусственно
+                    if (currentSuitClump >= 4) unnaturalSuitClumps++;
+                }
+            }
+
+            for (int j = 0; j < hiddenCount - 1; j++)
+            {
+                var top = deck[idx + j];
+                var bot = deck[idx + j + 1];
+                if (bot.rank != top.rank - 1 || bot.suit != top.suit) hiddenRankBreaks++;
+                if (top.rank == 13) deepestKing = Mathf.Max(deepestKing, hiddenCount - j);
+            }
+            if (hiddenCount > 0 && deck[idx + hiddenCount - 1].rank == 13) deepestKing = Mathf.Max(deepestKing, 1);
+
+            idx += colSize;
+        }
+
+        // Рентген колоды работает ТОЛЬКО против "ультра-хардкора"
+        // Если мы не наказываем за это в Easy/Medium, игра оставит естественные совпадения в Stock!
+        if (targetMinScore >= 95) // Признак уровня Hard
+        {
+            int stockFreePairs = 0;
+            for (int col = 0; col < 10; col++)
+            {
+                for (int deal = 0; deal < 4; deal++)
+                {
+                    int firstDealIdx = 103 - (deal * 10) - col;
+                    int secondDealIdx = 103 - ((deal + 1) * 10) - col;
+
+                    var c1 = deck[firstDealIdx];
+                    var c2 = deck[secondDealIdx];
+
+                    if (c2.rank == c1.rank - 1 && c2.suit == c1.suit) stockFreePairs++;
+                }
+            }
+            score -= (stockFreePairs * 5);
+        }
+
+        score += (kingsOnHidden * 4);
+        score += (deepestKing * 2);
+        score += buriedAces;
+        score += (highBlockers / 100);
+        score += (hiddenRankBreaks / 2);
+        score += (unnaturalSuitClumps * 10); // Штраф за искусственную сортировку
+
+        return Mathf.Max(1, score);
+    }
+
+    private Deal BuildDealFromDeck(List<CardModel> deck)
+    {
+        Deal d = new Deal();
+        d.tableau.Clear();
+        for (int i = 0; i < 10; i++) d.tableau.Add(new List<CardInstance>());
+
+        int idx = 0;
+        for (int i = 0; i < 10; i++)
+        {
+            int colSize = (i < 4) ? 6 : 5;
+            for (int k = 0; k < colSize; k++)
+            {
+                d.tableau[i].Add(new CardInstance(deck[idx++], k == colSize - 1));
+            }
+        }
+
+        while (idx < 104) d.stock.Push(new CardInstance(deck[idx++], false));
+
+        return d;
     }
 
     private int[] GetSuitsMap(int count)
     {
-        // 0=Clubs, 1=Diamonds, 2=Hearts, 3=Spades
-        if (count == 1) return new int[] { 3, 3, 3, 3, 3, 3, 3, 3 }; // 8 Пик
-        if (count == 2) return new int[] { 3, 2, 3, 2, 3, 2, 3, 2 }; // 4 Пики, 4 Черви
-        return new int[] { 0, 1, 2, 3, 0, 1, 2, 3 }; // По 2 каждой
+        if (count == 1) return new int[] { 3, 3, 3, 3, 3, 3, 3, 3 };
+        if (count == 2) return new int[] { 3, 2, 3, 2, 3, 2, 3, 2 };
+        return new int[] { 0, 1, 2, 3, 0, 1, 2, 3 };
     }
 
     private void Shuffle<T>(List<T> list)
     {
+        System.Random rng = new System.Random();
         int n = list.Count;
         while (n > 1)
         {
             n--;
-            int k = Random.Range(0, n + 1);
+            int k = rng.Next(n + 1);
             T value = list[k];
             list[k] = list[n];
             list[n] = value;

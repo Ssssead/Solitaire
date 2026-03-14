@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MonteCarloPileManager : MonoBehaviour
+public class MonteCarloPileManager : PileManager
 {
-    [Header("Slots")]
+    [Header("Monte Carlo Slots")]
     public Transform StockRoot;
     public Transform FoundationRoot;
     public List<Transform> TableauSlots = new List<Transform>(25);
@@ -28,10 +28,8 @@ public class MonteCarloPileManager : MonoBehaviour
         FoundationCards.Clear();
     }
 
-    // --- НОВЫЙ МЕТОД: Контроль наложения теней ---
     public void UpdateShadows()
     {
-        // 1. Карты на столе: тень есть у всех
         foreach (var card in BoardCards)
         {
             if (card != null)
@@ -41,18 +39,77 @@ public class MonteCarloPileManager : MonoBehaviour
             }
         }
 
-        // 2. Колода (Stock): тень ТОЛЬКО у самой нижней карты (индекс 0)
         for (int i = 0; i < StockCards.Count; i++)
         {
             var sh = StockCards[i].GetComponent<CardShadowController>();
             if (sh) sh.SetShadowVisible(i == 0);
         }
 
-        // 3. Фундамент (Foundation): тень ТОЛЬКО у самой нижней карты (индекс 0)
         for (int i = 0; i < FoundationCards.Count; i++)
         {
             var sh = FoundationCards[i].GetComponent<CardShadowController>();
             if (sh) sh.SetShadowVisible(i == 0);
         }
+    }
+
+    // --- Для интро анимации ---
+    public void SetAllSlotsAlpha(float alpha)
+    {
+        SetAlpha(StockRoot, alpha);
+        SetAlpha(FoundationRoot, alpha);
+        foreach (var slot in TableauSlots) SetAlpha(slot, alpha);
+    }
+
+    private void SetAlpha(Transform t, float alpha)
+    {
+        if (t == null) return;
+        var cg = t.GetComponent<CanvasGroup>();
+        if (cg == null) cg = t.gameObject.AddComponent<CanvasGroup>();
+        cg.alpha = alpha;
+    }
+
+    // --- СОВМЕСТИМОСТЬ С SCENE EXIT ANIMATOR ---
+    public override List<ICardContainer> GetAllContainers()
+    {
+        List<ICardContainer> list = new List<ICardContainer>();
+
+        // SceneExitAnimator ищет ICardContainer, берет с них CanvasGroup и плавно их скрывает.
+        // Добавляем фиктивные отключенные контейнеры, чтобы аниматор их "увидел".
+
+        foreach (var slot in TableauSlots)
+        {
+            if (slot == null) continue;
+            var container = slot.GetComponent<TableauPile>();
+            if (container == null)
+            {
+                container = slot.gameObject.AddComponent<TableauPile>();
+                container.enabled = false; // Отключаем, чтобы не работала логика Косынки
+            }
+            list.Add(container);
+        }
+
+        if (StockRoot != null)
+        {
+            var stock = StockRoot.GetComponent<StockPile>();
+            if (stock == null)
+            {
+                stock = StockRoot.gameObject.AddComponent<StockPile>();
+                stock.enabled = false;
+            }
+            list.Add(stock);
+        }
+
+        if (FoundationRoot != null)
+        {
+            var found = FoundationRoot.GetComponent<FoundationPile>();
+            if (found == null)
+            {
+                found = FoundationRoot.gameObject.AddComponent<FoundationPile>();
+                found.enabled = false;
+            }
+            list.Add(found);
+        }
+
+        return list;
     }
 }

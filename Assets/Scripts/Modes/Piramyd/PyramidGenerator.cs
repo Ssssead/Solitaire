@@ -1,384 +1,276 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class PyramidGenerator : BaseGenerator
 {
     public override GameType GameType => GameType.Pyramid;
 
-    private struct GenCard
+    [Header("Generation Strategy")]
+    public int maxMutationsPerCandidate = 30;
+
+    public override IEnumerator GenerateDeal(Difficulty difficulty, int param, Action<Deal, DealMetrics> onComplete)
     {
-        public int Suit; // 0-3
-        public int Rank; // 1-13
-        public int ID;   // 0-51
-    }
+        Deal validDeal = null;
 
-    private Dictionary<int, List<int>> coverMap;
+        // Запускаем весь процесс генерации и валидации в фоновом потоке!
+        // Это полностью освобождает главный поток Unity от фризов.
+        Task<Deal> generationTask = Task.Run(() => GenerateDealBackground(difficulty));
 
-    private void Awake()
-    {
-        InitializeCoverMap();
-    }
-
-    public override IEnumerator GenerateDeal(Difficulty difficulty, int param, System.Action<Deal, DealMetrics> onComplete)
-    {
-        // 1. Создаем колоду
-        List<GenCard> deck = CreateFullDeck();
-
-        // 2. Базовая перетасовка
-        Shuffle(deck);
-
-        yield return null;
-
-        // 3. Применяем смещение (Bias) в зависимости от сложности
-        ApplyDifficultyBias(deck, difficulty);
-
-        // 4. Проверка и исправление "Мертвых замков" (Hard Locks)
-        int attempts = 0;
-        int maxFixCycles = 50;
-
-        while (HasHardLocks(deck) && attempts < maxFixCycles)
+        // Ждем, пока фоновый поток закончит работу (FPS при этом не падает)
+        while (!generationTask.IsCompleted)
         {
-            FixLocks(deck);
-            attempts++;
-            if (attempts % 10 == 0) yield return null;
+            yield return null;
         }
 
-        if (attempts >= maxFixCycles)
+        if (generationTask.IsFaulted)
         {
-            Debug.LogWarning($"[PyramidGenerator] Could not fully resolve locks after {attempts} attempts. Retrying...");
-            yield return StartCoroutine(GenerateDeal(difficulty, param, onComplete));
-            yield break;
+            UnityEngine.Debug.LogError($"[Pyramid Gen] Error: {generationTask.Exception}");
+        }
+        else
+        {
+            validDeal = generationTask.Result;
         }
 
-        // 5. Собираем объект Deal
-        Deal finalDeal = BuildDealObject(deck);
-
-        // 6. Возвращаем результат
-        var metrics = new DealMetrics
-        {
-            Solved = true,
-            MoveEstimate = 0
-        };
-
-        onComplete?.Invoke(finalDeal, metrics);
+        var metrics = new DealMetrics { Solved = true, MoveEstimate = 0, StockPasses = 0 };
+        onComplete?.Invoke(validDeal, metrics);
     }
 
-    // --- 1. BIASING (НАСТРОЙКА СЛОЖНОСТИ) ---
-
-    private void ApplyDifficultyBias(List<GenCard> deck, Difficulty difficulty)
+    // Этот метод теперь работает вне главного потока
+    private Deal GenerateDealBackground(Difficulty difficulty)
     {
-        if (difficulty == Difficulty.Easy)
+        int totalAttempts = 0;
+
+        // Создаем контекст ОДИН раз на всю генерацию (Экономия памяти и Garbage Collector)
+        PyramidSolver.SolverContext solverContext = new PyramidSolver.SolverContext();
+        PyramidSolver.SolverResult result = new PyramidSolver.SolverResult();
+
+        while (true)
         {
-            // EASY: Короли внизу пирамиды или в начале стока
-            var kingsIndices = GetIndicesByRank(deck, 13);
-            List<int> easySlots = new List<int> { 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 };
-            ShuffleList(easySlots);
+            totalAttempts++;
+            Deal candidate = CreateSmartDeal(difficulty);
 
-            for (int i = 0; i < kingsIndices.Count; i++)
+            for (int m = 0; m <= maxMutationsPerCandidate; m++)
             {
-                Swap(deck, kingsIndices[i], easySlots[i]);
-            }
+                // Вызываем синхронный поиск (он использует закэшированную память)
+                PyramidSolver.Solve(candidate, 2, solverContext, result);
 
-            // EASY: В начало стока подтягиваем пары к открытым картам
-            int stockPtr = 28;
-            for (int i = 21; i <= 27; i++)
-            {
-                if (stockPtr >= 36) break;
-
-                GenCard tableCard = deck[i];
-                if (tableCard.Rank == 13) continue;
-
-                int neededRank = 13 - tableCard.Rank;
-                int pairIdx = FindCardIndex(deck, neededRank, 36, 52);
-
-                if (pairIdx != -1)
+                if (result.IsSolved)
                 {
-                    Swap(deck, stockPtr, pairIdx);
-                    stockPtr++;
+                    int states = result.StatesVisited;
+                    int inv = result.Inversions;
+                    bool match = false;
+                    bool makeHarder = false;
+
+                    switch (difficulty)
+                    {
+                        case Difficulty.Easy:
+                            if (states <= 25000 && inv <= 11) match = true;
+                            else if (states > 25000) makeHarder = false;
+                            break;
+
+                        case Difficulty.Medium:
+                            if (states > 25000 && states <= 260000) match = true;
+                            else makeHarder = states <= 25000;
+                            break;
+
+                        case Difficulty.Hard:
+                            if (states > 260000 && inv >= 12) match = true;
+                            else makeHarder = true;
+                            break;
+                    }
+
+                    if (match)
+                    {
+                        // Debug.Log не потокобезопасен в Unity, поэтому логи выведем потом или используем потокобезопасные методы
+                        return candidate; // Нашли! Возвращаем результат
+                    }
+                    else
+                    {
+                        MutateSafe(candidate, makeHarder);
+                    }
+                }
+                else
+                {
+                    MutateSafe(candidate, false);
                 }
             }
         }
-        else if (difficulty == Difficulty.Medium)
-        {
-            // MEDIUM: Не больше 1 короля на самой верхушке
-            int kingsAtTop = 0;
-            for (int i = 0; i <= 5; i++)
-            {
-                if (deck[i].Rank == 13) kingsAtTop++;
-            }
+    }
 
-            if (kingsAtTop > 1)
-            {
-                var kings = GetIndicesByRank(deck, 13).Where(idx => idx <= 5).ToList();
-                for (int k = 1; k < kings.Count; k++)
-                {
-                    int swapTarget = Random.Range(30, 52);
-                    Swap(deck, kings[k], swapTarget);
-                }
-            }
-        }
+    private Deal CreateSmartDeal(Difficulty difficulty)
+    {
+        List<CardModel> deck = new List<CardModel>();
+        foreach (Suit s in Enum.GetValues(typeof(Suit)))
+            for (int r = 1; r <= 13; r++) deck.Add(new CardModel(s, r));
+
+        System.Random rng = new System.Random();
+        Shuffle(deck, rng);
+
+        if (difficulty == Difficulty.Easy) MoveKingsToBottomOrStock(deck, rng);
+        else if (difficulty == Difficulty.Medium) MoveKingsToMiddle(deck, rng);
         else if (difficulty == Difficulty.Hard)
         {
-            // HARD: Короли на вершине или в конце стока
-            var kingsIndices = GetIndicesByRank(deck, 13);
-            List<int> hardSlots = new List<int> { 0, 1, 2, 3, 4, 5, 46, 47, 48, 49, 50, 51 };
-            ShuffleList(hardSlots);
-
-            for (int i = 0; i < kingsIndices.Count; i++)
-            {
-                Swap(deck, kingsIndices[i], hardSlots[i]);
-            }
-
-            // HARD: Анти-синергия в начале стока
-            for (int s = 28; s <= 32; s++)
-            {
-                GenCard stockCard = deck[s];
-                bool helpsPlayer = false;
-                for (int t = 21; t <= 27; t++)
-                {
-                    if (deck[t].Rank + stockCard.Rank == 13)
-                    {
-                        helpsPlayer = true;
-                        break;
-                    }
-                }
-
-                if (helpsPlayer)
-                {
-                    int deepSlot = Random.Range(35, 52);
-                    Swap(deck, s, deepSlot);
-                }
-            }
+            MoveKingsToTop(deck, rng);
+            CreateChoiceTraps(deck, rng, 2);
         }
-    }
 
-    // --- 2. VALIDATION & FIXING ---
-
-    private bool HasHardLocks(List<GenCard> deck)
-    {
-        for (int i = 0; i < 21; i++)
-        {
-            GenCard blocker = deck[i];
-            if (blocker.Rank == 13) continue;
-
-            int targetRank = 13 - blocker.Rank;
-            List<int> coveredIndices = GetCoveredIndicesRecursive(i);
-
-            int pairsAvailableElsewhere = 0;
-
-            for (int k = 0; k < 52; k++)
-            {
-                if (deck[k].Rank == targetRank)
-                {
-                    if (k >= 28) // В стоке
-                    {
-                        pairsAvailableElsewhere++;
-                    }
-                    else if (k > i && !IsCoveredBy(k, i)) // В другой ветке
-                    {
-                        pairsAvailableElsewhere++;
-                    }
-                }
-            }
-
-            if (pairsAvailableElsewhere == 0) return true;
-        }
-        return false;
-    }
-
-    private void FixLocks(List<GenCard> deck)
-    {
-        for (int i = 0; i < 21; i++)
-        {
-            GenCard blocker = deck[i];
-            if (blocker.Rank == 13) continue;
-
-            int targetRank = 13 - blocker.Rank;
-            List<int> coveredIndices = GetCoveredIndicesRecursive(i);
-
-            int pairsAvailable = 0;
-            for (int k = 0; k < 52; k++)
-            {
-                if (deck[k].Rank == targetRank)
-                {
-                    if (!coveredIndices.Contains(k) && k >= 28) pairsAvailable++;
-                }
-            }
-
-            if (pairsAvailable == 0)
-            {
-                int swapIdx = FindSafeSwapIndexInStock(deck, targetRank);
-                Swap(deck, i, swapIdx);
-                return;
-            }
-        }
-    }
-
-    private int FindSafeSwapIndexInStock(List<GenCard> deck, int rankToAvoid)
-    {
-        List<int> candidates = new List<int>();
-        for (int i = 28; i < 52; i++)
-        {
-            if (deck[i].Rank != rankToAvoid && deck[i].Rank != 13)
-                candidates.Add(i);
-        }
-        if (candidates.Count > 0) return candidates[Random.Range(0, candidates.Count)];
-        return Random.Range(28, 52);
-    }
-
-    // --- DATA HELPERS ---
-
-    private void InitializeCoverMap()
-    {
-        coverMap = new Dictionary<int, List<int>>();
-        int currentRow = 0;
-        int cardsInRow = 1;
-        int cardIndex = 0;
-
-        while (currentRow < 6)
-        {
-            for (int i = 0; i < cardsInRow; i++)
-            {
-                int leftChild = cardIndex + currentRow + 1;
-                int rightChild = cardIndex + currentRow + 2;
-                coverMap[cardIndex] = new List<int> { leftChild, rightChild };
-                cardIndex++;
-            }
-            currentRow++;
-            cardsInRow++;
-        }
-    }
-
-    private List<int> GetCoveredIndicesRecursive(int index)
-    {
-        List<int> result = new List<int>();
-        if (!coverMap.ContainsKey(index)) return result;
-
-        Queue<int> queue = new Queue<int>();
-        foreach (var child in coverMap[index]) queue.Enqueue(child);
-
-        while (queue.Count > 0)
-        {
-            int current = queue.Dequeue();
-            if (!result.Contains(current))
-            {
-                result.Add(current);
-                if (coverMap.ContainsKey(current))
-                {
-                    foreach (var child in coverMap[current]) queue.Enqueue(child);
-                }
-            }
-        }
-        return result;
-    }
-
-    private bool IsCoveredBy(int child, int parent)
-    {
-        var covered = GetCoveredIndicesRecursive(parent);
-        return covered.Contains(child);
-    }
-
-    // --- GENERIC HELPERS ---
-
-    private List<GenCard> CreateFullDeck()
-    {
-        List<GenCard> d = new List<GenCard>();
-        int id = 0;
-        for (int s = 0; s < 4; s++)
-        {
-            for (int r = 1; r <= 13; r++)
-            {
-                d.Add(new GenCard { Suit = s, Rank = r, ID = id++ });
-            }
-        }
+        Deal d = new Deal();
+        RebuildDeal(d, deck);
         return d;
     }
 
-    private void Shuffle(List<GenCard> list)
+    private void MutateSafe(Deal d, bool makeHarder)
     {
-        int n = list.Count;
-        while (n > 1)
+        List<CardModel> flat = FlattenDeal(d);
+        System.Random rng = new System.Random();
+
+        List<int> validTableau = new List<int>();
+        for (int i = 0; i < 28; i++)
+            if (flat[i].rank != 13) validTableau.Add(i);
+
+        List<int> validStock = new List<int>();
+        for (int i = 28; i < 52; i++)
+            if (flat[i].rank != 13) validStock.Add(i);
+
+        if (validTableau.Count == 0 || validStock.Count == 0) return;
+
+        if (makeHarder)
         {
-            n--;
-            int k = Random.Range(0, n + 1);
-            GenCard value = list[k];
-            list[k] = list[n];
-            list[n] = value;
+            int stockIdx = validStock[rng.Next(validStock.Count)];
+            var topCandidates = validTableau.Where(x => x <= 14).ToList();
+            if (topCandidates.Count > 0)
+            {
+                int topIdx = topCandidates[rng.Next(topCandidates.Count)];
+                Swap(flat, stockIdx, topIdx);
+            }
         }
-    }
-
-    private void ShuffleList<T>(List<T> list)
-    {
-        int n = list.Count;
-        while (n > 1)
+        else
         {
-            n--;
-            int k = Random.Range(0, n + 1);
-            T value = list[k];
-            list[k] = list[n];
-            list[n] = value;
+            var topCandidates = validTableau.Where(x => x <= 14).ToList();
+            if (topCandidates.Count > 0)
+            {
+                int topIdx = topCandidates[rng.Next(topCandidates.Count)];
+                int easierIdx = validStock[rng.Next(validStock.Count)];
+                Swap(flat, topIdx, easierIdx);
+            }
         }
+
+        RebuildDeal(d, flat);
     }
 
-    private void Swap(List<GenCard> list, int a, int b)
+    private void MoveKingsToBottomOrStock(List<CardModel> deck, System.Random rng)
     {
-        GenCard temp = list[a];
-        list[a] = list[b];
-        list[b] = temp;
-    }
-
-    private List<int> GetIndicesByRank(List<GenCard> deck, int rank)
-    {
-        List<int> idxs = new List<int>();
+        List<int> easySlots = new List<int> { 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 };
+        Shuffle(easySlots, rng);
+        int slotPtr = 0;
         for (int i = 0; i < deck.Count; i++)
-        {
-            if (deck[i].Rank == rank) idxs.Add(i);
-        }
-        return idxs;
+            if (deck[i].rank == 13 && i < 21 && slotPtr < easySlots.Count) Swap(deck, i, easySlots[slotPtr++]);
     }
 
-    private int FindCardIndex(List<GenCard> deck, int rank, int startIdx, int endIdx)
+    private void MoveKingsToMiddle(List<CardModel> deck, System.Random rng)
     {
-        for (int i = startIdx; i < endIdx; i++)
-        {
-            if (deck[i].Rank == rank) return i;
-        }
-        return -1;
+        List<int> midSlots = new List<int> { 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
+        Shuffle(midSlots, rng);
+        int slotPtr = 0;
+        for (int i = 0; i < deck.Count; i++)
+            if (deck[i].rank == 13 && (i < 6 || i > 27) && slotPtr < midSlots.Count) Swap(deck, i, midSlots[slotPtr++]);
     }
 
-    // --- CONVERSION TO GAME OBJECTS ---
-
-    private Deal BuildDealObject(List<GenCard> flatDeck)
+    private void MoveKingsToTop(List<CardModel> deck, System.Random rng)
     {
-        Deal deal = new Deal();
-        deal.stock = new Stack<CardInstance>();
-        deal.tableau = new List<List<CardInstance>>();
+        List<int> hardSlots = new List<int> { 0, 1, 2, 3, 4, 5 };
+        Shuffle(hardSlots, rng);
+        int slotPtr = 0;
+        for (int i = 0; i < deck.Count; i++)
+            if (deck[i].rank == 13 && i >= 6 && slotPtr < hardSlots.Count) Swap(deck, i, hardSlots[slotPtr++]);
+    }
 
+    private void CreateChoiceTraps(List<CardModel> deck, System.Random rng, int trapCount)
+    {
+        List<int> validParents = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        Shuffle(validParents, rng);
+
+        int trapsCreated = 0;
+        List<int> usedRanks = new List<int> { 13 };
+        HashSet<int> lockedIndices = new HashSet<int>();
+
+        for (int i = 0; i < validParents.Count && trapsCreated < trapCount; i++)
+        {
+            int parentIdx = validParents[i];
+            int row = GetRow(parentIdx);
+            int childIdx = parentIdx + row + 1 + (rng.NextDouble() > 0.5 ? 1 : 0);
+
+            if (lockedIndices.Contains(parentIdx) || lockedIndices.Contains(childIdx)) continue;
+
+            int rank1 = rng.Next(1, 13);
+            if (usedRanks.Contains(rank1) || usedRanks.Contains(13 - rank1)) continue;
+
+            int rank2 = 13 - rank1;
+            usedRanks.Add(rank1); usedRanks.Add(rank2);
+
+            List<int> baitSlots = new List<int> { 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 };
+            baitSlots.RemoveAll(x => lockedIndices.Contains(x) || x == parentIdx || x == childIdx);
+            if (baitSlots.Count < 2) continue;
+            Shuffle(baitSlots, rng);
+
+            lockedIndices.Add(parentIdx); lockedIndices.Add(childIdx);
+            lockedIndices.Add(baitSlots[0]); lockedIndices.Add(baitSlots[1]);
+
+            PlaceCardSafe(deck, parentIdx, rank1, lockedIndices);
+            PlaceCardSafe(deck, childIdx, rank2, lockedIndices);
+            PlaceCardSafe(deck, baitSlots[0], rank1, lockedIndices);
+            PlaceCardSafe(deck, baitSlots[1], rank2, lockedIndices);
+
+            trapsCreated++;
+        }
+    }
+
+    private void PlaceCardSafe(List<CardModel> deck, int targetIdx, int targetRank, HashSet<int> locked)
+    {
+        if (deck[targetIdx].rank == targetRank) return;
+        for (int i = 0; i < deck.Count; i++)
+            if (deck[i].rank == targetRank && !locked.Contains(i)) { Swap(deck, targetIdx, i); return; }
+        for (int i = 0; i < deck.Count; i++)
+            if (deck[i].rank == targetRank && i != targetIdx) { Swap(deck, targetIdx, i); return; }
+    }
+
+    private int GetRow(int index)
+    {
+        if (index == 0) return 0;
+        if (index <= 2) return 1;
+        if (index <= 5) return 2;
+        if (index <= 9) return 3;
+        if (index <= 14) return 4;
+        if (index <= 20) return 5;
+        return 6;
+    }
+
+    private List<CardModel> FlattenDeal(Deal d)
+    {
+        List<CardModel> list = new List<CardModel>();
+        foreach (var row in d.tableau) foreach (var c in row) list.Add(c.Card);
+        var stockArr = d.stock.ToArray();
+        for (int i = 0; i < stockArr.Length; i++) list.Add(stockArr[i].Card);
+        return list;
+    }
+
+    private void RebuildDeal(Deal d, List<CardModel> cards)
+    {
+        d.tableau.Clear(); d.stock.Clear();
         int ptr = 0;
-        // Заполняем Пирамиду
         for (int row = 0; row < 7; row++)
         {
-            List<CardInstance> rowList = new List<CardInstance>();
-            for (int col = 0; col <= row; col++)
-            {
-                var gCard = flatDeck[ptr++];
-                CardModel model = new CardModel((Suit)gCard.Suit, gCard.Rank);
-                rowList.Add(new CardInstance(model, true));
-            }
-            deal.tableau.Add(rowList);
+            var rowList = new List<CardInstance>();
+            for (int col = 0; col <= row; col++) rowList.Add(new CardInstance(cards[ptr++], true));
+            d.tableau.Add(rowList);
         }
-
-        // Заполняем Сток
-        for (int i = 51; i >= 28; i--)
-        {
-            var gCard = flatDeck[i];
-            CardModel model = new CardModel((Suit)gCard.Suit, gCard.Rank);
-            // --- ИЗМЕНЕНИЕ ЗДЕСЬ: FaceUp = true ---
-            deal.stock.Push(new CardInstance(model, true));
-        }
-
-        return deal;
+        for (int i = 51; i >= 28; i--) d.stock.Push(new CardInstance(cards[i], true));
     }
+
+    private void Swap(List<CardModel> list, int a, int b) { var temp = list[a]; list[a] = list[b]; list[b] = temp; }
+    private void Shuffle<T>(List<T> list, System.Random rng) { int n = list.Count; while (n > 1) { n--; int k = rng.Next(n + 1); T value = list[k]; list[k] = list[n]; list[n] = value; } }
 }

@@ -303,7 +303,7 @@ public class TableauPile : MonoBehaviour, ICardContainer
     public bool IsEmpty() => cards.Count == 0;
     public CardController GetTopCard() => cards.Count == 0 ? null : cards[cards.Count - 1];
 
-    public Vector2 GetDropAnchoredPosition(CardController card)
+    public virtual Vector2 GetDropAnchoredPosition(CardController card)
     {
         ComputeFaceUpGap();
 

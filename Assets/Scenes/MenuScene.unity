@@ -2160,6 +2160,8 @@ GameObject:
   - component: {fileID: 116862373}
   - component: {fileID: 116862374}
   - component: {fileID: 116862375}
+  - component: {fileID: 116862376}
+  - component: {fileID: 116862377}
   m_Layer: 0
   m_Name: GlobalSystems
   m_TagString: Untagged
@@ -2238,6 +2240,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6d26d05572677e4ebe88bca30128024, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  calibrationMode: 0
+  targetDifficulty: 0
+  targetSuitsCount: 2
+  frameBudgetMs: 8
+  maxMutations: 50000
 --- !u!114 &116862368
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2250,6 +2257,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed216efba727fca4d9ac4b0d5306b4f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxMutationsPerCandidate: 10
+  maxTotalAttempts: 10
+  frameBudgetMs: 8
 --- !u!114 &116862369
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2262,6 +2272,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29832b10adc8de34fad3344b6ba24ce7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxMutationsPerCandidate: 10
+  calibrationMode: 0
+  frameBudgetMs: 8
 --- !u!114 &116862370
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2356,6 +2369,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b093e4154a32e9749b7f5ef8e10ef693, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &116862376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 116862361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a2803ded656aab4e985659095107597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &116862377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 116862361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 990e5e93b748a8f4a91b4f4bfd5708c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  msDealsJson: {fileID: 4900000, guid: 079a941460603834ebbd5a96eb54ddff, type: 3}
+  maxFrameTimeMs: 25
+  maxRecyclesAllowed: 2
 --- !u!1 &121356814
 GameObject:
   m_ObjectHideFlags: 0

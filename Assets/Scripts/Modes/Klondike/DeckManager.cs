@@ -22,6 +22,7 @@ public class DeckManager : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool showDebugLogs = true;
+    public bool isSkippingIntro = false;
 
     [Header("Intro Animation")]
     public Transform offScreenSpawnPoint;
@@ -52,20 +53,23 @@ public class DeckManager : MonoBehaviour
 
         LogDebug($"Initialized. Generator found: {generator != null}");
     }
+    private void Update()
+    {
+        if ((isDealing || IsRecycling) && (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)))
+        {
+            isSkippingIntro = true;
+        }
+    }
 
     public void RestartGame()
     {
-        // 1. Принудительно останавливаем все текущие анимации
         StopAllCoroutines();
-
-        // 2. СБРОС ФЛАГА
         isDealing = false;
         IsRecycling = false;
+        isSkippingIntro = false;
 
         ResetStalemate();
-
         if (mode != null && mode.undoManager != null) mode.undoManager.ResetHistory();
-
         ClearAllPiles();
         if (cardFactory != null) cardFactory.DestroyAllCards();
 
@@ -74,8 +78,6 @@ public class DeckManager : MonoBehaviour
             mode.StartNewGame();
             mode.IsInputAllowed = true;
         }
-
-        // 3. Запускаем раздачу
         DealInitial();
     }
 
@@ -87,47 +89,30 @@ public class DeckManager : MonoBehaviour
     // --- СТРОГАЯ ЛОГИКА РАЗДАЧИ ---
     public void DealInitial()
     {
-        if (isDealing)
-        {
-            LogDebug("DealInitial ignored: already dealing.");
-            return;
-        }
+        if (isDealing) return;
 
+        isSkippingIntro = false;
         isDealing = true;
         if (mode != null) mode.IsInputAllowed = false;
 
         ClearAllPiles();
-
         int drawCount = (mode != null) ? (int)mode.stockDealMode : 1;
 
-        // 1. ПЫТАЕМСЯ ВЗЯТЬ ИЗ КЭША
         if (DealCacheSystem.Instance != null && generator != null)
         {
-            // Важно: берем GameType из генератора или явно Klondike, чтобы не перепутать с Sultan
             GameType gType = generator.GameType;
             Deal cachedDeal = DealCacheSystem.Instance.GetDeal(gType, difficulty, drawCount);
 
             if (cachedDeal != null)
             {
-                LogDebug("Deal found in Cache! Applying...");
                 ApplyDeal(cachedDeal, animate: true);
                 return;
             }
-            else
-            {
-                LogDebug("Cache empty. Requesting new generation...");
-            }
         }
 
-        // 2. ЕСЛИ В КЭШЕ ПУСТО -> ГЕНЕРИРУЕМ (Но не рандом!)
-        if (generator != null)
-        {
-            StartCoroutine(generator.GenerateDeal(difficulty, drawCount, OnDealGenerated));
-        }
+        if (generator != null) StartCoroutine(generator.GenerateDeal(difficulty, drawCount, OnDealGenerated));
         else
         {
-            // КРИТИЧЕСКАЯ ОШИБКА: Нет ни кэша, ни генератора.
-            Debug.LogError("[DeckManager] FATAL: No Generator and No Cache! Cannot deal smart game.");
             isDealing = false;
             if (mode != null) mode.IsInputAllowed = true;
         }
@@ -150,13 +135,12 @@ public class DeckManager : MonoBehaviour
     // --- ИНТРО ЛОГИКА ---
     public IEnumerator PlayIntroDeckArrival(float duration)
     {
-        // 1. Создаем карты (скрыто, в StockPile)
+        isSkippingIntro = false;
         PrepareRealCardsForIntro();
 
         if (pileManager == null || pileManager.StockPile == null) yield break;
         var stock = pileManager.StockPile;
 
-        // 2. Собираем карты для анимации
         List<Transform> allCards = new List<Transform>();
         foreach (Transform child in stock.transform)
         {
@@ -165,16 +149,13 @@ public class DeckManager : MonoBehaviour
 
         if (allCards.Count == 0) yield break;
 
-        // 3. Анимация полета колоды из-за экрана
         Vector3 spawnPos = offScreenSpawnPoint != null ? offScreenSpawnPoint.position : stock.transform.position - new Vector3(1500, 0, 0);
-
         Vector3[] startPositions = new Vector3[allCards.Count];
         Vector3[] targetPositions = new Vector3[allCards.Count];
 
         for (int i = 0; i < allCards.Count; i++)
         {
             startPositions[i] = spawnPos;
-            // Каждая карта летит на свое место (с учетом GetWorldPositionForIndex из StockPile)
             targetPositions[i] = stock.GetWorldPositionForIndex(i);
             allCards[i].position = startPositions[i];
         }
@@ -182,8 +163,9 @@ public class DeckManager : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            float t = Mathf.SmoothStep(0, 1, elapsed / duration);
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.SmoothStep(0, 1, Mathf.Clamp01(elapsed / duration));
             for (int i = 0; i < allCards.Count; i++)
             {
                 allCards[i].position = Vector3.Lerp(startPositions[i], targetPositions[i], t);
@@ -191,12 +173,10 @@ public class DeckManager : MonoBehaviour
             yield return null;
         }
 
-        // Финализация позиций
         for (int i = 0; i < allCards.Count; i++) allCards[i].position = targetPositions[i];
 
         mode?.AnimationService?.ReorderContainerZ(stock.transform);
 
-        // 4. Запускаем раздачу на стол
         if (pendingTableauDeals != null)
         {
             yield return StartCoroutine(AnimateOpeningDeal(pendingTableauDeals));
@@ -207,28 +187,18 @@ public class DeckManager : MonoBehaviour
     private void PrepareRealCardsForIntro()
     {
         isDealing = true;
+        isSkippingIntro = false;
         if (mode != null) mode.IsInputAllowed = false;
         ClearAllPiles();
 
         int drawCount = (mode != null) ? (int)mode.stockDealMode : 1;
         Deal deal = null;
 
-        // Пытаемся взять синхронно из кэша
         if (DealCacheSystem.Instance != null && generator != null)
-        {
             deal = DealCacheSystem.Instance.GetDeal(generator.GameType, difficulty, drawCount);
-        }
 
-        if (deal != null)
-        {
-            // Создаем карты, но БЕЗ запуска анимации (animate: false)
-            ApplyDeal(deal, animate: false);
-        }
-        else
-        {
-            Debug.LogError("[DeckManager] Intro failed: Cache is empty. Cannot start intro.");
-            isDealing = false;
-        }
+        if (deal != null) ApplyDeal(deal, animate: false);
+        else isDealing = false;
     }
 
     // --- ПРИМЕНЕНИЕ РАСКЛАДА (Визуальная логика) ---
@@ -349,7 +319,6 @@ public class DeckManager : MonoBehaviour
                         card.rectTransform.SetAsLastSibling();
                     }
 
-                    // Вычисляем цель
                     Vector3 worldPos = Vector3.zero;
                     Vector2 anchoredTarget = new Vector2(0f, -row * dealingGap);
 
@@ -362,11 +331,26 @@ public class DeckManager : MonoBehaviour
 
                     StartCoroutine(MoveCardRoutine(card, worldPos, moveDuration, targetPile, shouldFlip));
                 }
-                yield return new WaitForSeconds(delayPerCard);
+
+                // --- КАСТОМНАЯ ПАУЗА МЕЖДУ КАРТАМИ ---
+                float waitTimer = 0f;
+                while (waitTimer < delayPerCard)
+                {
+                    float speed = isSkippingIntro ? 15f : 1f;
+                    waitTimer += Time.deltaTime * speed;
+                    yield return null;
+                }
             }
         }
 
-        yield return new WaitForSeconds(moveDuration);
+        // --- КАСТОМНАЯ ПАУЗА В КОНЦЕ ---
+        float finalTimer = 0f;
+        while (finalTimer < moveDuration)
+        {
+            float speed = isSkippingIntro ? 15f : 1f;
+            finalTimer += Time.deltaTime * speed;
+            yield return null;
+        }
 
         foreach (var pile in pileManager.Tableau)
         {
@@ -375,7 +359,6 @@ public class DeckManager : MonoBehaviour
 
         isDealing = false;
         if (mode != null) mode.IsInputAllowed = true;
-        LogDebug("Animated Deal Complete.");
     }
 
     private IEnumerator MoveCardRoutine(CardController card, Vector3 targetPos, float duration, TableauPile targetPile, bool endStateFaceUp)
@@ -385,8 +368,9 @@ public class DeckManager : MonoBehaviour
 
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            float t = elapsed / duration;
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(elapsed / duration);
             t = t * t * (3f - 2f * t);
             card.rectTransform.position = Vector3.Lerp(startPos, targetPos, t);
             yield return null;
@@ -401,16 +385,14 @@ public class DeckManager : MonoBehaviour
             if (data != null) data.SetFaceUp(true, animate: true);
         }
 
-        if (card.canvasGroup)
-        {
-            card.canvasGroup.blocksRaycasts = true;
-        }
+        if (card.canvasGroup) card.canvasGroup.blocksRaycasts = true;
     }
 
     // --- ЛОГИКА КОЛОДЫ (Draw / Recycle) ---
     public void LoadDeal(Deal deal)
     {
         if (isDealing) return;
+        isSkippingIntro = false;
         isDealing = true;
         if (mode != null) mode.IsInputAllowed = false;
         ClearAllPiles();
@@ -477,11 +459,14 @@ public class DeckManager : MonoBehaviour
     {
         IsRecycling = true;
         isDealing = true;
+        isSkippingIntro = false; // <-- Сброс здесь
 
         if (pileManager == null) return;
         var stock = pileManager.StockPile;
         var waste = pileManager.WastePile;
         if (stock == null || waste == null) return;
+        // ... [остальной код метода RecycleWasteToStock не меняется, кроме строки выше] ...
+        // ... (оставьте ваш оригинальный код до вызова StartCoroutine(AnimateRecycleRoutine(wasteCards, stock));)
 
         var wasteCards = waste.TakeAll();
         if (wasteCards == null || wasteCards.Count == 0)
@@ -571,15 +556,15 @@ public class DeckManager : MonoBehaviour
             float elapsed = 0f;
             while (elapsed < durationPerCard)
             {
-                elapsed += Time.unscaledDeltaTime;
-                card.rectTransform.position = Vector3.Lerp(startPos, targetBasePos, elapsed / durationPerCard);
+                float speed = isSkippingIntro ? 15f : 1f;
+                elapsed += Time.unscaledDeltaTime * speed;
+                card.rectTransform.position = Vector3.Lerp(startPos, targetBasePos, Mathf.Clamp01(elapsed / durationPerCard));
                 yield return null;
             }
 
             card.rectTransform.position = targetBasePos;
             card.rectTransform.SetParent(stock.transform, false);
 
-            // AddCard сам расставит смещения
             stock.AddCard(card, false);
 
             if (cardData != null) cardData.flipDuration = 0.2f;
@@ -590,6 +575,7 @@ public class DeckManager : MonoBehaviour
 
         isDealing = false;
         IsRecycling = false;
+        isSkippingIntro = false;
 
         if (mode != null) mode.IsInputAllowed = true;
 

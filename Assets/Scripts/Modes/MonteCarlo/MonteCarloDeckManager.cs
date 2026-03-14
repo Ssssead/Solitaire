@@ -11,9 +11,12 @@ public class MonteCarloDeckManager : MonoBehaviour
     [Header("Stock Visual Settings")]
     public Vector2 stockCardOffset = new Vector2(2f, 0f);
 
-    public void InstantiateDeal(Deal deal)
+    public void InstantiateDeal(Deal deal, bool isIntro = false)
     {
         ClearBoard();
+
+        // Точка старта интро: за экраном слева
+        Vector3 introSpawnPos = pileManager.StockRoot.position + new Vector3(-1500f, 0f, 0f);
 
         for (int i = 0; i < 25; i++)
         {
@@ -22,6 +25,9 @@ public class MonteCarloDeckManager : MonoBehaviour
                 var instance = deal.tableau[i][0];
                 var cardObj = cardFactory.CreateCard(instance.Card, pileManager.TableauSlots[i], Vector2.zero);
                 SetupCard(cardObj);
+
+                if (isIntro) cardObj.transform.position = introSpawnPos;
+
                 pileManager.BoardCards[i] = cardObj;
             }
         }
@@ -36,11 +42,17 @@ public class MonteCarloDeckManager : MonoBehaviour
             cardObj.GetComponent<CardData>()?.SetFaceUp(true, false);
             pileManager.StockCards.Add(cardObj);
 
-            cardObj.transform.localPosition = new Vector3(stockCardOffset.x * i, stockCardOffset.y * i, 0f);
+            if (isIntro)
+            {
+                cardObj.transform.position = introSpawnPos;
+            }
+            else
+            {
+                cardObj.transform.localPosition = new Vector3(stockCardOffset.x * i, stockCardOffset.y * i, 0f);
+            }
         }
 
-        // НОВОЕ: Обновляем тени после расстановки
-        pileManager.UpdateShadows();
+        if (!isIntro) pileManager.UpdateShadows();
     }
 
     private void SetupCard(CardController cardObj)
@@ -54,7 +66,6 @@ public class MonteCarloDeckManager : MonoBehaviour
             if (data.image) data.image.color = Color.white;
         }
 
-        // НОВОЕ: Добавляем компонент тени, если его нет
         var shadow = cardObj.GetComponent<CardShadowController>();
         if (shadow == null) shadow = cardObj.gameObject.AddComponent<CardShadowController>();
     }

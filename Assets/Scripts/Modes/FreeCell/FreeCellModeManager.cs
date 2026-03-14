@@ -15,14 +15,13 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     public RectTransform dragLayer;
 
     public GameUIController gameUI;
-    // --- НОВОЕ: Ссылка на интро контроллер и дек менеджер ---
     public FreeCellIntroController introController;
     public FreeCellDeckManager deckManager;
     private bool isRestarting = false;
     private bool isGameWon = false;
 
-    // --- НОВОЕ: Флаг, началась ли игра реально (был ли ход) ---
     private bool hasGameStarted = false;
+
     [Header("UI & HUD")]
     [Tooltip("Лимит карт для перемещения (SuperMove)")]
     public TMP_Text moveLimitText;
@@ -34,6 +33,8 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     public TMP_Text timeText;
     private float gameTimer = 0f;
     private bool isTimerRunning = false;
+    [HideInInspector] public bool JustFailedDueToLimit = false;
+
     [Header("FreeCell Specific")]
     public Transform freeCellSlotsParent;
     private List<FreeCellPile> freeCells = new List<FreeCellPile>();
@@ -41,11 +42,13 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     [Header("Rules")]
     public float tableauVerticalGap = 35f;
 
-    // По умолчанию Medium, но будет перезаписано из GameSettings
     private Difficulty currentDifficulty = Difficulty.Medium;
     private int currentSeed = 0;
     public GameType GameType => GameType.FreeCell;
     private int _cachedLimit = -1;
+
+    public int CurrentDragCount { get; set; } = 1;
+    public bool IsGrabbing { get; set; } = false;
 
     // --- ICardGameMode Properties ---
     public string GameName => "FreeCell";
@@ -70,63 +73,61 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
     {
         StartCoroutine(LateInitialize());
     }
+
     public bool IsMatchInProgress()
     {
         return hasGameStarted;
     }
+
     private void Update()
     {
         if (pileManager == null) return;
 
         // 1. Обновление SuperMove лимита
-        int currentLimit = GetMaxDragSequenceSize();
-        if (currentLimit != _cachedLimit)
+        // --- ИСПРАВЛЕНИЕ АНИМАЦИИ: Жестко фиксируем лимит на 5 до начала игры ---
+        if (!IsInputAllowed && !hasGameStarted)
         {
-            _cachedLimit = currentLimit;
-            if (moveLimitText != null) moveLimitText.text = $"{_cachedLimit}";
+            if (_cachedLimit != 5)
+            {
+                _cachedLimit = 5;
+                if (moveLimitText != null) moveLimitText.text = "5";
+            }
+        }
+        else
+        {
+            int currentLimit = GetMaxDragSequenceSize();
+            if (currentLimit != _cachedLimit)
+            {
+                _cachedLimit = currentLimit;
+                if (moveLimitText != null) moveLimitText.text = $"{_cachedLimit}";
+            }
         }
 
         // 2. Обновление Таймера и HUD
         if (IsInputAllowed && !isGameWon)
         {
-            // Если игра началась, но таймер еще не запущен — запускаем
-            if (hasGameStarted && !isTimerRunning)
-            {
-                isTimerRunning = true;
-            }
-
-            // Тикаем таймером
-            if (isTimerRunning)
-            {
-                gameTimer += Time.deltaTime;
-            }
-
+            if (hasGameStarted && !isTimerRunning) isTimerRunning = true;
+            if (isTimerRunning) gameTimer += Time.deltaTime;
             UpdateHUD();
         }
     }
+
     private void UpdateHUD()
     {
-        // Обновление ходов
         if (movesText != null && StatisticsManager.Instance != null)
-        {
             movesText.text = $"{StatisticsManager.Instance.GetCurrentMoves()}";
-        }
 
-        // Обновление времени из локального таймера
         if (timeText != null)
         {
             int timeInSeconds = Mathf.FloorToInt(gameTimer);
             int minutes = timeInSeconds / 60;
             int seconds = timeInSeconds % 60;
-            timeText.text = $"{minutes:0}:{seconds:00}"; // Формат MM:SS
+            timeText.text = $"{minutes:0}:{seconds:00}";
         }
 
-        // Обновление очков
-        if (scoreText != null)
-        {
-            scoreText.text = $"{CurrentScore}";
-        }
+        if (scoreText != null) scoreText.text = $"{CurrentScore}";
     }
+
     private void UpdateTimeUI()
     {
         if (timeText != null)
@@ -138,16 +139,11 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         }
     }
 
-    // Вызывается из Меню принудительно (если используется)
     public void InitializeMode(Difficulty difficulty, int seed)
     {
         currentDifficulty = difficulty;
         currentSeed = seed;
-
-        if (pileManager != null)
-        {
-            RestartGame();
-        }
+        if (pileManager != null) RestartGame();
     }
 
     private void Initialize()
@@ -155,7 +151,6 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         if (pileManager == null) pileManager = GetComponent<FreeCellPileManager>();
 
         pileManager.InitializeFreeCell(this);
-
         if (undoManager != null) undoManager.Initialize(this);
 
         if (dragManager != null)
@@ -165,9 +160,7 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
             dragManager.RegisterAllContainers(containers);
         }
 
-        // Синхронизация с глобальными настройками
         currentDifficulty = GameSettings.CurrentDifficulty;
-
         StartNewGame();
     }
 
@@ -177,23 +170,20 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         Initialize();
     }
 
-    // --- ИСПРАВЛЕНИЕ: Обработка выхода со сцены ---
     private void OnDestroy()
     {
-        // Если игра была начата (сделан ход), но не выиграна -> Поражение
         if (hasGameStarted && !isGameWon)
         {
             if (StatisticsManager.Instance != null)
                 StatisticsManager.Instance.OnGameAbandoned();
         }
     }
-    // ----------------------------------------------
 
     public void RestartGame()
     {
         isGameWon = false;
         IsInputAllowed = false;
-        isRestarting = true; // --- Флаг, что это рестарт ---
+        isRestarting = true;
 
         pileManager.ClearAllPiles();
         foreach (var fc in freeCells) foreach (Transform child in fc.transform) Destroy(child.gameObject);
@@ -215,24 +205,24 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         IsInputAllowed = false;
         currentDifficulty = GameSettings.CurrentDifficulty;
 
-        hasGameStarted = false; // Таймер стоит
+        hasGameStarted = false;
         isTimerRunning = false;
         gameTimer = 0f;
 
         var scoreMgr = GetComponent<FreeCellScoreManager>();
         if (scoreMgr != null) scoreMgr.ResetScore();
 
-        if (undoManager != null && undoManager.GetType().GetMethod("ResetHistory") != null)
-            undoManager.GetType().GetMethod("ResetHistory").Invoke(undoManager, null);
+        // --- ИСПРАВЛЕНИЕ ТАЙМЕРА: Используем ClearHistory вместо ResetHistory ---
+        // Это очистит логи Undo, но не вызовет OnUndoAction() и не стартанет таймер
+        if (undoManager != null) undoManager.ClearHistory();
+        // ------------------------------------------------------------------------
 
         UpdateHUD();
 
         if (StatisticsManager.Instance != null)
             StatisticsManager.Instance.OnGameStarted("FreeCell", currentDifficulty, "Standard");
 
-        // ПЕРЕДАЕМ ФЛАГ РЕСТАРТА В INTRO
-        if (introController != null)
-            introController.PrepareIntro(isRestarting);
+        if (introController != null) introController.PrepareIntro(isRestarting);
 
         bool dealLoadedFromCache = false;
 
@@ -255,7 +245,7 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
             }));
         }
 
-        isRestarting = false; // Сбрасываем флаг
+        isRestarting = false;
     }
 
     private void ApplyDeal(Deal deal)
@@ -280,22 +270,45 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         }
     }
 
-    public int GetMaxDragSequenceSize()
+    public int GetMaxDragSequenceSize(bool targetIsEmptyColumn = false)
     {
+        if (IsGrabbing) return 999;
+
         int emptyFC = 0;
-        foreach (var fc in pileManager.FreeCells)
-        {
-            if (fc.IsEmpty) emptyFC++;
-        }
+        foreach (var fc in pileManager.FreeCells) if (fc.IsEmpty) emptyFC++;
 
         int emptyCols = 0;
-        foreach (var tab in pileManager.Tableau)
-        {
-            if (tab.cards.Count == 0) emptyCols++;
-        }
+        foreach (var tab in pileManager.Tableau) if (tab.cards.Count == 0) emptyCols++;
+
+        if (targetIsEmptyColumn && emptyCols > 0) emptyCols--;
 
         int rawLimit = (1 + emptyFC) * (int)Mathf.Pow(2, emptyCols);
         return Mathf.Min(rawLimit, 13);
+    }
+
+    public void ShakeMoveLimitUI()
+    {
+        if (moveLimitText != null && moveLimitText.transform.parent != null)
+        {
+            RectTransform target = moveLimitText.transform.parent.GetComponent<RectTransform>();
+            if (target != null) StartCoroutine(ShakeRoutine(target));
+        }
+    }
+
+    private IEnumerator ShakeRoutine(RectTransform target)
+    {
+        Vector3 originalPos = target.anchoredPosition;
+        float elapsed = 0f;
+        float duration = 0.25f;
+        float magnitude = 15f;
+        while (elapsed < duration)
+        {
+            float xOffset = Mathf.Sin(elapsed * 40f) * magnitude;
+            target.anchoredPosition = new Vector3(originalPos.x + xOffset, originalPos.y, originalPos.z);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        target.anchoredPosition = originalPos;
     }
 
     public void CheckGameState()
@@ -303,14 +316,10 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         if (isGameWon) return;
 
         int totalCardsInFoundation = 0;
-        foreach (var f in pileManager.Foundations)
-        {
-            totalCardsInFoundation += f.Count;
-        }
+        foreach (var f in pileManager.Foundations) totalCardsInFoundation += f.Count;
 
         if (totalCardsInFoundation == 52)
         {
-            Debug.Log("Victory!");
             isGameWon = true;
             IsInputAllowed = false;
             StartCoroutine(VictorySequence());
@@ -319,53 +328,39 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
 
         if (!HasAnyValidMove())
         {
-            Debug.Log("Defeat! No moves left.");
-            // Здесь можно вызывать поражение, но в FreeCell часто дают игроку самому нажать Restart/Undo
-            // Если вы хотите авто-поражение:
-            // isGameWon = true; // Блокируем ввод
-            // if (gameUI) gameUI.OnGameLost();
+
+            StartCoroutine(LossSequence());
+
         }
     }
 
     private IEnumerator VictorySequence()
     {
         isGameWon = true;
-        IsInputAllowed = false; // Блокируем ввод
+        IsInputAllowed = false;
 
         yield return new WaitForSeconds(1.0f);
 
-        // 1. ЗАПОМИНАЕМ ХОДЫ ПЕРЕД СБРОСОМ
         int finalMoves = 0;
-        if (StatisticsManager.Instance != null)
-        {
-            finalMoves = StatisticsManager.Instance.GetCurrentMoves();
-        }
+        if (StatisticsManager.Instance != null) finalMoves = StatisticsManager.Instance.GetCurrentMoves();
 
-        // 2. ОТПРАВЛЯЕМ ПОБЕДУ В СТАТИСТИКУ (счетчик сбросится в 0)
-        if (StatisticsManager.Instance != null)
-        {
-            StatisticsManager.Instance.OnGameWon(CurrentScore);
-        }
+        if (StatisticsManager.Instance != null) StatisticsManager.Instance.OnGameWon(CurrentScore);
 
-        // 3. ПОКАЗЫВАЕМ UI С СОХРАНЕННЫМИ ХОДАМИ
-        if (gameUI != null)
-        {
-            gameUI.OnGameWon(finalMoves);
-        }
-        else
-        {
-            var foundUI = FindObjectOfType<GameUIController>();
-            if (foundUI != null) foundUI.OnGameWon(finalMoves);
-        }
+        if (gameUI != null) gameUI.OnGameWon(finalMoves);
+        else FindObjectOfType<GameUIController>()?.OnGameWon(finalMoves);
     }
-
+    private IEnumerator LossSequence()
+    {
+        yield return new WaitForSeconds(1);
+        if (gameUI != null) gameUI.OnGameLost();
+        
+    }
     public void OnCardDroppedToContainer(CardController card, ICardContainer container)
     {
-        OnMoveMade(); // Любое перетаскивание - это ход
+        OnMoveMade();
         CheckGameState();
     }
 
-    // --- ИСПРАВЛЕНИЕ: Логика первого хода ---
     public void OnMoveMade()
     {
         hasGameStarted = true;
@@ -374,9 +369,7 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
 
     public void OnUndoAction()
     {
-        // Undo тоже считается действием
         OnMoveMade();
-
         isGameWon = false;
         IsInputAllowed = true;
 
@@ -386,13 +379,128 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager
         UpdateMoveLimitUI();
     }
 
-    // --- Остальные методы ---
     public void OnStockClicked() { }
-    public void OnCardDoubleClicked(CardController card) { }
-    public void OnCardClicked(CardController card)
+    public void OnCardDoubleClicked(CardController card)
     {
-        hasGameStarted = true;
+        if (!IsInputAllowed || isGameWon || card == null) return;
+
+        ICardContainer sourceContainer = card.GetComponentInParent<ICardContainer>();
+        if (sourceContainer == null || sourceContainer is FoundationPile) return;
+
+        // Проверяем, что карта свободна (верхняя в стопке)
+        if (sourceContainer is TableauPile tab)
+        {
+            if (tab.cards.Count == 0 || tab.cards[tab.cards.Count - 1] != card)
+            {
+                StartCoroutine(ShakeCardRoutine(card.rectTransform));
+                return;
+            }
+        }
+
+        bool moved = TryDoubleClickMove(card, sourceContainer);
+
+        if (moved)
+        {
+            OnMoveMade();
+            UpdateMoveLimitUI();
+            Invoke(nameof(CheckGameState), 0.3f); // Проверка победы после того как карта долетит
+        }
+        else
+        {
+            // Если нет вариантов куда перенести - трясем саму карту
+            StartCoroutine(ShakeCardRoutine(card.rectTransform));
+        }
     }
+    private bool TryDoubleClickMove(CardController card, ICardContainer source)
+    {
+        // 1. Приоритет: перемещение в Foundation (Дом)
+        foreach (var f in pileManager.Foundations)
+        {
+            if (f.CanAccept(card))
+            {
+                ExecuteProgrammaticMove(card, source, f);
+                return true;
+            }
+        }
+
+        // 2. Вторичный приоритет: перемещение в пустой FreeCell (если мы не берем из него же)
+        if (!(source is FreeCellPile))
+        {
+            foreach (var fc in pileManager.FreeCells)
+            {
+                if (fc.CanAccept(card))
+                {
+                    ExecuteProgrammaticMove(card, source, fc);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    private void ExecuteProgrammaticMove(CardController card, ICardContainer source, ICardContainer target)
+    {
+        Transform prevParent = card.transform.parent;
+        int prevSib = card.transform.GetSiblingIndex();
+
+        // --- ИСПРАВЛЕНИЕ 3: Запоминаем РЕАЛЬНУЮ локальную позицию до старта полета ---
+        Vector3 prevPos = card.transform.localPosition;
+
+        // Логическое удаление из источника
+        if (source is TableauPile tab)
+        {
+            int idx = tab.IndexOfCard(card);
+            if (idx != -1) tab.RemoveSequenceFrom(idx);
+        }
+
+        // Мгновенно резервируем слот в Foundation, чтобы предотвратить наложение
+        if (target is FoundationPile found) found.ReserveCard(card);
+
+        // Запуск полета. В конце анимации ForceSnapToContainer сама вызовет AcceptCard у таргета
+        card.ForceSnapToContainer(target);
+
+        // Запись Undo
+        if (undoManager != null)
+        {
+            undoManager.RecordMove(
+                new List<CardController> { card },
+                source, target,
+                new List<Transform> { prevParent },
+                new List<Vector3> { prevPos }, // Передаем реальную позицию вместо Vector3.zero!
+                new List<int> { prevSib }
+            );
+        }
+
+        // Очки
+        var scoreMgr = GetComponent<FreeCellScoreManager>();
+        if (scoreMgr != null) scoreMgr.OnCardMove(source, target);
+    }
+
+    // Анимация тряски для конкретной карты с затуханием амплитуды
+    private IEnumerator ShakeCardRoutine(RectTransform target)
+    {
+        if (target == null) yield break;
+
+        Vector3 originalPos = target.anchoredPosition;
+        float elapsed = 0f;
+        float duration = 0.25f;
+        float magnitude = 10f; // Амплитуда тряски карты
+
+        while (elapsed < duration)
+        {
+            if (target == null) yield break;
+
+            elapsed += Time.deltaTime;
+            float phase = 1f - (elapsed / duration); // Плавное затухание
+            float xOffset = Mathf.Sin(elapsed * 50f) * magnitude * phase;
+
+            target.anchoredPosition = new Vector3(originalPos.x + xOffset, originalPos.y, originalPos.z);
+            yield return null;
+        }
+
+        if (target != null) target.anchoredPosition = originalPos;
+    }
+    public void OnCardClicked(CardController card) { hasGameStarted = true; }
     public void OnCardLongPressed(CardController card) { }
     public void OnKeyboardPick(CardController card) { }
 

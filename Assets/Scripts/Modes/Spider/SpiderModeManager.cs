@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.VisualScripting.Antlr3.Runtime.Misc;
+using TMPro;
 
 public class SpiderModeManager : MonoBehaviour, ICardGameMode
 {
@@ -20,12 +21,23 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
     public RectTransform dragLayer;
     public float tableauVerticalGap = 35f;
 
+    [Header("UI & HUD")]
+    public TMP_Text movesText;
+    public TMP_Text scoreText;
+    public TMP_Text timeText;
+    public SpiderIntroController introController;
+    [HideInInspector] public bool isRestarting = false;
+
     private SpiderDefeatManager _defeatManager;
     private SpiderScoreManager _scoreManager;
+
+    // Флаги состояния игры
     private bool _isGameEnded = false;
-    
-    // --- НОВОЕ: Флаг старта игры ---
-    private bool _hasGameStarted = false; 
+    private bool _hasGameStarted = false;
+
+    // Локальный таймер
+    private float gameTimer = 0f;
+    private bool isTimerRunning = false;
 
     public int ActiveFoundationAnimations { get; set; } = 0;
 
@@ -38,14 +50,13 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
     public float TableauVerticalGap => tableauVerticalGap;
     public StockDealMode StockDealMode => StockDealMode.Draw1;
     public bool IsInputAllowed { get; set; } = true;
-    private bool hasGameStarted = false;
     public string GameName => "Spider";
     public GameType GameType => GameType.Spider;
 
     // Статистика
     public int CurrentScore => _scoreManager != null ? _scoreManager.CurrentScore : 0;
     public int MoveCount => StatisticsManager.Instance != null ? StatisticsManager.Instance.GetCurrentMoves() : 0;
-    public float GameTime => 0f;
+    public float GameTime => gameTimer;
 
     public SpiderScoreManager ScoreManager => _scoreManager;
 
@@ -53,15 +64,37 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
     {
         InitializeGame();
     }
+
+    private void Update()
+    {
+        if (isTimerRunning && !_isGameEnded)
+        {
+            gameTimer += Time.deltaTime;
+            UpdateTimeUI();
+        }
+    }
+
     public bool IsMatchInProgress()
     {
-        return hasGameStarted;
+        return _hasGameStarted && !_isGameEnded;
     }
+
     public void InitializeGame()
     {
         _isGameEnded = false;
-        _hasGameStarted = false; // Сброс флага
+        _hasGameStarted = false;
         ActiveFoundationAnimations = 0;
+
+        gameTimer = 0f;
+        isTimerRunning = false;
+
+        if (pileManager != null && pileManager.FoundationPiles != null)
+        {
+            foreach (var f in pileManager.FoundationPiles)
+            {
+                f.ResetFoundation();
+            }
+        }
 
         int suits = GameSettings.SpiderSuitCount;
         if (suits == 0) suits = 1;
@@ -80,8 +113,6 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
         if (_scoreManager == null) _scoreManager = gameObject.AddComponent<SpiderScoreManager>();
         _scoreManager.ResetScore();
 
-        // ВАЖНО: Убрали вызов StatisticsManager.OnGameStarted отсюда.
-
         if (dragManager != null)
         {
             dragManager.Initialize(this, rootCanvas, dragLayer, undoManager);
@@ -92,16 +123,20 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
 
         deckManager.CreateAndDeal(suits, diff);
         UpdateTableauLayouts();
+
+        UpdateFullUI();
     }
 
-    // --- МЕТОД РЕГИСТРАЦИИ ХОДА (Вызывать при действиях) ---
     public void OnMoveMade()
     {
-        // 1. Регистрируем старт игры при первом ходе
+        // --- ЗАЩИТА ОТ ФАНТОМНЫХ ХОДОВ ВО ВРЕМЯ АНИМАЦИЙ И ПОСЛЕ ПОБЕДЫ ---
+        if (_isGameEnded || !IsInputAllowed) return;
+
         if (!_hasGameStarted)
         {
             _hasGameStarted = true;
-            
+            isTimerRunning = true;
+
             if (StatisticsManager.Instance != null)
             {
                 int suits = GameSettings.SpiderSuitCount;
@@ -113,92 +148,127 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
             }
         }
 
-        // 2. Регистрируем сам ход
         if (_scoreManager) _scoreManager.ApplyPenalty();
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
+
+        UpdateFullUI();
     }
 
     public void OnStockClicked()
     {
-        // Клик по стоку - это ход
+        if (_isGameEnded || !IsInputAllowed) return;
+
         OnMoveMade();
-        if (_scoreManager) _scoreManager.ApplyPenalty();
-        if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
+        UpdateFullUI();
     }
 
     public void OnUndoAction()
     {
-        // Undo тоже считается активностью
-        if (!_hasGameStarted)
+        // Если игра не начата, или закончилась победой, или заблокирован ввод — отменяем действие
+        if (!_hasGameStarted || _isGameEnded || !IsInputAllowed) return;
+
+        if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
+
+        IsInputAllowed = true;
+
+        if (_defeatManager != null) _defeatManager.OnUndo();
+        if (_scoreManager != null)
         {
-             // Если вдруг нажали Undo до первого хода (теоретически невозможно, но для надежности)
-             OnMoveMade(); 
+            _scoreManager.ApplyPenalty();
+        }
+        StopCoroutine("DelayedTableauUpdate");
+        StartCoroutine("DelayedTableauUpdate");
+
+        UpdateFullUI();
+    }
+
+    private IEnumerator DelayedTableauUpdate()
+    {
+        if (undoManager != null)
+        {
+            while (undoManager.IsUndoing)
+            {
+                yield return null;
+            }
         }
         else
         {
-             // Просто регистрируем +1 ход
-             if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
+            yield return new WaitForSeconds(0.8f);
         }
 
-        _isGameEnded = false;
-        IsInputAllowed = true;
-        
-        if (_defeatManager != null) _defeatManager.OnUndo();
-        if (_scoreManager) _scoreManager.ApplyPenalty();
-        
+        yield return new WaitForEndOfFrame();
         UpdateTableauLayouts();
+
+        if (pileManager != null && pileManager.TableauPiles != null && pileManager.TableauPiles.Count > 9)
+        {
+            pileManager.TableauPiles[9].ForceRecalculateLayout();
+        }
     }
 
     public void OnRowCompleted()
     {
         if (_scoreManager) _scoreManager.AddRowBonus();
-        CheckGameState(); // Проверяем победу сразу после сбора ряда
+        UpdateFullUI();
+        CheckGameState();
     }
 
-    public void UpdateTableauLayouts()
+    public void UpdateTableauLayouts(bool isStockEmptying = false)
     {
         if (pileManager == null) return;
 
-        bool hasStockCards = (pileManager.StockPile != null && pileManager.StockPile.cards.Count > 0);
+        int stockCardsCount = 0;
+        if (pileManager.StockPile != null)
+        {
+            foreach (Transform child in pileManager.StockPile.transform)
+            {
+                if (child.GetComponent<CardController>() != null) stockCardsCount++;
+            }
+        }
+
+        bool hasStockCards = isStockEmptying ? false : (stockCardsCount > 0);
         SetPileCompressed(9, hasStockCards);
+
+        // --- ИСПРАВЛЕНИЕ НЕВИДИМОЙ СТЕНЫ У СТОКА ---
+        if (pileManager.StockPile != null)
+        {
+            // Отключаем Image (Raycast Target), так как именно он перехватывает клики
+            var img = pileManager.StockPile.GetComponent<UnityEngine.UI.Image>();
+            if (img != null) img.raycastTarget = hasStockCards;
+
+            // На всякий случай отключаем и CanvasGroup
+            var cg = pileManager.StockPile.GetComponent<CanvasGroup>();
+            if (cg != null) cg.blocksRaycasts = hasStockCards;
+        }
+        // -------------------------------------------
 
         int filledFoundations = 0;
         if (pileManager.FoundationPiles != null)
         {
             foreach (var f in pileManager.FoundationPiles)
             {
-                if (f.IsFull) filledFoundations++;
+                if (f.IsFull || f.isReserved) filledFoundations++;
             }
         }
 
-        filledFoundations += ActiveFoundationAnimations;
-
-        bool compressSlot1 = filledFoundations >= 1;
-        bool compressSlot2 = filledFoundations >= 2;
-        bool compressSlot3 = filledFoundations >= 6;
-
-        SetPileCompressed(0, compressSlot1);
-        SetPileCompressed(1, compressSlot2);
-        SetPileCompressed(2, compressSlot3);
+        SetPileCompressed(0, filledFoundations >= 1);
+        SetPileCompressed(1, filledFoundations >= 3);
+        SetPileCompressed(2, filledFoundations >= 7);
 
         for (int i = 3; i <= 8; i++) SetPileCompressed(i, false);
     }
 
-    private void SetPileCompressed(int index, bool compressed)
+    private void SetPileCompressed(int index, bool isCompressed)
     {
-        if (index >= 0 && index < pileManager.TableauPiles.Count)
+        if (pileManager.TableauPiles != null && pileManager.TableauPiles.Count > index)
         {
-            var pile = pileManager.TableauPiles[index].GetComponent<SpiderTableauPile>();
-            if (pile != null)
-            {
-                pile.SetLayoutCompressed(compressed);
-            }
+            pileManager.TableauPiles[index].SetLayoutCompressed(isCompressed);
         }
     }
-    
+
     public void CheckGameState()
     {
         UpdateTableauLayouts();
+
         if (_isGameEnded) return;
         if (ActiveFoundationAnimations > 0) return;
 
@@ -212,6 +282,7 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
         {
             Debug.Log("Spider: Victory!");
             _isGameEnded = true;
+            isTimerRunning = false;
             IsInputAllowed = false;
             StartCoroutine(VictoryRoutine());
             return;
@@ -223,7 +294,36 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
         }
     }
 
-    // --- НОВОЕ: Обработка выхода со сцены ---
+    private void UpdateFullUI()
+    {
+        if (movesText != null)
+        {
+            if (!_hasGameStarted) movesText.text = "0";
+            else if (StatisticsManager.Instance != null)
+                movesText.text = $"{StatisticsManager.Instance.GetCurrentMoves()}";
+            else movesText.text = "0";
+        }
+
+        if (scoreText != null)
+        {
+            int score = _scoreManager != null ? _scoreManager.CurrentScore : 0;
+            scoreText.text = $"{score}";
+        }
+
+        UpdateTimeUI();
+    }
+
+    private void UpdateTimeUI()
+    {
+        if (timeText != null)
+        {
+            int totalSeconds = Mathf.FloorToInt(gameTimer);
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
+            timeText.text = string.Format("{0}:{1:00}", minutes, seconds);
+        }
+    }
+
     private void OnDestroy()
     {
         if (_hasGameStarted && !_isGameEnded)
@@ -232,27 +332,30 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
                 StatisticsManager.Instance.OnGameAbandoned();
         }
     }
-    // ----------------------------------------
 
     private IEnumerator VictoryRoutine()
     {
         _isGameEnded = true;
         IsInputAllowed = false;
 
+        // --- ИСПРАВЛЕНИЕ: Мгновенно сбрасываем историю отмены ---
+        // Это автоматически сделает кнопки Undo некликабельными (серыми)
+        if (undoManager != null)
+        {
+            undoManager.ResetHistory();
+        }
+
         yield return new WaitForSeconds(1.0f);
 
-        // 1. Запоминаем ходы ДО сброса
         int finalMoves = 0;
         if (StatisticsManager.Instance != null)
             finalMoves = StatisticsManager.Instance.GetCurrentMoves();
 
-        // 2. Отправляем в статистику (счетчик сбросится)
         if (StatisticsManager.Instance != null)
         {
             StatisticsManager.Instance.OnGameWon(CurrentScore);
         }
 
-        // 3. Показываем UI с сохраненными ходами
         if (gameUI != null)
             gameUI.OnGameWon(finalMoves);
     }
@@ -273,7 +376,11 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
     {
         foreach (var f in pileManager.FoundationPiles)
         {
-            if (!f.IsFull) return f;
+            if (!f.IsFull && !f.isReserved)
+            {
+                f.isReserved = true;
+                return f;
+            }
         }
         return null;
     }
@@ -282,7 +389,8 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
 
     public void RestartGame()
     {
-        // Если рестартим активную игру -> поражение
+        isRestarting = true;
+
         if (_hasGameStarted && !_isGameEnded)
         {
             if (StatisticsManager.Instance != null)
@@ -290,14 +398,29 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode
         }
 
         _isGameEnded = false;
-        _hasGameStarted = false; // Сброс
+        _hasGameStarted = false;
         IsInputAllowed = true;
         ActiveFoundationAnimations = 0;
 
+        gameTimer = 0f;
+        isTimerRunning = false;
+
+        if (undoManager != null) undoManager.ResetHistory();
+
+        if (pileManager != null && pileManager.FoundationPiles != null)
+        {
+            foreach (var f in pileManager.FoundationPiles)
+            {
+                f.ResetFoundation();
+            }
+        }
+
         if (_scoreManager) _scoreManager.ResetScore();
         if (_defeatManager != null) _defeatManager.OnUndo();
-        
+
         deckManager.RestartGame();
         UpdateTableauLayouts();
+
+        UpdateFullUI();
     }
 }

@@ -1,12 +1,14 @@
 using UnityEngine;
 using System.Reflection;
 
-// Убираем ", ICardContainer", так как наследование от TableauPile уже дает это
 public class FreeCellTableauPile : TableauPile
 {
+    private FreeCellModeManager modeManager;
+
     private void Start()
     {
-        // Внедряем зависимости в базовый класс, чтобы избежать NullReference
+        modeManager = FindObjectOfType<FreeCellModeManager>();
+
         var animService = FindObjectOfType<AnimationService>();
         var type = typeof(TableauPile);
 
@@ -15,29 +17,46 @@ public class FreeCellTableauPile : TableauPile
 
         if (GetComponent<CanvasGroup>() == null) gameObject.AddComponent<CanvasGroup>();
 
-        // ВАЖНО: Разблокируем лейаут, иначе карты могут зависнуть
         var fieldLocked = type.GetField("isLayoutLocked", BindingFlags.Instance | BindingFlags.NonPublic);
         if (fieldLocked != null) fieldLocked.SetValue(this, false);
     }
 
-    // ТЕПЕРЬ ИСПОЛЬЗУЕМ OVERRIDE (работает, так как в TableauPile добавили virtual)
     public override bool CanAccept(CardController card)
     {
-        // Отладка: покажет в консоли, доходит ли вообще вызов сюда
-        // Debug.Log($"FreeCell Check: {card.name} -> {gameObject.name}");
-
         if (card == null) return false;
 
-        // 1. Если стопка пуста - принимаем ЛЮБУЮ карту
-        if (cards.Count == 0) return true;
+        // 1. Проверяем физические правила игры (цвет и ранг)
+        bool validByRules = false;
+        if (cards.Count == 0)
+        {
+            validByRules = true;
+        }
+        else
+        {
+            CardController topCard = cards[cards.Count - 1];
+            bool isColorDifferent = IsRed(topCard) != IsRed(card);
+            bool isRankCorrect = topCard.cardModel.rank == card.cardModel.rank + 1;
+            validByRules = isColorDifferent && isRankCorrect;
+        }
 
-        // 2. Иначе стандартные правила (другой цвет + ранг ниже)
-        CardController topCard = cards[cards.Count - 1];
+        // Если масть или ранг не подходят - сразу отказываем
+        if (!validByRules) return false;
 
-        bool isColorDifferent = IsRed(topCard) != IsRed(card);
-        bool isRankCorrect = topCard.cardModel.rank == card.cardModel.rank + 1;
+        // 2. Правила соблюдены! Теперь проверяем ЛИМИТ ПЕРЕНОСА
+        if (modeManager != null && modeManager.CurrentDragCount > 1)
+        {
+            bool isEmptyColumn = (cards.Count == 0);
+            int limit = modeManager.GetMaxDragSequenceSize(isEmptyColumn);
 
-        return isColorDifferent && isRankCorrect;
+            if (modeManager.CurrentDragCount > limit)
+            {
+                // Лимит превышен! Ставим флаг для скриптов перетаскивания и отказываем.
+                modeManager.JustFailedDueToLimit = true;
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private bool IsRed(CardController c)

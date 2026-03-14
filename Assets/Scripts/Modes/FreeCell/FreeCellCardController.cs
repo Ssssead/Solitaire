@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using System.Collections;
 
 public class FreeCellCardController : CardController
 {
@@ -12,55 +13,82 @@ public class FreeCellCardController : CardController
 
     public override void OnBeginDrag(PointerEventData eventData)
     {
-        // 1. Базовые проверки
-        if (CardmodeManager != null && !CardmodeManager.IsInputAllowed)
-        {
-            eventData.pointerDrag = null;
-            return;
-        }
+        if (CardmodeManager != null && !CardmodeManager.IsInputAllowed) { eventData.pointerDrag = null; return; }
 
         var cData = GetComponent<CardData>();
         if (cData != null && !cData.IsFaceUp()) return;
 
-        // --- НОВАЯ ПРОВЕРКА: ЗАПРЕТ БРАТЬ ИЗ FOUNDATION ---
-        // Если карта лежит в стопке "Дом" (FoundationPile), мы сразу отменяем драг.
-        if (transform.parent != null && transform.parent.GetComponent<FoundationPile>() != null)
-        {
-            eventData.pointerDrag = null;
-            return;
-        }
-        // -------------------------------------------------
+        if (transform.parent != null && transform.parent.GetComponent<FoundationPile>() != null) { eventData.pointerDrag = null; return; }
 
-        // 2. ПРОВЕРКА ПОСЛЕДОВАТЕЛЬНОСТИ (для Tableau)
-        if (!IsSubStackValid())
-        {
-            Debug.Log("FreeCell: Неверная последовательность.");
-            eventData.pointerDrag = null;
-            return;
-        }
+        if (!IsSubStackValid()) { eventData.pointerDrag = null; return; }
 
-        // 3. ПРОВЕРКА ЛИМИТА (для Tableau)
+        // --- ИСПРАВЛЕНИЕ: Разрешаем поднять ЛЮБУЮ валидную стопку (даже больше лимита) ---
         if (freeCellMode != null)
         {
-            int draggingCount = CountCardsBelow();
-            int limit = freeCellMode.GetMaxDragSequenceSize();
-
-            if (draggingCount > limit)
-            {
-                Debug.Log($"FreeCell: Лимит превышен ({draggingCount} > {limit}).");
-                eventData.pointerDrag = null;
-                return;
-            }
+            freeCellMode.CurrentDragCount = CountCardsBelow();
+            freeCellMode.IsGrabbing = true;
         }
 
-        // 4. Запускаем базовую логику
         base.OnBeginDrag(eventData);
+
+        if (freeCellMode != null) freeCellMode.IsGrabbing = false;
     }
 
     public override void OnEndDrag(PointerEventData eventData)
     {
+        // Сбрасываем флаг перед обработкой отпускания
+        if (freeCellMode != null) freeCellMode.JustFailedDueToLimit = false;
+
         base.OnEndDrag(eventData);
-        Invoke(nameof(ForceEnableRaycast), 0.1f);
+
+        // Если дроп сорвался ИМЕННО из-за лимита (флаг поднялся в CanAccept)
+        if (freeCellMode != null && freeCellMode.JustFailedDueToLimit)
+        {
+            freeCellMode.ShakeMoveLimitUI();
+            freeCellMode.JustFailedDueToLimit = false; // Очищаем
+        }
+
+        // --- ИСПРАВЛЕНИЕ: Чиним Z-Order в FreeCell ячейке (чтобы не пряталась под картами) ---
+        if (transform.parent != null && transform.parent.GetComponent<FreeCellPile>() != null)
+        {
+            StartCoroutine(FlightZOrderFixRoutine());
+        }
+        else
+        {
+            Invoke(nameof(ForceEnableRaycast), 0.1f);
+        }
+    }
+    private IEnumerator FlightZOrderFixRoutine()
+    {
+        var cg = GetComponent<CanvasGroup>();
+        if (cg != null) cg.blocksRaycasts = false;
+
+        Canvas tempCanvas = gameObject.GetComponent<Canvas>();
+        bool addedCanvas = false;
+        if (tempCanvas == null)
+        {
+            tempCanvas = gameObject.AddComponent<Canvas>();
+            addedCanvas = true;
+        }
+
+        tempCanvas.overrideSorting = true;
+        tempCanvas.sortingOrder = 100;
+
+        // Ждем пока базовая система доставит карту в ячейку (0,0)
+        float safeTimer = 0.25f;
+        while (safeTimer > 0f && rectTransform.localPosition.sqrMagnitude > 1f)
+        {
+            safeTimer -= Time.deltaTime;
+            yield return null;
+        }
+
+        // Финальное выравнивание и уборка
+        rectTransform.anchoredPosition = Vector2.zero;
+
+        if (addedCanvas) Destroy(tempCanvas);
+        else tempCanvas.overrideSorting = false;
+
+        if (cg != null) cg.blocksRaycasts = true;
     }
 
     private void ForceEnableRaycast()
@@ -68,22 +96,14 @@ public class FreeCellCardController : CardController
         if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
     }
 
-    // --- НОВЫЙ МЕТОД ДЛЯ ПРОВЕРКИ ПОБЕДЫ ---
     private void OnTransformParentChanged()
     {
-        // Срабатывает в конце полета, когда карта становится ребенком слота
-        if (freeCellMode != null && transform.parent != null)
+        if (freeCellMode != null && transform.parent != null && transform.parent.GetComponent<FoundationPile>() != null)
         {
-            // Если нас удочерил Foundation - проверяем победу
-            if (transform.parent.GetComponent<FoundationPile>() != null)
-            {
-                freeCellMode.CheckGameState();
-            }
+            freeCellMode.CheckGameState();
         }
     }
-    // ----------------------------------------
 
-    // --- Вспомогательные методы ---
     private bool IsSubStackValid()
     {
         if (transform.parent == null) return true;
@@ -110,9 +130,7 @@ public class FreeCellCardController : CardController
     private int CountCardsBelow()
     {
         if (transform.parent == null) return 1;
-        int myIndex = transform.GetSiblingIndex();
-        int total = transform.parent.childCount;
-        return total - myIndex;
+        return transform.parent.childCount - transform.GetSiblingIndex();
     }
 
     private bool IsRed(CardModel model)
