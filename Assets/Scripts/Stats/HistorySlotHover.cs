@@ -7,14 +7,14 @@ public class HistorySlotHover : MonoBehaviour, IPointerEnterHandler, IPointerExi
     public enum SlotType
     {
         Difficulty, // Обычная сложность (Easy/Medium/Hard) -> НИЧЕГО не показываем
-        GameGlobal, // Глобальная статистика игры (Klondike Global) -> Показываем GameInfoTooltip
-        AppGlobal   // Общая статистика приложения (Total) -> Показываем другую панель (в будущем)
+        GameGlobal, // Глобальная статистика конкретной игры (Klondike Global)
+        AppGlobal   // Общая статистика приложения (Total) 
     }
 
     private GameHistoryEntry myData;
-    private SlotType myType = SlotType.Difficulty; // По умолчанию - сложность (без панели)
+    private SlotType myType = SlotType.Difficulty;
 
-    // Обновленный метод настройки: теперь принимает и тип слота
+    // Метод настройки: принимает и данные, и тип слота
     public void Setup(GameHistoryEntry data, SlotType type)
     {
         myData = data;
@@ -34,30 +34,22 @@ public class HistorySlotHover : MonoBehaviour, IPointerEnterHandler, IPointerExi
                 break;
 
             case SlotType.GameGlobal:
-                // Для глобальной статистики игры показываем текущий тултип
+            case SlotType.AppGlobal:
+                // Передаем и данные, и ТИП слота, чтобы тултип сам решил, что показывать!
                 if (GameInfoTooltip.Instance != null)
                 {
-                    GameInfoTooltip.Instance.ShowTooltip(myData);
+                    GameInfoTooltip.Instance.ShowTooltip(myData, myType);
                 }
-                break;
-
-            case SlotType.AppGlobal:
-                // TODO: Здесь будет вызов вашей новой панели (AppGlobalTooltip)
-                // Пока можно оставить пусто или вывести лог
-                // if (AppGlobalTooltip.Instance != null) AppGlobalTooltip.Instance.Show(myData);
-                Debug.Log("Show App Global Tooltip (Coming Soon)");
                 break;
         }
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        // Скрываем все возможные тултипы
+        // Скрываем тултип
         if (GameInfoTooltip.Instance != null)
         {
             GameInfoTooltip.Instance.HideTooltip();
         }
-
-        // TODO: Скрыть AppGlobalTooltip, когда он будет готов
     }
 }

@@ -149,6 +149,10 @@ public class DeckManager : MonoBehaviour
 
         if (allCards.Count == 0) yield break;
 
+        // <--- ÄÎÁÀÂËßÅÌ ÇÂÓÊ ÏÐÈËÅÒÀ ÊÎËÎÄÛ ÍÀ ÑÒÎË --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySoundWithAutoFade("Card_Whoosh_In", duration, 0.2f);
+
         Vector3 spawnPos = offScreenSpawnPoint != null ? offScreenSpawnPoint.position : stock.transform.position - new Vector3(1500, 0, 0);
         Vector3[] startPositions = new Vector3[allCards.Count];
         Vector3[] targetPositions = new Vector3[allCards.Count];
@@ -329,6 +333,10 @@ public class DeckManager : MonoBehaviour
 
                     bool shouldFlip = (row == col);
 
+                    // <--- ÄÎÁÀÂËßÅÌ ÇÂÓÊ ÁÐÎÑÊÀ ÊÀÐÒÛ --->
+                    if (AudioManager.Instance != null)
+                        AudioManager.Instance.PlaySound("Card_Deal");
+
                     StartCoroutine(MoveCardRoutine(card, worldPos, moveDuration, targetPile, shouldFlip));
                 }
 
@@ -379,8 +387,13 @@ public class DeckManager : MonoBehaviour
         card.rectTransform.position = targetPos;
         targetPile.AddCard(card, endStateFaceUp);
 
+        // <--- ÄÎÁÀÂËßÅÌ ÇÂÓÊ ÏÐÈÇÅÌËÅÍÈß ÊÀÐÒÛ ÍÀ ÑÒÎË --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
+
         if (endStateFaceUp)
         {
+           
             var data = card.GetComponent<CardData>();
             if (data != null) data.SetFaceUp(true, animate: true);
         }
@@ -426,7 +439,8 @@ public class DeckManager : MonoBehaviour
         {
             var card = stock.PopTop();
             if (card == null) break;
-
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Deal");
             movedCards.Add(card);
             parents.Add(stock.transform);
             positions.Add(Vector3.zero);
@@ -537,7 +551,8 @@ public class DeckManager : MonoBehaviour
         {
             var card = cardsToRecycle[i];
             if (card == null) continue;
-
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Deal");
             if (layer != null)
             {
                 card.rectTransform.SetParent(layer, true);

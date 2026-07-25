@@ -132,7 +132,13 @@ public class GameIntroController : MonoBehaviour, IIntroController
             if (target != null) target.anchoredPosition = Vector2.Lerp(from, to, curve.Evaluate(t));
             yield return null;
         }
+
+        //  нопка встала на свое финальное место
         if (target != null) target.anchoredPosition = to;
+
+        // <--- ƒќЅј¬Ћя≈ћ «¬”  ѕ–»«≈ћЋ≈Ќ»я —ёƒј --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("UI_Drop");
     }
 
     private IEnumerator FadeInSlots(float duration)

@@ -1,4 +1,4 @@
-// CardController.cs [FINAL: Auto-Lift to DragLayer]
+п»ї// CardController.cs [FINAL: Auto-Lift to DragLayer]
 using System;
 using System.Collections;
 using UnityEngine;
@@ -41,7 +41,7 @@ public class CardController : MonoBehaviour,
     private bool isPressed = false;
     private float pressStartTime = 0f;
     private bool longPressTriggered = false;
-
+    public bool IsAnimating => isAnimating;
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -70,40 +70,41 @@ public class CardController : MonoBehaviour,
 
     public virtual void OnBeginDrag(PointerEventData eventData)
     {
-        // 1. Проверка блокировки ввода (Global)
+        // 1. РџСЂРѕРІРµСЂРєР° Р±Р»РѕРєРёСЂРѕРІРєРё РІРІРѕРґР° (Global)
         if (CardmodeManager != null && !CardmodeManager.IsInputAllowed) return;
 
-        // 2. --- ИСПРАВЛЕНИЕ: Проверка, открыта ли карта ---
-        // Получаем компонент данных карты
+        // 2. --- РРЎРџР РђР’Р›Р•РќРР•: РџСЂРѕРІРµСЂРєР°, РѕС‚РєСЂС‹С‚Р° Р»Рё РєР°СЂС‚Р° ---
+        // РџРѕР»СѓС‡Р°РµРј РєРѕРјРїРѕРЅРµРЅС‚ РґР°РЅРЅС‹С… РєР°СЂС‚С‹
         var cardData = GetComponent<CardData>();
-        // Если компонента нет (странно) или карта НЕ открыта (IsFaceUp == false) -> выходим
+        // Р•СЃР»Рё РєРѕРјРїРѕРЅРµРЅС‚Р° РЅРµС‚ (СЃС‚СЂР°РЅРЅРѕ) РёР»Рё РєР°СЂС‚Р° РќР• РѕС‚РєСЂС‹С‚Р° (IsFaceUp == false) -> РІС‹С…РѕРґРёРј
         if (cardData != null && !cardData.IsFaceUp())
         {
             return;
         }
         // --------------------------------------------------
 
-        // 3. Проверка интерактивности UI
+        // 3. РџСЂРѕРІРµСЂРєР° РёРЅС‚РµСЂР°РєС‚РёРІРЅРѕСЃС‚Рё UI
         if (canvasGroup != null && !canvasGroup.interactable) return;
-
-        // --- Ваш старый код ---
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_PickUp");
+        // --- Р’Р°С€ СЃС‚Р°СЂС‹Р№ РєРѕРґ ---
         isDragging = true;
         if (canvasGroup != null) canvasGroup.blocksRaycasts = false;
 
-        // Теперь это событие сработает, ТОЛЬКО если карта открыта
+        // РўРµРїРµСЂСЊ СЌС‚Рѕ СЃРѕР±С‹С‚РёРµ СЃСЂР°Р±РѕС‚Р°РµС‚, РўРћР›Р¬РљРћ РµСЃР»Рё РєР°СЂС‚Р° РѕС‚РєСЂС‹С‚Р°
         OnPickedUp?.Invoke(this);
         if (shadowAnim != null) shadowAnim.OnBeginDrag(eventData);
     }
 
     public virtual void OnDrag(PointerEventData eventData)
     {
-        // --- ДОБАВЛЕНО ---
+        // --- Р”РћР‘РђР’Р›Р•РќРћ ---
         if (CardmodeManager != null && !CardmodeManager.IsInputAllowed) return;
         // -----------------
 
         if (isDragging)
         {
-            // ... ваш код перемещения ...
+            // ... РІР°С€ РєРѕРґ РїРµСЂРµРјРµС‰РµРЅРёСЏ ...
             if (canvas != null)
             {
                 rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
@@ -122,7 +123,7 @@ public class CardController : MonoBehaviour,
         {
             isDragging = false;
             if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
-            // Возвращаем на место, если карта зависла
+            // Р’РѕР·РІСЂР°С‰Р°РµРј РЅР° РјРµСЃС‚Рѕ, РµСЃР»Рё РєР°СЂС‚Р° Р·Р°РІРёСЃР»Р°
             transform.localPosition = Vector3.zero;
             return;
         }
@@ -131,7 +132,7 @@ public class CardController : MonoBehaviour,
         if (shadowAnim != null) shadowAnim.OnEndDrag(eventData);
         if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
 
-        // 1. Находим DragManager, если ссылка потерялась
+        // 1. РќР°С…РѕРґРёРј DragManager, РµСЃР»Рё СЃСЃС‹Р»РєР° РїРѕС‚РµСЂСЏР»Р°СЃСЊ
         if (dragManager == null)
         {
             dragManager = FindObjectOfType<DragManager>();
@@ -139,40 +140,53 @@ public class CardController : MonoBehaviour,
 
         if (dragManager != null)
         {
-            // 2. ВОТ ЗДЕСЬ ДОЛЖЕН БЫТЬ ВЫЗОВ, КОТОРОГО У ВАС НЕТ
-            // Мы спрашиваем у менеджера: "Над чем я сейчас вишу?"
             ICardContainer target = dragManager.FindNearestContainer(this, eventData.position, 0f);
 
             if (target != null)
             {
-                // Если нашли контейнер - вызываем событие успешного сброса
-                // DragManager подписан на это событие и обработает логику (OnCardDroppedToContainer)
+                // === РРќРўР•Р›Р›Р•РљРўРЈРђР›Р¬РќР«Р™ Р—Р’РЈРљ ===
+                if (AudioManager.Instance != null)
+                {
+                    bool playSoundNow = true;
+
+                    if (CardmodeManager != null && CardmodeManager.GameName == "FreeCell")
+                    {
+                        // Р’Рѕ FreeCell РЎРІРѕР±РѕРґРЅС‹Рµ СЏС‡РµР№РєРё Рё Р”РѕРјР° РёСЃРїРѕР»СЊР·СѓСЋС‚ SnapRoutine 
+                        // РґР»СЏ РїР»Р°РІРЅРѕРіРѕ РїРѕР»РµС‚Р°, Р·РІСѓРє Р±СѓРґРµС‚ РїСЂРѕРёРіСЂР°РЅ РІ РєРѕРЅС†Рµ РєРѕСЂСѓС‚РёРЅС‹.
+                        // РќРћ РЎС‚РѕР»Р±С†С‹ (Tableau) РёСЃРїРѕР»СЊР·СѓСЋС‚ РјРіРЅРѕРІРµРЅРЅС‹Р№ Layout, 
+                        // РїРѕСЌС‚РѕРјСѓ РґР»СЏ РЅРёС… Р·РІСѓРє РЅСѓР¶РЅРѕ РёРіСЂР°С‚СЊ РЅРµРјРµРґР»РµРЅРЅРѕ.
+                        if (target is FreeCellPile || target is FoundationPile)
+                        {
+                            playSoundNow = false;
+                        }
+                    }
+
+                    if (playSoundNow)
+                    {
+                        AudioManager.Instance.PlaySound("Card_Drop_Success");
+                    }
+                }
+
                 OnDroppedToContainer?.Invoke(this, target);
             }
             else
             {
-                // Если контейнер не найден, проверяем, может мы бросили просто на фон стола?
                 bool droppedOnBoard = dragManager.OnDropToBoard(this, eventData.position);
 
                 if (!droppedOnBoard)
                 {
-                    // Если никуда не попали - вызываем событие возврата
-                    // DragManager вернет карты назад (OnCardDroppedToBoardEvent -> ReturnDraggingStackToOrigin)
+                    if (AudioManager.Instance != null)
+                        AudioManager.Instance.PlaySound("Card_Drop_Fail");
                     OnDroppedToBoard?.Invoke(this);
                 }
             }
         }
-        else
-        {
-            // Fallback, если менеджера нет
-            transform.localPosition = Vector3.zero;
-        }
     }
 
-    // --- ДОБАВИТЬ ЭТО СВОЙСТВО ---
+    // --- Р”РћР‘РђР’РРўР¬ Р­РўРћ РЎР’РћР™РЎРўР’Рћ ---
     /// <summary>
-    /// Возвращает контейнер (стопку), в котором сейчас находится карта.
-    /// Определяется через поиск компонента ICardContainer в родительском объекте.
+    /// Р’РѕР·РІСЂР°С‰Р°РµС‚ РєРѕРЅС‚РµР№РЅРµСЂ (СЃС‚РѕРїРєСѓ), РІ РєРѕС‚РѕСЂРѕРј СЃРµР№С‡Р°СЃ РЅР°С…РѕРґРёС‚СЃСЏ РєР°СЂС‚Р°.
+    /// РћРїСЂРµРґРµР»СЏРµС‚СЃСЏ С‡РµСЂРµР· РїРѕРёСЃРє РєРѕРјРїРѕРЅРµРЅС‚Р° ICardContainer РІ СЂРѕРґРёС‚РµР»СЊСЃРєРѕРј РѕР±СЉРµРєС‚Рµ.
     /// </summary>
     public ICardContainer CurrentContainer
     {
@@ -192,18 +206,19 @@ public class CardController : MonoBehaviour,
     {
         if (container == null) return;
         if (isAnimating) return;
-
+        isAnimating = true; // в†ђ РџР•Р Р•РќР•РЎР•РќРћ РЎР®Р”Рђ РёР· SnapRoutine
         StartCoroutine(SnapRoutine(container));
     }
 
     private IEnumerator SnapRoutine(ICardContainer container)
     {
-        isAnimating = true;
+       // isAnimating = true;
 
-        // --- КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: ПОДНИМАЕМ КАРТУ В DRAGLAYER ---
-        // Это гарантирует, что карта всегда летит поверх всего, откуда бы она ни вылетала.
-        // Мы пытаемся найти DragLayer через менеджер или Canvas.
-
+        // --- РљР РРўРР§Р•РЎРљРћР• РР—РњР•РќР•РќРР•: РџРћР”РќРРњРђР•Рњ РљРђР РўРЈ Р’ DRAGLAYER ---
+        // Р­С‚Рѕ РіР°СЂР°РЅС‚РёСЂСѓРµС‚, С‡С‚Рѕ РєР°СЂС‚Р° РІСЃРµРіРґР° Р»РµС‚РёС‚ РїРѕРІРµСЂС… РІСЃРµРіРѕ, РѕС‚РєСѓРґР° Р±С‹ РѕРЅР° РЅРё РІС‹Р»РµС‚Р°Р»Р°.
+        // РњС‹ РїС‹С‚Р°РµРјСЃСЏ РЅР°Р№С‚Рё DragLayer С‡РµСЂРµР· РјРµРЅРµРґР¶РµСЂ РёР»Рё Canvas.
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_PickUp");
         RectTransform layer = null;
 
         // Use CardmodeManager interface property
@@ -218,18 +233,18 @@ public class CardController : MonoBehaviour,
 
         if (layer != null && rectTransform.parent != layer)
         {
-            rectTransform.SetParent(layer, true); // true = сохранить мировую позицию
-            rectTransform.SetAsLastSibling();     // Рисовать поверх всего в слое
+            rectTransform.SetParent(layer, true); // true = СЃРѕС…СЂР°РЅРёС‚СЊ РјРёСЂРѕРІСѓСЋ РїРѕР·РёС†РёСЋ
+            rectTransform.SetAsLastSibling();     // Р РёСЃРѕРІР°С‚СЊ РїРѕРІРµСЂС… РІСЃРµРіРѕ РІ СЃР»РѕРµ
         }
 
-        // Временно отключаем Raycast во время полета
+        // Р’СЂРµРјРµРЅРЅРѕ РѕС‚РєР»СЋС‡Р°РµРј Raycast РІРѕ РІСЂРµРјСЏ РїРѕР»РµС‚Р°
         if (canvasGroup != null) canvasGroup.blocksRaycasts = false;
         // -----------------------------------------------------------
 
         Vector2 targetAnchored = container.GetDropAnchoredPosition(this);
         Transform targetParent = container.Transform;
 
-        // Расчет целевой мировой позиции
+        // Р Р°СЃС‡РµС‚ С†РµР»РµРІРѕР№ РјРёСЂРѕРІРѕР№ РїРѕР·РёС†РёРё
         GameObject tempObj = new GameObject("TempTarget");
         tempObj.transform.SetParent(targetParent, false);
         RectTransform tempRect = tempObj.AddComponent<RectTransform>();
@@ -238,7 +253,7 @@ public class CardController : MonoBehaviour,
         Vector3 targetWorldPos = tempRect.position;
         Destroy(tempObj);
 
-        // Старт анимации
+        // РЎС‚Р°СЂС‚ Р°РЅРёРјР°С†РёРё
         Vector3 startPos = rectTransform.position;
         float elapsed = 0f;
         float duration = 0.2f;
@@ -251,31 +266,41 @@ public class CardController : MonoBehaviour,
             yield return null;
         }
 
-        // 1. Финальная позиция
+        // 1. Р¤РёРЅР°Р»СЊРЅР°СЏ РїРѕР·РёС†РёСЏ
         rectTransform.position = targetWorldPos;
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
 
-        // 2. Перенос родителя (с сохранением world position во избежание скачка)
+            // <--- Р”РћР‘РђР’Р›РЇР•Рњ Р—Р’РЈРљ Р”Р›РЇ Р”РћРњРђ (Foundation) --->
+            // РњС‹ РїСЂРѕРІРµСЂСЏРµРј, СЏРІР»СЏРµС‚СЃСЏ Р»Рё РѕР±СЉРµРєС‚, Рє РєРѕС‚РѕСЂРѕРјСѓ РјС‹ РїСЂРёР»РµС‚РµР»Рё, FoundationPile
+            if (container is FoundationPile)
+            {
+                AudioManager.Instance.PlaySound("Card_Foundation_Success");
+            }
+        }
+        // 2. РџРµСЂРµРЅРѕСЃ СЂРѕРґРёС‚РµР»СЏ (СЃ СЃРѕС…СЂР°РЅРµРЅРёРµРј world position РІРѕ РёР·Р±РµР¶Р°РЅРёРµ СЃРєР°С‡РєР°)
         if (rectTransform.parent != targetParent)
         {
             rectTransform.SetParent(targetParent, true);
         }
 
-        // 3. Логическое добавление
+        // 3. Р›РѕРіРёС‡РµСЃРєРѕРµ РґРѕР±Р°РІР»РµРЅРёРµ
         container.AcceptCard(this);
 
-        // 4. Сброс локального Z
+        // 4. РЎР±СЂРѕСЃ Р»РѕРєР°Р»СЊРЅРѕРіРѕ Z
         Vector3 lp = rectTransform.localPosition;
         lp.z = 0f;
         rectTransform.localPosition = lp;
-
-        // 5. Восстановление Raycasts
+        isAnimating = false;
+        // 5. Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ Raycasts
         if (canvasGroup != null)
         {
             canvasGroup.blocksRaycasts = true;
             canvasGroup.interactable = true;
         }
 
-        isAnimating = false;
+       
 
     }
 

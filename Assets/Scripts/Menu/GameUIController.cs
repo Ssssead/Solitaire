@@ -12,7 +12,8 @@ public class GameUIController : MonoBehaviour
     [Header("Main Panels")]
     public GameObject winPanel;
     public GameObject defeatPanel;
-    public GameObject statisticsPanel;
+    public GameObject basicStatisticsPanel;   // <--- ИЗМЕНЕНО: Базовая статистика
+    public GameObject premiumStatisticsPanel;
     public GameObject settingsPanel;
 
     [Header("Confirmation Panels")]
@@ -30,7 +31,21 @@ public class GameUIController : MonoBehaviour
     public RectTransform winCardRect;
     public XPProgressBar winLevelBar;
     private Vector2 winCardDefaultPos;
+    [Header("Defeat Panel Ads UI")]
+    [Tooltip("Перетащи сюда объекты иконок рекламы (телевизоры) с кнопок отмены")]
+    public GameObject undoOneAdIcon;
+    public GameObject undoAllAdIcon;
+    [Header("Text RectTransforms for Ads")]
+    [Header("Text RectTransforms for Ads")]
+    [Tooltip("Перетащи сюда сами объекты текста с кнопок отмены")]
+    public RectTransform undoOneTextRect;
+    public RectTransform undoAllTextRect;
 
+    [Tooltip("Значение Right из инспектора, когда картинки НЕТ")]
+    public float textPaddingNormal = 16.35f;
+
+    [Tooltip("Значение Right из инспектора, когда картинка ЕСТЬ")]
+    public float textPaddingWithAd = 55.51f;
     [Header("Other Bars")]
     public XPProgressBar localLevelBar;
 
@@ -64,33 +79,63 @@ public class GameUIController : MonoBehaviour
     public UndoManager undoManager;
     [Header("Effects")]
     public SceneExitAnimator exitAnimator;
-    
+    [Header("Colors Extension")]
+    public Color buttonDisabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f); // Цвет заблокированной кнопки Паука
     [Header("Settings Containers")]
     // Контейнеры внутри SettingsPanel
     public GameObject settingsDifficultyContainer;
     public GameObject settingsDrawContainer;     // Klondike
-    public GameObject settingsSuitContainer;     // Spider (резерв)
+    public GameObject settingsSuitContainer;
+    public GameObject settingsRoundsContainer;
+    public GameObject settingsYukonContainer;
+    public GameObject settingsMonteCarloContainer;
+    public GameObject settingsMontanaContainer;
+    [Header("New Game Settings Containers")]
+    public GameObject newGameSettingsDiffContainer;
+    public GameObject newGameSettingsDrawContainer;
+    public GameObject newGameSettingsSuitContainer;
+    public GameObject newGameSettingsRoundsContainer;
+    public GameObject newGameSettingsYukonContainer;
+    public GameObject newGameSettingsMonteCarloContainer;
+    public GameObject newGameSettingsMontanaContainer;
 
     [Header("Settings Buttons")]
     public Button[] settingsDiffButtons;   // 0-Easy, 1-Medium, 2-Hard
     public Button[] settingsDrawButtons;   // 0-(Draw1), 1-(Draw3)
-    // public Button[] settingsSuitButtons;
+    public Button[] settingsSuitButtons;
+    public Button[] settingsRoundsButtons;
+    public Button settingsYukonClassicBtn;
+    public Button settingsYukonRussianBtn;
+    public Button settingsMonteCarlo8Btn;
+    public Button settingsMonteCarlo4Btn;
+    public Button settingsMontanaClassicBtn;
+    public Button settingsMontanaHardBtn;
 
     // --- NEW GAME SETTINGS PANEL (SEPARATE PANEL) ---
     [Header("New Game Settings Panel")]
     public GameObject newGameSettingsPanel;
 
-    [Header("New Game Settings Containers")]
-    public GameObject newGameSettingsDiffContainer;
-    public GameObject newGameSettingsDrawContainer;
+   
 
     [Header("New Game Settings Buttons")]
     public Button[] newGameSettingsDiffButtons; // 0-Easy, 1-Medium, 2-Hard
     public Button[] newGameSettingsDrawButtons; // 0-Draw1, 1-Draw3
-
+    public Button[] newGameSettingsSuitButtons;
+    public Button[] newGameSettingsRoundsButtons;
+    public Button newGameSettingsYukonClassicBtn;
+    public Button newGameSettingsYukonRussianBtn;
+    public Button newGameSettingsMonteCarlo8Btn;
+    public Button newGameSettingsMonteCarlo4Btn;
+    public Button newGameSettingsMontanaClassicBtn;
+    public Button newGameSettingsMontanaHardBtn;
     [Header("New Game XP Preview")]
     public TMP_Text newGameXPPreviewText;
     private Coroutine winSequenceCoroutine;
+    [Header("Win Panel Tutorial UI")]
+    [Tooltip("Поместите сюда 4 обычные кнопки: Новая игра, В меню(мелкая), Статистика, Настройки")]
+    public GameObject[] standardWinButtons;
+    [Tooltip("Поместите сюда вашу новую БОЛЬШУЮ кнопку В меню")]
+    public GameObject tutorialBigMenuButton;
     private void Start()
     {
         if (activeGameMode == null)
@@ -107,7 +152,8 @@ public class GameUIController : MonoBehaviour
         // Регистрируем все панели, включая Settings
         RegisterAndHidePanel(winPanel);
         RegisterAndHidePanel(defeatPanel);
-        RegisterAndHidePanel(statisticsPanel);
+        RegisterAndHidePanel(basicStatisticsPanel);   // <--- РЕГИСТРИРУЕМ БАЗОВУЮ
+        RegisterAndHidePanel(premiumStatisticsPanel);
         RegisterAndHidePanel(settingsPanel); // [ВАЖНО] Панель настроек должна быть здесь
         RegisterAndHidePanel(newGameSettingsPanel);
         RegisterAndHidePanel(exitConfirmationPanel);
@@ -122,6 +168,65 @@ public class GameUIController : MonoBehaviour
 
         if (StatisticsManager.Instance != null)
             StatisticsManager.Instance.OnLevelUp += HandleLevelUp;
+    }
+    private void Update()
+    {
+        // Если панель поражения открыта, проверяем статус бесплатной рекламы
+        if (defeatPanel != null && defeatPanel.activeSelf)
+        {
+            UpdateDefeatAdVisuals();
+        }
+    }
+
+    private void UpdateDefeatAdVisuals()
+    {
+        // Проверяем, существует ли AdManager и активен ли льготный период
+        bool isRewardFree = AdManager.Instance != null && AdManager.Instance.IsRewardFree();
+
+        // 1. Включаем/выключаем иконки
+        if (undoOneAdIcon != null) undoOneAdIcon.SetActive(!isRewardFree);
+        if (undoAllAdIcon != null) undoAllAdIcon.SetActive(!isRewardFree);
+
+        // 2. Определяем нужный отступ. 
+        // Если бесплатно (иконки нет) -> отступ обычный (16.35)
+        // Если платно (иконка есть) -> отступ большой (55.51)
+        float currentRightPadding = isRewardFree ? textPaddingNormal : textPaddingWithAd;
+
+        // 3. Применяем отступ к текстам. В коде значение Right — это отрицательный offsetMax.x!
+        if (undoOneTextRect != null)
+        {
+            undoOneTextRect.offsetMax = new Vector2(-currentRightPadding, undoOneTextRect.offsetMax.y);
+        }
+
+        if (undoAllTextRect != null)
+        {
+            undoAllTextRect.offsetMax = new Vector2(-currentRightPadding, undoAllTextRect.offsetMax.y);
+        }
+    }
+
+    private void OnEnable()
+    {
+        // Слушаем сообщение от AdManager об успешном просмотре
+        AdManager.OnRewardEarned += HandleRewardEarned;
+    }
+
+    private void OnDisable()
+    {
+        AdManager.OnRewardEarned -= HandleRewardEarned;
+    }
+
+    // Этот метод сработает ТОЛЬКО если игрок досмотрел рекламу до конца
+    // (Или если у него действует льготный бесплатный период / куплен Премиум)
+    private void HandleRewardEarned(string rewardId)
+    {
+        if (rewardId == "undo_one")
+        {
+            ExecuteUndoOne();
+        }
+        else if (rewardId == "undo_all")
+        {
+            ExecuteUndoAll();
+        }
     }
     private void RegisterAndHidePanel(GameObject panel)
     {
@@ -153,7 +258,7 @@ public class GameUIController : MonoBehaviour
         if (defeatPanel) defeatPanel.SetActive(false);
         if (settingsPanel) settingsPanel.SetActive(false);
         if (activeGameMode != null) activeGameMode.IsInputAllowed = false;
-
+        
         // [FIX] Сохраняем ссылку на корутину, чтобы можно было её отменить
         if (winSequenceCoroutine != null) StopCoroutine(winSequenceCoroutine);
         winSequenceCoroutine = StartCoroutine(WinSequenceRoutine(manualMoves));
@@ -162,7 +267,8 @@ public class GameUIController : MonoBehaviour
     private IEnumerator WinSequenceRoutine(int manualMoves)
     {
         yield return new WaitForSeconds(1.0f);
-
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Win_Sound");
         if (winPanel)
         {
             // [REMOVED] SetupControlPanel() - здесь больше нет кнопок
@@ -216,12 +322,15 @@ public class GameUIController : MonoBehaviour
 
             TogglePanelAnimated(defeatPanel, true);
             if (activeGameMode != null) activeGameMode.IsInputAllowed = false;
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Loss_Sound");
         }
     }
     // --- SETTINGS BUTTONS LOGIC (SYNC) ---
 
     public void OnSettingsClicked()
     {
+        PlayClickSound();
         if (settingsPanel != null)
         {
             // [FIX] Если панель уже открыта (или находится в процессе анимации),
@@ -234,6 +343,7 @@ public class GameUIController : MonoBehaviour
     }
     public void OnCloseSettingsClicked()
     {
+        PlayClickSound();
         if (settingsPanel != null)
         {
             TogglePanelAnimated(settingsPanel, false);
@@ -243,45 +353,66 @@ public class GameUIController : MonoBehaviour
     private void SetupSettingsPanel()
     {
         if (activeGameMode == null) return;
-
         GameType type = activeGameMode.GameType;
 
-        // 1. Включаем контейнеры в зависимости от типа игры
-        // Используем новые переменные settings...Container
-
-        bool isKlondike = (type == GameType.Klondike);
-        // bool isSpider = (type == GameType.Spider);
-
-        if (settingsDrawContainer) settingsDrawContainer.SetActive(isKlondike);
-        // if (settingsSuitContainer) settingsSuitContainer.SetActive(isSpider);
+        // Включаем нужные контейнеры
+        if (settingsDrawContainer) settingsDrawContainer.SetActive(type == GameType.Klondike);
+        if (settingsSuitContainer) settingsSuitContainer.SetActive(type == GameType.Spider);
+        if (settingsRoundsContainer) settingsRoundsContainer.SetActive(type == GameType.Pyramid || type == GameType.TriPeaks);
+        if (settingsYukonContainer) settingsYukonContainer.SetActive(type == GameType.Yukon);
+        if (settingsMonteCarloContainer) settingsMonteCarloContainer.SetActive(type == GameType.MonteCarlo);
+        if (settingsMontanaContainer) settingsMontanaContainer.SetActive(type == GameType.Montana);
 
         if (settingsDifficultyContainer) settingsDifficultyContainer.SetActive(true);
 
-        // 2. Обновляем цвета кнопок
-        UpdateSettingsVisuals();
+        // Ограничения для Паука
+        if (type == GameType.Spider) ValidateSpiderConstraints(GameSettings.SpiderSuitCount, settingsDiffButtons);
+        else EnableAllDifficulties(settingsDiffButtons);
 
-        // 3. Обновляем текст предпросмотра XP (если он есть в панели настроек)
+        UpdateSettingsVisuals();
         UpdateXPPreviewText();
     }
     private void UpdateSettingsVisuals()
     {
-        // Difficulty
         int diffIndex = (int)GameSettings.CurrentDifficulty;
         for (int i = 0; i < settingsDiffButtons.Length; i++)
         {
             if (settingsDiffButtons[i] != null)
-                SetButtonState(settingsDiffButtons[i], i == diffIndex);
+            {
+                if (!settingsDiffButtons[i].interactable) settingsDiffButtons[i].image.color = buttonDisabledColor;
+                else SetButtonState(settingsDiffButtons[i], i == diffIndex);
+            }
         }
 
-        // Klondike Draw
-        if (settingsDrawButtons.Length >= 2)
+        if (settingsDrawButtons != null && settingsDrawButtons.Length >= 2)
         {
             SetButtonState(settingsDrawButtons[0], GameSettings.KlondikeDrawCount == 1);
             SetButtonState(settingsDrawButtons[1], GameSettings.KlondikeDrawCount == 3);
         }
+        if (settingsSuitButtons != null && settingsSuitButtons.Length >= 3)
+        {
+            SetButtonState(settingsSuitButtons[0], GameSettings.SpiderSuitCount == 1);
+            SetButtonState(settingsSuitButtons[1], GameSettings.SpiderSuitCount == 2);
+            SetButtonState(settingsSuitButtons[2], GameSettings.SpiderSuitCount == 4);
+        }
+        if (settingsRoundsButtons != null && settingsRoundsButtons.Length >= 3)
+        {
+            SetButtonState(settingsRoundsButtons[0], GameSettings.RoundsCount == 1);
+            SetButtonState(settingsRoundsButtons[1], GameSettings.RoundsCount == 2);
+            SetButtonState(settingsRoundsButtons[2], GameSettings.RoundsCount == 3);
+        }
+
+        SetButtonState(settingsYukonClassicBtn, !GameSettings.YukonRussian);
+        SetButtonState(settingsYukonRussianBtn, GameSettings.YukonRussian);
+        SetButtonState(settingsMonteCarlo8Btn, !GameSettings.MonteCarlo4Ways);
+        SetButtonState(settingsMonteCarlo4Btn, GameSettings.MonteCarlo4Ways);
+        SetButtonState(settingsMontanaClassicBtn, !GameSettings.MontanaHard);
+        SetButtonState(settingsMontanaHardBtn, GameSettings.MontanaHard);
     }
     public void OnSettingsDifficultyClicked(int diffIndex)
     {
+        if (settingsDiffButtons != null && diffIndex < settingsDiffButtons.Length && !settingsDiffButtons[diffIndex].interactable) return;
+        PlayClickSound();
         GameSettings.CurrentDifficulty = (Difficulty)diffIndex;
         UpdateSettingsVisuals();
         UpdateXPPreviewText();
@@ -289,11 +420,75 @@ public class GameUIController : MonoBehaviour
 
     public void OnSettingsDrawModeClicked(int drawCount)
     {
+        PlayClickSound();
         GameSettings.KlondikeDrawCount = drawCount;
         UpdateSettingsVisuals();
         UpdateXPPreviewText();
     }
+    public void OnSettingsSuitClicked(int count) // Передаем 1, 2 или 4
+    {
+        PlayClickSound();
+        GameSettings.SpiderSuitCount = count;
+        ValidateSpiderConstraints(count, settingsDiffButtons);
+        UpdateSettingsVisuals();
+        UpdateXPPreviewText();
+    }
+    public void OnSettingsRoundsClicked(int index) // Передаем 0, 1 или 2 (будет 1, 2, 3 раунда)
+    {
+        PlayClickSound();
+        GameSettings.RoundsCount = index + 1;
+        UpdateSettingsVisuals();
+        UpdateXPPreviewText();
+    }
+    public void OnSettingsYukonClicked(int mode) { PlayClickSound(); GameSettings.YukonRussian = (mode == 1); UpdateSettingsVisuals(); UpdateXPPreviewText(); }
+    public void OnSettingsMonteCarloClicked(int mode) { PlayClickSound(); GameSettings.MonteCarlo4Ways = (mode == 1); UpdateSettingsVisuals(); UpdateXPPreviewText(); }
+    public void OnSettingsMontanaClicked(int mode) { PlayClickSound(); GameSettings.MontanaHard = (mode == 1); UpdateSettingsVisuals(); UpdateXPPreviewText(); }
 
+    // --- ДОБАВИТЬ: Обработчики кнопок для Настроек Новой Игры ---
+    public void OnNewGameSettingsSuitClicked(int count) // Передаем 1, 2 или 4
+    {
+        PlayClickSound();
+        GameSettings.SpiderSuitCount = count;
+        ValidateSpiderConstraints(count, newGameSettingsDiffButtons);
+        UpdateNewGameSettingsVisuals();
+        UpdateNewGameXPPreview();
+    }
+    public void OnNewGameSettingsRoundsClicked(int index) // Передаем 0, 1 или 2
+    {
+        PlayClickSound();
+        GameSettings.RoundsCount = index + 1;
+        UpdateNewGameSettingsVisuals();
+        UpdateNewGameXPPreview();
+    }
+    public void OnNewGameSettingsYukonClicked(int mode) { PlayClickSound(); GameSettings.YukonRussian = (mode == 1); UpdateNewGameSettingsVisuals(); UpdateNewGameXPPreview(); }
+    public void OnNewGameSettingsMonteCarloClicked(int mode) { PlayClickSound(); GameSettings.MonteCarlo4Ways = (mode == 1); UpdateNewGameSettingsVisuals(); UpdateNewGameXPPreview(); }
+    public void OnNewGameSettingsMontanaClicked(int mode) { PlayClickSound(); GameSettings.MontanaHard = (mode == 1); UpdateNewGameSettingsVisuals(); UpdateNewGameXPPreview(); }
+
+    // --- ДОБАВИТЬ: Вспомогательные методы ограничений Паука ---
+    private void ValidateSpiderConstraints(int suitCount, Button[] diffBtns)
+    {
+        EnableAllDifficulties(diffBtns);
+
+        if (suitCount == 1)
+        {
+            if (diffBtns.Length > 2 && diffBtns[2] != null) diffBtns[2].interactable = false;
+            if (GameSettings.CurrentDifficulty == Difficulty.Hard) GameSettings.CurrentDifficulty = Difficulty.Medium;
+        }
+        else if (suitCount == 4)
+        {
+            if (diffBtns.Length > 0 && diffBtns[0] != null) diffBtns[0].interactable = false;
+            if (GameSettings.CurrentDifficulty == Difficulty.Easy) GameSettings.CurrentDifficulty = Difficulty.Medium;
+        }
+    }
+
+    private void EnableAllDifficulties(Button[] diffBtns)
+    {
+        if (diffBtns == null) return;
+        foreach (var btn in diffBtns)
+        {
+            if (btn != null) btn.interactable = true;
+        }
+    }
     private void SetupControlPanel()
     {
         if (activeGameMode == null) return;
@@ -342,6 +537,7 @@ public class GameUIController : MonoBehaviour
 
     public void OnWinDifficultyClicked(int diffIndex)
     {
+        PlayClickSound();
         GameSettings.CurrentDifficulty = (Difficulty)diffIndex;
         UpdateControlVisuals();
         UpdateXPPreviewText();
@@ -349,6 +545,7 @@ public class GameUIController : MonoBehaviour
 
     public void OnWinDrawModeClicked(int drawCount)
     {
+        PlayClickSound();
         GameSettings.KlondikeDrawCount = drawCount;
         UpdateControlVisuals();
         UpdateXPPreviewText();
@@ -356,64 +553,81 @@ public class GameUIController : MonoBehaviour
 
     private void UpdateXPPreviewText()
     {
-        if (winXPText == null || activeGameMode == null) return;
+        if (winXPText == null && xpPreviewText == null || activeGameMode == null) return;
 
-        string variant = "";
-        if (activeGameMode.GameType == GameType.Klondike)
-            variant = GameSettings.KlondikeDrawCount == 3 ? "draw3" : "draw1";
+        string variant = GameSettings.GetCurrentVariantString(activeGameMode.GameType);
 
         int currentLvl = 1;
+        bool isPremium = false;
+
+        // ---> ИСПРАВЛЕНИЕ УРОВНЯ И ПРЕМИУМА <---
         if (StatisticsManager.Instance != null)
         {
             var data = StatisticsManager.Instance.GetGameGlobalStats(activeGameMode.GameName);
             if (data != null) currentLvl = data.currentLevel;
+            isPremium = StatisticsManager.Instance.IsUserPremium;
         }
 
-        int xpAmount = LevelingUtils.CalculateXP(
-            activeGameMode.GameType,
-            currentLvl,
-            GameSettings.CurrentDifficulty,
-            variant,
-            false
-        );
+        int xpAmount = LevelingUtils.CalculateXP(activeGameMode.GameType, currentLvl, GameSettings.CurrentDifficulty, variant, isPremium);
+
+        // ---> ИНТЕГРАЦИЯ БУСТЕРА Х2 <---
+        if (QuestManager.Instance != null && System.Enum.TryParse(activeGameMode.GameType.ToString(), out QuestCategory cat))
+        {
+            if (QuestManager.Instance.HasActiveXpBuff(cat))
+            {
+                xpAmount *= 2;
+            }
+        }
+        // ------------------------------
 
         string coloredXP = $"<color=#FFC400>{xpAmount}</color>";
+
+        string format = "{0} XP";
         if (LocalizationManager.instance != null && LocalizationManager.instance.IsReady())
         {
-            string format = LocalizationManager.instance.GetLocalizedValue(xpPreviewLocKey);
-            if (string.IsNullOrEmpty(format)) format = "{0} XP";
-            try { winXPText.text = string.Format(format, coloredXP); }
-            catch { winXPText.text = $"{coloredXP} XP"; }
+            string loc = LocalizationManager.instance.GetLocalizedValue(xpPreviewLocKey);
+            if (!string.IsNullOrEmpty(loc)) format = loc;
         }
-        else
-        {
-            winXPText.text = $"XP: {coloredXP}";
-        }
+
+        if (winXPText != null) { try { winXPText.text = string.Format(format, coloredXP); } catch { winXPText.text = $"{coloredXP} XP"; } }
+        if (xpPreviewText != null) { try { xpPreviewText.text = string.Format(format, coloredXP); } catch { xpPreviewText.text = $"{coloredXP} XP"; } }
     }
 
     // --- MENU AND EXIT LOGIC (CORRECTED) ---
 
     public void OnMenuClicked()
     {
-        if ((winPanel != null && winPanel.activeSelf) || (defeatPanel != null && defeatPanel.activeSelf))
+        PlayClickSound();
+
+        // ---> ЗАСТАВЛЯЕМ ВСЕ ПАНЕЛИ ЗАДАНИЙ МГНОВЕННО УЛЕТЕТЬ <---
+        InGameQuestNotification.Instance?.ForceCloseAll();
+
+        // 1. Если мы на экране победы - выходим в меню мгновенно (и запускаем красивую анимацию улета)
+        if (winPanel != null && winPanel.activeSelf)
         {
             OnConfirmExitClicked();
             return;
         }
 
         bool needConfirmation = false;
-        if (activeGameMode != null && activeGameMode.IsMatchInProgress())
+
+        // 2. Проверяем, нужно ли показать окно подтверждения выхода
+        if (defeatPanel != null && defeatPanel.activeSelf)
         {
+            // Игрок на экране поражения, но хочет выйти -> сдается
+            needConfirmation = true;
+        }
+        else if (activeGameMode != null && activeGameMode.IsMatchInProgress() && !GameSettings.IsTutorialMode)
+        {
+            // Обычная игра (не туториал), и игрок уже сделал хотя бы один ход -> сдается
             int moves = (StatisticsManager.Instance != null) ? StatisticsManager.Instance.GetCurrentMoves() : 0;
             if (moves > 0) needConfirmation = true;
         }
 
-        // 1. Игрок нажал Меню -> Прячем только текстовую панель влево
-        if (activeGameMode is KlondikeModeManager klondikeMode && klondikeMode.tutorialManager != null)
-        {
-            klondikeMode.tutorialManager.HidePanelToLeft();
-        }
+        // Прячем текстовую панель туториала влево (если она была)
+        activeGameMode?.Tutorial?.HidePanelToLeft();
 
+        // Показываем панель подтверждения выхода, если требуется
         if (needConfirmation && exitConfirmationPanel != null)
         {
             TogglePanelAnimated(exitConfirmationPanel, true);
@@ -426,20 +640,44 @@ public class GameUIController : MonoBehaviour
 
     public void OnConfirmExitClicked()
     {
+        PlayClickSound();
+
+        // --- ФИКС: Железобетонно прячем панель туториала при любом выходе ---
+        activeGameMode?.Tutorial?.HidePanelToLeft();
+
         // Скрываем панель подтверждения (если была)
         if (exitConfirmationPanel != null && exitConfirmationPanel.activeSelf)
             TogglePanelAnimated(exitConfirmationPanel, false);
 
-        // --- НОВАЯ ЛОГИКА: Если открыта панель победы, сначала анимируем уход ---
+        // --- НОВАЯ ЛОГИКА: Проверяем, какая панель открыта, и анимируем её улет ---
         if (winPanel != null && winPanel.activeSelf)
         {
             StartCoroutine(ExitMenuSequenceWithAnimation());
         }
+        else if (defeatPanel != null && defeatPanel.activeSelf)
+        {
+            // [ИСПРАВЛЕНИЕ БАГА] Анимируем улет панели поражения
+            StartCoroutine(DefeatExitSequenceWithAnimation());
+        }
         else
         {
-            // Стандартный выход (без анимации UI победы)
+            // Стандартный выход
             PerformSceneExit();
         }
+    }
+    private IEnumerator DefeatExitSequenceWithAnimation()
+    {
+        // Скрываем панель с анимацией
+        if (defeatPanel != null)
+        {
+            TogglePanelAnimated(defeatPanel, false);
+        }
+
+        // Ждем 0.3 секунды (время вашей анимации AnimatePanelRoutine)
+        yield return new WaitForSeconds(0.3f);
+
+        // Выходим в меню
+        PerformSceneExit();
     }
     private IEnumerator ExitMenuSequenceWithAnimation()
     {
@@ -500,11 +738,8 @@ public class GameUIController : MonoBehaviour
             else DealCacheSystem.Instance.ReturnActiveDealToQueue();
         }
 
-        // 3. Игрок реально выходит -> Отправляем хайлайты в космос
-        if (activeGameMode is KlondikeModeManager klondikeMode && klondikeMode.tutorialManager != null)
-        {
-            klondikeMode.tutorialManager.HideHighlights();
-        }
+        // 3. Игрок реально выходит -> Отправляем хайлайты в космос и чистим туториал
+        activeGameMode?.Tutorial?.HideHighlights();
 
         if (exitAnimator != null)
         {
@@ -520,52 +755,59 @@ public class GameUIController : MonoBehaviour
 
     public void OnCancelExitClicked()
     {
+        PlayClickSound();
         if (exitConfirmationPanel != null) TogglePanelAnimated(exitConfirmationPanel, false);
 
-        // 2. Игрок нажал "Нет" -> Возвращаем текстовую панель обратно
-        if (activeGameMode is KlondikeModeManager klondikeMode && klondikeMode.tutorialManager != null)
-        {
-            klondikeMode.tutorialManager.RestorePanelPosition();
-        }
+        // 2. Игрок нажал "Нет" -> Возвращаем текстовую панель туториала обратно
+        activeGameMode?.Tutorial?.RestorePanelPosition();
     }
 
     // --- NEW GAME LOGIC (CORRECTED) ---
 
     public void OnNewGameClicked()
     {
-        // Убираем разделение логики. 
-        // Неважно, победа сейчас или пауза — мы всегда запускаем один и тот же процесс подтверждения.
+        PlayClickSound();
 
-        // Если панель подтверждения уже назначена и мы НЕ на экране победы/поражения, показываем её.
-        bool isWinState = (winPanel != null && winPanel.activeSelf);
-        bool isDefeatState = (defeatPanel != null && defeatPanel.activeSelf);
+        // 1. Если панель победы активна - игра УЖЕ выиграна.
+        // Сразу начинаем новую игру без предупреждений о поражении.
+        if (winPanel != null && winPanel.activeSelf)
+        {
+            OnConfirmNewGameClicked();
+            return;
+        }
 
-        if (!isWinState && !isDefeatState && newGameConfirmationPanel != null)
+        // 2. Если игра идет ИЛИ мы на экране поражения - нужно подтверждение.
+        // Игрок еще может нажать Undo, поэтому предупреждаем его.
+        if (newGameConfirmationPanel != null)
         {
             TogglePanelAnimated(newGameConfirmationPanel, true);
         }
         else
         {
-            // Если мы уже выиграли/проиграли, подтверждение не нужно — сразу рестарт.
             OnConfirmNewGameClicked();
         }
     }
 
     public void OnNewGameSettingsClicked()
     {
+        PlayClickSound();
+
         // 1. Скрываем панель подтверждения новой игры
         if (newGameConfirmationPanel != null)
         {
             TogglePanelAnimated(newGameConfirmationPanel, false);
         }
 
-        // 2. Открываем панель настроек
-        // Этот метод (OnSettingsClicked) уже содержит проверку на повторное открытие 
-        // и инициализацию кнопок (SetupSettingsPanel)
-        OnSettingsClicked();
+        // 2. Открываем СПЕЦИАЛЬНУЮ панель настроек новой игры (NewGameSettingsPanel)
+        if (newGameSettingsPanel != null)
+        {
+            SetupNewGameSettingsPanel();
+            TogglePanelAnimated(newGameSettingsPanel, true);
+        }
     }
     public void OnConfirmNewGameClicked()
     {
+        PlayClickSound();
         GameSettings.IsTutorialMode = false; // [NEW] Сбрасываем туториал
 
         if (newGameConfirmationPanel != null && newGameConfirmationPanel.activeSelf)
@@ -629,23 +871,11 @@ public class GameUIController : MonoBehaviour
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
     }
-    // New helper method to distinguish between simple restart and scene reload
-    public void OnNewGameSettingsOptionClicked()
-    {
-        // Скрываем подтверждение
-        if (newGameConfirmationPanel != null) TogglePanelAnimated(newGameConfirmationPanel, false);
-
-        // Открываем специальную панель настроек для новой игры
-        if (newGameSettingsPanel != null)
-        {
-            SetupNewGameSettingsPanel();
-            TogglePanelAnimated(newGameSettingsPanel, true);
-        }
-    }
-
+    
     // 2. Вызывается кнопкой "НАЧАТЬ" (Start) в панели настроек новой игры
     public void OnNewGameStartClicked()
     {
+        PlayClickSound();
         GameSettings.IsTutorialMode = false; // [NEW] Сбрасываем туториал
 
         if (newGameSettingsPanel != null) TogglePanelAnimated(newGameSettingsPanel, false);
@@ -655,6 +885,7 @@ public class GameUIController : MonoBehaviour
     // 3. Вызывается кнопкой "Закрыть/Крестик" в панели настроек новой игры (Отмена)
     public void OnCloseNewGameSettingsClicked()
     {
+        PlayClickSound();
         if (newGameSettingsPanel != null) TogglePanelAnimated(newGameSettingsPanel, false);
     }
 
@@ -664,63 +895,101 @@ public class GameUIController : MonoBehaviour
     {
         if (activeGameMode == null) return;
         GameType type = activeGameMode.GameType;
-        bool isKlondike = (type == GameType.Klondike);
 
-        // Включаем нужные контейнеры
-        if (newGameSettingsDrawContainer) newGameSettingsDrawContainer.SetActive(isKlondike);
+        if (newGameSettingsDrawContainer) newGameSettingsDrawContainer.SetActive(type == GameType.Klondike);
+        if (newGameSettingsSuitContainer) newGameSettingsSuitContainer.SetActive(type == GameType.Spider);
+        if (newGameSettingsRoundsContainer) newGameSettingsRoundsContainer.SetActive(type == GameType.Pyramid || type == GameType.TriPeaks);
+        if (newGameSettingsYukonContainer) newGameSettingsYukonContainer.SetActive(type == GameType.Yukon);
+        if (newGameSettingsMonteCarloContainer) newGameSettingsMonteCarloContainer.SetActive(type == GameType.MonteCarlo);
+        if (newGameSettingsMontanaContainer) newGameSettingsMontanaContainer.SetActive(type == GameType.Montana);
+
         if (newGameSettingsDiffContainer) newGameSettingsDiffContainer.SetActive(true);
 
-        // Обновляем цвета кнопок и текст
+        // Ограничения для Паука
+        if (type == GameType.Spider) ValidateSpiderConstraints(GameSettings.SpiderSuitCount, newGameSettingsDiffButtons);
+        else EnableAllDifficulties(newGameSettingsDiffButtons);
+
         UpdateNewGameSettingsVisuals();
         UpdateNewGameXPPreview();
     }
 
     private void UpdateNewGameSettingsVisuals()
     {
-        // Сложность
         int diffIndex = (int)GameSettings.CurrentDifficulty;
         for (int i = 0; i < newGameSettingsDiffButtons.Length; i++)
         {
             if (newGameSettingsDiffButtons[i] != null)
-                SetButtonState(newGameSettingsDiffButtons[i], i == diffIndex);
+            {
+                if (!newGameSettingsDiffButtons[i].interactable) newGameSettingsDiffButtons[i].image.color = buttonDisabledColor;
+                else SetButtonState(newGameSettingsDiffButtons[i], i == diffIndex);
+            }
         }
 
-        // Режим раздачи (Klondike)
-        if (newGameSettingsDrawButtons.Length >= 2)
+        if (newGameSettingsDrawButtons != null && newGameSettingsDrawButtons.Length >= 2)
         {
             SetButtonState(newGameSettingsDrawButtons[0], GameSettings.KlondikeDrawCount == 1);
             SetButtonState(newGameSettingsDrawButtons[1], GameSettings.KlondikeDrawCount == 3);
         }
+        if (newGameSettingsSuitButtons != null && newGameSettingsSuitButtons.Length >= 3)
+        {
+            SetButtonState(newGameSettingsSuitButtons[0], GameSettings.SpiderSuitCount == 1);
+            SetButtonState(newGameSettingsSuitButtons[1], GameSettings.SpiderSuitCount == 2);
+            SetButtonState(newGameSettingsSuitButtons[2], GameSettings.SpiderSuitCount == 4);
+        }
+        if (newGameSettingsRoundsButtons != null && newGameSettingsRoundsButtons.Length >= 3)
+        {
+            SetButtonState(newGameSettingsRoundsButtons[0], GameSettings.RoundsCount == 1);
+            SetButtonState(newGameSettingsRoundsButtons[1], GameSettings.RoundsCount == 2);
+            SetButtonState(newGameSettingsRoundsButtons[2], GameSettings.RoundsCount == 3);
+        }
+
+        SetButtonState(newGameSettingsYukonClassicBtn, !GameSettings.YukonRussian);
+        SetButtonState(newGameSettingsYukonRussianBtn, GameSettings.YukonRussian);
+        SetButtonState(newGameSettingsMonteCarlo8Btn, !GameSettings.MonteCarlo4Ways);
+        SetButtonState(newGameSettingsMonteCarlo4Btn, GameSettings.MonteCarlo4Ways);
+        SetButtonState(newGameSettingsMontanaClassicBtn, !GameSettings.MontanaHard);
+        SetButtonState(newGameSettingsMontanaHardBtn, GameSettings.MontanaHard);
     }
 
     private void UpdateNewGameXPPreview()
     {
         if (newGameXPPreviewText == null || activeGameMode == null) return;
 
-        string variant = (activeGameMode.GameType == GameType.Klondike && GameSettings.KlondikeDrawCount == 3) ? "draw3" : "draw1";
+        string variant = GameSettings.GetCurrentVariantString(activeGameMode.GameType);
 
         int currentLvl = 1;
+        bool isPremium = false;
+
+        // ---> ИСПРАВЛЕНИЕ УРОВНЯ И ПРЕМИУМА <---
         if (StatisticsManager.Instance != null)
         {
             var data = StatisticsManager.Instance.GetGameGlobalStats(activeGameMode.GameName);
             if (data != null) currentLvl = data.currentLevel;
+            isPremium = StatisticsManager.Instance.IsUserPremium;
         }
 
-        int xpAmount = LevelingUtils.CalculateXP(activeGameMode.GameType, currentLvl, GameSettings.CurrentDifficulty, variant, false);
+        int xpAmount = LevelingUtils.CalculateXP(activeGameMode.GameType, currentLvl, GameSettings.CurrentDifficulty, variant, isPremium);
+
+        // ---> ИНТЕГРАЦИЯ БУСТЕРА Х2 <---
+        if (QuestManager.Instance != null && System.Enum.TryParse(activeGameMode.GameType.ToString(), out QuestCategory cat))
+        {
+            if (QuestManager.Instance.HasActiveXpBuff(cat))
+            {
+                xpAmount *= 2;
+            }
+        }
+        // ------------------------------
+
         string coloredXP = $"<color=#FFC400>{xpAmount}</color>";
 
-        // Используем тот же ключ локализации или формат
         if (LocalizationManager.instance != null && LocalizationManager.instance.IsReady())
         {
-            string format = LocalizationManager.instance.GetLocalizedValue(xpPreviewLocKey); // "You will get {0} XP"
+            string format = LocalizationManager.instance.GetLocalizedValue(xpPreviewLocKey);
             if (string.IsNullOrEmpty(format)) format = "{0} XP";
             try { newGameXPPreviewText.text = string.Format(format, coloredXP); }
             catch { newGameXPPreviewText.text = $"{coloredXP} XP"; }
         }
-        else
-        {
-            newGameXPPreviewText.text = $"XP: {coloredXP}";
-        }
+        else newGameXPPreviewText.text = $"XP: {coloredXP}";
     }
 
     // --- ОБРАБОТЧИКИ КЛИКОВ ДЛЯ НОВОЙ ПАНЕЛИ ---
@@ -728,6 +997,8 @@ public class GameUIController : MonoBehaviour
 
     public void OnNewGameSettingsDiffClicked(int diffIndex)
     {
+        if (newGameSettingsDiffButtons != null && diffIndex < newGameSettingsDiffButtons.Length && !newGameSettingsDiffButtons[diffIndex].interactable) return;
+        PlayClickSound();
         GameSettings.CurrentDifficulty = (Difficulty)diffIndex;
         UpdateNewGameSettingsVisuals();
         UpdateNewGameXPPreview();
@@ -735,6 +1006,7 @@ public class GameUIController : MonoBehaviour
 
     public void OnNewGameSettingsDrawClicked(int drawCount)
     {
+        PlayClickSound();
         GameSettings.KlondikeDrawCount = drawCount;
         UpdateNewGameSettingsVisuals();
         UpdateNewGameXPPreview();
@@ -769,7 +1041,10 @@ public class GameUIController : MonoBehaviour
 
         Vector2 startPos = card.anchoredPosition;
         Vector2 targetPos = winCardDefaultPos + new Vector2(1500f, 0f); // Улетает вправо
-
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySound("Card_Whoosh_Out");
+        }
         float duration = 0.4f;
         float elapsed = 0f;
 
@@ -789,6 +1064,7 @@ public class GameUIController : MonoBehaviour
     }
     public void OnCancelNewGameClicked()
     {
+        PlayClickSound();
         if (newGameConfirmationPanel != null) TogglePanelAnimated(newGameConfirmationPanel, false);
     }
 
@@ -802,7 +1078,10 @@ public class GameUIController : MonoBehaviour
 
         // На всякий случай еще раз ставим позицию (дублирование не повредит)
         card.anchoredPosition = startPos;
-
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySound("Card_Whoosh_Out");
+        }
         float duration = 0.5f;
         float elapsed = 0f;
 
@@ -832,7 +1111,6 @@ public class GameUIController : MonoBehaviour
         {
             string diffKey = "DiffMedium";
 
-            // --- ИЗМЕНЕНИЕ: Проверяем, был ли это туториал ---
             if (GameSettings.IsTutorialMode)
             {
                 diffKey = "tutorial";
@@ -851,12 +1129,10 @@ public class GameUIController : MonoBehaviour
                 winDifficultyText.text = LocalizationManager.instance.GetLocalizedValue(diffKey);
             else
             {
-                // Fallback, если локализация не загрузилась
                 winDifficultyText.text = GameSettings.IsTutorialMode ? "Обучение" : GameSettings.CurrentDifficulty.ToString();
             }
         }
 
-        // --- ЧТЕНИЕ ФЛАГОВ РЕКОРДОВ ИЗ STATISTICS MANAGER ---
         bool isNewScoreRecord = false;
         bool isNewMovesRecord = false;
         bool isNewTimeRecord = false;
@@ -872,7 +1148,6 @@ public class GameUIController : MonoBehaviour
         if (activeGameMode != null && winScoreText)
         {
             int finalScore = GetScoreFromGameMode();
-            // Форматируем текст с проверкой на рекорд
             winScoreText.text = GetRecordText(finalScore.ToString(), isNewScoreRecord);
         }
 
@@ -889,10 +1164,9 @@ public class GameUIController : MonoBehaviour
             if (winEarnedXPText)
             {
                 int earned = StatisticsManager.Instance.LastXPGained;
-                winEarnedXPText.text = $"<color=#FFC400>{earned}</color> опыта";
+                winEarnedXPText.text = $"<color=#FFC400>{earned}</color>";
             }
         }
-
         // 5. Визуал карты 
         if (winLevelBar != null && StatisticsManager.Instance != null)
         {
@@ -900,11 +1174,37 @@ public class GameUIController : MonoBehaviour
             StatData data = StatisticsManager.Instance.GetGameGlobalStats(gameName);
             if (data != null)
             {
-                int displayLevel = data.currentLevel;
+                int currentXP = data.currentXP;
                 int xpGained = StatisticsManager.Instance.LastXPGained;
-                if (data.currentXP - xpGained < 0) displayLevel = Mathf.Max(1, displayLevel - 1);
+                int startXP = currentXP - xpGained;
 
-                winLevelBar.UpdateBar(displayLevel, 0, 100);
+                if (startXP < 0) // Если произошел Level Up
+                {
+                    int oldLevel = Mathf.Max(1, data.currentLevel - 1);
+                    int oldTarget = oldLevel * 500;
+                    int oldXPStart = oldTarget + startXP;
+                    winLevelBar.UpdateBar(oldLevel, oldXPStart, oldTarget);
+                }
+                else // Обычное начисление опыта
+                {
+                    int targetXP = data.xpForNextLevel > 0 ? data.xpForNextLevel : 500;
+                    winLevelBar.UpdateBar(data.currentLevel, startXP, targetXP);
+                }
+            }
+        }
+        // --- 6. ПЕРЕКЛЮЧЕНИЕ КНОПОК НАВИГАЦИИ (ОБЫЧНАЯ ИГРА vs ТУТОРИАЛ) ---
+        bool isTutorial = GameSettings.IsTutorialMode;
+
+        if (tutorialBigMenuButton != null)
+        {
+            tutorialBigMenuButton.SetActive(isTutorial);
+        }
+
+        if (standardWinButtons != null)
+        {
+            foreach (var btnObj in standardWinButtons)
+            {
+                if (btnObj != null) btnObj.SetActive(!isTutorial);
             }
         }
     }
@@ -948,6 +1248,7 @@ public class GameUIController : MonoBehaviour
         }
         return finalScore;
     }
+   
     private IEnumerator AnimateXPBarDelayed()
     {
         yield return new WaitForSeconds(0.6f);
@@ -962,21 +1263,100 @@ public class GameUIController : MonoBehaviour
                 int startXP = currentXP - xpGained;
                 int targetXP = data.xpForNextLevel > 0 ? data.xpForNextLevel : 500;
 
-                if (startXP < 0) // Level Up
+                if (startXP < 0) // ВЕТКА ПОЛУЧЕНИЯ НОВОГО УРОВНЯ (Level Up)
                 {
                     int oldLevel = Mathf.Max(1, data.currentLevel - 1);
                     int oldTarget = oldLevel * 500;
                     int oldXPStart = oldTarget + startXP;
-                    winLevelBar.AnimateLevelUp(oldLevel, oldXPStart, oldTarget, data.currentLevel, currentXP, targetXP);
+
+                    // Передаем управление в нашу красивую анимацию
+                    StartCoroutine(CardLevelUpSequence(data, oldLevel, oldXPStart, oldTarget, currentXP, targetXP));
                 }
-                else
+                else // ВЕТКА ОБЫЧНОГО ЗАПОЛНЕНИЯ (XP Gain)
                 {
+                    // <--- ДИНАМИЧЕСКИЙ ЗВУК ОПЫТА --->
+                    // Предполагаем, что стандартная анимация бара длится около 1 секунды
+                    StartCoroutine(PlayDynamicXPSound(1.0f));
+
                     winLevelBar.AnimateBar(data.currentLevel, startXP, currentXP, targetXP);
                 }
             }
         }
     }
+    private IEnumerator CardLevelUpSequence(StatData data, int oldLevel, int oldXPStart, int oldTarget, int currentXP, int targetXP)
+    {
+        // --- 1. ФАЗА ЗАПОЛНЕНИЯ ДО 100% ---
+        // Запускаем динамический звук на 1.5 сек (время анимации бара)
+        StartCoroutine(PlayDynamicXPSound(1.5f));
 
+        winLevelBar.AnimateBar(oldLevel, oldXPStart, oldTarget, oldTarget);
+        yield return new WaitForSeconds(1.5f);
+
+        // --- 2. ФАЗА ТРАНСФОРМАЦИИ (Вращение 360) ---
+        if (AudioManager.Instance != null)
+        {
+            // Звук магического повышения уровня
+            AudioManager.Instance.PlaySound("Level_Up");
+            // Звук резкого вращения/взмаха карты
+            AudioManager.Instance.PlaySound("Card_Whoosh_In");
+        }
+
+        Vector3 originalScale = winCardRect.localScale;
+        Vector3 targetScale = originalScale * 1.25f;
+
+        float animDuration = 1.5f;
+        float elapsed = 0f;
+        float overshoot = 1.70158f;
+
+        while (elapsed < animDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = elapsed / animDuration;
+
+            float t_minus = t - 1f;
+            float easeRotate = 1f + (overshoot + 1f) * Mathf.Pow(t_minus, 3) + overshoot * Mathf.Pow(t_minus, 2);
+            float easeScale = 1f - Mathf.Pow(1f - t, 3);
+
+            winCardRect.localScale = Vector3.Lerp(originalScale, targetScale, easeScale);
+            winCardRect.localEulerAngles = new Vector3(0f, 0f, -360f * easeRotate);
+
+            yield return null;
+        }
+
+        winCardRect.localScale = targetScale;
+        winCardRect.localEulerAngles = Vector3.zero;
+
+        yield return new WaitForSeconds(0.3f);
+
+        // --- 5. ОБНУЛЕНИЕ ПОЛОСКИ ---
+        winLevelBar.AnimateBar(oldLevel, oldTarget, 0, oldTarget);
+        yield return new WaitForSeconds(0.4f);
+
+        // 6. ОБНОВЛЯЕМ ЦИФРУ УРОВНЯ 
+        winLevelBar.UpdateBar(data.currentLevel, 0, targetXP);
+
+        // 7. ВОЗВРАТ РАЗМЕРА КАРТЫ
+        float shrinkDuration = 0.6f;
+        elapsed = 0f;
+        while (elapsed < shrinkDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / shrinkDuration);
+            winCardRect.localScale = Vector3.Lerp(targetScale, originalScale, t);
+            yield return null;
+        }
+
+        winCardRect.localScale = originalScale;
+
+        // --- 8. ФИНАЛЬНОЕ ЗАПОЛНЕНИЕ НОВЫМ ОПЫТОМ ---
+        if (currentXP > 0)
+        {
+            // Запускаем динамический звук на 0.6 сек
+            StartCoroutine(PlayDynamicXPSound(0.6f));
+        }
+
+        winLevelBar.AnimateBar(data.currentLevel, 0, currentXP, targetXP);
+    }
     private string FormatTime(float timeInSeconds)
     {
         int minutes = Mathf.FloorToInt(timeInSeconds / 60F);
@@ -987,7 +1367,13 @@ public class GameUIController : MonoBehaviour
     private void TogglePanelAnimated(GameObject panel, bool show)
     {
         if (panel == null) return;
-
+        if (AudioManager.Instance != null)
+        {
+            if (show)
+                AudioManager.Instance.PlaySound("Panel_Slide_In");
+            else
+                AudioManager.Instance.PlaySound("Panel_Slide_Out");
+        }
         if (show)
         {
             panel.SetActive(true);
@@ -1037,8 +1423,155 @@ public class GameUIController : MonoBehaviour
     }
 
     private void HandleLevelUp(string context, int newLevel) { if (context == "Account" && globalLevelUpPopup) globalLevelUpPopup.ShowNotification(newLevel); }
-    public void OnStatisticsClicked() { if (statisticsPanel) TogglePanelAnimated(statisticsPanel, true); }
-    public void OnCloseStatisticsClicked() { if (statisticsPanel) TogglePanelAnimated(statisticsPanel, false); }
-    public void OnUndoOneClicked() { if (defeatPanel) defeatPanel.SetActive(false); if (activeGameMode != null) activeGameMode.IsInputAllowed = true; if (undoManager && undoManager.undoButton.interactable) undoManager.undoButton.onClick.Invoke(); }
-    public void OnUndoAllClicked() { if (defeatPanel) defeatPanel.SetActive(false); if (activeGameMode != null) activeGameMode.IsInputAllowed = true; if (undoManager && undoManager.undoAllButton.interactable) undoManager.undoAllButton.onClick.Invoke(); }
+    public void OnStatisticsClicked()
+    {
+        PlayClickSound();
+        if (activeGameMode == null) return;
+
+        bool isPremium = false;
+        if (StatisticsManager.Instance != null)
+        {
+            isPremium = StatisticsManager.Instance.IsUserPremium;
+        }
+
+        // Выбираем панель в зависимости от премиума
+        GameObject panelToShow = isPremium ? premiumStatisticsPanel : basicStatisticsPanel;
+
+        if (panelToShow != null)
+        {
+            // Передаем данные в скрипт ДО начала анимации
+            if (isPremium)
+            {
+                var statsUI = panelToShow.GetComponent<StatisticsUI>();
+                if (statsUI != null) statsUI.ShowStatsForGame(activeGameMode.GameType);
+            }
+            else
+            {
+                // Вызываем показ в базовой панели (предполагается, что скрипт называется BasicStatisticsUI)
+                var basicStatsUI = panelToShow.GetComponent<BasicStatisticsUI>();
+                if (basicStatsUI != null) basicStatsUI.ShowStatsForGame(activeGameMode.GameType);
+            }
+
+            TogglePanelAnimated(panelToShow, true);
+        }
+    }
+    public void OnCloseStatisticsClicked()
+    {
+        PlayClickSound();
+        // Закрываем любую открытую статистику с анимацией улета
+        if (basicStatisticsPanel != null && basicStatisticsPanel.activeSelf) TogglePanelAnimated(basicStatisticsPanel, false);
+        if (premiumStatisticsPanel != null && premiumStatisticsPanel.activeSelf) TogglePanelAnimated(premiumStatisticsPanel, false);
+    }
+    private void PlayClickSound()
+    {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("UI_Click");
+    }
+    private IEnumerator PlayDynamicXPSound(float duration, float delay = 0.05f)
+    {
+        // 1. Ждем крошечную долю секунды, чтобы UI-анимация точно успела начать движение
+        if (delay > 0f) yield return new WaitForSeconds(delay);
+
+        if (AudioManager.Instance == null) yield break;
+
+        AudioSource source = AudioManager.Instance.PlaySound("XP_Gain");
+        if (source == null) yield break;
+
+        float elapsed = 0f;
+        float baseVolume = source.volume;
+        float basePitch = source.pitch;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            source.pitch = basePitch + (t * 0.4f);
+
+            float speedFactor = 4f * t * (1f - t);
+
+            // 2. ИЗМЕНЕНО: Начинаем с 0.0f (полная тишина). 
+            // Звук будет плавно "выплывать" из нуля вместе с разгоном жидкости
+            source.volume = baseVolume * Mathf.Lerp(0.0f, 1.0f, speedFactor);
+
+            yield return null;
+        }
+
+        // Плавное затухание
+        float fadeOut = 0.2f;
+        float fadeElapsed = 0f;
+        while (fadeElapsed < fadeOut)
+        {
+            fadeElapsed += Time.unscaledDeltaTime;
+            source.volume = Mathf.Lerp(baseVolume * 0.3f, 0f, fadeElapsed / fadeOut);
+            yield return null;
+        }
+
+        source.Stop();
+
+        source.volume = baseVolume;
+        source.pitch = basePitch;
+    }
+    public void OnUndoOneClicked()
+    {
+        PlayClickSound();
+        if (AdManager.Instance != null)
+        {
+            AdManager.Instance.ShowRewarded("undo_one");
+        }
+        else
+        {
+            // Если AdManager нет на сцене (тест в редакторе), выполняем сразу
+            ExecuteUndoOne();
+        }
+    }
+    public void OnUndoAllClicked()
+    {
+        PlayClickSound();
+        if (AdManager.Instance != null)
+        {
+            AdManager.Instance.ShowRewarded("undo_all");
+        }
+        else
+        {
+            ExecuteUndoAll();
+        }
+    }
+    // --- РЕАЛЬНАЯ ЛОГИКА ОТМЕНЫ ---
+    // Вызывается автоматически из HandleRewardEarned после успешного просмотра
+    private void ExecuteUndoOne()
+    {
+        // Красивый улет панели поражения
+        if (defeatPanel != null && defeatPanel.activeSelf) TogglePanelAnimated(defeatPanel, false);
+
+        if (activeGameMode != null) activeGameMode.IsInputAllowed = true;
+
+        if (undoManager != null && undoManager.undoButton != null)
+        {
+            if (undoManager.undoButton.interactable) undoManager.undoButton.onClick.Invoke();
+        }
+        else if (activeGameMode != null)
+        {
+            activeGameMode.OnUndoAction();
+        }
+    }
+
+    private void ExecuteUndoAll()
+    {
+        // Красивый улет панели поражения
+        if (defeatPanel != null && defeatPanel.activeSelf) TogglePanelAnimated(defeatPanel, false);
+
+        if (activeGameMode != null) activeGameMode.IsInputAllowed = true;
+
+        if (undoManager != null && undoManager.undoAllButton != null)
+        {
+            if (undoManager.undoAllButton.interactable) undoManager.undoAllButton.onClick.Invoke();
+        }
+        else if (activeGameMode != null)
+        {
+            var type = activeGameMode.GetType();
+            var method = type.GetMethod("OnUndoAllAction");
+            if (method != null) method.Invoke(activeGameMode, null);
+        }
+    }
 }

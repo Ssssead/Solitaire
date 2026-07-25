@@ -7,12 +7,10 @@ public class YukonCardController : CardController, IBeginDragHandler, IDragHandl
 {
     private YukonModeManager _mode;
     private YukonAnimationService _animService;
+    private CardFactory _cardFactory;
     private Image _image;
     private CanvasGroup _localCanvasGroup;
 
-    // --- ИСПРАВЛЕНИЕ: СИНХРОНИЗАЦИЯ С CARDDATA ---
-    // Мы используем _internalFaceUp как кэш, но главным источником правды является CardData.
-    // Это важно, потому что TableauPile может перевернуть карту через CardData, минуя этот контроллер.
     private bool _internalFaceUp;
 
     public bool IsFaceUp
@@ -28,7 +26,6 @@ public class YukonCardController : CardController, IBeginDragHandler, IDragHandl
             _internalFaceUp = value;
         }
     }
-    // --------------------------------------------
 
     // Undo Data
     private Transform _originalParent;
@@ -50,6 +47,7 @@ public class YukonCardController : CardController, IBeginDragHandler, IDragHandl
     {
         _mode = FindObjectOfType<YukonModeManager>();
         _animService = FindObjectOfType<YukonAnimationService>();
+        _cardFactory = FindObjectOfType<CardFactory>();
 
         rectTransform = GetComponent<RectTransform>();
         _image = GetComponent<Image>();
@@ -76,50 +74,90 @@ public class YukonCardController : CardController, IBeginDragHandler, IDragHandl
     private void UpdateSprite()
     {
         var data = GetComponent<CardData>();
-        if (data) data.image.sprite = IsFaceUp ? (data.faceSprite ?? data.image.sprite) : data.backSprite;
+        if (data)
+        {
+            if (IsFaceUp)
+            {
+                data.image.sprite = data.faceSprite ?? data.image.sprite;
+            }
+            else
+            {
+                if (_cardFactory != null && _cardFactory.spriteDb != null)
+                {
+                    data.image.sprite = _cardFactory.spriteDb.GetCurrentBackSprite();
+                }
+                else
+                {
+                    data.image.sprite = data.backSprite;
+                }
+            }
+        }
     }
 
     public void SetFaceUp(bool value, bool instant = false)
     {
-        // 1. Обновляем локальное состояние
         IsFaceUp = value;
 
-        // 2. Обновляем CardData (ОБЯЗАТЕЛЬНО для синхронизации с базой)
         var data = GetComponent<CardData>();
         if (data != null)
         {
-            // Используем метод CardData, чтобы он тоже знал о состоянии
-            // Но аккуратно с анимацией, чтобы не двоилось
             data.SetFaceUp(value, false);
         }
 
-        // 3. Визуализация и анимация
         if (instant || _animService == null)
         {
             UpdateSprite();
         }
         else
         {
-            // Если состояние реально изменилось визуально - запускаем анимацию
-            // (Проверка нужна, чтобы не крутить уже открытую карту)
             StartCoroutine(_animService.AnimateFlip(this, value, UpdateSprite));
         }
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    private void SetStackRaycasts(bool state)
+    {
+        if (canvasGroup != null) canvasGroup.blocksRaycasts = state;
+
+        if (_draggedSubStack != null)
+        {
+            foreach (var child in _draggedSubStack)
+            {
+                if (child != null && child.canvasGroup != null)
+                {
+                    child.canvasGroup.blocksRaycasts = state;
+                }
+            }
+        }
+    }
+
+    public override void OnPointerClick(PointerEventData eventData)
     {
         if (_isAnimating) return;
         if (eventData.dragging) return;
-        if (eventData.clickCount == 2 && IsFaceUp) _mode.OnCardDoubleClicked(this);
+
+        // --- ИСПРАВЛЕНИЕ: Добавляем обработку одинарного клика! ---
+        if (eventData.clickCount == 1 && IsFaceUp)
+        {
+            // Отправляем сигнал одинарного клика в менеджер Юкона
+            _mode.OnCardClicked(this);
+        }
+        else if (eventData.clickCount == 2 && IsFaceUp)
+        {
+            // Отправляем сигнал двойного клика в менеджер Юкона
+            _mode.OnCardDoubleClicked(this);
+        }
     }
 
-    public void OnBeginDrag(PointerEventData eventData)
+    public override void OnBeginDrag(PointerEventData eventData)
     {
         if (_isAnimating) { eventData.pointerDrag = null; return; }
         if (_mode == null) _mode = FindObjectOfType<YukonModeManager>();
 
-        // Теперь IsFaceUp вернет true, если CardData.faceUp == true, даже если мы сами этого не меняли
         if (!_mode.IsInputAllowed || !IsFaceUp) { eventData.pointerDrag = null; return; }
+
+        // <--- ДОБАВЛЕН ЗВУК: Взятие карты --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_PickUp");
 
         _uiCamera = _mode.RootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _mode.RootCanvas.worldCamera;
         _dragLayer = _mode.DragLayer;
@@ -163,7 +201,7 @@ public class YukonCardController : CardController, IBeginDragHandler, IDragHandl
         if (_localCanvasGroup != null) _localCanvasGroup.blocksRaycasts = false;
     }
 
-    public void OnDrag(PointerEventData eventData)
+    public override void OnDrag(PointerEventData eventData)
     {
         Vector3 currentMouseWorldPos;
         if (RectTransformUtility.ScreenPointToWorldPointInRectangle(_dragLayer, eventData.position, _uiCamera, out currentMouseWorldPos))
@@ -172,7 +210,7 @@ public class YukonCardController : CardController, IBeginDragHandler, IDragHandl
         }
     }
 
-    public void OnEndDrag(PointerEventData eventData)
+    public override void OnEndDrag(PointerEventData eventData)
     {
         if (_localCanvasGroup != null) _localCanvasGroup.blocksRaycasts = true;
 
@@ -180,6 +218,7 @@ public class YukonCardController : CardController, IBeginDragHandler, IDragHandl
 
         if (target != null)
         {
+            // Звук успеха проиграется в AnimateToTarget, когда карта физически долетит до места
             Vector3 targetPos = Vector3.zero;
             if (target is YukonTableauPile tab) targetPos = tab.GetNextCardWorldPosition();
             else if (target is FoundationPile found) targetPos = found.transform.position;
@@ -188,6 +227,10 @@ public class YukonCardController : CardController, IBeginDragHandler, IDragHandl
         }
         else
         {
+            // <--- ДОБАВЛЕН ЗВУК: Ошибка при отпускании (мимо) --->
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Drop_Fail");
+
             AnimateReturn();
         }
     }
@@ -204,10 +247,27 @@ public class YukonCardController : CardController, IBeginDragHandler, IDragHandl
     public void AnimateToTarget(ICardContainer target, Vector3 worldPos)
     {
         _isAnimating = true;
+        SetStackRaycasts(false);
+        SetContainerRaycasts(target, false);
+
         StartCoroutine(_animService.AnimateCard(transform, worldPos, () =>
         {
+            // <--- ДОБАВЛЕН ЗВУК: Успешное приземление (на стол или в дом) --->
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySound("Card_Drop_Success");
+                if (target is FoundationPile)
+                {
+                    AudioManager.Instance.PlaySound("Card_Foundation_Success");
+                }
+            }
+
+            SetStackRaycasts(true);
+
             target.AcceptCard(this);
             _mode.OnCardDroppedToContainer(this, target);
+
+            SetContainerRaycasts(target, true);
             _isAnimating = false;
         }));
     }
@@ -215,11 +275,26 @@ public class YukonCardController : CardController, IBeginDragHandler, IDragHandl
     private void AnimateReturn()
     {
         _isAnimating = true;
+        SetStackRaycasts(false);
+        SetContainerRaycasts(SourceContainer, false);
+
         StartCoroutine(_animService.AnimateCard(transform, _originalWorldPos, () =>
         {
+            SetStackRaycasts(true);
             RestoreHierarchy();
+            SetContainerRaycasts(SourceContainer, true);
             _isAnimating = false;
         }));
+    }
+
+    private void SetContainerRaycasts(ICardContainer container, bool state)
+    {
+        if (container is MonoBehaviour mb)
+        {
+            var cg = mb.GetComponent<CanvasGroup>();
+            if (cg == null) cg = mb.gameObject.AddComponent<CanvasGroup>();
+            cg.blocksRaycasts = state;
+        }
     }
 
     private void RestoreHierarchy()

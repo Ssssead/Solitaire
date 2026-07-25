@@ -12,11 +12,21 @@ public class MontanaDeckManager : MonoBehaviour
     [Header("Intro Settings")]
     public MontanaIntroController introController;
 
+    [HideInInspector] public bool isSkippingIntro = false;
+
     public void Initialize(MontanaModeManager mode, CardFactory factory, MontanaPileManager piles)
     {
         modeManager = mode;
         cardFactory = factory;
         pileManager = piles;
+    }
+
+    private void Update()
+    {
+        if (!modeManager.IsInputAllowed && (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)))
+        {
+            isSkippingIntro = true;
+        }
     }
 
     public void DealInitial()
@@ -26,8 +36,22 @@ public class MontanaDeckManager : MonoBehaviour
 
     private IEnumerator DealRoutine()
     {
+        isSkippingIntro = false;
         modeManager.IsInputAllowed = false;
         pileManager.ClearAllPiles();
+
+        // === ИНТЕГРАЦИЯ ТУТОРИАЛА ===
+        if (GameSettings.IsTutorialMode && modeManager.Tutorial != null)
+        {
+            var tutorial = modeManager.Tutorial as MontanaTutorialManager;
+            if (tutorial != null)
+            {
+                tutorial.enabled = true; // Принудительно включаем скрипт
+                yield return StartCoroutine(tutorial.PlayTutorialIntro());
+                yield break; // Останавливаем обычную генерацию карт!
+            }
+        }
+        // ==============================
 
         if (DealCacheSystem.Instance == null) yield break;
         while (!DealCacheSystem.Instance.IsReady) yield return null;
@@ -38,18 +62,18 @@ public class MontanaDeckManager : MonoBehaviour
         Deal deal = DealCacheSystem.Instance.GetDeal(modeManager.GameType, diff, param);
         if (deal == null) yield break;
 
-        // --- ИЗМЕНЕНИЯ ЗДЕСЬ: Передаем флаг isRestarting ---
+        // Расшифровываем сид из колоды
+        modeManager.puzzleManager.InitializeFromStock(deal.stock, diff, modeManager.MaxReshuffles);
+
         if (introController != null)
         {
             introController.PrepareIntro(modeManager.isRestarting);
             yield return StartCoroutine(introController.PlayIntroSequence(modeManager.isRestarting));
         }
 
-        // 2. ВЛЕТ СТОПКИ В SLOT0
         MontanaSlot slot0 = pileManager.GetSlot(0, 0);
         Vector3 targetStackPos = slot0.Transform.position;
 
-        // --- ИСПРАВЛЕНИЕ 1: Учитываем масштаб Canvas, чтобы отступ был правильным на любых экранах ---
         float canvasScale = modeManager.rootCanvas.transform.localScale.x;
         Vector3 startStackPos = targetStackPos + new Vector3(-1500f * canvasScale, 0, 0);
 
@@ -63,7 +87,6 @@ public class MontanaDeckManager : MonoBehaviour
                 var inst = deal.tableau[i][0];
                 Vector3 cardOffset = new Vector3(-i * 1f * canvasScale, 0, 0);
 
-                // --- ИСПРАВЛЕНИЕ 2: Создаем карты СРАЗУ за экраном, чтобы не было "вспышки" по центру ---
                 var card = cardFactory.CreateCard(inst.Card, modeManager.DragLayer, Vector2.zero);
                 card.transform.position = startStackPos + cardOffset;
 
@@ -74,14 +97,16 @@ public class MontanaDeckManager : MonoBehaviour
             }
         }
 
-        // --- ИСПРАВЛЕНИЕ 3: Увеличиваем время полета (с 0.55 до 0.85 секунд) ---
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySoundWithAutoFade("Card_Whoosh_In", 0.85f, 0.2f);
+
         float flyDuration = 0.85f;
         float elapsed = 0f;
         while (elapsed < flyDuration)
         {
-            elapsed += Time.deltaTime;
-            float t = elapsed / flyDuration;
-            // Используем формулу SmoothStep для плавного разгона и красивого торможения в конце
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(elapsed / flyDuration);
             float easedT = t * t * (3f - 2f * t);
 
             for (int i = 0; i < cardsToDeal.Count; i++)
@@ -92,26 +117,22 @@ public class MontanaDeckManager : MonoBehaviour
             yield return null;
         }
 
-        // Жесткая фиксация в slot0
         for (int i = 0; i < cardsToDeal.Count; i++)
         {
             cardsToDeal[i].transform.position = targetStackPos + new Vector3(i * 1f * canvasScale, 0, 0);
         }
 
-        yield return new WaitForSeconds(0.15f); // Короткая пауза перед разлетом
+        yield return StartCoroutine(SkippableWait(0.15f));
 
-        // 3. РАЗЛЕТ КАРТ В СВОИ СЛОТЫ (начиная с 56/55 слота)
-        float dealSpeed = 0.02f; // Задержка (в сек) между вылетом следующей карты
-        float cardMoveDuration = 0.22f; // Время полета одной карты
+        float dealSpeed = 0.02f;
+        float cardMoveDuration = 0.22f;
 
-        // Перебираем массив с конца (снимаем верхние карты стопки)
         for (int i = cardsToDeal.Count - 1; i >= 0; i--)
         {
             var card = cardsToDeal[i];
             int slotIndex = targetSlotIndices[i];
             var targetSlot = pileManager.Slots[slotIndex];
 
-            // Карта для slot0 уже на месте, просто закрепляем её
             if (slotIndex == 0)
             {
                 targetSlot.AcceptCard(card);
@@ -120,12 +141,12 @@ public class MontanaDeckManager : MonoBehaviour
             else
             {
                 StartCoroutine(MoveCardToSlotRoutine(card, targetSlot, cardMoveDuration));
-                yield return new WaitForSeconds(dealSpeed);
+                yield return StartCoroutine(SkippableWait(dealSpeed));
             }
         }
 
-        // Ждем, пока последняя вылетевшая карта долетит до своего места
-        yield return new WaitForSeconds(cardMoveDuration);
+        yield return StartCoroutine(SkippableWait(cardMoveDuration));
+
         modeManager.SaveInitialState();
         modeManager.IsInputAllowed = true;
         modeManager.isRestarting = false;
@@ -134,14 +155,17 @@ public class MontanaDeckManager : MonoBehaviour
 
     private IEnumerator MoveCardToSlotRoutine(CardController card, MontanaSlot targetSlot, float duration)
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Deal");
+
         Vector3 startPos = card.transform.position;
         Vector3 endPos = targetSlot.Transform.position;
         float elapsed = 0f;
 
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            float t = elapsed / duration;
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(elapsed / duration);
             float easedT = t * t * (3f - 2f * t);
 
             card.transform.position = Vector3.Lerp(startPos, endPos, easedT);
@@ -151,19 +175,42 @@ public class MontanaDeckManager : MonoBehaviour
         card.transform.position = endPos;
         targetSlot.AcceptCard(card);
 
-        // Снимаем статус анимации, чтобы карту снова можно было брать
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Drop_Success");
+
         card.GetComponent<MontanaCardController>()?.SetAnimating(false);
         modeManager.RegisterCardEvents(card);
     }
 
-    // --- Метод ReshuffleRoutine оставляем без изменений (из прошлого шага) ---
+    private IEnumerator SkippableWait(float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            yield return null;
+        }
+    }
+
     public IEnumerator ReshuffleRoutine()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+
+        isSkippingIntro = false;
         modeManager.IsInputAllowed = false;
+
+        // Делаем снимок стола ДО пересдачи, чтобы её можно было отменить
+        var preReshuffleState = new Dictionary<CardController, MontanaSlot>();
+        foreach (var slot in pileManager.Slots)
+        {
+            var topCard = slot.GetTopCard();
+            if (topCard != null) preReshuffleState[topCard] = slot;
+        }
+        modeManager.PushReshuffleRecord(preReshuffleState);
+
         List<CardController> cardsToShuffle = new List<CardController>();
         List<MontanaSlot> slotsForShuffle = new List<MontanaSlot>();
 
-        // 1. Ищем, какие карты нужно перетасовать и какие слоты заполнить
         for (int r = 0; r < 4; r++)
         {
             int validLength = 0;
@@ -211,9 +258,30 @@ public class MontanaDeckManager : MonoBehaviour
             yield break;
         }
 
-        // 2. Тасуем логически
-        System.Random rng = new System.Random();
-        cardsToShuffle = cardsToShuffle.OrderBy(x => rng.Next()).ToList();
+        // ========================================================
+        // НОВАЯ СИСТЕМА: Запрашиваем веса у Оракула
+        // ========================================================
+        bool isWinningRoll;
+        Difficulty diff = GameSettings.CurrentDifficulty;
+
+        Dictionary<string, int> stableWeights = modeManager.puzzleManager.GetReshuffleWeights(
+            pileManager,
+            modeManager.MaxReshuffles,
+            modeManager.CurrentReshufflesLeft, // Передается уже уменьшенное значение (R)
+            diff,
+            modeManager.IsHardMode,
+            out isWinningRoll
+        );
+
+        if (AudioManager.Instance != null)
+        {
+            // Подсказка эхолота: успех или тупик
+            AudioManager.Instance.PlaySound(isWinningRoll ? "Card_Foundation_Success" : "Card_Drop_Fail");
+        }
+
+        // Сортировка карт по полученным весам
+        cardsToShuffle = cardsToShuffle.OrderBy(c => stableWeights[$"{c.cardModel.suit}_{c.cardModel.rank}"]).ToList();
+        // ========================================================
 
         foreach (var c in cardsToShuffle)
         {
@@ -224,9 +292,11 @@ public class MontanaDeckManager : MonoBehaviour
             c.GetComponent<MontanaCardController>()?.SetAnimating(true);
         }
 
-        yield return new WaitForSeconds(0.1f);
+        yield return StartCoroutine(SkippableWait(0.1f));
 
-        // --- ФАЗА АНИМАЦИИ 1: Слет в 55 слот (правый нижний угол) ---
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySoundWithAutoFade("Card_Whoosh_In", 0.4f, 0.1f);
+
         Vector3 gatherPos = pileManager.Slots[55].Transform.position;
         float gatherDuration = 0.4f;
         float gatherElapsed = 0f;
@@ -234,9 +304,10 @@ public class MontanaDeckManager : MonoBehaviour
 
         while (gatherElapsed < gatherDuration)
         {
-            gatherElapsed += Time.deltaTime;
-            float t = gatherElapsed / gatherDuration;
-            t = t * t * (3f - 2f * t); // Плавное торможение
+            float speed = isSkippingIntro ? 15f : 1f;
+            gatherElapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(gatherElapsed / gatherDuration);
+            t = t * t * (3f - 2f * t);
 
             for (int i = 0; i < cardsToShuffle.Count; i++)
             {
@@ -247,25 +318,21 @@ public class MontanaDeckManager : MonoBehaviour
 
         foreach (var c in cardsToShuffle) c.transform.position = gatherPos;
 
-        // Небольшая пауза, пока карты лежат стопкой
-        yield return new WaitForSeconds(0.2f);
+        yield return StartCoroutine(SkippableWait(0.2f));
 
-        // --- ФАЗА АНИМАЦИИ 2: Раздача из 55 слота на новые места ---
-        float dealSpeed = 0.02f; // Скорость пулеметной очереди
-        float cardMoveDuration = 0.25f; // Время полета одной карты
+        float dealSpeed = 0.02f;
+        float cardMoveDuration = 0.25f;
 
         for (int i = 0; i < cardsToShuffle.Count; i++)
         {
             var card = cardsToShuffle[i];
             var targetSlot = slotsForShuffle[i];
 
-            // Выпускаем карты по одной с задержкой
             StartCoroutine(MoveCardToSlotRoutine(card, targetSlot, cardMoveDuration));
-            yield return new WaitForSeconds(dealSpeed);
+            yield return StartCoroutine(SkippableWait(dealSpeed));
         }
 
-        // Ждем приземления последней карты
-        yield return new WaitForSeconds(cardMoveDuration);
+        yield return StartCoroutine(SkippableWait(cardMoveDuration));
 
         modeManager.IsInputAllowed = true;
         modeManager.CheckGameState();

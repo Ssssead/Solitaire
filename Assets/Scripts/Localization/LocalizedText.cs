@@ -29,11 +29,26 @@ public class LocalizedText : MonoBehaviour
             return;
         }
 
+        // --- ФИКС БАГА МАТЕРИАЛА: Запоминаем кастомный пресет, выбранный в инспекторе ---
+        Material customPresetMaterial = null;
+        if (tmpText != null)
+        {
+            customPresetMaterial = tmpText.fontSharedMaterial;
+        }
+        // -------------------------------------------------------------------------------
+
         // Если LocalizationManager уже присутствует — просим его применить шрифт к этому TMP (инкрементально)
         if (tmpText != null && LocalizationManager.instance != null)
         {
             LocalizationManager.instance.ApplyFontToTMPIfNeeded(tmpText);
         }
+
+        // --- ВОССТАНАВЛИВАЕМ ПРЕСЕТ: Возвращаем обводку/тени обратно на текст ---
+        if (tmpText != null && customPresetMaterial != null)
+        {
+            tmpText.fontSharedMaterial = customPresetMaterial;
+        }
+        // -------------------------------------------------------------------------------
     }
 
     private void Start()
@@ -77,8 +92,9 @@ public class LocalizedText : MonoBehaviour
 
         tmpText.font = newFont;
         if (newFont.material != null)
-            tmpText.fontSharedMaterial = newFont.material;
-        tmpText.SetAllDirty();
-        tmpText.ForceMeshUpdate(true, true);
+        {
+            // Здесь при необходимости можно было бы расширить логику, 
+            // но для Awake фикса выше более чем достаточно.
+        }
     }
 }

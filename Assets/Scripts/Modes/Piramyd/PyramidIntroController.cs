@@ -88,6 +88,10 @@ public class PyramidIntroController : MonoBehaviour, IIntroController
     {
         yield return StartCoroutine(SkippableWait(startDelay));
 
+        // <--- ЗВУК: ПАНЕЛЬ ВЫЕЗЖАЕТ НА ЭКРАН --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Panel_Slide_In");
+
         // 1. Выезд UI
         if (topPanel != null) StartCoroutine(AnimateUIElement(topPanel, topPanelHiddenPos, topPanelStartPos, uiSlideDuration));
         for (int i = 0; i < bottomButtons.Count; i++)
@@ -127,6 +131,10 @@ public class PyramidIntroController : MonoBehaviour, IIntroController
             yield return null;
         }
         if (target != null) target.anchoredPosition = to;
+
+        // <--- ЗВУК: ЭЛЕМЕНТ ИНТЕРФЕЙСА ПРИЗЕМЛИЛСЯ --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("UI_Drop");
     }
 
     // Собираем все картинки-подложки слотов, чтобы плавно проявить их

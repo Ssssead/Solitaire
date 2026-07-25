@@ -17,6 +17,12 @@ public class SultanDeckManager : MonoBehaviour
     public int maxRecycles = 2;
     private int currentRecycles = 0;
 
+    public bool HasRecyclesRemaining => currentRecycles < maxRecycles;
+    public Difficulty currentDifficulty;
+
+    public bool isDealing = false;
+    public bool isSkippingIntro = false;
+
     public void Initialize(SultanModeManager mode, CardFactory factory, SultanPileManager piles)
     {
         modeManager = mode;
@@ -28,6 +34,25 @@ public class SultanDeckManager : MonoBehaviour
         else _animService.Initialize(mode);
     }
 
+    private void Update()
+    {
+        if (isDealing && (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)))
+        {
+            isSkippingIntro = true;
+        }
+    }
+
+    private IEnumerator SkippableWait(float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            yield return null;
+        }
+    }
+
     public void DealInitial()
     {
         currentRecycles = 0;
@@ -36,41 +61,60 @@ public class SultanDeckManager : MonoBehaviour
 
     private IEnumerator DealRoutine()
     {
+        isDealing = true;
+        isSkippingIntro = false;
         modeManager.IsInputAllowed = false;
 
         var intro = GetComponent<SultanIntroController>();
         if (intro != null) intro.PrepareIntro(modeManager.isRestarting);
 
         Deal deal = null;
-
         if (DealCacheSystem.Instance != null)
-            deal = DealCacheSystem.Instance.GetDeal(modeManager.GameType, Difficulty.Medium, 0);
+        {
+            deal = DealCacheSystem.Instance.GetDeal(modeManager.GameType, currentDifficulty, 0);
+        }
+
+        // --- ГЛАВНЫЙ БАГФИКС СУЛТАНА ---
+        // Если расклад пришел из кэша, в нем нет домов (DealCacheSystem их не сохраняет).
+        // Мы вручную реконструируем 9 базовых карт!
+        if (deal != null && (deal.foundations == null || deal.foundations.Count < 9 || deal.foundations[0].Count == 0))
+        {
+            deal.foundations = new List<List<CardModel>>();
+            for (int i = 0; i < 9; i++) deal.foundations.Add(new List<CardModel>());
+
+            deal.foundations[0].Add(new CardModel(Suit.Diamonds, 13));
+            deal.foundations[1].Add(new CardModel(Suit.Hearts, 1));
+            deal.foundations[2].Add(new CardModel(Suit.Diamonds, 13));
+            deal.foundations[3].Add(new CardModel(Suit.Clubs, 13));
+            deal.foundations[4].Add(new CardModel(Suit.Hearts, 13));
+            deal.foundations[5].Add(new CardModel(Suit.Clubs, 13));
+            deal.foundations[6].Add(new CardModel(Suit.Spades, 13));
+            deal.foundations[7].Add(new CardModel(Suit.Hearts, 13));
+            deal.foundations[8].Add(new CardModel(Suit.Spades, 13));
+        }
 
         if (deal != null)
         {
             deal.tableau.RemoveAll(list => list == null || list.Count == 0);
-            deal.foundations.RemoveAll(list => list == null || list.Count == 0);
         }
 
         bool isDealValid = deal != null && deal.tableau.Count >= 6 && deal.foundations.Count >= 9;
 
+        // Если кэш оказался реально пуст
         if (!isDealValid)
         {
             var tempGenerator = gameObject.AddComponent<SultanGenerator>();
-            yield return StartCoroutine(tempGenerator.GenerateDeal(Difficulty.Medium, 0, (d, metrics) => { deal = d; }));
+
+            // ИСПРАВЛЕНИЕ: Убрали жесткий хардкод Difficulty.Medium!
+            yield return StartCoroutine(tempGenerator.GenerateDeal(currentDifficulty, 0, (d, metrics) => { deal = d; }));
             Destroy(tempGenerator);
 
-            if (deal != null)
-            {
-                deal.tableau.RemoveAll(list => list == null || list.Count == 0);
-                deal.foundations.RemoveAll(list => list == null || list.Count == 0);
-            }
+            if (deal != null) deal.tableau.RemoveAll(list => list == null || list.Count == 0);
         }
 
         if (intro != null) yield return StartCoroutine(intro.AnimateUIAndSlots(modeManager.isRestarting));
 
         Vector3 spawnPos = offScreenSpawnPoint != null ? offScreenSpawnPoint.position : new Vector3(0, -2000, 0);
-        Vector3 stockPos = pileManager.StockPile.transform.position;
 
         var stockArray = deal.stock.ToArray();
         List<CardController> stockCards = new List<CardController>();
@@ -81,47 +125,42 @@ public class SultanDeckManager : MonoBehaviour
             stockCards.Add(card);
         }
 
-        // ⚡ ТРЮК С ПРЕДРАСЧЕТОМ ПОЗИЦИЙ ⚡
-        // Мгновенно кладем карты в стопку, чтобы она сама рассчитала идеальные отступы
         pileManager.StockPile.ClearWithoutUpdate();
         foreach (var c in stockCards) pileManager.StockPile.AddCard(c, false);
         pileManager.StockPile.UpdateOffsets();
 
-        // Запоминаем эти идеальные финальные позиции лесенки
         List<Vector3> targetPositions = new List<Vector3>();
         foreach (var c in stockCards)
         {
             targetPositions.Add(c.transform.position);
-
-            // Забираем их обратно в DragLayer для красивого полета поверх всех UI элементов
             c.transform.SetParent(modeManager.DragLayer, true);
-            c.transform.position = spawnPos; // Перемещаем на точку старта (за экран)
+            c.transform.position = spawnPos;
         }
 
-        // --- АНИМАЦИЯ ПОЛЕТА ---
+        if (AudioManager.Instance != null && stockCards.Count > 0)
+            AudioManager.Instance.PlaySoundWithAutoFade("Card_Whoosh_In", 0.45f, 0.2f);
+
         float stockDuration = 0.45f;
         float elapsed = 0f;
         while (elapsed < stockDuration)
         {
-            elapsed += Time.deltaTime;
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
             float t = elapsed / stockDuration;
             float curvedT = t * t * (3f - 2f * t);
 
-            // Теперь каждая карта летит в свою УНИКАЛЬНУЮ точку назначения
             for (int i = 0; i < stockCards.Count; i++)
             {
                 stockCards[i].transform.position = Vector3.Lerp(spawnPos, targetPositions[i], curvedT);
             }
-
             yield return null;
         }
 
-        // По завершении полета физически возвращаем их в стопку
         pileManager.StockPile.ClearWithoutUpdate();
         foreach (var c in stockCards) pileManager.StockPile.AddCard(c, false);
         pileManager.StockPile.UpdateOffsets();
 
-        yield return new WaitForSeconds(0.1f);
+        yield return StartCoroutine(SkippableWait(0.1f));
 
         Vector3 topStockPos = pileManager.StockPile.transform.position;
         if (pileManager.StockPile.transform.childCount > 0)
@@ -138,10 +177,12 @@ public class SultanDeckManager : MonoBehaviour
             var card = SpawnCard(deal.foundations[i][0], modeManager.DragLayer, false);
             card.transform.position = topStockPos;
 
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Deal");
+
             StartCoroutine(FlyCardRoutine(card, targetPile, 0.25f, true));
 
             if (!isCenter) fIndex++;
-            yield return new WaitForSeconds(0.06f);
+            yield return StartCoroutine(SkippableWait(0.06f));
         }
 
         for (int i = 0; i < 6; i++)
@@ -149,11 +190,16 @@ public class SultanDeckManager : MonoBehaviour
             var card = SpawnCard(deal.tableau[i][0].Card, modeManager.DragLayer, false);
             card.transform.position = topStockPos;
 
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Deal");
+
             StartCoroutine(FlyCardRoutine(card, pileManager.Reserves[i], 0.25f, true));
-            yield return new WaitForSeconds(0.06f);
+            yield return StartCoroutine(SkippableWait(0.06f));
         }
 
-        yield return new WaitForSeconds(0.3f);
+        yield return StartCoroutine(SkippableWait(0.3f));
+
+        isDealing = false;
+        isSkippingIntro = false;
         modeManager.isRestarting = false;
         modeManager.IsInputAllowed = true;
         modeManager.CheckGameState();
@@ -170,8 +216,9 @@ public class SultanDeckManager : MonoBehaviour
 
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            float t = elapsed / duration;
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(elapsed / duration);
             float curvedT = t * t * (3f - 2f * t);
 
             Vector3 currentPos = Vector3.Lerp(startPos, targetPos, curvedT);
@@ -189,6 +236,8 @@ public class SultanDeckManager : MonoBehaviour
 
         card.transform.position = targetPos;
         if (flipFaceUp && !flipped && data != null) data.SetFaceUp(true, false);
+
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Drop_Success");
 
         targetPile.AcceptCard(card);
     }
@@ -216,6 +265,8 @@ public class SultanDeckManager : MonoBehaviour
 
     public void DrawFromStock()
     {
+        if (isDealing) return;
+
         int stockCount = pileManager.StockPile.transform.childCount;
 
         if (stockCount > 0)
@@ -234,6 +285,8 @@ public class SultanDeckManager : MonoBehaviour
             }
 
             if (modeManager.scoreManager != null) modeManager.scoreManager.BreakStreak();
+
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Deal");
 
             _animService.AnimateStockToWaste(card, pileManager.WastePile);
         }
@@ -279,15 +332,15 @@ public class SultanDeckManager : MonoBehaviour
         StartCoroutine(AnimateRecycleRoutine(movedCards));
     }
 
-    // --- ⚡ ИСПРАВЛЕННАЯ СИСТЕМА АНИМАЦИИ ПЕРЕСДАЧИ ⚡ ---
     private IEnumerator AnimateRecycleRoutine(List<CardController> cardsToRecycle)
     {
+        isDealing = true;
+        isSkippingIntro = false;
         modeManager.IsInputAllowed = false;
 
-        float flightDuration = 0.15f; // Время полета одной карты
-        float staggerDelay = 0.015f;  // Микро-задержка между вылетами (создает эффект "потока")
+        float flightDuration = 0.15f;
+        float staggerDelay = 0.015f;
 
-        // Запускаем полет каждой карты в своей корутине (параллельно!)
         for (int i = 0; i < cardsToRecycle.Count; i++)
         {
             var card = cardsToRecycle[i];
@@ -296,21 +349,22 @@ public class SultanDeckManager : MonoBehaviour
             StartCoroutine(RecycleSingleCardRoutine(card, flightDuration, i * staggerDelay));
         }
 
-        // Ждем ровно столько времени, сколько нужно последней карте, чтобы приземлиться
         float totalTime = flightDuration + (cardsToRecycle.Count * staggerDelay);
-        yield return new WaitForSeconds(totalTime);
+        yield return StartCoroutine(SkippableWait(totalTime));
 
-        // На всякий случай обновляем всю лесенку в конце
         if (pileManager.StockPile != null) pileManager.StockPile.UpdateOffsets();
 
+        isDealing = false;
+        isSkippingIntro = false;
         modeManager.IsInputAllowed = true;
         modeManager.CheckGameState();
     }
 
     private IEnumerator RecycleSingleCardRoutine(CardController card, float duration, float delay)
     {
-        // Ждем своей очереди на вылет
-        if (delay > 0) yield return new WaitForSeconds(delay);
+        if (delay > 0) yield return StartCoroutine(SkippableWait(delay));
+
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Deal");
 
         card.transform.SetParent(modeManager.DragLayer, true);
         card.transform.SetAsLastSibling();
@@ -318,29 +372,25 @@ public class SultanDeckManager : MonoBehaviour
         var cardData = card.GetComponent<CardData>();
         if (cardData != null)
         {
-            // МГНОВЕННЫЙ переворот (без анимации), чтобы не изменять параметр flipDuration!
             cardData.SetFaceUp(false, false);
         }
 
         Vector3 startPos = card.transform.position;
-
-        // Летим СТРОГО в базовую точку StockPile. Никаких умножений на scaleFactor!
         Vector3 targetPos = pileManager.StockPile.transform.position;
 
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            float t = elapsed / duration;
-            t = t * t * (3f - 2f * t); // SmoothStep
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(elapsed / duration);
+            t = t * t * (3f - 2f * t);
 
             card.transform.position = Vector3.Lerp(startPos, targetPos, t);
             yield return null;
         }
 
         card.transform.position = targetPos;
-
-        // Отдаем карту слоту. Он сам установит ее на нужную ступеньку лесенки.
         pileManager.StockPile.AddCard(card, false);
         pileManager.StockPile.UpdateOffsets();
     }

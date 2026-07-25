@@ -22,6 +22,16 @@ namespace YG
         [Tooltip(Langs.t_maxQuantityPlayers)]
 #endif
         public int maxQuantityPlayers = 20;
+        // --- СТАТИЧЕСКИЙ КЭШ ДЛЯ ОБХОДА ЛИМИТОВ ЯНДЕКСА ---
+        private static Dictionary<string, LBData> lbCache = new Dictionary<string, LBData>();
+        private static Dictionary<string, float> lbRequestTimes = new Dictionary<string, float>();
+        private const float CACHE_TIME = 240f; // Храним 4 минуты (лимит Яндекса - 5 минут)
+        public static void ResetCache(string lbName)
+        {
+            if (lbRequestTimes.ContainsKey(lbName)) lbRequestTimes.Remove(lbName);
+            if (lbCache.ContainsKey(lbName)) lbCache.Remove(lbName);
+        }
+        // --------------------------------------------------
 #if UNITY_EDITOR
         [Range(1, 20), Tooltip(Langs.t_quantityTop)]
 #endif
@@ -96,9 +106,13 @@ namespace YG
         private void OnUpdateLB(LBData lbData)
         {
             if (lbData.technoName != nameLB)
-                return;
+                return; //[cite: 13]
 
-            string noData = string.Empty;
+            // ---> НОВОЕ: СОХРАНЯЕМ СВЕЖИЕ ДАННЫЕ В КЭШ <---
+            lbCache[lbData.technoName] = lbData;
+            // ----------------------------------------------
+
+            string noData = string.Empty; //[cite: 13]
 #if Localization_yg
             if (lbData.entries == InfoYG.NO_DATA)
             {
@@ -257,6 +271,21 @@ namespace YG
 
         public void UpdateLB()
         {
+            // ---> НОВОЕ: ПРОВЕРЯЕМ КЭШ ПЕРЕД ОТПРАВКОЙ ЗАПРОСА <---
+            if (lbCache.ContainsKey(nameLB) && lbRequestTimes.ContainsKey(nameLB))
+            {
+                if (Time.unscaledTime - lbRequestTimes[nameLB] < CACHE_TIME)
+                {
+                    Debug.Log($"[LB Cache] Данные {nameLB} мгновенно загружены из памяти!");
+                    OnUpdateLB(lbCache[nameLB]); // Рисуем из кэша
+                    return; // ВАЖНО: прерываем метод, Яндекс не дергаем!
+                }
+            }
+
+            // Если кэша нет или устарел - обновляем время и делаем реальный запрос
+            lbRequestTimes[nameLB] = Time.unscaledTime;
+            // -------------------------------------------------------
+
             string photoSize = "nonePhoto";
 
             switch (playerPhoto)
@@ -272,7 +301,7 @@ namespace YG
                     break;
             }
 
-            YG2.GetLeaderboard(nameLB, quantityTop, quantityAround, photoSize);
+            YG2.GetLeaderboard(nameLB, quantityTop, quantityAround, photoSize); //
         }
 
         public void SetLeaderboard(int score) => YG2.SetLeaderboard(nameLB, score);

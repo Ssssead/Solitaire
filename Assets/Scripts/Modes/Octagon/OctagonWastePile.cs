@@ -2,6 +2,12 @@ using UnityEngine;
 
 public class OctagonWastePile : MonoBehaviour, ICardContainer
 {
+    [Header("3D Stacking Effect")]
+    [Tooltip("Горизонтальный отступ между картами (отрицательный - влево)")]
+    public float offsetX = -2f;
+    [Tooltip("Вертикальный отступ между картами")]
+    public float offsetY = 0f;
+
     public Transform Transform => transform;
     public int CardCount => transform.childCount;
 
@@ -12,53 +18,85 @@ public class OctagonWastePile : MonoBehaviour, ICardContainer
         AddCard(card);
     }
 
+    // --- ОБНОВЛЕНО: Метод теперь учитывает кумулятивный отступ ---
     public void AddCard(CardController card)
     {
-        card.transform.SetParent(transform);
-        card.rectTransform.anchoredPosition = Vector2.zero;
-        card.transform.localRotation = Quaternion.identity;
+        if (card == null) return;
+
+        card.transform.SetParent(transform, true);
         card.transform.SetAsLastSibling();
 
+        int cardIndex = transform.childCount - 1;
+        if (cardIndex < 0) cardIndex = 0;
+
+        // Устанавливаем смещенную локальную позицию
+        card.transform.localPosition = new Vector3(cardIndex * offsetX, cardIndex * offsetY, 0f);
+        card.transform.localRotation = Quaternion.identity;
+        card.transform.localScale = Vector3.one;
+
         var data = card.GetComponent<CardData>();
-        if (data != null) data.SetFaceUp(true, true);
+        if (data != null) data.SetFaceUp(true, false); // false, чтобы не дублировать звук переворота из анимации
 
         var cg = card.GetComponent<CanvasGroup>();
         if (cg != null) cg.blocksRaycasts = true;
     }
 
-    // --- НОВЫЙ МЕТОД: Взять карту со дна и отсоединить ---
+    // ==========================================
+    // НОВОЕ: Возвращает верхнюю карту сброса
+    // ==========================================
+    public CardController GetTopCard()
+    {
+        if (transform.childCount == 0) return null;
+
+        // В Unity верхняя карта визуально — это последний дочерний объект
+        return transform.GetChild(transform.childCount - 1).GetComponent<CardController>();
+    }
+
     public CardController PopBottomCard()
     {
         if (transform.childCount == 0) return null;
 
-        // Индекс 0 = Самая нижняя карта
-        Transform bottomCardTr = transform.GetChild(0);
-        CardController card = bottomCardTr.GetComponent<CardController>();
-
-        if (card != null)
+        // Перебираем элементы снизу вверх, пока не найдем карту с контроллером
+        for (int i = 0; i < transform.childCount; i++)
         {
-            // Отсоединяем от Waste, чтобы индексы сдвинулись
-            // Canvas/Root как временный родитель
-            Canvas root = GetComponentInParent<Canvas>();
-            if (root) card.transform.SetParent(root.transform);
-            else card.transform.SetParent(null);
+            Transform bottomCardTr = transform.GetChild(i);
+            CardController card = bottomCardTr.GetComponent<CardController>();
+
+            if (card != null)
+            {
+                Canvas root = GetComponentInParent<Canvas>();
+                if (root) card.transform.SetParent(root.transform, true);
+                else card.transform.SetParent(null, true);
+
+                UpdateLayout();
+                return card;
+            }
         }
 
-        UpdateLayout(); // Обновляем оставшиеся
-        return card;
+        return null; // Если детей много, но среди них нет карт
     }
 
-    // Совместимость со старым кодом
     public CardController DrawBottomCard() => PopBottomCard();
 
+    // --- ОБНОВЛЕНО: Пересчет лейаута с учетом новых отступов ---
     public void UpdateLayout()
     {
-        foreach (Transform child in transform)
+        int count = transform.childCount;
+        for (int i = 0; i < count; i++)
         {
-            child.localPosition = Vector3.zero;
+            Transform child = transform.GetChild(i);
+            child.localPosition = new Vector3(i * offsetX, i * offsetY, 0f);
             child.localRotation = Quaternion.identity;
+            child.localScale = Vector3.one;
         }
     }
+
     public void OnCardIncoming(CardController card) { }
-    public Vector2 GetDropAnchoredPosition(CardController card) => Vector2.zero;
+
+    // Позволяет внешним скриптам узнать, где должна приземлиться карта
+    public Vector2 GetDropAnchoredPosition(CardController card)
+    {
+        int count = transform.childCount;
+        return new Vector2(count * offsetX, count * offsetY);
+    }
 }

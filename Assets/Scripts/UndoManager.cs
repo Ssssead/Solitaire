@@ -1,4 +1,4 @@
-using System.Collections;
+п»їusing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,7 +19,7 @@ public class UndoManager : MonoBehaviour
     [SerializeField] private float stockRapidDelay = 0.05f;
 
     private bool inProgress = false;
-    public bool isLocked = false; // --- НОВОЕ: Флаг жесткой блокировки ---
+    public bool isLocked = false; // --- РќРћР’РћР•: Р¤Р»Р°Рі Р¶РµСЃС‚РєРѕР№ Р±Р»РѕРєРёСЂРѕРІРєРё ---
     public bool IsUndoing => inProgress;
 
     public void Initialize(ICardGameMode mode)
@@ -38,12 +38,12 @@ public class UndoManager : MonoBehaviour
         UpdateButtons();
     }
 
-    // Сохраняем поддержку isRapidUndo
+    // РЎРѕС…СЂР°РЅСЏРµРј РїРѕРґРґРµСЂР¶РєСѓ isRapidUndo
     public void RecordMove(List<CardController> cards, ICardContainer source, ICardContainer target,
                            List<Transform> origParents = null, List<Vector3> origLocal = null, List<int> origSibling = null,
                            string groupID = null, bool isRapidUndo = false)
     {
-        // --- НОВОЕ: Если система заблокирована (авто-сбор/победа), мы игнорируем любые записи ходов ---
+        // --- РќРћР’РћР•: Р•СЃР»Рё СЃРёСЃС‚РµРјР° Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅР° (Р°РІС‚Рѕ-СЃР±РѕСЂ/РїРѕР±РµРґР°), РјС‹ РёРіРЅРѕСЂРёСЂСѓРµРј Р»СЋР±С‹Рµ Р·Р°РїРёСЃРё С…РѕРґРѕРІ ---
         if (isLocked) return;
 
         if (undoStack.Count == 0 && DealCacheSystem.Instance != null)
@@ -78,18 +78,20 @@ public class UndoManager : MonoBehaviour
     private void OnUndoButtonClick() { if (!inProgress) StartCoroutine(UndoLastCoroutine()); }
     private void OnUndoAllButtonClick() { if (!inProgress) StartCoroutine(UndoAllCoroutine()); }
 
-    private IEnumerator UndoLastCoroutine()
+    public IEnumerator UndoLastCoroutine()
     {
         if (inProgress || undoStack.Count == 0) yield break;
         inProgress = true;
 
         gameMode?.OnUndoAction();
-
+        // --- Р”РћР‘РђР’РРўР¬ Р­РўРћ: РћС‚СЃР»РµР¶РёРІР°РµРј РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ РѕС‚РјРµРЅС‹ ---
+        GameQuestTracker.Instance?.RecordUndoUsed();
+        // ------------------------------------------------------
         var currentRecord = undoStack.Pop();
         string currentGroupID = currentRecord.groupID;
         bool isRapid = currentRecord.isRapidUndo;
 
-        // Если это быстрый режим (Stock в Spider)
+        // Р•СЃР»Рё СЌС‚Рѕ Р±С‹СЃС‚СЂС‹Р№ СЂРµР¶РёРј (Stock РІ Spider)
         if (isRapid)
         {
             StartCoroutine(PerformUndo(currentRecord, immediate: false));
@@ -105,7 +107,7 @@ public class UndoManager : MonoBehaviour
             }
             yield return new WaitForSeconds(undoAnimDuration);
         }
-        else // Стандартный режим (Klondike и Foundation в Spider)
+        else // РЎС‚Р°РЅРґР°СЂС‚РЅС‹Р№ СЂРµР¶РёРј (Klondike Рё Foundation РІ Spider)
         {
             yield return StartCoroutine(PerformUndo(currentRecord, immediate: false));
 
@@ -124,7 +126,7 @@ public class UndoManager : MonoBehaviour
         gameMode?.CheckGameState();
     }
 
-    // --- ИЗМЕНЕННЫЙ МЕТОД: ВЫПОЛНЯЕТСЯ ЗА ОДИН КАДР ---
+    // --- РР—РњР•РќР•РќРќР«Р™ РњР•РўРћР”: Р’Р«РџРћР›РќРЇР•РўРЎРЇ Р—Рђ РћР”РРќ РљРђР”Р  ---
     private IEnumerator UndoAllCoroutine()
     {
         if (inProgress || undoStack.Count == 0) yield break;
@@ -137,16 +139,16 @@ public class UndoManager : MonoBehaviour
         {
             var record = undoStack.Pop();
 
-            // --- ЗАЩИТА ОТ КРАША (Fix для FreeCell/Klondike) ---
-            // Проверяем, существуют ли карты физически. 
-            // Unity уничтожает объекты при перезагрузке, но C# ссылка остается (как null).
+            // --- Р—РђР©РРўРђ РћРў РљР РђРЁРђ (Fix РґР»СЏ FreeCell/Klondike) ---
+            // РџСЂРѕРІРµСЂСЏРµРј, СЃСѓС‰РµСЃС‚РІСѓСЋС‚ Р»Рё РєР°СЂС‚С‹ С„РёР·РёС‡РµСЃРєРё. 
+            // Unity СѓРЅРёС‡С‚РѕР¶Р°РµС‚ РѕР±СЉРµРєС‚С‹ РїСЂРё РїРµСЂРµР·Р°РіСЂСѓР·РєРµ, РЅРѕ C# СЃСЃС‹Р»РєР° РѕСЃС‚Р°РµС‚СЃСЏ (РєР°Рє null).
             bool isRecordBroken = false;
             if (record.cards == null || record.cards.Count == 0) isRecordBroken = true;
             else
             {
                 foreach (var card in record.cards)
                 {
-                    // Проверка: (card == null) сработает, если Unity уничтожила объект
+                    // РџСЂРѕРІРµСЂРєР°: (card == null) СЃСЂР°Р±РѕС‚Р°РµС‚, РµСЃР»Рё Unity СѓРЅРёС‡С‚РѕР¶РёР»Р° РѕР±СЉРµРєС‚
                     if (card == null || card.gameObject == null)
                     {
                         isRecordBroken = true;
@@ -157,19 +159,19 @@ public class UndoManager : MonoBehaviour
 
             if (isRecordBroken)
             {
-                // Если запись ссылается на мертвые карты, просто пропускаем её
+                // Р•СЃР»Рё Р·Р°РїРёСЃСЊ СЃСЃС‹Р»Р°РµС‚СЃСЏ РЅР° РјРµСЂС‚РІС‹Рµ РєР°СЂС‚С‹, РїСЂРѕСЃС‚Рѕ РїСЂРѕРїСѓСЃРєР°РµРј РµС‘
                 continue;
             }
             // ----------------------------------------------------
 
-            // Если карты живы, выполняем откат
+            // Р•СЃР»Рё РєР°СЂС‚С‹ Р¶РёРІС‹, РІС‹РїРѕР»РЅСЏРµРј РѕС‚РєР°С‚
             RemoveCardsFromTarget(record);
 
             if (record.sourceCardWasFlipped && record.sourceContainer is TableauPile tableau)
             {
                 if (record.flippedCardIndex >= 0) tableau.ForceFlipFaceDown(record.flippedCardIndex, true);
             }
-
+            
             RestoreCardsPositionImmediate(record);
             AddCardsBackToSource(record, true);
         }
@@ -188,7 +190,7 @@ public class UndoManager : MonoBehaviour
             }
         }
 
-        // Обновляем Waste (для Klondike)
+        // РћР±РЅРѕРІР»СЏРµРј Waste (РґР»СЏ Klondike)
         var waste = FindObjectOfType<WastePile>();
         if (waste != null) waste.UpdateLayout();
 
@@ -220,7 +222,7 @@ public class UndoManager : MonoBehaviour
             if (card == null) continue;
             card.StopAllCoroutines();
 
-            // Если Stock - закрываем
+            // Р•СЃР»Рё Stock - Р·Р°РєСЂС‹РІР°РµРј
             if (record.sourceContainer.GetType().Name.Contains("Stock"))
                 card.GetComponent<CardData>()?.SetFaceUp(false, animate: false);
 
@@ -243,7 +245,7 @@ public class UndoManager : MonoBehaviour
         Transform sourceTrans = (record.sourceContainer as Component)?.transform;
         bool isStock = record.sourceContainer.GetType().Name.Contains("Stock");
 
-        // Проверка: возвращаем ли мы карты в WastePile?
+        // РџСЂРѕРІРµСЂРєР°: РІРѕР·РІСЂР°С‰Р°РµРј Р»Рё РјС‹ РєР°СЂС‚С‹ РІ WastePile?
         WastePile wasteTarget = record.sourceContainer as WastePile;
 
         for (int i = 0; i < cards.Count; i++)
@@ -252,7 +254,7 @@ public class UndoManager : MonoBehaviour
             if (card == null) continue;
             startPos.Add(card.rectTransform.position);
 
-            // Поднимаем в слой драга для красивого полета
+            // РџРѕРґРЅРёРјР°РµРј РІ СЃР»РѕР№ РґСЂР°РіР° РґР»СЏ РєСЂР°СЃРёРІРѕРіРѕ РїРѕР»РµС‚Р°
             if (dragLayer != null) card.rectTransform.SetParent(dragLayer, true);
             card.rectTransform.SetAsLastSibling();
 
@@ -260,13 +262,13 @@ public class UndoManager : MonoBehaviour
 
             Vector3 targetW = Vector3.zero;
 
-            // --- ЛОГИКА ИСПРАВЛЕНИЯ ---
+            // --- Р›РћР“РРљРђ РРЎРџР РђР’Р›Р•РќРРЇ ---
             if (wasteTarget != null)
             {
-                // Для WastePile игнорируем savedPositions, так как лейаут мог измениться.
-                // Рассчитываем, где карта должна оказаться "в будущем".
+                // Р”Р»СЏ WastePile РёРіРЅРѕСЂРёСЂСѓРµРј savedPositions, С‚Р°Рє РєР°Рє Р»РµР№Р°СѓС‚ РјРѕРі РёР·РјРµРЅРёС‚СЊСЃСЏ.
+                // Р Р°СЃСЃС‡РёС‚С‹РІР°РµРј, РіРґРµ РєР°СЂС‚Р° РґРѕР»Р¶РЅР° РѕРєР°Р·Р°С‚СЊСЃСЏ "РІ Р±СѓРґСѓС‰РµРј".
                 int futureCount = wasteTarget.Count + cards.Count;
-                int futureIndex = wasteTarget.Count + i; // i идет от 0 до cards.Count, сохраняя порядок
+                int futureIndex = wasteTarget.Count + i; // i РёРґРµС‚ РѕС‚ 0 РґРѕ cards.Count, СЃРѕС…СЂР°РЅСЏСЏ РїРѕСЂСЏРґРѕРє
 
                 Vector2 anchor = wasteTarget.GetAnchoredPositionForFutureIndex(futureCount, futureIndex);
 
@@ -278,7 +280,7 @@ public class UndoManager : MonoBehaviour
             // ---------------------------
             else if (record.sourceLocalPositions != null && i < record.sourceLocalPositions.Count && sourceTrans != null)
             {
-                // Стандартная логика для Tableau и других
+                // РЎС‚Р°РЅРґР°СЂС‚РЅР°СЏ Р»РѕРіРёРєР° РґР»СЏ Tableau Рё РґСЂСѓРіРёС…
                 Vector3 savedLocal = record.sourceLocalPositions[i];
                 if (animationService != null) targetW = animationService.AnchoredToWorldPosition(sourceTrans as RectTransform, new Vector2(savedLocal.x, savedLocal.y));
                 else targetW = sourceTrans.TransformPoint(savedLocal);
@@ -296,7 +298,7 @@ public class UndoManager : MonoBehaviour
         {
             t += Time.unscaledDeltaTime;
             float p = t / undoAnimDuration;
-            // Добавим SmoothStep для более плавной анимации, как в DeckManager
+            // Р”РѕР±Р°РІРёРј SmoothStep РґР»СЏ Р±РѕР»РµРµ РїР»Р°РІРЅРѕР№ Р°РЅРёРјР°С†РёРё, РєР°Рє РІ DeckManager
             p = p * p * (3f - 2f * p);
 
             for (int i = 0; i < cards.Count; i++)
@@ -310,7 +312,7 @@ public class UndoManager : MonoBehaviour
         var cards = record.cards;
         var source = record.sourceContainer;
 
-        // Проверяем имя, чтобы работало и для StockPile, и для SpiderStockPile
+        // РџСЂРѕРІРµСЂСЏРµРј РёРјСЏ, С‡С‚РѕР±С‹ СЂР°Р±РѕС‚Р°Р»Рѕ Рё РґР»СЏ StockPile, Рё РґР»СЏ SpiderStockPile
         if (source.GetType().Name.Contains("Stock"))
         {
             if (source is StockPile st)
@@ -321,10 +323,11 @@ public class UndoManager : MonoBehaviour
             {
                 for (int i = cards.Count - 1; i >= 0; i--) tp.AddCard(cards[i], false);
             }
-
-            // ИСПРАВЛЕНИЕ: МЫ БОЛЬШЕ НЕ МЕНЯЕМ blocksRaycasts ЗДЕСЬ.
-            // SpiderStockPile сам отключит их в LateUpdate.
-            // StockPile (Klondike) оставит их как есть (обычно true), что правильно для Клондайка.
+            // РџРѕРґРґРµСЂР¶РєР° РєР°СЃС‚РѕРјРЅС‹С… СЃС‚РѕРєРѕРІ (РЅР°РїСЂРёРјРµСЂ, SultanStockPile)
+            else
+            {
+                for (int i = cards.Count - 1; i >= 0; i--) source.AcceptCard(cards[i]);
+            }
         }
         else if (source is WastePile waste)
         {
@@ -354,7 +357,31 @@ public class UndoManager : MonoBehaviour
         {
             if (cards.Count > 0) freeCell.AcceptCard(cards[0]);
         }
-        if (source is Component comp && !immediate) animationService?.ReorderContainerZ(comp.transform);
+        // --- рџ”Ґ РРЎРџР РђР’Р›Р•РќРР•: РЈРќРР’Р•Р РЎРђР›Р¬РќР«Р™ Р¤РћР›Р›Р‘Р­Рљ Р”Р›РЇ РќРћР’Р«РҐ Р Р•Р–РРњРћР’ рџ”Ґ ---
+        // Р•СЃР»Рё UndoManager РЅРµ Р·РЅР°РµС‚ СЌС‚РѕС‚ РєР»Р°СЃСЃ (РєР°Рє РІ СЃР»СѓС‡Р°Рµ СЃ РЎСѓР»С‚Р°РЅРѕРј), 
+        // РѕРЅ РїСЂРѕСЃС‚Рѕ Р·Р°СЃС‚Р°РІРёС‚ РєРѕРЅС‚РµР№РЅРµСЂ РїСЂРёРЅСЏС‚СЊ РєР°СЂС‚Сѓ С‡РµСЂРµР· Р±Р°Р·РѕРІС‹Р№ РёРЅС‚РµСЂС„РµР№СЃ.
+        else
+        {
+            foreach (var card in cards)
+            {
+                if (card == null) continue;
+
+                // Р’С‹Р·С‹РІР°РµРј СЂРѕРґРЅРѕР№ РјРµС‚РѕРґ РєРѕРЅС‚РµР№РЅРµСЂР°
+                source.AcceptCard(card);
+
+                // Р“Р°СЂР°РЅС‚РёСЂСѓРµРј, С‡С‚Рѕ РєР°СЂС‚Р° С„РёР·РёС‡РµСЃРєРё РїРѕРєРёРЅСѓР»Р° DragLayer
+                if (source is Component comp)
+                {
+                    if (card.transform.parent != comp.transform)
+                    {
+                        card.transform.SetParent(comp.transform, true);
+                        card.transform.SetAsLastSibling();
+                    }
+                }
+            }
+        }
+
+        if (source is Component sourceComp && !immediate) animationService?.ReorderContainerZ(sourceComp.transform);
     }
 
     private void RemoveCardsFromTarget(MoveRecord record)
@@ -372,21 +399,21 @@ public class UndoManager : MonoBehaviour
         }
         else if (record.targetContainer is FoundationPile found)
         {
-            // Foundation обычно принимает по 1 карте
+            // Foundation РѕР±С‹С‡РЅРѕ РїСЂРёРЅРёРјР°РµС‚ РїРѕ 1 РєР°СЂС‚Рµ
             found.ForceRemove(record.cards[0]);
         }
         else if (record.targetContainer is FreeCellPile freeCell)
         {
-            // Так как FreeCellPile содержит карты как детей, undo просто заберет их при перемещении
-            // Но если есть специфическая логика удаления, она должна быть тут.
-            // Обычно для Transform-based контейнеров ничего делать не надо, если DragManager меняет parent.
+            // РўР°Рє РєР°Рє FreeCellPile СЃРѕРґРµСЂР¶РёС‚ РєР°СЂС‚С‹ РєР°Рє РґРµС‚РµР№, undo РїСЂРѕСЃС‚Рѕ Р·Р°Р±РµСЂРµС‚ РёС… РїСЂРё РїРµСЂРµРјРµС‰РµРЅРёРё
+            // РќРѕ РµСЃР»Рё РµСЃС‚СЊ СЃРїРµС†РёС„РёС‡РµСЃРєР°СЏ Р»РѕРіРёРєР° СѓРґР°Р»РµРЅРёСЏ, РѕРЅР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ С‚СѓС‚.
+            // РћР±С‹С‡РЅРѕ РґР»СЏ Transform-based РєРѕРЅС‚РµР№РЅРµСЂРѕРІ РЅРёС‡РµРіРѕ РґРµР»Р°С‚СЊ РЅРµ РЅР°РґРѕ, РµСЃР»Рё DragManager РјРµРЅСЏРµС‚ parent.
         }
         else if (record.targetContainer.GetType().Name.Contains("Stock"))
         {
             if (record.targetContainer is StockPile st)
             {
-                // --- ИСПРАВЛЕНИЕ ---
-                // Удаляем столько карт, сколько было добавлено в этом ходу
+                // --- РРЎРџР РђР’Р›Р•РќРР• ---
+                // РЈРґР°Р»СЏРµРј СЃС‚РѕР»СЊРєРѕ РєР°СЂС‚, СЃРєРѕР»СЊРєРѕ Р±С‹Р»Рѕ РґРѕР±Р°РІР»РµРЅРѕ РІ СЌС‚РѕРј С…РѕРґСѓ
                 int count = record.cards.Count;
                 for (int i = 0; i < count; i++)
                 {
@@ -403,9 +430,15 @@ public class UndoManager : MonoBehaviour
         isLocked = true;
         UpdateButtons();
     }
-    public void ResetHistory() { undoStack.Clear(); inProgress = false; isLocked = false; UpdateButtons(); gameMode?.OnUndoAction(); }
+    public void ResetHistory()
+    {
+        undoStack.Clear();
+        inProgress = false;
+        isLocked = false;
+        UpdateButtons();
+    }
 
-    // --- НОВЫЙ МЕТОД: Очищает стек и выключает кнопки, не вызывая игровых событий ---
+    // --- РќРћР’Р«Р™ РњР•РўРћР”: РћС‡РёС‰Р°РµС‚ СЃС‚РµРє Рё РІС‹РєР»СЋС‡Р°РµС‚ РєРЅРѕРїРєРё, РЅРµ РІС‹Р·С‹РІР°СЏ РёРіСЂРѕРІС‹С… СЃРѕР±С‹С‚РёР№ ---
     public void ClearHistory()
     {
         undoStack.Clear();

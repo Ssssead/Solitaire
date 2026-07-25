@@ -24,7 +24,7 @@ public class MontanaSlot : MonoBehaviour, ICardContainer
     {
         if (card == null || _cards.Count > 0) return false;
 
-        // В первый столбец можно класть только Тузов
+        // В первый столбец можно класть ЛЮБОГО Туза (игрок сам должен угадать правильного)
         if (Col == 0) return card.cardModel.rank == 1;
 
         // Для остальных ячеек смотрим на карту слева

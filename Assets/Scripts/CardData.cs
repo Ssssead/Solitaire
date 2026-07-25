@@ -52,8 +52,6 @@ public class CardData : MonoBehaviour
         // если модель есть и faceSprite не назначен, можно попытаться назначить его
         if (faceSprite == null && image != null)
         {
-            // Предположение: фабрика могла уже поставить image.sprite в момент создания.
-            // Сохраним это как faceSprite, чтобы позже использовать при flip.
             faceSprite = image.sprite;
         }
 
@@ -63,10 +61,13 @@ public class CardData : MonoBehaviour
             flipCoroutine = null;
         }
 
-        // если требуется мгновенно — просто поставим sprite и флаг
+        // === 1. МГНОВЕННАЯ СМЕНА (БЕЗ АНИМАЦИИ И БЕЗ ЗВУКА) ===
         if (!animate)
         {
             isFaceUp = faceUp;
+
+            // ЗВУК ОТСЮДА УБРАН!
+
             if (image != null)
             {
                 image.sprite = isFaceUp ? (faceSprite ?? image.sprite) : backSprite;
@@ -76,16 +77,21 @@ public class CardData : MonoBehaviour
             return;
         }
 
-        // если состояние не меняется — ничего не делаем
+        // === 2. ПРОВЕРКА: ЕСЛИ СОСТОЯНИЕ НЕ МЕНЯЕТСЯ ===
         if (isFaceUp == faceUp)
         {
-            // но если не соответствует спрайт (напр. faceSprite недоступен), исправим
             if (image != null)
             {
                 var desired = isFaceUp ? (faceSprite ?? image.sprite) : backSprite;
                 if (image.sprite != desired) image.sprite = desired;
             }
             return;
+        }
+
+        // === 3. АНИМИРОВАННЫЙ ПЕРЕВОРОТ (ВСТАВЛЯЕМ ЗВУК СЮДА) ===
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySound("Card_Flip");
         }
 
         // запускаем анимацию переворота
@@ -165,6 +171,10 @@ public class CardData : MonoBehaviour
     public bool IsFaceUp()
     {
         return isFaceUp;
+    }
+    public bool IsFlipping()
+    {
+        return flipCoroutine != null;
     }
     public void UpdateBackVisual(Sprite newBack)
     {

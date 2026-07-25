@@ -1,856 +1,2616 @@
 {
     "items": [
         {
-            "key": "Levels",
-            "value": "Seviyeler"
-        },
-        {
-            "key": "Puzzles",
-            "value": "Bulmacalar"
-        },
-        {
-            "key": "Play",
-            "value": "Oyna"
-        },
-        {
-            "key": "level",
+            "key": "Level",
             "value": "Seviye"
         },
         {
-            "key": "clue.l1.oclock_numeric",
-            "value": "Kapı saat {H}:{MM} olduğunda açılacak."
+            "key": "Klondike",
+            "value": "Klondike"
         },
         {
-            "key": "clue.l1.hint_minutes",
-            "value": "Kapı, dakika ibresi {minuteWord} dakika ve saat ibresi {hourWord} gösterdiğinde açılacak."
+            "key": "Spider",
+            "value": "Örümcek"
         },
         {
-            "key": "word.hour.1",
-            "value": "saat bir"
+            "key": "Freecell",
+            "value": "FreeCell"
         },
         {
-            "key": "word.hour.2",
-            "value": "saat iki"
+            "key": "Pyramid",
+            "value": "Piramit"
         },
         {
-            "key": "word.hour.3",
-            "value": "saat üç"
+            "key": "TriPeaks",
+            "value": "TriPeaks"
         },
         {
-            "key": "word.hour.4",
-            "value": "saat dört"
+            "key": "Sultan",
+            "value": "Sultan"
         },
         {
-            "key": "word.hour.5",
-            "value": "saat beş"
+            "key": "MonteCarlo",
+            "value": "Monte Carlo"
         },
         {
-            "key": "word.hour.6",
-            "value": "saat altı"
+            "key": "Montana",
+            "value": "Montana"
         },
         {
-            "key": "word.hour.7",
-            "value": "saat yedi"
+            "key": "Octagon",
+            "value": "Sekizgen"
         },
         {
-            "key": "word.hour.8",
-            "value": "saat sekiz"
+            "key": "Yukon",
+            "value": "Yukon"
         },
         {
-            "key": "word.hour.9",
-            "value": "saat dokuz"
+            "key": "Start",
+            "value": "Başla"
         },
         {
-            "key": "word.hour.10",
-            "value": "saat on"
+            "key": "DiffHard",
+            "value": "Zor"
         },
         {
-            "key": "word.hour.11",
-            "value": "saat on bir"
+            "key": "DiffMedium",
+            "value": "Orta"
         },
         {
-            "key": "word.hour.12",
-            "value": "saat on iki"
+            "key": "DiffEasy",
+            "value": "Kolay"
         },
         {
-            "key": "word.minute.0",
-            "value": "tam"
+            "key": "Diff",
+            "value": "Zorluk:"
         },
         {
-            "key": "word.minute.5",
-            "value": "beş"
+            "key": "DrawMode",
+            "value": "Kart Çekme Modu:"
         },
         {
-            "key": "word.minute.10",
-            "value": "on"
+            "key": "Rounds",
+            "value": "Tur Sayısı:"
         },
         {
-            "key": "word.minute.15",
-            "value": "on beş"
+            "key": "SuitMode",
+            "value": "Seri Sayısı:"
         },
         {
-            "key": "word.minute.20",
-            "value": "yirmi"
+            "key": "Classic",
+            "value": "Klasik"
         },
         {
-            "key": "word.minute.25",
-            "value": "yirmi beş"
+            "key": "Russian",
+            "value": "Rus"
         },
         {
-            "key": "word.minute.30",
-            "value": "otuz"
+            "key": "4Ways",
+            "value": "4 Yön"
         },
         {
-            "key": "word.minute.35",
-            "value": "otuz beş"
+            "key": "8Ways",
+            "value": "8 Yön"
         },
         {
-            "key": "word.minute.40",
-            "value": "kırk"
+            "key": "GameMode",
+            "value": "Oyun Modu:"
         },
         {
-            "key": "word.minute.45",
-            "value": "kırk beş"
+            "key": "xp_reward_preview",
+            "value": "{0} DP alacaksınız"
         },
         {
-            "key": "word.minute.50",
-            "value": "elli"
+            "key": "stats",
+            "value": "İstatistikler"
         },
         {
-            "key": "word.minute.55",
-            "value": "elli beş"
-        },
-        {
-            "key": "clue.l2.solar_noon",
-            "value": "Kapı güneş tepe noktasına ulaştığında açılacak."
-        },
-        {
-            "key": "clue.l2.time.half_past",
-            "value": "Kapı  {hourWord} buçukta açılacak."
-        },
-        {
-            "key": "clue.l2.time.quarter_past",
-            "value": "Kapı  {hourWord} çeyrek geçe açılacak."
-        },
-        {
-            "key": "clue.l2.time.quarter_to",
-            "value": "Kapı  {hourPointerWord}e çeyrek kala açılacak."
-        },
-        {
-            "key": "clue.l2.time.minutes_to",
-            "value": "Kapı  {hourPointerWord}e {nextminuteWord} kala açılacak."
-        },
-        {
-            "key": "clue.l2.time.minutes_past",
-            "value": "Kapı  {hourWord} {minuteWord} geçe açılacak."
-        },
-        {
-            "key": "word.nextminute.0",
-            "value": "tam"
-        },
-        {
-            "key": "word.nextminute.5",
-            "value": "beş"
-        },
-        {
-            "key": "word.nextminute.10",
-            "value": "on"
-        },
-        {
-            "key": "word.nextminute.15",
-            "value": "on beş"
-        },
-        {
-            "key": "word.nextminute.20",
-            "value": "yirmi"
-        },
-        {
-            "key": "word.nextminute.25",
-            "value": "yirmi beş"
-        },
-        {
-            "key": "word.nextminute.30",
-            "value": "otuz"
-        },
-        {
-            "key": "word.nextminute.35",
-            "value": "otuz beş"
-        },
-        {
-            "key": "word.nextminute.40",
-            "value": "kırk"
-        },
-        {
-            "key": "word.nextminute.45",
-            "value": "kırk beş"
-        },
-        {
-            "key": "word.nextminute.50",
-            "value": "elli"
-        },
-        {
-            "key": "word.nextminute.55",
-            "value": "elli beş"
-        },
-        {
-            "key": "word.nexthour.1",
-            "value": "saat bir"
-        },
-        {
-            "key": "word.nexthour.2",
-            "value": "saat iki"
-        },
-        {
-            "key": "word.nexthour.3",
-            "value": "saat üç"
-        },
-        {
-            "key": "word.nexthour.4",
-            "value": "saat dört"
-        },
-        {
-            "key": "word.nexthour.5",
-            "value": "saat beş"
-        },
-        {
-            "key": "word.nexthour.6",
-            "value": "saat altı"
-        },
-        {
-            "key": "word.nexthour.7",
-            "value": "saat yedi"
-        },
-        {
-            "key": "word.nexthour.8",
-            "value": "saat sekiz"
-        },
-        {
-            "key": "word.nexthour.9",
-            "value": "saat dokuz"
-        },
-        {
-            "key": "word.nexthour.10",
-            "value": "saat on"
-        },
-        {
-            "key": "word.nexthour.11",
-            "value": "saat on bir"
-        },
-        {
-            "key": "word.nexthour.12",
-            "value": "saat on iki"
-        },
-        {
-            "key": "clue.l2.time.start_hour",
-            "value": "Kapı {nextHourStartWord} saat başladığında açılacak."
-        },
-        {
-            "key": "word.hour_start.1",
-            "value": "birinci"
-        },
-        {
-            "key": "word.hour_start.2",
-            "value": "ikinci"
-        },
-        {
-            "key": "word.hour_start.3",
-            "value": "üçüncü"
-        },
-        {
-            "key": "word.hour_start.4",
-            "value": "dördüncü"
-        },
-        {
-            "key": "word.hour_start.5",
-            "value": "beşinci"
-        },
-        {
-            "key": "word.hour_start.6",
-            "value": "altıncı"
-        },
-        {
-            "key": "word.hour_start.7",
-            "value": "yedinci"
-        },
-        {
-            "key": "word.hour_start.8",
-            "value": "sekizinci"
-        },
-        {
-            "key": "word.hour_start.9",
-            "value": "dokuzuncu"
-        },
-        {
-            "key": "word.hour_start.10",
-            "value": "onuncu"
-        },
-        {
-            "key": "word.hour_start.11",
-            "value": "on birinci"
-        },
-        {
-            "key": "word.hour_start.12",
-            "value": "on ikinci"
-        },
-        {
-            "key": "clue.l3.time.half_past",
-            "value": "Kapı {hourWord} buçukta, {SS} saniye sonra açılacak."
-        },
-        {
-            "key": "clue.l3.time.quarter_past",
-            "value": "Kapı {hourWord} çeyrek geçe, {SS} saniye sonra açılacak."
-        },
-        {
-            "key": "clue.l3.time.quarter_to",
-            "value": "Kapı {hourPointerWord} çeyrek kala, {SS} saniye sonra açılacak."
-        },
-        {
-            "key": "clue.l3.time.minutes_to",
-            "value": "Kapı {hourPointerWord} {nextminuteWord} kala, {SS} saniye sonra açılacak."
-        },
-        {
-            "key": "clue.l3.time.minutes_past",
-            "value": "Kapı {hourWord} {minuteWord} dakika geçe, {SS} saniye sonra açılacak."
-        },
-        {
-            "key": "clue.l3.time.start_hour",
-            "value": "Kapı {nextHourStartWord} saat başladığında, {SS} saniye sonra açılacak."
-        },
-        {
-            "key": "word.nexthour_after.1",
-            "value": "saat bir"
-        },
-        {
-            "key": "word.nexthour_after.2",
-            "value": "saat iki"
-        },
-        {
-            "key": "word.nexthour_after.3",
-            "value": "saat üç"
-        },
-        {
-            "key": "word.nexthour_after.4",
-            "value": "saat dört"
-        },
-        {
-            "key": "word.nexthour_after.5",
-            "value": "saat beş"
-        },
-        {
-            "key": "word.nexthour_after.6",
-            "value": "saat altı"
-        },
-        {
-            "key": "word.nexthour_after.7",
-            "value": "saat yedi"
-        },
-        {
-            "key": "word.nexthour_after.8",
-            "value": "saat sekiz"
-        },
-        {
-            "key": "word.nexthour_after.9",
-            "value": "saat dokuz"
-        },
-        {
-            "key": "word.nexthour_after.10",
-            "value": "saat on"
-        },
-        {
-            "key": "word.nexthour_after.11",
-            "value": "saat on bir"
-        },
-        {
-            "key": "word.nexthour_after.12",
-            "value": "saat on iki"
-        },
-        {
-            "key": "word.hour_pointer.1",
-            "value": "saat ikiye"
-        },
-        {
-            "key": "word.hour_pointer.2",
-            "value": "saat üçe"
-        },
-        {
-            "key": "word.hour_pointer.3",
-            "value": "saat dörde"
-        },
-        {
-            "key": "word.hour_pointer.4",
-            "value": "saat beşe"
-        },
-        {
-            "key": "word.hour_pointer.5",
-            "value": "saat altıya"
-        },
-        {
-            "key": "word.hour_pointer.6",
-            "value": "saat yediye"
-        },
-        {
-            "key": "word.hour_pointer.7",
-            "value": "saat sekize"
-        },
-        {
-            "key": "word.hour_pointer.8",
-            "value": "saat dokuza"
-        },
-        {
-            "key": "word.hour_pointer.9",
-            "value": "saat ona"
-        },
-        {
-            "key": "word.hour_pointer.10",
-            "value": "saat on bire"
-        },
-        {
-            "key": "word.hour_pointer.11",
-            "value": "saat on ikiye"
-        },
-        {
-            "key": "word.hour_pointer.12",
-            "value": "saat bire"
-        },
-        {
-            "key": "ru",
-            "value": "Rusça"
-        },
-        {
-            "key": "en",
-            "value": "İngilizce"
-        },
-        {
-            "key": "es",
-            "value": "İspanyolca"
-        },
-        {
-            "key": "pt",
-            "value": "Portekizce"
-        },
-        {
-            "key": "fr",
-            "value": "Fransızca"
-        },
-        {
-            "key": "tr",
-            "value": "Türkçe"
-        },
-        {
-            "key": "de",
-            "value": "Almanca"
-        },
-        {
-            "key": "ja",
-            "value": "Japonca"
-        },
-        {
-            "key": "lang",
-            "value": "Dil"
-        },
-        {
-            "key": "setsound",
-            "value": "Sesler"
-        },
-        {
-            "key": "PuzzleDiff",
-            "value": "Bulmaca Zorluğu"
-        },
-        {
-            "key": "PuzzleSettings",
-            "value": "Bulmaca Ayarları"
-        },
-        {
-            "key": "PuzzleMode",
-            "value": "Bulmaca Modu"
-        },
-        {
-            "key": "BookArabic",
-            "value": "Arap rakamları"
-        },
-        {
-            "key": "BookRoman",
-            "value": "Romen rakamları"
-        },
-        {
-            "key": "BookPicture",
-            "value": "Resim"
-        },
-        {
-            "key": "PuzzleSolved",
-            "value": "Bulmaca çözüldü!"
-        },
-        {
-            "key": "BackToMenu",
-            "value": "Menüye dön"
-        },
-        {
-            "key": "hint_first_card",
-            "value": "{0} ilk karttır."
-        },
-        {
-            "key": "hint_last_card",
-            "value": "{0} son karttır."
-        },
-        {
-            "key": "hint_immediately_after",
-            "value": "{0}, {1}’den hemen sonradır."
-        },
-        {
-            "key": "hint_immediately_before",
-            "value": "{0}, {1}’den hemen öncedir."
-        },
-        {
-            "key": "hint_between",
-            "value": "{0}, {1} ile {2} arasındadır."
-        },
-        {
-            "key": "hint_left_of",
-            "value": "{0}, {1}’in solundadır."
-        },
-        {
-            "key": "hint_right_of",
-            "value": "{0}, {1}’in sağındadır."
-        },
-        {
-            "key": "hint_one_false",
-            "value": "İpuçlarından biri yanlıştır."
-        },
-        {
-            "key": "hint_no_suit",
-            "value": "Masada {0} renginde kart yok."
-        },
-        {
-            "key": "hint_no_rank",
-            "value": "Masada {0} değerinde kart yok."
-        },
-        {
-            "key": "hint_no_even",
-            "value": "Masada çift sayılı kart yok."
-        },
-        {
-            "key": "hint_no_odd",
-            "value": "Masada tek sayılı kart yok."
-        },
-        {
-            "key": "hint_no_above_10",
-            "value": "Masada 10’dan büyük kart yok."
-        },
-        {
-            "key": "hint_no_below_6",
-            "value": "Masada 6’dan küçük kart yok."
-        },
-        {
-            "key": "hint_has_suit",
-            "value": "Masada {0} renginde kartlar var."
-        },
-        {
-            "key": "hint_has_rank",
-            "value": "Masada {0} değerinde kartlar var."
-        },
-        {
-            "key": "hint_position_of_card",
-            "value": "{0}, {1}. pozisyondadır."
-        },
-        {
-            "key": "hint_not_first",
-            "value": "{0} ilk pozisyonda değildir."
-        },
-        {
-            "key": "hint_not_last",
-            "value": "{0} son pozisyonda değildir."
-        },
-        {
-            "key": "hint_not_neighbor",
-            "value": "{0}, {1}’in yanında değildir."
-        },
-        {
-            "key": "hint_exact_count_suit",
-            "value": "Masada tam olarak {0} tane {1} renginde kart vardır."
-        },
-        {
-            "key": "hint_exact_count_rank",
-            "value": "Masada tam olarak {0} tane {1} değerinde kart vardır."
-        },
-        {
-            "key": "hint_even_position",
-            "value": "{0} çift numaralı bir pozisyondadır."
-        },
-        {
-            "key": "hint_odd_position",
-            "value": "{0} tek numaralı bir pozisyondadır."
-        },
-        {
-            "key": "hint_between_count",
-            "value": "{0} ile {1} arasında tam olarak {2} kart vardır."
-        },
-        {
-            "key": "false_there_is",
-            "value": "Masada kesinlikle {0} vardır."
-        },
-        {
-            "key": "false_no",
-            "value": "Masada {0} yoktur."
-        },
-        {
-            "key": "false_first",
-            "value": "{0} ilk karttır."
-        },
-        {
-            "key": "false_last",
-            "value": "{0} son karttır."
-        },
-        {
-            "key": "false_immediately_after",
-            "value": "{0}, {1}’den hemen sonradır."
-        },
-        {
-            "key": "false_exact_count_suit",
-            "value": "Masada tam olarak {0} tane {1} renginde kart vardır."
-        },
-        {
-            "key": "false_exact_count_rank",
-            "value": "Masada tam olarak {0} tane {1} değerinde kart vardır."
-        },
-        {
-            "key": "false_position_of_card",
-            "value": "{0}, {1}. pozisyondadır."
-        },
-        {
-            "key": "false_neighbor",
-            "value": "{0}, {1}’in yanındadır."
-        },
-        {
-            "key": "ArmorPuzzleInfo1",
-            "value": "Zırh parçalarını doğru sırayla yerleştirmeniz gerekiyor."
-        },
-        {
-            "key": "ArmorPuzzleInfo2",
-            "value": "Üst hücrede — miğfer, orta hücrede — göğüs zırhı, alt hücrede — çizmeler."
-        },
-        {
-            "key": "BalancePuzzleInfo",
-            "value": "Tüm ağırlıkları koyarak teraziyi dengelemeniz gerekiyor."
-        },
-        {
-            "key": "BookPuzzleInfo",
-            "value": "Kitapları doğru sırayla yerleştirmeniz gerekiyor."
-        },
-        {
-            "key": "SlidersPuzzleInfo",
-            "value": "Plakaları sıraya koymanız gerekiyor."
-        },
-        {
-            "key": "MazePuzzleInfo1",
-            "value": "Kırmızı topu labirentten çıkarmanız gerekiyor."
-        },
-        {
-            "key": "MazePuzzleInfo2",
-            "value": "Kontroller: WASD."
-        },
-        {
-            "key": "ClockPuzzleInfo1",
-            "value": "İpucuna göre saatteki zamanı ayarlamanız gerekiyor."
-        },
-        {
-            "key": "ClockPuzzleInfo2",
-            "value": "İpucuna göre saatteki zamanı ayarlamanız gerekiyor. Bazı ipuçları yanlış olabilir."
-        },
-        {
-            "key": "ClockPuzzleInfo3",
-            "value": "A — saat yönünün tersine döndürme."
-        },
-        {
-            "key": "ClockPuzzleInfo4",
-            "value": "D — saat yönünde döndürme."
-        },
-        {
-            "key": "ClockPuzzleInfo5",
-            "value": "E — ibre değiştirme."
-        },
-        {
-            "key": "ClockPuzzleInfo6",
-            "value": "Kontroller:"
-        },
-        {
-            "key": "ClockPuzzleInfo7",
-            "value": "İpuçlarına göre saati ayarlaman gerekiyor. Bazı ipuçları yanlıştır. Akrep ve yelkovan birbirinin hareketini etkiler."
-        },
-        {
-            "key": "CardsPuzzleInfo1",
-            "value": "Koşullara göre bir kart sırası oluşturmanız gerekiyor."
-        },
-        {
-            "key": "CardsPuzzleInfo2",
-            "value": "Sarı daireli alana, koşullara uyma ihtimali olan kartları yerleştirebilirsin."
-        },
-        {
-            "key": "CardsPuzzleInfo3",
-            "value": "Kırmızı artı işaretli alana, kesinlikle koşullara uymayan kartları yerleştirebilirsin."
-        },
-        {
-            "key": "DicesPuzzleInfo1",
-            "value": "Denklem doğru olacak şekilde zarları üst alana yerleştirmeniz gerekiyor."
-        },
-        {
-            "key": "DicesPuzzleInfo2",
-            "value": "Sağ fare tuşu — zar üzerindeki sayıyı değiştir."
-        },
-        {
-            "key": "DicesPuzzleInfo3",
-            "value": "Koşullar:"
-        },
-        {
-            "key": "DicesPuzzleInfo4",
-            "value": "Bu koşul, ilk kutuda değeri 1 olan bir zar olması gerektiğini belirtir."
-        },
-        {
-            "key": "DicesPuzzleInfo5",
-            "value": "Bu koşul, değeri 1 olan zarların kullanılamayacağını belirtir."
-        },
-        {
-            "key": "DicesPuzzleInfo6",
-            "value": "Bu koşul, değeri 1 olan zarların sayısının iki'den az olması gerektiğini belirtir."
-        },
-        {
-            "key": "DicesPuzzleInfo7",
-            "value": "Bu koşul, değeri 1 olan zarların sayısının iki'den fazla olması gerektiğini belirtir."
-        },
-        {
-            "key": "DicesPuzzleInfo8",
-            "value": "Sol fare tuşu — zarın rengini değiştir."
-        },
-        {
-            "key": "DicesPuzzleInfo9",
-            "value": "Bu koşul, üst üste iki siyah zardan fazla olmaması gerektiğini belirtir."
-        },
-        {
-            "key": "DicesPuzzleInfo10",
-            "value": "Bu koşul, ilk kutuda beyaz bir zar olması gerektiğini belirtir."
-        },
-        {
-            "key": "DicesPuzzleInfo11",
-            "value": "Bu koşul, siyah ve beyaz zarların sırayla olması gerektiğini belirtir."
-        },
-        {
-            "key": "SkipPuzzle",
-            "value": "Atla"
-        },
-        {
-            "key": "ContinuePuzzle",
-            "value": "Devam et"
-        },
-        {
-            "key": "NewItem",
-            "value": "Yeni eşya!"
-        },
-        {
-            "key": "ItemSuitable",
-            "value": "Eşya uyuyor."
-        },
-        {
-            "key": "ItemNotSuitable",
-            "value": "Eşya uygun değil."
-        },
-        {
-            "key": "InventoryFull",
-            "value": "Envanter dolu."
-        },
-        {
-            "key": "ItemBall",
-            "value": "Kırmızı top"
-        },
-        {
-            "key": "ItemBook",
-            "value": "Kitap"
-        },
-        {
-            "key": "ItemCards",
-            "value": "Oyun kartları"
-        },
-        {
-            "key": "ItemClockHand",
-            "value": "Saat ibresi"
-        },
-        {
-            "key": "ItemDices",
-            "value": "Zarlar"
-        },
-        {
-            "key": "ItemExitKey",
-            "value": "Yuvarlak anahtar"
-        },
-        {
-            "key": "ItemGoldenKey",
-            "value": "Altın anahtar"
-        },
-        {
-            "key": "ItemHelmet",
-            "value": "Miğfer"
-        },
-        {
-            "key": "ItemIronKey",
-            "value": "Demir anahtar"
-        },
-        {
-            "key": "ItemWeight",
-            "value": "Terazi için ağırlık"
-        },
-        {
-            "key": "ItemLight",
-            "value": "Meşale"
-        },
-        {
-            "key": "ItemPreciousKey",
-            "value": "Değerli anahtar"
-        },
-        {
-            "key": "ItemStonePlate",
-            "value": "Taş plaka"
-        },
-        {
-            "key": "GameOver",
-            "value": "Öldün!"
-        },
-        {
-            "key": "LevelComplete",
-            "value": "Bölüm tamamlandı!"
-        },
-        {
-            "key": "RestartLevel",
-            "value": "Bölümü yeniden başlat"
-        },
-        {
-            "key": "NextLevel",
-            "value": "Sonraki bölüm"
-        },
-        {
-            "key": "EndPuzzleInfo1",
-            "value": "Kabartmayı onarmak için parçaları döndürmelisin."
-        },
-        {
-            "key": "EndPuzzleInfo2",
-            "value": "E - yuvarlak anahtarı değiştir"
-        },
-        {
-            "key": "DoorWrongSide",
-            "value": "Kapı diğer taraftan açılıyor."
-        },
-        {
-            "key": "NoFuel",
-            "value": "Meşaleyi yakmak için ateş gerekiyor!"
-        },
-        {
-            "key": "Settings",
+            "key": "settings",
             "value": "Ayarlar"
         },
         {
-            "key": "Restart",
-            "value": "Yeniden başlat"
+            "key": "shop",
+            "value": "Mağaza"
         },
         {
-            "key": "SkipPanelText",
-            "value": "Kilidi açmak için bulmacayı çözün."
+            "key": "leaderboards",
+            "value": "Liderlik Tablosu"
+        },
+        {
+            "key": "dailyquests",
+            "value": "Günlük Görevler"
+        },
+        {
+            "key": "dailyquests2",
+            "value": "Günlük Görevler:"
+        },
+        {
+            "key": "STATSGlobalStats",
+            "value": "Genel İstatistikler"
+        },
+        {
+            "key": "STATSGamesPlayed",
+            "value": "OYNANAN OYUN: "
+        },
+        {
+            "key": "STATSWins",
+            "value": "KAZANMA:"
+        },
+        {
+            "key": "STATSRecords",
+            "value": "REKORLAR:"
+        },
+        {
+            "key": "STATSScore",
+            "value": "Puan:"
+        },
+        {
+            "key": "STATSTime",
+            "value": "Süre:"
+        },
+        {
+            "key": "STATSMoves",
+            "value": "Hamle:"
+        },
+        {
+            "key": "STATSPERFORMANCE",
+            "value": "PERFORMANS:"
+        },
+        {
+            "key": "STATSWinRate",
+            "value": "Kazanma Oranı:"
+        },
+        {
+            "key": "STATSAvgTime",
+            "value": "Ortalama Süre:"
+        },
+        {
+            "key": "STATSAvgMoves",
+            "value": "Ortalama Hamle:"
+        },
+        {
+            "key": "STATSStreaks",
+            "value": "SERİLER:"
+        },
+        {
+            "key": "STATSCurrentStreak",
+            "value": "Mevcut:"
+        },
+        {
+            "key": "STATSBestStreak",
+            "value": "En İyi:"
+        },
+        {
+            "key": "STATSHistory",
+            "value": "GEÇMİŞ (Son 10):"
+        },
+        {
+            "key": "STATSDifficulties",
+            "value": "Zorluk İstatistikleri:"
+        },
+        {
+            "key": "STATSEasyStats",
+            "value": "Kolay İstatistikleri"
+        },
+        {
+            "key": "STATSMediumStats",
+            "value": "Orta İstatistikleri"
+        },
+        {
+            "key": "STATSHardStats",
+            "value": "Zor İstatistikleri"
+        },
+        {
+            "key": "STATSGlobal",
+            "value": "Genel İstatistikler"
+        },
+        {
+            "key": "STATSKlondike",
+            "value": "Klondike İstatistikleri"
+        },
+        {
+            "key": "STATSSpider",
+            "value": "Örümcek İstatistikleri"
+        },
+        {
+            "key": "STATSFreecell",
+            "value": "FreeCell İstatistikleri"
+        },
+        {
+            "key": "STATSPyramid",
+            "value": "Piramit İstatistikleri"
+        },
+        {
+            "key": "STATSTripeaks",
+            "value": "TriPeaks İstatistikleri"
+        },
+        {
+            "key": "STATSOctagon",
+            "value": "Sekizgen İstatistikleri"
+        },
+        {
+            "key": "STATSMontana",
+            "value": "Montana İstatistikleri"
+        },
+        {
+            "key": "STATSMontecarlo",
+            "value": "Monte Carlo İstatistikleri"
+        },
+        {
+            "key": "STATSSultan",
+            "value": "Sultan İstatistikleri"
+        },
+        {
+            "key": "STATSYukon",
+            "value": "Yukon İstatistikleri"
+        },
+        {
+            "key": "ConfirmExit1",
+            "value": "Menüye dönmek istediğinizden emin misiniz?"
+        },
+        {
+            "key": "ConfirmExit2",
+            "value": "Bu oyun mağlubiyet sayılacak."
+        },
+        {
+            "key": "Yes",
+            "value": "EVET"
+        },
+        {
+            "key": "Yes2",
+            "value": "EVET, ayarları değiştir"
+        },
+        {
+            "key": "No",
+            "value": "HAYIR"
+        },
+        {
+            "key": "ConfirmNewGame1",
+            "value": "Yeni bir oyuna başlamak istediğinizden emin misiniz?"
+        },
+        {
+            "key": "ConfirmNewGame2",
+            "value": "Yeni oyuna başlamak mağlubiyet sayılacak."
+        },
+        {
+            "key": "WinText",
+            "value": "ZAFER!!!"
+        },
+        {
+            "key": "ExpText",
+            "value": "Kazanılan DP: "
+        },
+        {
+            "key": "LossText",
+            "value": "Hamle kalmadı"
+        },
+        {
+            "key": "UndoAll",
+            "value": "Tüm hamleleri geri al"
+        },
+        {
+            "key": "ToMenu",
+            "value": "Menü"
+        },
+        {
+            "key": "Undo",
+            "value": "Hamleyi geri al"
+        },
+        {
+            "key": "NewGame",
+            "value": "Yeni Oyun"
+        },
+        {
+            "key": "NewGlobalLevelNotification",
+            "value": "Yeni Genel Seviye: {newLevel}!"
+        },
+        {
+            "key": "STATSGlobalFavGame",
+            "value": "Favori oyun: "
+        },
+        {
+            "key": "STATSGlobalTotalMoves",
+            "value": "Toplam hamle: "
+        },
+        {
+            "key": "STATSGlobalTotalTime",
+            "value": "Toplam süre: "
+        },
+        {
+            "key": "STATSGlobalQuestsCompleted",
+            "value": "Tamamlanan görevler: "
+        },
+        {
+            "key": "STATSGlobalTotalGlobalXPearned",
+            "value": "Kazanılan toplam DP (Genel): "
+        },
+        {
+            "key": "STATSGlobalTotalGamesXPearned",
+            "value": "Kazanılan toplam DP (Oyunlar): "
+        },
+        {
+            "key": "STATSGlobalBestScore",
+            "value": "En iyi puan: "
+        },
+        {
+            "key": "STATSGlobalBestTime",
+            "value": "En iyi süre: "
+        },
+        {
+            "key": "STATSGlobalBestMoves",
+            "value": "En az hamle: "
+        },
+        {
+            "key": "STATSBaseBuyPrem",
+            "value": "Detaylı istatistikleri görmek için Premium satın alın"
+        },
+        {
+            "key": "PurchasePremium",
+            "value": "Premium Satın Al"
+        },
+        {
+            "key": "STATSGlobalQuestsStreaks",
+            "value": "GÖREV SERİLERİ:"
+        },
+        {
+            "key": "SmallStreak",
+            "value": "Küçük seri:"
+        },
+        {
+            "key": "BigStreak",
+            "value": "Büyük seri:"
+        },
+        {
+            "key": "Diff2",
+            "value": "Zorluk:"
+        },
+        {
+            "key": "NewRecord",
+            "value": "Yeni Rekor!"
+        },
+        {
+            "key": "Game",
+            "value": "Oyun:"
+        },
+        {
+            "key": "Draw1",
+            "value": "1 Kart Çek"
+        },
+        {
+            "key": "Draw3",
+            "value": "3 Kart Çek"
+        },
+        {
+            "key": "Suit1",
+            "value": "1 Seri"
+        },
+        {
+            "key": "Suit2",
+            "value": "2 Seri"
+        },
+        {
+            "key": "Suit4",
+            "value": "4 Seri"
+        },
+        {
+            "key": "Round1",
+            "value": "1 Tur"
+        },
+        {
+            "key": "Round2",
+            "value": "2 Tur"
+        },
+        {
+            "key": "Round3",
+            "value": "3 Tur"
+        },
+        {
+            "key": "SoundOn",
+            "value": "Ses AÇIK"
+        },
+        {
+            "key": "SoundOff",
+            "value": "Ses KAPALI"
+        },
+        {
+            "key": "Confirm",
+            "value": "Onayla"
+        },
+        {
+            "key": "ChangeBG",
+            "value": "Arka Planı Değiştir"
+        },
+        {
+            "key": "ChangeCards",
+            "value": "Kartları Değiştir"
+        },
+        {
+            "key": "SettingsSound",
+            "value": "Ses"
+        },
+        {
+            "key": "SettingsLanguage",
+            "value": "Dil"
+        },
+        {
+            "key": "SettingsDesign",
+            "value": "Tasarım"
+        },
+        {
+            "key": "ChangeBack",
+            "value": "Kart Arkasını Değiştir"
+        },
+        {
+            "key": "ChangeDeck",
+            "value": "Desteyi Değiştir"
+        },
+        {
+            "key": "tutorial",
+            "value": "Eğitim"
+        },
+        {
+            "key": "Foundaton",
+            "value": "Temeller"
+        },
+        {
+            "key": "Stock",
+            "value": "Deste"
+        },
+        {
+            "key": "Tableau",
+            "value": "Oyun Alanı"
+        },
+        {
+            "key": "AutoButton",
+            "value": "Otomatik"
+        },
+        {
+            "key": "KlondikeTutorial1",
+            "value": "Oyunun amacı, kartları üstteki <color=#FCA311>'Temeller'</color> alanında toplamaktır.\nAçık olan <color=#8294FF>Maça Altılısını (6♠)</color> ilk <color=#FCA311>Temel'e</color> sürükleyin."
+        },
+        {
+            "key": "KlondikeTutorial2",
+            "value": "<color=#FCA311>Oyun Alanında</color>, kartlar azalan sırada ve renkleri dönüşümlü olarak dizilir.\n<color=#8294FF>Siyah Sinek Onlusunu (10♣)</color>, <color=#FF6B6B>kırmızı Karo Valesinin (J♦)</color> üzerine sürükleyin."
+        },
+        {
+            "key": "KlondikeTutorial3",
+            "value": "Harika, gizli bir kart açıldı! Kartları çift tıklayarak hızla <color=#FCA311>Temel'e</color> gönderebilirsiniz.\n<color=#FF6B6B>Kupa Altılısına (6♥)</color> çift tıklayın."
+        },
+        {
+            "key": "KlondikeTutorial4",
+            "value": "Oyun alanındaki boş hücrelere <color=#FCA311>SADECE</color> Papazlar konulabilir.\n<color=#FF6B6B>Kupa Papazını (K♥)</color> ilk boş sütuna sürükleyin."
+        },
+        {
+            "key": "KlondikeTutorial5",
+            "value": "Birden fazla açık kartı aynı anda taşıyabilirsiniz.\n<color=#FF6B6B>Kırmızı Karo Onlusunun (10♦)</color> bulunduğu desteyi <color=#8294FF>siyah Sinek Valesinin (J♣)</color> üzerine taşıyın."
+        },
+        {
+            "key": "KlondikeTutorial6",
+            "value": "Yapacak hamle kalmadı mı? (Sol üstteki) <color=#FCA311>Desteyi</color> kullanın. Bir kart çekmek için üzerine tıklayın."
+        },
+        {
+            "key": "KlondikeTutorial7",
+            "value": "Bize bir <color=#8294FF>Maça Onlusu (10♠)</color> geldi. Onu açılan <color=#FF6B6B>Kupa Valesinin (J♥)</color> üzerine koyun."
+        },
+        {
+            "key": "KlondikeTutorial8",
+            "value": "Harika bir hamle! Ancak bazen bir işlemi geri almak gerekir. Ekranın altındaki <color=#FCA311>'Hamleyi geri al'</color> düğmesinin nasıl çalıştığını kontrol edelim."
+        },
+        {
+            "key": "KlondikeTutorial9",
+            "value": "<color=#8294FF>Maça Onlusunu (10♠)</color> tekrar <color=#FF6B6B>Kupa Valesinin (J♥)</color> üzerine geri koyun."
+        },
+        {
+            "key": "KlondikeTutorial10",
+            "value": "Bazen bir kartı <color=#FCA311>Temel'den</color> alıp tekrar oyun alanına koymak faydalıdır.\n<color=#FF6B6B>Karo Dokuzlusunu (9♦)</color> <color=#FCA311>Temel'den</color> alarak <color=#8294FF>siyah Maça Onlusunun (10♠)</color> üzerine sürükleyin."
+        },
+        {
+            "key": "KlondikeTutorial11",
+            "value": "Eğitim <color=#FCA311>destemizde</color> son bir kart kaldı. Hadi onu çekelim!\nDesteye tıklayın."
+        },
+        {
+            "key": "KlondikeTutorial12",
+            "value": "<color=#FF6B6B>Kupa Dokuzlusunu (9♥)</color>, <color=#8294FF>Sinek Onlusunun (10♣)</color> üzerine koyun."
+        },
+        {
+            "key": "KlondikeTutorial13",
+            "value": "Deste bitti! Şimdi açılan kartları <color=#FCA311>Temel'e</color> gönderelim.\n<color=#8294FF>Maça Yedilisine (7♠)</color> çift tıklayın."
+        },
+        {
+            "key": "KlondikeTutorial14",
+            "value": "<color=#FF6B6B>Kupa Yedilisine (7♥)</color> çift tıklayın."
+        },
+        {
+            "key": "KlondikeTutorial15",
+            "value": "Tüm kartlar açıldı. <color=#FCA311>'OTOMATİK'</color> düğmesine basın!"
+        },
+        {
+            "key": "KlondikeTutorialEnd",
+            "value": "<color=#FCA311>Tebrikler!</color> Tüm mekanikleri öğrendiniz. Oyunda iyi şanslar!"
+        },
+        {
+            "key": "SpiderTutorial1",
+            "value": "Örümcek oyununda kartlar azalan sırada dizilir.\n<color=#8294FF>Maça Sekizlisini (8♠)</color>, <color=#8294FF>Maça Dokuzlusunun (9♠)</color> üzerine sürükleyin."
+        },
+        {
+            "key": "SpiderTutorial2",
+            "value": "Harika, gizli bir kart açıldı!\n<color=#FCA311>Aynı seriden</color> olan kart yığınları birlikte taşınabilir. <color=#8294FF>7♠-6♠-5♠</color> yığınını Sekizlinizin üzerine taşıyın."
+        },
+        {
+            "key": "SpiderTutorial3",
+            "value": "Serisi ne olursa olsun kartları birbiri üzerine koyabilirsiniz.\n<color=#FF6B6B>Kupa Dörtlüsünü (4♥)</color>, siyah <color=#8294FF>Maça Beşlisinin (5♠)</color> üzerine koyun."
+        },
+        {
+            "key": "SpiderTutorial4",
+            "value": "Dikkat: Farklı serilerden oluşan yığınlar <color=#FF6B6B>kilitlenir</color>! Birlikte taşınamazlar.\nKartı geri almak için <color=#FCA311>'Hamleyi geri al'</color>a basın."
+        },
+        {
+            "key": "SpiderTutorial5",
+            "value": "Desteden yeni kartlar dağıtmak için oyun alanında boş hücre olmamalıdır!\n<color=#8294FF>Maça Papazını (K♠)</color> sağdaki boş sütuna taşıyın."
+        },
+        {
+            "key": "SpiderTutorial6",
+            "value": "Şimdi tüm hücreler dolu. Yeni bir sıra kart dağıtmak için sağ alt köşedeki <color=#FCA311>desteye</color> tıklayın."
+        },
+        {
+            "key": "SpiderTutorial7",
+            "value": "İhtiyacımız olan Aslar geldi! Ancak İkililer yeni kartlarla örtüldü.\n<color=#8294FF>Maça Üçlüsünü (3♠)</color>, <color=#8294FF>Maça Dörtlüsünün (4♠)</color> üzerine taşıyın."
+        },
+        {
+            "key": "SpiderTutorial8",
+            "value": "Yol açıldı! Seriyi tamamlamak için <color=#FF6B6B>Kupa Asını (A♥)</color>, <color=#FF6B6B>Kupa İkilisinin (2♥)</color> üzerine taşıyın!"
+        },
+        {
+            "key": "SpiderTutorial9",
+            "value": "Harika! Şimdi ikinci İkiliyi kurtaralım.\n<color=#FF6B6B>Kupa Dörtlüsünü (4♥)</color>, <color=#8294FF>Maça Beşlisinin (5♠)</color> üzerine taşıyın."
+        },
+        {
+            "key": "SpiderTutorial10",
+            "value": "Ve şimdi <color=#8294FF>Maça Asını (A♠)</color>, kalan son yığındaki <color=#8294FF>Maça İkilisinin (2♠)</color> üzerine taşıyın."
+        },
+        {
+            "key": "SpiderTutorialEnd",
+            "value": "Tebrikler! Örümcek oyununun tüm mekaniklerini öğrendiniz!"
+        },
+        {
+            "key": "FreeCellTutorial1",
+            "value": "Bu solitaire oyununun temel özelliği 4 adet <color=#FCA311>Boş Hücre</color> bulunmasıdır.\n<color=#8294FF>Maça Ası (A♠)</color> engellenmiş durumda. <color=#FF6B6B>Kupa Sekizlisini (8♥)</color> bir <color=#FCA311>Boş Hücreye</color> (sol üst) taşıyın."
+        },
+        {
+            "key": "FreeCellTutorial2",
+            "value": "As serbest kaldı! Tüm uygun kartları <color=#FCA311>Temellere</color> göndermek için <color=#FCA311>'OTOMATİK'</color> düğmesine basın."
+        },
+        {
+            "key": "FreeCellTutorial3",
+            "value": "Tıpkı Klondike'da olduğu gibi, oyun alanındaki kartların renkleri dönüşümlü olmalıdır.\n<color=#FF6B6B>Karo Yedilisini (7♦)</color>, <color=#8294FF>Sinek Sekizlisinin (8♣)</color> üzerine taşıyın."
+        },
+        {
+            "key": "FreeCellTutorial4",
+            "value": "Otomatik düğmesinin yanındaki <color=#FCA311>gösterge</color>, taşıyabileceğiniz maksimum yığın uzunluğunu gösterir (şu an 4).\nSütunu boşaltmak için <color=#FF6B6B>Karo Onlusunu (10♦)</color> bir <color=#FCA311>Boş Hücreye</color> taşıyın."
+        },
+        {
+            "key": "FreeCellTutorial5",
+            "value": "Gösterge değişti (6/3). İkinci sayı, <color=#FCA311>boş bir sütun</color> için sınırdır.\nYığını (<color=#8294FF>6♠</color> ve <color=#FF6B6B>5♥</color>) boş sütuna taşıyın."
+        },
+        {
+            "key": "FreeCellTutorial6",
+            "value": "Herhangi bir hamle geri alınabilir. Ekranın altındaki <color=#FCA311>'Hamleyi geri al'</color> düğmesinin nasıl çalıştığını kontrol edelim."
+        },
+        {
+            "key": "FreeCellTutorial7",
+            "value": "Şimdi bu yığını (<color=#8294FF>6♠</color> ve <color=#FF6B6B>5♥</color>) <color=#FF6B6B>Karo Yedilisinin (7♦)</color> üzerine taşıyın."
+        },
+        {
+            "key": "FreeCellTutorial8",
+            "value": "Eğitim tamamlandı! Kalan kartları toplayıp kazanmak için <color=#FCA311>'OTOMATİK'</color> düğmesine basın!"
+        },
+        {
+            "key": "FreeCellTutorialEnd",
+            "value": "<color=#FCA311>Tebrikler!</color> FreeCell kurallarını tamamen öğrendiniz. Oyunda iyi şanslar!"
+        },
+        {
+            "key": "FreeCellTutorInfo1",
+            "value": "Boş Hücreler"
+        },
+        {
+            "key": "PyramidTutorial1",
+            "value": "Piramit oyununda, toplamı <color=#FCA311>13</color> olan kart çiftlerini kaldırmanız gerekir. Papaz 13 değerindedir ve tek bir tıklamayla kaldırılabilir.\n<color=#8294FF>Maça Papazına (K♠)</color> tıklayın."
+        },
+        {
+            "key": "PyramidTutorial2",
+            "value": "Kız (12) + As (1) = <color=#FCA311>13</color>.\nKaldırmak için önce <color=#FF6B6B>Karo Kızına (Q♦)</color>, ardından <color=#8294FF>Sinek Asına (A♣)</color> tıklayın."
+        },
+        {
+            "key": "PyramidTutorial3",
+            "value": "Bir kartın değerini mi unuttunuz? Üstteki <color=#FCA311>'İpucu'</color> düğmesine basın."
+        },
+        {
+            "key": "PyramidTutorial4",
+            "value": "Masada eşleşen çift yok. Yeni kartlar açmak için destenin altındaki <color=#FCA311>düğmeye</color> tıklayın. Not: Sadece <color=#FCA311>2 kez yeniden dağıtma</color> hakkınız var!"
+        },
+        {
+            "key": "PyramidTutorial5",
+            "value": "Harika! Beş (5) + Sekiz (8) = <color=#FCA311>13</color>.\nDesteden gelen <color=#8294FF>Maça Beşlisini (5♠)</color>, masadaki <color=#8294FF>Maça Sekizlisiyle (8♠)</color> eşleştirin."
+        },
+        {
+            "key": "PyramidTutorial6",
+            "value": "Harika bir hamle! Ancak bazen bir işlemi geri almak gerekir. Ekranın altındaki <color=#FCA311>'Hamleyi geri al'</color> düğmesine basın."
+        },
+        {
+            "key": "PyramidTutorial7",
+            "value": "Şimdi <color=#8294FF>Maça Beşlisi (5♠)</color> ile <color=#8294FF>Maça Sekizlisini (8♠)</color> tekrar eşleştirelim."
+        },
+        {
+            "key": "PyramidTutorial8",
+            "value": "Dokuz (9) + Dört (4) = <color=#FCA311>13</color>.\nDesteden gelen <color=#FF6B6B>Kupa Dokuzlusunu (9♥)</color>, <color=#8294FF>Sinek Dörtlüsüyle (4♣)</color> eşleştirin."
+        },
+        {
+            "key": "PyramidTutorial9",
+            "value": "Yol açıldı! Zirvede bir Yedili ve atık destesinde bizim Altılımız var.\n<color=#FF6B6B>Karo Altılısına (6♦)</color> ve <color=#FF6B6B>Kupa Yedilisine (7♥)</color> tıklayın!"
+        },
+        {
+            "key": "PyramidTutorialEnd",
+            "value": "<color=#FCA311>Tebrikler!</color> Piramit oyununu öğrendiniz!"
+        },
+        {
+            "key": "TriPeaksTutorial1",
+            "value": "Amaç <color=#FCA311>tüm kartları kaldırmaktır</color>. Atık destesindeki (şu an <color=#8294FF>5♠</color>) karttan <color=#FCA311>1 değer yüksek veya düşük</color> açık kartları seçin. Puan kazanmak için uzun <color=#FCA311>kombolar</color> yapın!\nKaldırın: <color=#FF6B6B>6♥</color> -> <color=#8294FF>7♣</color> -> <color=#FF6B6B>8♦</color>."
+        },
+        {
+            "key": "TriPeaksTutorial3",
+            "value": "Başka hamle kalmadı. <color=#FCA311>Desteden</color> yeni bir kart çekin."
+        },
+        {
+            "key": "TriPeaksTutorial4",
+            "value": "Bize bir <color=#FF6B6B>Kız (Q♦)</color> geldi. Kart değerleri <color=#FCA311>döngüseldir</color>: <color=#8294FF>Papazın (K)</color> üzerine bir <color=#FF6B6B>As (A)</color>, Asın üzerine ise bir <color=#8294FF>İkili (2)</color> oynanabilir. Bu zinciri tamamlayın!"
+        },
+        {
+            "key": "TriPeaksTutorial7",
+            "value": "<color=#FCA311>'Hamleyi geri al'</color> düğmesinin nasıl çalıştığını kontrol edelim. Üzerine tıklayın."
+        },
+        {
+            "key": "TriPeaksTutorial8",
+            "value": "Harika! <color=#8294FF>Sinek İkilisini (2♣)</color> geri getirin ve masayı temizleyin: <color=#8294FF>2</color> -> <color=#FF6B6B>3</color> -> <color=#8294FF>4</color> -> <color=#FF6B6B>5</color>!"
+        },
+        {
+            "key": "TriPeaksTutorialEnd",
+            "value": "<color=#FCA311>Tebrikler!</color> TriPeaks oyununu öğrendiniz!"
+        },
+        {
+            "key": "YukonTutorial1",
+            "value": "Oyunumuzun iki varyantı var: <color=#FCA311>'Klasik'</color> ve <color=#FCA311>'Rus'</color>. Klasik modda kartlar renk dönüşümlü dizilir.\n<color=#8294FF>Siyah Maça Onlusunu (10♠)</color>, <color=#FF6B6B>kırmızı Kupa Valesinin (J♥)</color> üzerine taşıyın."
+        },
+        {
+            "key": "YukonTutorial2",
+            "value": "<color=#FCA311>'Rus'</color> varyantının kuralları farklıdır — kartlar kesinlikle aynı seriye göre dizilir.\nNasıl çalıştığını görmek için aynı <color=#8294FF>Maça Onlusunu (10♠)</color>, <color=#8294FF>Maça Valesinin (J♠)</color> üzerine taşıyalım."
+        },
+        {
+            "key": "YukonTutorial3",
+            "value": "Harika! Artık iki varyantı da biliyoruz. Bu hamleyi geri alıp Klasik kurallarla eğitime devam edelim.\n<color=#FCA311>'Hamleyi geri al'</color> düğmesine basın."
+        },
+        {
+            "key": "YukonTutorial4",
+            "value": "Yukon'un asıl özelliği yığınları taşımaktır. Açık olan <color=#FCA311>HERHANGİ BİR</color> kartı tutup üzerindeki devasa yığınla birlikte sürükleyebilirsiniz!\nSon sütundaki <color=#8294FF>siyah Sinek Kızını (Q♣)</color> alın ve <color=#FF6B6B>kırmızı Kupa Papazının (K♥)</color> üzerine taşıyın."
+        },
+        {
+            "key": "YukonTutorial5",
+            "value": "Kartları çift tıklayarak hızla <color=#FCA311>Temellere</color> gönderebilirsiniz.\nHadi <color=#8294FF>Sinek Onlusunu (10♣)</color> oraya gönderelim!"
+        },
+        {
+            "key": "YukonTutorial6",
+            "value": "Oyun alanındaki boş hücrelere <color=#FCA311>SADECE</color> Papazlar konulabilir.\nAltındaki kartı açmak için <color=#8294FF>Maça Papazını (K♠)</color> boş sütuna taşıyın."
+        },
+        {
+            "key": "YukonTutorial7",
+            "value": "Tüm mekanikleri öğrendiniz! Masada artık kapalı kart kalmadı.\nOyunu hızla bitirmek için <color=#FCA311>'OTOMATİK'</color> düğmesine basın!"
+        },
+        {
+            "key": "YukonTutorialEnd",
+            "value": "<color=#FCA311>Tebrikler!</color> Yukon oyununun tüm mekaniklerini öğrendiniz. Oyunda iyi şanslar!"
+        },
+        {
+            "key": "MonteCarloTutorial1",
+            "value": "Monte Carlo oyununda, aynı olan kart çiftlerini kaldırmanız gerekir.\nÖncelikle <color=#FCA311>'8 Yön'</color> kuralı. Yan yana duran iki Beşliye tıklayın: <color=#FF6B6B>(5♥)</color> ve <color=#8294FF>(5♠)</color>."
+        },
+        {
+            "key": "MonteCarloTutorial2",
+            "value": "Kartlar kaydı! Şimdi <color=#FCA311>'4 Yön'</color> modu (artı şeklinde) aktif.\nYedililer üst üste geldi. <color=#FF6B6B>(7♦)</color> ve <color=#8294FF>(7♣)</color> kartlarını kaldırın!"
+        },
+        {
+            "key": "MonteCarloTutorial3",
+            "value": "Tekrar <color=#FCA311>'8 Yön'</color> modu! Artık çapraz olarak da eşleştirebilirsiniz.\nİki Papazı kaldırın: <color=#FF6B6B>(K♥)</color> ve <color=#8294FF>(K♠)</color>."
+        },
+        {
+            "key": "MonteCarloTutorial4",
+            "value": "Harika bir hamle! Ancak <color=#FCA311>'Hamleyi geri al'</color> düğmesinin nasıl çalıştığını kontrol edelim.\nEkranın altındaki Hamleyi geri al düğmesine basın."
+        },
+        {
+            "key": "MonteCarloTutorial5",
+            "value": "Papazlar yerine döndü. Artık tüm kuralları biliyorsunuz!\nKalan tüm çiftleri kaldırarak oyunu bitirin."
+        },
+        {
+            "key": "MonteCarloTutorial6",
+            "value": "Tamamen kazanana kadar çiftleri kaldırmaya devam edin!"
+        },
+        {
+            "key": "MonteCarloTutorialEnd",
+            "value": "<color=#FCA311>Tebrikler!</color> Monte Carlo kurallarını öğrendiniz!"
+        },
+        {
+            "key": "SultanTutorial1",
+            "value": "Oyunun amacı, tüm kartları Sultan'ın (Kupa Papazı) etrafındaki <color=#FCA311>Temellerde</color> toplamaktır.\n<color=#FF6B6B>Kupa Valesini (J♥)</color> <color=#FCA311>Yedeklerden</color> uygun bir Temel'e taşıyın."
+        },
+        {
+            "key": "SultanTutorial2",
+            "value": "'Sultan' oyununda deste, oyun boyunca <color=#FCA311>sadece 2 kez</color> çevrilebilir!\nYeni bir kart açmak için <color=#FCA311>desteye</color> tıklayın."
+        },
+        {
+            "key": "SultanTutorial3",
+            "value": "Bize bir <color=#8294FF>Sinek Valesi (J♣)</color> geldi. Sinek Temellerinin önce Onlulara ihtiyacı olduğu için şu an buna gerek yok.\nBunu <color=#FCA311>boş bir Yedek hücresine</color> taşıyın."
+        },
+        {
+            "key": "SultanTutorial4",
+            "value": "Harika bir hamle! Ancak yedeklerdeki boş yerler çok değerlidir, onları saklamak en iyisidir.\nEkranın altındaki <color=#FCA311>'Hamleyi geri al'</color> düğmesine basın."
+        },
+        {
+            "key": "SultanTutorial5",
+            "value": "Bir sonraki kartın ne olduğuna bakalım.\n<color=#FCA311>Desteye</color> bir kez daha tıklayın."
+        },
+        {
+            "key": "SultanTutorial6",
+            "value": "Bu bir <color=#FF6B6B>Karo Valesi (J♦)</color>! Kusursuz bir şekilde uyuyor.\nBunu atık destesinden doğrudan doğru <color=#FCA311>Temel'e</color> gönderin."
+        },
+        {
+            "key": "SultanTutorial7",
+            "value": "Kartlar <color=#FCA311>çift tıklama</color> ile hızla taşınabilir. Oyun kendi başına yeri seçecektir: önce Temelleri, sonra Yedekleri kontrol eder.\n<color=#8294FF>Sinek Valesine (J♣)</color> çift tıklayın."
+        },
+        {
+            "key": "SultanTutorial8",
+            "value": "Harika! Vale boş Yedek hücresine uçtu. Şimdi <color=#FCA311>desteden</color> bir kart daha çekelim."
+        },
+        {
+            "key": "SultanTutorial9",
+            "value": "Bu bir <color=#8294FF>Sinek Onlusu (10♣)</color> ve Temellerin buna ihtiyacı var! Üzerine <color=#FCA311>iki kez</color> tıklayın, doğrudan doğru yere uçacaktır."
+        },
+        {
+            "key": "SultanTutorial10",
+            "value": "Sultan oyununun tüm kurallarını öğrendiniz!\n<color=#FCA311>Kalan kartları</color> dağıtarak oyunu kendi başınıza bitirin."
+        },
+        {
+            "key": "SultanTutorialEnd",
+            "value": "<color=#FCA311>Tebrikler!</color> Sultan oyununu başarıyla öğrendiniz!"
+        },
+        {
+            "key": "OctagonTutorial1",
+            "value": "Sekizgen'e hoş geldiniz! Zafere çok az kaldı. Biraz yeni kart açalım: <color=#FCA311>desteye</color> tıklayın. Unutmayın: Deste bir oyunda <color=#FCA311>sadece 2 kez</color> çevrilebilir!"
+        },
+        {
+            "key": "OctagonTutorial2",
+            "value": "Masada kartlar azalan sırada dizilir ve renk <color=#FCA311>HERHANGİ BİRİ</color> olabilir.\nAtık destesindeki <color=#FF6B6B>Kupa Kızını (Q♥)</color>, masadaki <color=#8294FF>Sinek Papazının (K♣)</color> üzerine taşıyın."
+        },
+        {
+            "key": "OctagonTutorial3",
+            "value": "Sol hücre grubunda sadece bir kart kaldı. <color=#8294FF>Sinek Valesini (J♣)</color>, bizim <color=#FF6B6B>Kupa Kızının (Q♥)</color> üzerine taşıyın. Grup boşalacak ve <color=#FCA311>otomatik olarak</color> yeni kartlarla dolacaktır!"
+        },
+        {
+            "key": "OctagonTutorial4",
+            "value": "Yeni kartlar şu an bize yardımcı olmadı ve Vale ihtiyacımız olan kartı engelledi. Her şeyi geri alalım! <color=#FCA311>'Hamleyi geri al'</color> düğmesine basın."
+        },
+        {
+            "key": "OctagonTutorial5",
+            "value": "Bazen durumu kurtarmak için gereken bir kartı doğrudan Temel'den alabilirsiniz! (Sadece Asları ve Papazları alamazsınız). <color=#FF6B6B>Karo Kızını (Q♦)</color> Temel'den çekin ve <color=#8294FF>Maça Papazının (K♠)</color> üzerine koyun."
+        },
+        {
+            "key": "OctagonTutorial6",
+            "value": "Mükemmel! Çift tıklama bir kartı Temel'e VEYA masaya gönderir, ancak masadayken <color=#FCA311>seri (renk) tam olarak eşleşmelidir</color>. <color=#FF6B6B>Karo Valesine (J♦)</color> çift tıklayın."
+        },
+        {
+            "key": "OctagonTutorial7",
+            "value": "Valeyi kaldırarak final kartlarının kilidini açtık! Şimdi açılan <color=#FF6B6B>Kupa Papazına (K♥)</color> çift tıklayın, doğruca Temel'e gidecektir."
+        },
+        {
+            "key": "OctagonTutorial8",
+            "value": "Sekizgen'in tüm mekaniklerini öğrendiniz!\nMasada sadece birkaç açık kart kaldı. Bunları <color=#FCA311>Temellere</color> dağıtın ve oyunu bitirin!"
+        },
+        {
+            "key": "OctagonTutorialEnd",
+            "value": "<color=#FCA311>Tebrikler!</color> Eğitimi başarıyla tamamladınız ve Sekizgen oyununu çözdünüz!"
+        },
+        {
+            "key": "CarpetTutorial1",
+            "value": "'Montana' oyununun amacı, kartları As'tan Papaz'a kadar 4 sıra halinde dizmektir. SOLDAKİ boş hücrelere sadece Aslar yerleştirilebilir. <color=#8294FF>Maça Asını (A♠)</color> ilk boş hücreye sürükleyin."
+        },
+        {
+            "key": "CarpetTutorialUndo",
+            "value": "Harika bir hamle! Ancak bazen bir işlemi geri almak gerekir. Ekranın altındaki <color=#FCA311>'Hamleyi geri al'</color> düğmesinin nasıl çalıştığını kontrol edelim. Üzerine tıklayın."
+        },
+        {
+            "key": "CarpetTutorial2",
+            "value": "As geri döndü! Kartlar çift tıklama ile hızla yerlerine gönderilebilir. <color=#8294FF>Maça Asına (A♠)</color> çift tıklayın."
+        },
+        {
+            "key": "CarpetTutorial3",
+            "value": "As'ı aynı seriden bir İkili takip etmelidir. <color=#8294FF>Maça İkilisine (2♠)</color> çift tıklayın."
+        },
+        {
+            "key": "CarpetTutorial4",
+            "value": "Sıraya devam edin! <color=#8294FF>Maça Üçlüsünü (3♠)</color> çift tıklayarak İkilinin yanına gönderin."
+        },
+        {
+            "key": "CarpetTutorial5",
+            "value": "Harika! Uygun hamleler olduğu sürece Maçaları taşımaya devam edin!"
+        },
+        {
+            "key": "CarpetTutorialAces",
+            "value": "Şimdi kalan Asları çift tıklayarak soldaki boş hücrelere gönderin! <color=#8294FF>Sinek Ası (A♣)</color> ile başlayın."
+        },
+        {
+            "key": "CarpetTutorialAces2",
+            "value": "Ve şimdi <color=#FF6B6B>Karo Ası (A♦)</color>."
+        },
+        {
+            "key": "CarpetTutorial6",
+            "value": "Çıkmaza girdiniz! Tüm boş hücreler Papazların arkasında kaldı ve Papazlardan sonra kart koyamazsınız. <color=#FCA311>'Yeniden Dağıt'</color> düğmesine basın!"
+        },
+        {
+            "key": "CarpetTutorial7",
+            "value": "Şu an <color=#FCA311>'Zor'</color> mod aktif: yeniden dağıtımdan sonraki boş hücreler SADECE sıranın sonunda belirir. <color=#FF6B6B>Kupa Valesini (J♥)</color> Onlunun arkasındaki boş hücreye taşıyın."
+        },
+        {
+            "key": "CarpetTutorial8",
+            "value": "Maça Yedilisinin arkasında bir hücre açıldı! Şimdi <color=#8294FF>Maça Sekizlisini (8♠)</color> güvenle çift tıklayarak oraya gönderin."
+        },
+        {
+            "key": "CarpetTutorial9",
+            "value": "Yine çıkmaz sokak! Bir kez daha <color=#FCA311>'Yeniden Dağıt'</color> düğmesine basın. <color=#FCA311>'Klasik'</color> moda dönüyoruz — boş hücreler uygun bir şekilde toplanmış kartların hemen arkasında belirecek!"
+        },
+        {
+            "key": "CarpetTutorial10",
+            "value": "Neredeyse bitti! Kartlar mucizevi bir şekilde bir araya geldi, sadece son hamle kaldı. <color=#FF6B6B>Kupa Valesini (J♥)</color> yerine gönderin."
+        },
+        {
+            "key": "CarpetTutorial11",
+            "value": "Harika! Şimdi <color=#FF6B6B>Kupa Kızını (Q♥)</color>."
+        },
+        {
+            "key": "CarpetTutorial12",
+            "value": "Ve son olarak, mutlak bir zafer için <color=#FF6B6B>Kupa Papazını (K♥)</color>!"
+        },
+        {
+            "key": "CarpetTutorialEnd",
+            "value": "<color=#FCA311>Tebrikler!</color> Montana oyununun kurallarını ustalıkla öğrendiniz!"
+        },
+        {
+            "key": "Leaderboard_Global",
+            "value": "Genel Liderlik Tablosu"
+        },
+        {
+            "key": "Leaderboard_Klondike",
+            "value": "Klondike Liderlik Tablosu"
+        },
+        {
+            "key": "Leaderboard_Spider",
+            "value": "Örümcek Liderlik Tablosu"
+        },
+        {
+            "key": "Leaderboard_FreeCell",
+            "value": "FreeCell Liderlik Tablosu"
+        },
+        {
+            "key": "Leaderboard_Pyramid",
+            "value": "Piramit Liderlik Tablosu"
+        },
+        {
+            "key": "Leaderboard_TriPeaks",
+            "value": "TriPeaks Liderlik Tablosu"
+        },
+        {
+            "key": "Leaderboard_Sultan",
+            "value": "Sultan Liderlik Tablosu"
+        },
+        {
+            "key": "Leaderboard_MonteCarlo",
+            "value": "Monte Carlo Liderlik Tablosu"
+        },
+        {
+            "key": "Leaderboard_Montana",
+            "value": "Montana Liderlik Tablosu"
+        },
+        {
+            "key": "Leaderboard_Octagon",
+            "value": "Sekizgen Liderlik Tablosu"
+        },
+        {
+            "key": "Leaderboard_Yukon",
+            "value": "Yukon Liderlik Tablosu"
+        },
+        {
+            "key": "Quest_General_Easy_01_Title",
+            "value": "Kart Maratonu"
+        },
+        {
+            "key": "Quest_General_Easy_01_Desc",
+            "value": "Bugün oynanan tüm oyunlarda toplam <color=#ffbb00>{0} hamle</color> yapın."
+        },
+        {
+            "key": "Quest_General_Easy_02_Title",
+            "value": "Kaşif"
+        },
+        {
+            "key": "Quest_General_Easy_02_Desc",
+            "value": "Bu mekaniğe sahip oyunlarda (<color=#a8d9e0>Klondike</color>, <color=#a8d9e0>Spider</color>, <color=#a8d9e0>Yukon</color>) masadaki <color=#ffbb00>{0} kapalı kartı</color> açın."
+        },
+        {
+            "key": "Quest_General_Easy_03_Title",
+            "value": "Hevesli Oyuncu"
+        },
+        {
+            "key": "Quest_General_Easy_03_Desc",
+            "value": "Herhangi <color=#ffbb00>{0} oyunu</color> tamamen bitirin."
+        },
+        {
+            "key": "Quest_General_Easy_04_Title",
+            "value": "Eve Dönüş"
+        },
+        {
+            "key": "Quest_General_Easy_04_Desc",
+            "value": "Tüm oyunlarda toplam <color=#ffbb00>{0} kartı</color> <color=#ffbb00>Temel destelerine</color> taşıyın."
+        },
+        {
+            "key": "Quest_General_Easy_05_Title",
+            "value": "Tadımcı"
+        },
+        {
+            "key": "Quest_General_Easy_05_Desc",
+            "value": "<color=#ffbb00>{0} farklı Solitaire modunda</color> en az bir oyun oynayın (örn. <color=#a8d9e0>Klondike</color>, <color=#a8d9e0>Sultan</color>, <color=#a8d9e0>Yukon</color>)."
+        },
+        {
+            "key": "Quest_General_Easy_06_Title",
+            "value": "Masada Geçen Zaman"
+        },
+        {
+            "key": "Quest_General_Easy_06_Desc",
+            "value": "Oyun içinde toplam <color=#ffbb00>{0} dakika</color> geçirin."
+        },
+        {
+            "key": "Quest_General_Easy_07_Title",
+            "value": "Kraliyet Sarayı"
+        },
+        {
+            "key": "Quest_General_Easy_07_Desc",
+            "value": "Toplam <color=#ffbb00>{0} Papaz ve Kız</color> kartını masadan temizleyin veya <color=#ffbb00>Temel destelerine</color> taşıyın."
+        },
+        {
+            "key": "Quest_General_Easy_08_Title",
+            "value": "Aktif Oyuncu"
+        },
+        {
+            "key": "Quest_General_Easy_08_Desc",
+            "value": "Bugün oynanan tüm oyunlarda <color=#ffbb00>Dağıtma destesinden</color> toplam <color=#ffbb00>{0} kart</color> çevirin."
+        },
+        {
+            "key": "Quest_General_Easy_09_Title",
+            "value": "Kararlı Çaylak"
+        },
+        {
+            "key": "Quest_General_Easy_09_Desc",
+            "value": "Sadece <color=#9fd25c>Kolay zorlukta</color> <color=#ffbb00>{0} oyun</color> kazanın."
+        },
+        {
+            "key": "Quest_General_Easy_10_Title",
+            "value": "Alt Rütbeler"
+        },
+        {
+            "key": "Quest_General_Easy_10_Desc",
+            "value": "Toplam <color=#ffbb00>{0} As ve İkili</color> kartını masadan temizleyin veya <color=#ffbb00>Temel destelerine</color> taşıyın."
+        },
+        {
+            "key": "Quest_General_Medium_01_Title",
+            "value": "Çifte Başarı"
+        },
+        {
+            "key": "Quest_General_Medium_01_Desc",
+            "value": "Bugün toplam <color=#ffbb00>{0} oyun</color> kazanın."
+        },
+        {
+            "key": "Quest_General_Medium_02_Title",
+            "value": "Çok Yönlü"
+        },
+        {
+            "key": "Quest_General_Medium_02_Desc",
+            "value": "<color=#ffbb00>{0} farklı Solitaire modunda</color> oyun kazanın."
+        },
+        {
+            "key": "Quest_General_Medium_03_Title",
+            "value": "Galibiyet Serisi"
+        },
+        {
+            "key": "Quest_General_Medium_03_Desc",
+            "value": "Arka arkaya <color=#ffbb00>{0} oyun</color> kazanın."
+        },
+        {
+            "key": "Quest_General_Medium_04_Title",
+            "value": "Orta Yol"
+        },
+        {
+            "key": "Quest_General_Medium_04_Desc",
+            "value": "Sadece <color=#eeae32>Orta zorlukta</color> veya daha üzerinde <color=#ffbb00>{0} oyun</color> kazanın."
+        },
+        {
+            "key": "Quest_General_Medium_05_Title",
+            "value": "Sabit El"
+        },
+        {
+            "key": "Quest_General_Medium_05_Desc",
+            "value": "Geri Al kullanmadan <color=#ffbb00>{0} oyun</color> kazanın."
+        },
+        {
+            "key": "Quest_General_Medium_06_Title",
+            "value": "Zaman Ustası"
+        },
+        {
+            "key": "Quest_General_Medium_06_Desc",
+            "value": "Herhangi bir oyunu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_General_Medium_07_Title",
+            "value": "Maratoncu"
+        },
+        {
+            "key": "Quest_General_Medium_07_Desc",
+            "value": "<color=#ffbb00>{0} hamleden</color> fazla yaparak herhangi bir oyunu kazanın."
+        },
+        {
+            "key": "Quest_General_Medium_08_Title",
+            "value": "Çalışkanlık"
+        },
+        {
+            "key": "Quest_General_Medium_08_Desc",
+            "value": "En az 1 galibiyet dahil olmak üzere <color=#ffbb00>{0} oyunu</color> tamamen bitirin."
+        },
+
+        {
+            "key": "Quest_General_Hard_01_Title",
+            "value": "Büyük Usta"
+        },
+        {
+            "key": "Quest_General_Hard_01_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> kazanın."
+        },
+        {
+            "key": "Quest_General_Hard_02_Title",
+            "value": "Çelik Gibi Sinirler"
+        },
+        {
+            "key": "Quest_General_Hard_02_Desc",
+            "value": "Arka arkaya <color=#ffbb00>{0} oyun</color> kazanın."
+        },
+        {
+            "key": "Quest_General_Hard_03_Title",
+            "value": "Mükemmel Gün"
+        },
+        {
+            "key": "Quest_General_Hard_03_Desc",
+            "value": "<color=#e14849>Zor zorlukta</color> Geri Al kullanmadan <color=#ffbb00>{0} oyun</color> kazanın."
+        },
+        {
+            "key": "Quest_General_Hard_04_Title",
+            "value": "Çoklu Usta"
+        },
+        {
+            "key": "Quest_General_Hard_04_Desc",
+            "value": "Bir gün içinde <color=#ffbb00>{0} farklı Solitaire modunda</color> oyun kazanın."
+        },
+        {
+            "key": "Quest_General_Hard_05_Title",
+            "value": "Speedrunner"
+        },
+        {
+            "key": "Quest_General_Hard_05_Desc",
+            "value": "Her biri 3 dakikadan kısa sürede <color=#ffbb00>{0} oyun</color> kazanın."
+        },
+        {
+            "key": "Quest_Klondike_Easy_01_Title",
+            "value": "Eve Dönüş"
+        },
+        {
+            "key": "Quest_Klondike_Easy_01_Desc",
+            "value": "<color=#a8d9e0>Klondike</color> modunda (<color=#a8d9e0>1 Kart Çekme</color> veya <color=#a8d9e0>3 Kart Çekme</color>) <color=#ffbb00>Temel destelerine</color> <color=#ffbb00>{0} kart</color> taşıyın."
+        },
+        {
+            "key": "Quest_Klondike_Easy_02_Title",
+            "value": "Kaşif"
+        },
+        {
+            "key": "Quest_Klondike_Easy_02_Desc",
+            "value": "<color=#a8d9e0>Klondike</color> modunda (<color=#a8d9e0>1 Kart Çekme</color>) masadaki <color=#ffbb00>{0} kapalı kartı</color> açın."
+        },
+        {
+            "key": "Quest_Klondike_Easy_03_Title",
+            "value": "Kraliyet Sarayı"
+        },
+        {
+            "key": "Quest_Klondike_Easy_03_Desc",
+            "value": "<color=#a8d9e0>Klondike</color> modunda <color=#ffbb00>{0} Temel destesini</color> tamamen toplayın."
+        },
+        {
+            "key": "Quest_Klondike_Easy_04_Title",
+            "value": "Aktif Yedek"
+        },
+        {
+            "key": "Quest_Klondike_Easy_04_Desc",
+            "value": "<color=#a8d9e0>Klondike</color> modunda <color=#ffbb00>{0} kartı</color> doğrudan <color=#ffbb00>Dağıtma destesinden</color> <color=#ffbb00>Temel destelerine</color> taşıyın."
+        },
+        {
+            "key": "Quest_Klondike_Easy_05_Title",
+            "value": "Sıkı Yaklaşım"
+        },
+        {
+            "key": "Quest_Klondike_Easy_05_Desc",
+            "value": "Sadece <color=#9fd25c>Kolay zorlukta</color> <color=#a8d9e0>Klondike</color> modunda <color=#ffbb00>Temel destelerine</color> <color=#ffbb00>{0} kart</color> taşıyın."
+        },
+
+        {
+            "key": "Quest_Klondike_Medium_01_Title",
+            "value": "Üçlü Çekiliş"
+        },
+        {
+            "key": "Quest_Klondike_Medium_01_Desc",
+            "value": "<color=#a8d9e0>Klondike</color> (<color=#a8d9e0>3 Kart Çekme</color>) modunda <color=#ffbb00>{0} oyun</color> kazanın."
+        },
+        {
+            "key": "Quest_Klondike_Medium_02_Title",
+            "value": "Zaman Ustası"
+        },
+        {
+            "key": "Quest_Klondike_Medium_02_Desc",
+            "value": "Bir <color=#a8d9e0>Klondike</color> oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_Klondike_Medium_03_Title",
+            "value": "Kusursuz Plan"
+        },
+        {
+            "key": "Quest_Klondike_Medium_03_Desc",
+            "value": "Geri Al kullanmadan <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Klondike</color> kazanın."
+        },
+        {
+            "key": "Quest_Klondike_Medium_04_Title",
+            "value": "Orta Seviye"
+        },
+        {
+            "key": "Quest_Klondike_Medium_04_Desc",
+            "value": "Sadece <color=#eeae32>Orta zorlukta</color> veya daha üzerinde <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Klondike</color> kazanın."
+        },
+
+        {
+            "key": "Quest_Klondike_Hard_01_Title",
+            "value": "Büyük Lig"
+        },
+        {
+            "key": "Quest_Klondike_Hard_01_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Klondike</color> kazanın."
+        },
+        {
+            "key": "Quest_Klondike_Hard_02_Title",
+            "value": "Yıldırım Dağıtımı"
+        },
+        {
+            "key": "Quest_Klondike_Hard_02_Desc",
+            "value": "Bir <color=#a8d9e0>Klondike</color> (<color=#a8d9e0>3 Kart Çekme</color>) oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_Klondike_Hard_03_Title",
+            "value": "Taviz Yok"
+        },
+        {
+            "key": "Quest_Klondike_Hard_03_Desc",
+            "value": "Geri Al kullanmadan <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Klondike</color> (<color=#a8d9e0>3 Kart Çekme</color>) kazanın."
+        },
+        {
+            "key": "Quest_Spider_Easy_01_Title",
+            "value": "Ağ Örmek"
+        },
+        {
+            "key": "Quest_Spider_Easy_01_Desc",
+            "value": "<color=#a8d9e0>Spider</color> (<color=#a8d9e0>1 Takım</color>) oyununda <color=#ffbb00>{0} tam dizi</color> toplayın."
+        },
+        {
+            "key": "Quest_Spider_Easy_02_Title",
+            "value": "Derin Analiz"
+        },
+        {
+            "key": "Quest_Spider_Easy_02_Desc",
+            "value": "<color=#a8d9e0>Spider</color> (<color=#a8d9e0>1 veya 2 Takım</color>) oyununda masadaki <color=#ffbb00>{0} kapalı kartı</color> açın."
+        },
+        {
+            "key": "Quest_Spider_Easy_03_Title",
+            "value": "Temizlik Zamanı"
+        },
+        {
+            "key": "Quest_Spider_Easy_03_Desc",
+            "value": "<color=#a8d9e0>Spider</color> oyununda masadaki <color=#ffbb00>{0} sütunu</color> tamamen boşaltın."
+        },
+        {
+            "key": "Quest_Spider_Easy_04_Title",
+            "value": "Sıralama"
+        },
+        {
+            "key": "Quest_Spider_Easy_04_Desc",
+            "value": "<color=#a8d9e0>Spider</color> (<color=#a8d9e0>1 Takım</color>) oyununda sütunlar arasında <color=#ffbb00>{0} başarılı kart hamlesi</color> yapın."
+        },
+        {
+            "key": "Quest_Spider_Easy_05_Title",
+            "value": "Çevik Dokumacı"
+        },
+        {
+            "key": "Quest_Spider_Easy_05_Desc",
+            "value": "Sadece <color=#9fd25c>Kolay zorlukta</color> <color=#a8d9e0>Spider</color> oyununda <color=#ffbb00>{0} tam dizi</color> toplayın."
+        },
+
+        {
+            "key": "Quest_Spider_Medium_01_Title",
+            "value": "Çifte Tehdit"
+        },
+        {
+            "key": "Quest_Spider_Medium_01_Desc",
+            "value": "<color=#a8d9e0>Spider</color> (<color=#a8d9e0>2 Takım</color>) oyununda <color=#ffbb00>{0} el</color> kazanın."
+        },
+        {
+            "key": "Quest_Spider_Medium_02_Title",
+            "value": "Hızlı Dokuma"
+        },
+        {
+            "key": "Quest_Spider_Medium_02_Desc",
+            "value": "Bir <color=#a8d9e0>Spider</color> oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_Spider_Medium_03_Title",
+            "value": "Temiz Zafer"
+        },
+        {
+            "key": "Quest_Spider_Medium_03_Desc",
+            "value": "Geri Al tuşunu en fazla <color=#ffbb00>{0} kez</color> kullanarak bir <color=#a8d9e0>Spider</color> oyunu kazanın."
+        },
+        {
+            "key": "Quest_Spider_Medium_04_Title",
+            "value": "Orta Seviye"
+        },
+        {
+            "key": "Quest_Spider_Medium_04_Desc",
+            "value": "Sadece <color=#eeae32>Orta zorlukta</color> veya daha üzerinde <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Spider</color> kazanın."
+        },
+
+        {
+            "key": "Quest_Spider_Hard_01_Title",
+            "value": "Ağların Efendisi"
+        },
+        {
+            "key": "Quest_Spider_Hard_01_Desc",
+            "value": "<color=#a8d9e0>Spider</color> (<color=#a8d9e0>4 Takım</color>) oyununda <color=#ffbb00>{0} el</color> kazanın."
+        },
+        {
+            "key": "Quest_Spider_Hard_02_Title",
+            "value": "Araknofobi"
+        },
+        {
+            "key": "Quest_Spider_Hard_02_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Spider</color> kazanın."
+        },
+        {
+            "key": "Quest_Spider_Hard_03_Title",
+            "value": "Kusursuz Ağ"
+        },
+        {
+            "key": "Quest_Spider_Hard_03_Desc",
+            "value": "Geri Al kullanmadan <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Spider</color> (<color=#a8d9e0>2 veya 4 Takım</color>) kazanın."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_01_Title",
+            "value": "Özgürlük"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_01_Desc",
+            "value": "<color=#a8d9e0>FreeCell</color> oyununda <color=#ffbb00>Temel destelerine</color> <color=#ffbb00>{0} kart</color> taşıyın."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_02_Title",
+            "value": "Geçiş"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_02_Desc",
+            "value": "<color=#ffbb00>Boş Hücreleri</color> <color=#ffbb00>{0} kez</color> kullanın."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_03_Title",
+            "value": "İlk Adımlar"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_03_Desc",
+            "value": "<color=#ffbb00>{0} oyunda</color> tüm <color=#ffbb00>4 As</color> ve <color=#ffbb00>4 İkiliyi</color> <color=#ffbb00>Temel destelerine</color> taşıyın."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_04_Title",
+            "value": "Uzun Zincirler"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_04_Desc",
+            "value": "<color=#a8d9e0>FreeCell</color> oyununda tek bir hamlede <color=#ffbb00>3 veya daha fazla kartlık</color> desteleri <color=#ffbb00>{0} kez</color> taşıyın."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_05_Title",
+            "value": "Sistematik Yaklaşım"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_05_Desc",
+            "value": "Sadece <color=#9fd25c>Kolay zorlukta</color> <color=#ffbb00>Temel destelerine</color> <color=#ffbb00>{0} kart</color> taşıyın."
+        },
+
+        {
+            "key": "Quest_FreeCell_Medium_01_Title",
+            "value": "Dikkatli Planlama"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_01_Desc",
+            "value": "<color=#ffbb00>{0} oyun</color> <color=#a8d9e0>FreeCell</color> kazanın."
+        },
+        {
+            "key": "Quest_FreeCell_Medium_02_Title",
+            "value": "Hızlı Düşünen"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_02_Desc",
+            "value": "Bir <color=#a8d9e0>FreeCell</color> oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_FreeCell_Medium_03_Title",
+            "value": "Boş Hücre"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_03_Desc",
+            "value": "Tüm <color=#ffbb00>4 Boş Hücreyi</color> aynı anda doldurmadan (en fazla 3) <color=#ffbb00>{0} oyun</color> kazanın."
+        },
+        {
+            "key": "Quest_FreeCell_Medium_04_Title",
+            "value": "Orta Seviye"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_04_Desc",
+            "value": "Sadece <color=#eeae32>Orta zorlukta</color> veya daha üzerinde <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>FreeCell</color> kazanın."
+        },
+
+        {
+            "key": "Quest_FreeCell_Hard_01_Title",
+            "value": "Usta Sınıfı"
+        },
+        {
+            "key": "Quest_FreeCell_Hard_01_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>FreeCell</color> kazanın."
+        },
+        {
+            "key": "Quest_FreeCell_Hard_02_Title",
+            "value": "Klostrofobi"
+        },
+        {
+            "key": "Quest_FreeCell_Hard_02_Desc",
+            "value": "Aynı anda <color=#ffbb00>2 Boş Hücreden</color> fazlasını doldurmadan <color=#ffbb00>{0} oyun</color> kazanın."
+        },
+        {
+            "key": "Quest_FreeCell_Hard_03_Title",
+            "value": "Planlama Dehası"
+        },
+        {
+            "key": "Quest_FreeCell_Hard_03_Desc",
+            "value": "Geri Al kullanmadan (<color=#eeae32>Orta</color> veya <color=#e14849>Zor</color> zorlukta) <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>FreeCell</color> kazanın."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_01_Title",
+            "value": "Yıkım"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_01_Desc",
+            "value": "<color=#a8d9e0>Piramit</color> oyununda <color=#ffbb00>{0} çift kart</color> kaldırın (Papazlar sayılmaz, <color=#a8d9e0>1 veya 2 Tur</color>)."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_02_Title",
+            "value": "Kazı"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_02_Desc",
+            "value": "Doğrudan piramit yapısından <color=#ffbb00>{0} kart</color> kaldırın."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_03_Title",
+            "value": "Dış Yardım"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_03_Desc",
+            "value": "En az bir kartın <color=#ffbb00>Dağıtma destesinden</color> alındığı <color=#ffbb00>{0} çift</color> oluşturun."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_04_Title",
+            "value": "Papaz Avı"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_04_Desc",
+            "value": "<color=#a8d9e0>Piramit</color> oyununda <color=#ffbb00>{0} Papaz</color> kaldırın."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_05_Title",
+            "value": "Parkta Bir Yürüyüş"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_05_Desc",
+            "value": "Sadece <color=#9fd25c>Kolay zorlukta</color> <color=#a8d9e0>Piramit</color> oyununda <color=#ffbb00>{0} çift kart</color> kaldırın."
+        },
+
+        {
+            "key": "Quest_Pyramid_Medium_01_Title",
+            "value": "Çifte Kazı"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_01_Desc",
+            "value": "<color=#a8d9e0>Piramit</color> (<color=#a8d9e0>2 Tur</color>) oyununda <color=#ffbb00>{0} el</color> kazanın."
+        },
+        {
+            "key": "Quest_Pyramid_Medium_02_Title",
+            "value": "Kombo Ustası"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_02_Desc",
+            "value": "<color=#ffbb00>Dağıtma destesinden</color> yeni kart çekmeden arka arkaya <color=#ffbb00>{0} çift kart</color> kaldırarak kombo yapın."
+        },
+        {
+            "key": "Quest_Pyramid_Medium_03_Title",
+            "value": "Güç Rezervi"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_03_Desc",
+            "value": "<color=#ffbb00>Dağıtma destesinde</color> en az <color=#ffbb00>{0} kullanılmayan kart</color> bırakarak bir <color=#a8d9e0>Piramit</color> oyunu kazanın."
+        },
+        {
+            "key": "Quest_Pyramid_Medium_04_Title",
+            "value": "Orta Seviye"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_04_Desc",
+            "value": "Sadece <color=#eeae32>Orta zorlukta</color> veya daha üzerinde <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Piramit</color> kazanın."
+        },
+
+        {
+            "key": "Quest_Pyramid_Hard_01_Title",
+            "value": "Firavun"
+        },
+        {
+            "key": "Quest_Pyramid_Hard_01_Desc",
+            "value": "<color=#a8d9e0>Piramit</color> (<color=#a8d9e0>3 Tur</color>) oyununda <color=#ffbb00>{0} el</color> kazanın."
+        },
+        {
+            "key": "Quest_Pyramid_Hard_02_Title",
+            "value": "Mezarın Laneti"
+        },
+        {
+            "key": "Quest_Pyramid_Hard_02_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Piramit</color> kazanın."
+        },
+        {
+            "key": "Quest_Pyramid_Hard_03_Title",
+            "value": "Kusursuz Temizlik"
+        },
+        {
+            "key": "Quest_Pyramid_Hard_03_Desc",
+            "value": "<color=#ffbb00>Dağıtma destesinden</color> yeni kart çekmeden arka arkaya <color=#ffbb00>{0} çift kart</color> kaldırarak kombo yapın."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_01_Title",
+            "value": "Dağcılık"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_01_Desc",
+            "value": "<color=#a8d9e0>TriPeaks</color> (<color=#a8d9e0>1 Tur</color>) oyununda masadan <color=#ffbb00>{0} kart</color> kaldırın."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_02_Title",
+            "value": "Çığ"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_02_Desc",
+            "value": "<color=#ffbb00>Dağıtma destesinden</color> yeni kart çekmeden arka arkaya <color=#ffbb00>{0} kart</color> kaldırarak seri (kombo) yapın."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_03_Title",
+            "value": "Temiz Ufuk"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_03_Desc",
+            "value": "Masadaki üç zirveden <color=#ffbb00>{0} tanesini</color> tamamen temizleyin."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_04_Title",
+            "value": "Ekonomi"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_04_Desc",
+            "value": "<color=#ffbb00>Dağıtma destesinden</color> en fazla 10 kart çekerek masadan <color=#ffbb00>{0} kart</color> kaldırın."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_05_Title",
+            "value": "Turist"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_05_Desc",
+            "value": "Sadece <color=#9fd25c>Kolay zorlukta</color> <color=#a8d9e0>TriPeaks</color> oyununda masadan <color=#ffbb00>{0} kart</color> kaldırın."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Medium_01_Title",
+            "value": "Uzun Yürüyüş"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_01_Desc",
+            "value": "<color=#a8d9e0>TriPeaks</color> (<color=#a8d9e0>2 Tur</color>) oyununda <color=#ffbb00>{0} el</color> kazanın."
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_02_Title",
+            "value": "Seri Ustası"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_02_Desc",
+            "value": "Arka arkaya <color=#ffbb00>{0} kart</color> kaldırarak kesintisiz bir seri yapın."
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_03_Title",
+            "value": "Rezervleri Korumak"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_03_Desc",
+            "value": "<color=#a8d9e0>TriPeaks</color> oyununu <color=#ffbb00>destede</color> en az <color=#ffbb00>{0} kart</color> bırakarak kazan."
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_04_Title",
+            "value": "Orta Seviye"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_04_Desc",
+            "value": "Sadece <color=#eeae32>Orta zorlukta</color> veya daha üzerinde <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>TriPeaks</color> kazanın."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Hard_01_Title",
+            "value": "Zirve Maratonu"
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_01_Desc",
+            "value": "<color=#a8d9e0>TriPeaks</color> (<color=#a8d9e0>3 Tur</color>) oyununda <color=#ffbb00>{0} el</color> kazanın."
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_02_Title",
+            "value": "Fatih"
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_02_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>TriPeaks</color> kazanın."
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_03_Title",
+            "value": "Süper Çığ"
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_03_Desc",
+            "value": "Arka arkaya <color=#ffbb00>{0} kart</color> kaldırarak kesintisiz bir seri (kombo) yapın."
+        },
+        {
+            "key": "Quest_Yukon_Easy_01_Title",
+            "value": "Altın Madeni"
+        },
+        {
+            "key": "Quest_Yukon_Easy_01_Desc",
+            "value": "<color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Klasik</color>) oyununda <color=#ffbb00>Temel destelerine</color> <color=#ffbb00>{0} kart</color> taşıyın."
+        },
+        {
+            "key": "Quest_Yukon_Easy_02_Title",
+            "value": "Kar Erimesi"
+        },
+        {
+            "key": "Quest_Yukon_Easy_02_Desc",
+            "value": "Masadaki <color=#ffbb00>{0} kapalı kartı</color> açın."
+        },
+        {
+            "key": "Quest_Yukon_Easy_03_Title",
+            "value": "Aktif Sıralama"
+        },
+        {
+            "key": "Quest_Yukon_Easy_03_Desc",
+            "value": "<color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Rus</color>) oyununda sütunlar arasında <color=#ffbb00>{0} kart</color> taşıyın."
+        },
+        {
+            "key": "Quest_Yukon_Easy_04_Title",
+            "value": "Takımları Toplamak"
+        },
+        {
+            "key": "Quest_Yukon_Easy_04_Desc",
+            "value": "<color=#ffbb00>{0} Temel destesini</color> tamamen toplayın."
+        },
+        {
+            "key": "Quest_Yukon_Easy_05_Title",
+            "value": "Meteorolog"
+        },
+        {
+            "key": "Quest_Yukon_Easy_05_Desc",
+            "value": "Sadece <color=#9fd25c>Kolay zorlukta</color> <color=#a8d9e0>Yukon</color> oyununda masadaki <color=#ffbb00>{0} kapalı kartı</color> açın."
+        },
+
+        {
+            "key": "Quest_Yukon_Medium_01_Title",
+            "value": "Rus Kışı"
+        },
+        {
+            "key": "Quest_Yukon_Medium_01_Desc",
+            "value": "<color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Rus</color>) oyununda <color=#ffbb00>{0} el</color> kazanın."
+        },
+        {
+            "key": "Quest_Yukon_Medium_02_Title",
+            "value": "Speedrun"
+        },
+        {
+            "key": "Quest_Yukon_Medium_02_Desc",
+            "value": "Bir <color=#a8d9e0>Yukon</color> oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_Yukon_Medium_03_Title",
+            "value": "Emin Adım"
+        },
+        {
+            "key": "Quest_Yukon_Medium_03_Desc",
+            "value": "Geri Al kullanmadan <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Yukon</color> (herhangi bir mod) kazanın."
+        },
+        {
+            "key": "Quest_Yukon_Medium_04_Title",
+            "value": "Orta Seviye"
+        },
+        {
+            "key": "Quest_Yukon_Medium_04_Desc",
+            "value": "Sadece <color=#eeae32>Orta zorlukta</color> veya daha üzerinde <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Yukon</color> kazanın."
+        },
+
+        {
+            "key": "Quest_Yukon_Hard_01_Title",
+            "value": "Sibirya Ayazı"
+        },
+        {
+            "key": "Quest_Yukon_Hard_01_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Rus</color>) kazanın."
+        },
+        {
+            "key": "Quest_Yukon_Hard_02_Title",
+            "value": "Soğuk Hesap"
+        },
+        {
+            "key": "Quest_Yukon_Hard_02_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Klasik</color>) kazanın."
+        },
+        {
+            "key": "Quest_Yukon_Hard_03_Title",
+            "value": "Kuzeyin Speedrunner'ı"
+        },
+        {
+            "key": "Quest_Yukon_Hard_03_Desc",
+            "value": "Bir <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Rus</color>) oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_01_Title",
+            "value": "Şanslı Komşular"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_01_Desc",
+            "value": "<color=#a8d9e0>Monte Carlo</color> (<color=#a8d9e0>8 Yönlü</color>) oyununda <color=#ffbb00>{0} çift kart</color> kaldırın."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_02_Title",
+            "value": "Dikeyler ve Yataylar"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_02_Desc",
+            "value": "<color=#a8d9e0>Monte Carlo</color> (<color=#a8d9e0>4 Yönlü</color>) oyununda <color=#ffbb00>{0} çift kart</color> kaldırın."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_03_Title",
+            "value": "Kumarhane Yüzleri"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_03_Desc",
+            "value": "<color=#a8d9e0>Monte Carlo</color> (herhangi bir mod) oyununda <color=#ffbb00>{0} çift resimli kart</color> (Vale, Kız veya Papaz) bulup kaldırın."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_04_Title",
+            "value": "Sihirli Sayılar"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_04_Desc",
+            "value": "<color=#a8d9e0>Monte Carlo</color> oyununda <color=#ffbb00>{0} çift sayılı kart</color> (2'den 10'a kadar) kaldırın."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_05_Title",
+            "value": "Kumarhane"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_05_Desc",
+            "value": "Sadece <color=#9fd25c>Kolay zorlukta</color> <color=#a8d9e0>Monte Carlo</color> oyununda <color=#ffbb00>{0} çift kart</color> kaldırın."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Medium_01_Title",
+            "value": "Katı Kurallar"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_01_Desc",
+            "value": "<color=#a8d9e0>Monte Carlo</color> (<color=#a8d9e0>4 Yönlü</color>) oyununda <color=#ffbb00>{0} el</color> kazanın."
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_02_Title",
+            "value": "Hızlı Kararlar"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_02_Desc",
+            "value": "Bir <color=#a8d9e0>Monte Carlo</color> oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_03_Title",
+            "value": "Kusursuz Hafıza"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_03_Desc",
+            "value": "Geri Al kullanmadan <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Monte Carlo</color> (herhangi bir mod) kazanın."
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_04_Title",
+            "value": "Orta Seviye"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_04_Desc",
+            "value": "Sadece <color=#eeae32>Orta zorlukta</color> veya daha üzerinde <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Monte Carlo</color> kazanın."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Hard_01_Title",
+            "value": "İleri Matematik"
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_01_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Monte Carlo</color> (<color=#a8d9e0>8 Yönlü</color>) kazanın."
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_02_Title",
+            "value": "Hassas Geometri"
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_02_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Monte Carlo</color> (<color=#a8d9e0>4 Yönlü</color>) kazanın."
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_03_Title",
+            "value": "Olağanüstü Hafıza"
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_03_Desc",
+            "value": "Bir <color=#a8d9e0>Monte Carlo</color> (<color=#a8d9e0>4 Yönlü</color>) oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_Sultan_Easy_01_Title",
+            "value": "Sultana Hediyeler"
+        },
+        {
+            "key": "Quest_Sultan_Easy_01_Desc",
+            "value": "<color=#a8d9e0>Sultan</color> oyununda merkezin etrafındaki <color=#ffbb00>Temel destelerine</color> <color=#ffbb00>{0} kart</color> yerleştirin."
+        },
+        {
+            "key": "Quest_Sultan_Easy_02_Title",
+            "value": "Maiyet"
+        },
+        {
+            "key": "Quest_Sultan_Easy_02_Desc",
+            "value": "Yanlardaki <color=#ffbb00>6 yedek alandan</color> en az <color=#ffbb00>{0} kez</color> kart oynayın."
+        },
+        {
+            "key": "Quest_Sultan_Easy_03_Title",
+            "value": "Harem"
+        },
+        {
+            "key": "Quest_Sultan_Easy_03_Desc",
+            "value": "Sultan'ın etrafında <color=#ffbb00>{0} Temel destesini</color> tamamen toplayın."
+        },
+        {
+            "key": "Quest_Sultan_Easy_04_Title",
+            "value": "Doğrudan Teslimat"
+        },
+        {
+            "key": "Quest_Sultan_Easy_04_Desc",
+            "value": "6 yedek alanı atlayarak doğrudan <color=#ffbb00>Dağıtma destesinden</color> Sultan'ın etrafındaki <color=#ffbb00>Temel destelerine</color> <color=#ffbb00>{0} kart</color> taşıyın."
+        },
+        {
+            "key": "Quest_Sultan_Easy_05_Title",
+            "value": "Hükümdarın Lütfu"
+        },
+        {
+            "key": "Quest_Sultan_Easy_05_Desc",
+            "value": "Sadece <color=#9fd25c>Kolay zorlukta</color> <color=#a8d9e0>Sultan</color> oyununda <color=#ffbb00>Temel destelerine</color> <color=#ffbb00>{0} kart</color> yerleştirin."
+        },
+
+        {
+            "key": "Quest_Sultan_Medium_01_Title",
+            "value": "Sadrazam"
+        },
+        {
+            "key": "Quest_Sultan_Medium_01_Desc",
+            "value": "<color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Sultan</color> kazanın."
+        },
+        {
+            "key": "Quest_Sultan_Medium_02_Title",
+            "value": "Düşünce Hızı"
+        },
+        {
+            "key": "Quest_Sultan_Medium_02_Desc",
+            "value": "Bir <color=#a8d9e0>Sultan</color> oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_Sultan_Medium_03_Title",
+            "value": "Kusursuz Hizmet"
+        },
+        {
+            "key": "Quest_Sultan_Medium_03_Desc",
+            "value": "Geri Al kullanmadan <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Sultan</color> kazanın."
+        },
+        {
+            "key": "Quest_Sultan_Medium_04_Title",
+            "value": "Orta Seviye"
+        },
+        {
+            "key": "Quest_Sultan_Medium_04_Desc",
+            "value": "Sadece <color=#eeae32>Orta zorlukta</color> veya daha üzerinde <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Sultan</color> kazanın."
+        },
+
+        {
+            "key": "Quest_Sultan_Hard_01_Title",
+            "value": "Büyük Sultan"
+        },
+        {
+            "key": "Quest_Sultan_Hard_01_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Sultan</color> kazanın."
+        },
+        {
+            "key": "Quest_Sultan_Hard_02_Title",
+            "value": "Bilge Hükümdar"
+        },
+        {
+            "key": "Quest_Sultan_Hard_02_Desc",
+            "value": "Geri Al kullanmadan <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Sultan</color> kazanın."
+        },
+        {
+            "key": "Quest_Sultan_Hard_03_Title",
+            "value": "Saliselik Karar"
+        },
+        {
+            "key": "Quest_Sultan_Hard_03_Desc",
+            "value": "Bir <color=#a8d9e0>Sultan</color> oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_Montana_Easy_01_Title",
+            "value": "Düzeni Sağlamak"
+        },
+        {
+            "key": "Quest_Montana_Easy_01_Desc",
+            "value": "<color=#a8d9e0>Montana</color> (<color=#a8d9e0>Klasik</color>) oyununda <color=#ffbb00>{0} kartı</color> takıma göre sıraya dizin."
+        },
+        {
+            "key": "Quest_Montana_Easy_02_Title",
+            "value": "Hassas İş"
+        },
+        {
+            "key": "Quest_Montana_Easy_02_Desc",
+            "value": "Boşlukları <color=#ffbb00>{0} kez</color> başarıyla doldurun."
+        },
+        {
+            "key": "Quest_Montana_Easy_03_Title",
+            "value": "Mükemmel Satırlar"
+        },
+        {
+            "key": "Quest_Montana_Easy_03_Desc",
+            "value": "<color=#a8d9e0>Montana</color> oyununda <color=#ffbb00>{0} tam satırı</color> tamamlayın."
+        },
+        {
+            "key": "Quest_Montana_Easy_04_Title",
+            "value": "Yeniden Dağıtma Yok"
+        },
+        {
+            "key": "Quest_Montana_Easy_04_Desc",
+            "value": "Yeniden Dağıt düğmesini kullanmadan önce arka arkaya <color=#ffbb00>{0} boşluğu</color> doldurun."
+        },
+        {
+            "key": "Quest_Montana_Easy_05_Title",
+            "value": "Kolay Başlangıç"
+        },
+        {
+            "key": "Quest_Montana_Easy_05_Desc",
+            "value": "Sadece <color=#9fd25c>Kolay zorlukta</color> <color=#a8d9e0>Montana</color> oyununda <color=#ffbb00>{0} kartı</color> doğru sırayla dizin."
+        },
+
+        {
+            "key": "Quest_Montana_Medium_01_Title",
+            "value": "Usta Düzenleyici"
+        },
+        {
+            "key": "Quest_Montana_Medium_01_Desc",
+            "value": "<color=#a8d9e0>Montana</color> (<color=#a8d9e0>Klasik</color>) oyununda <color=#ffbb00>{0} el</color> kazanın."
+        },
+        {
+            "key": "Quest_Montana_Medium_02_Title",
+            "value": "Hızlı Kurulum"
+        },
+        {
+            "key": "Quest_Montana_Medium_02_Desc",
+            "value": "Bir <color=#a8d9e0>Montana</color> oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_Montana_Medium_03_Title",
+            "value": "Yedek Plan"
+        },
+        {
+            "key": "Quest_Montana_Medium_03_Desc",
+            "value": "En az 1 yeniden dağıtma (karıştırma) hakkını kullanmadan <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Montana</color> kazanın."
+        },
+        {
+            "key": "Quest_Montana_Medium_04_Title",
+            "value": "Orta Seviye"
+        },
+        {
+            "key": "Quest_Montana_Medium_04_Desc",
+            "value": "Sadece <color=#eeae32>Orta zorlukta</color> veya daha üzerinde <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Montana</color> kazanın."
+        },
+
+        {
+            "key": "Quest_Montana_Hard_01_Title",
+            "value": "Karmaşık Düzen"
+        },
+        {
+            "key": "Quest_Montana_Hard_01_Desc",
+            "value": "<color=#a8d9e0>Montana</color> (<color=#a8d9e0>Zor mod</color>) oyununda <color=#ffbb00>{0} el</color> kazanın."
+        },
+        {
+            "key": "Quest_Montana_Hard_02_Title",
+            "value": "Dizi Ustası"
+        },
+        {
+            "key": "Quest_Montana_Hard_02_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Montana</color> (<color=#a8d9e0>Klasik</color>) kazanın."
+        },
+        {
+            "key": "Quest_Montana_Hard_03_Title",
+            "value": "Geri Dönüş Yok"
+        },
+        {
+            "key": "Quest_Montana_Hard_03_Desc",
+            "value": "Geri Al kullanmadan <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Montana</color> (<color=#a8d9e0>Zor mod</color>) kazanın."
+        },
+        {
+            "key": "Quest_Octagon_Easy_01_Title",
+            "value": "Işınları Doldurmak"
+        },
+        {
+            "key": "Quest_Octagon_Easy_01_Desc",
+            "value": "<color=#a8d9e0>Sekizgen</color> oyununda <color=#ffbb00>Temel destelerine</color> <color=#ffbb00>{0} kart</color> taşıyın."
+        },
+        {
+            "key": "Quest_Octagon_Easy_02_Title",
+            "value": "Köşeleri Açmak"
+        },
+        {
+            "key": "Quest_Octagon_Easy_02_Desc",
+            "value": "Köşelerdeki yedek destelerden <color=#ffbb00>Temel destelerine</color> başarıyla <color=#ffbb00>{0} kart</color> taşıyın."
+        },
+        {
+            "key": "Quest_Octagon_Easy_03_Title",
+            "value": "Çifte Güç"
+        },
+        {
+            "key": "Quest_Octagon_Easy_03_Desc",
+            "value": "<color=#ffbb00>{0} Temel destesini</color> tamamen toplayın."
+        },
+        {
+            "key": "Quest_Octagon_Easy_04_Title",
+            "value": "Merkezi Tedarik"
+        },
+        {
+            "key": "Quest_Octagon_Easy_04_Desc",
+            "value": "Doğrudan <color=#ffbb00>Dağıtma destesinden</color> <color=#ffbb00>Temel destelerine</color> <color=#ffbb00>{0} kart</color> taşıyın."
+        },
+        {
+            "key": "Quest_Octagon_Easy_05_Title",
+            "value": "Basit Geometri"
+        },
+        {
+            "key": "Quest_Octagon_Easy_05_Desc",
+            "value": "Sadece <color=#9fd25c>Kolay zorlukta</color> <color=#a8d9e0>Sekizgen</color> oyununda <color=#ffbb00>Temel destelerine</color> <color=#ffbb00>{0} kart</color> taşıyın."
+        },
+
+        {
+            "key": "Quest_Octagon_Medium_01_Title",
+            "value": "Kusursuz Şekil"
+        },
+        {
+            "key": "Quest_Octagon_Medium_01_Desc",
+            "value": "<color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Sekizgen</color> kazanın."
+        },
+        {
+            "key": "Quest_Octagon_Medium_02_Title",
+            "value": "Keskin Refleksler"
+        },
+        {
+            "key": "Quest_Octagon_Medium_02_Desc",
+            "value": "Bir <color=#a8d9e0>Sekizgen</color> oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "Quest_Octagon_Medium_03_Title",
+            "value": "Açığa Çıkan Potansiyel"
+        },
+        {
+            "key": "Quest_Octagon_Medium_03_Desc",
+            "value": "Geri Al kullanmadan <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Sekizgen</color> kazanın."
+        },
+        {
+            "key": "Quest_Octagon_Medium_04_Title",
+            "value": "Orta Seviye"
+        },
+        {
+            "key": "Quest_Octagon_Medium_04_Desc",
+            "value": "Sadece <color=#eeae32>Orta zorlukta</color> veya daha üzerinde <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Sekizgen</color> kazanın."
+        },
+
+        {
+            "key": "Quest_Octagon_Hard_01_Title",
+            "value": "Kusursuz Geometri"
+        },
+        {
+            "key": "Quest_Octagon_Hard_01_Desc",
+            "value": "Sadece <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Sekizgen</color> kazanın."
+        },
+        {
+            "key": "Quest_Octagon_Hard_02_Title",
+            "value": "Mutlak Hesap"
+        },
+        {
+            "key": "Quest_Octagon_Hard_02_Desc",
+            "value": "Geri Al kullanmadan <color=#e14849>Zor zorlukta</color> <color=#ffbb00>{0} oyun</color> <color=#a8d9e0>Sekizgen</color> kazanın."
+        },
+        {
+            "key": "Quest_Octagon_Hard_03_Title",
+            "value": "Ustaca Refleksler"
+        },
+        {
+            "key": "Quest_Octagon_Hard_03_Desc",
+            "value": "Bir <color=#a8d9e0>Sekizgen</color> oyununu <color=#ffbb00>{0} saniyeden</color> kısa sürede kazanın."
+        },
+        {
+            "key": "General",
+            "value": "Genel"
+        },
+        {
+            "key": "Month_1",
+            "value": "Ocak"
+        },
+        {
+            "key": "Month_2",
+            "value": "Şubat"
+        },
+        {
+            "key": "Month_3",
+            "value": "Mart"
+        },
+        {
+            "key": "Month_4",
+            "value": "Nisan"
+        },
+        {
+            "key": "Month_5",
+            "value": "Mayıs"
+        },
+        {
+            "key": "Month_6",
+            "value": "Haziran"
+        },
+        {
+            "key": "Month_7",
+            "value": "Temmuz"
+        },
+        {
+            "key": "Month_8",
+            "value": "Ağustos"
+        },
+        {
+            "key": "Month_9",
+            "value": "Eylül"
+        },
+        {
+            "key": "Month_10",
+            "value": "Ekim"
+        },
+        {
+            "key": "Month_11",
+            "value": "Kasım"
+        },
+        {
+            "key": "Month_12",
+            "value": "Aralık"
+        },
+        {
+            "key": "Quests_Reset",
+            "value": "Yenilenme:"
+        },
+        {
+            "key": "Claim_Reward",
+            "value": "Ödülü Al"
+        },
+        {
+            "key": "Quest_Notifications_On",
+            "value": "Bildirimler AÇIK"
+        },
+        {
+            "key": "Quest_Notifications_Off",
+            "value": "Bildirimler KAPALI"
+        },
+        {
+            "key": "Reward_Available",
+            "value": "Mevcut: {0}"
+        },
+        {
+            "key": "Reward_Desc",
+            "value": "Ödülü dağıtın! Her güçlendirici <color=#ffbb00>sonraki {0} oyun</color> için <color=#ffbb00>x2 TP</color> verir."
+        },
+        {
+            "key": "Stats_QuestsInARow",
+            "value": "Art arda görevler:"
+        },
+        {
+            "key": "Stats_QuestStreakBest",
+            "value": "En iyi görev serisi:"
+        },
+        {
+            "key": "Stats_DayStreakCurrent",
+            "value": "Gün serisi:"
+        },
+        {
+            "key": "Stats_DayStreakBest",
+            "value": "En iyi gün serisi:"
+        },
+        {
+            "key": "Stats_PerfectDaysTotal",
+            "value": "Mükemmel günler:"
+        },
+        {
+            "key": "Stats_PerfectStreakCurrent",
+            "value": "Mükemmel gün serisi:"
+        },
+        {
+            "key": "Stats_PerfectStreakBest",
+            "value": "En iyi mükemmel seri:"
+        },
+        {
+            "key": "TitleUI_Unlocked",
+            "value": "Kilidi Açıldı"
+        },
+        {
+            "key": "TitleUI_Selected",
+            "value": "Seçildi"
+        },
+        {
+            "key": "TitleUI_Requirement",
+            "value": "{0}. Seviye gerekli"
+        },
+        {
+            "key": "TitleUI_GlobalLevel",
+            "value": "Küresel Seviye"
+        },
+
+        {
+            "key": "Title_Klondike_1",
+            "value": "Yeni Gelen"
+        },
+        {
+            "key": "Title_Klondike_5",
+            "value": "Arayıcı"
+        },
+        {
+            "key": "Title_Klondike_10",
+            "value": "Kazıcı"
+        },
+        {
+            "key": "Title_Klondike_15",
+            "value": "Madenci"
+        },
+        {
+            "key": "Title_Klondike_20",
+            "value": "Altın Avcısı"
+        },
+        {
+            "key": "Title_Klondike_25",
+            "value": "Klondike Tröstü"
+        },
+        {
+            "key": "Title_Klondike_30",
+            "value": "Altına Hücum Efsanesi"
+        },
+
+        {
+            "key": "Title_Spider_1",
+            "value": "Ağa Takılmış"
+        },
+        {
+            "key": "Title_Spider_5",
+            "value": "Yakalayıcı"
+        },
+        {
+            "key": "Title_Spider_10",
+            "value": "İplikçi"
+        },
+        {
+            "key": "Title_Spider_15",
+            "value": "Ağ Örücü"
+        },
+        {
+            "key": "Title_Spider_20",
+            "value": "Zehirli Avcı"
+        },
+        {
+            "key": "Title_Spider_25",
+            "value": "Ağın Efendisi"
+        },
+        {
+            "key": "Title_Spider_30",
+            "value": "Örümcek Kral"
+        },
+
+        {
+            "key": "Title_FreeCell_1",
+            "value": "Amatör"
+        },
+        {
+            "key": "Title_FreeCell_5",
+            "value": "Çırak"
+        },
+        {
+            "key": "Title_FreeCell_10",
+            "value": "Analist"
+        },
+        {
+            "key": "Title_FreeCell_15",
+            "value": "Taktikçi"
+        },
+        {
+            "key": "Title_FreeCell_20",
+            "value": "Mantıkçı"
+        },
+        {
+            "key": "Title_FreeCell_25",
+            "value": "Stratejist"
+        },
+        {
+            "key": "Title_FreeCell_30",
+            "value": "Hesap Dehası"
+        },
+
+        {
+            "key": "Title_Pyramid_1",
+            "value": "Vaha Arayıcısı"
+        },
+        {
+            "key": "Title_Pyramid_5",
+            "value": "Taş Ustası"
+        },
+        {
+            "key": "Title_Pyramid_10",
+            "value": "İnşaatçı"
+        },
+        {
+            "key": "Title_Pyramid_15",
+            "value": "Gözetmen"
+        },
+        {
+            "key": "Title_Pyramid_20",
+            "value": "Rahip"
+        },
+        {
+            "key": "Title_Pyramid_25",
+            "value": "Mimar"
+        },
+        {
+            "key": "Title_Pyramid_30",
+            "value": "Boyun Eğmez Firavun"
+        },
+
+        {
+            "key": "Title_TriPeaks_1",
+            "value": "Yürüyüşçü"
+        },
+        {
+            "key": "Title_TriPeaks_5",
+            "value": "Gezgin"
+        },
+        {
+            "key": "Title_TriPeaks_10",
+            "value": "Turist"
+        },
+        {
+            "key": "Title_TriPeaks_15",
+            "value": "Kaya Tırmanıcısı"
+        },
+        {
+            "key": "Title_TriPeaks_20",
+            "value": "Dağcı"
+        },
+        {
+            "key": "Title_TriPeaks_25",
+            "value": "Fatih"
+        },
+        {
+            "key": "Title_TriPeaks_30",
+            "value": "Dağların Efendisi"
+        },
+
+        {
+            "key": "Title_Yukon_1",
+            "value": "Yabancı"
+        },
+        {
+            "key": "Title_Yukon_5",
+            "value": "Avcı"
+        },
+        {
+            "key": "Title_Yukon_10",
+            "value": "İz Süren"
+        },
+        {
+            "key": "Title_Yukon_15",
+            "value": "Kışlayan"
+        },
+        {
+            "key": "Title_Yukon_20",
+            "value": "Tayga'nın Efendisi"
+        },
+        {
+            "key": "Title_Yukon_25",
+            "value": "Kuzeyin Fatihi"
+        },
+        {
+            "key": "Title_Yukon_30",
+            "value": "Yukon'un Ruhu"
+        },
+
+        {
+            "key": "Title_MonteCarlo_1",
+            "value": "Seyirci"
+        },
+        {
+            "key": "Title_MonteCarlo_5",
+            "value": "Kumarbaz"
+        },
+        {
+            "key": "Title_MonteCarlo_10",
+            "value": "Risk Alan"
+        },
+        {
+            "key": "Title_MonteCarlo_15",
+            "value": "Şanslı"
+        },
+        {
+            "key": "Title_MonteCarlo_20",
+            "value": "Kart Hokkabazı"
+        },
+        {
+            "key": "Title_MonteCarlo_25",
+            "value": "Casino Müdavimi"
+        },
+        {
+            "key": "Title_MonteCarlo_30",
+            "value": "Şans Aristokratı"
+        },
+
+        {
+            "key": "Title_Sultan_1",
+            "value": "Yabancı"
+        },
+        {
+            "key": "Title_Sultan_5",
+            "value": "Muhafız"
+        },
+        {
+            "key": "Title_Sultan_10",
+            "value": "Sadık Hizmetkar"
+        },
+        {
+            "key": "Title_Sultan_15",
+            "value": "Danışman"
+        },
+        {
+            "key": "Title_Sultan_20",
+            "value": "Vezir"
+        },
+        {
+            "key": "Title_Sultan_25",
+            "value": "Hükümdar"
+        },
+        {
+            "key": "Title_Sultan_30",
+            "value": "Doğu'nun Efendisi"
+        },
+
+        {
+            "key": "Title_Octagon_1",
+            "value": "Taslak"
+        },
+        {
+            "key": "Title_Octagon_5",
+            "value": "Geometri Öğrencisi"
+        },
+        {
+            "key": "Title_Octagon_10",
+            "value": "Teknik Ressam"
+        },
+        {
+            "key": "Title_Octagon_15",
+            "value": "Tasarımcı"
+        },
+        {
+            "key": "Title_Octagon_20",
+            "value": "İllüzyonist"
+        },
+        {
+            "key": "Title_Octagon_25",
+            "value": "Şekillerin Efendisi"
+        },
+        {
+            "key": "Title_Octagon_30",
+            "value": "Sekizgenin Büyük Ustası"
+        },
+
+        {
+            "key": "Title_Montana_1",
+            "value": "Seyirci"
+        },
+        {
+            "key": "Title_Montana_5",
+            "value": "Çırak"
+        },
+        {
+            "key": "Title_Montana_10",
+            "value": "Nakışçı"
+        },
+        {
+            "key": "Title_Montana_15",
+            "value": "Zanaatkar"
+        },
+        {
+            "key": "Title_Montana_20",
+            "value": "İpliklerin Efendisi"
+        },
+        {
+            "key": "Title_Montana_25",
+            "value": "Yetenekli Dokumacı"
+        },
+        {
+            "key": "Title_Montana_30",
+            "value": "Desenlerin Bekçisi"
+        },
+
+        {
+            "key": "Title_Global_1",
+            "value": "Kulüp Misafiri"
+        },
+        {
+            "key": "Title_Global_10",
+            "value": "Kart Masası Çaylağı"
+        },
+        {
+            "key": "Title_Global_20",
+            "value": "Kendinden Emin Oyuncu"
+        },
+        {
+            "key": "Title_Global_30",
+            "value": "Solitaire Aşığı"
+        },
+        {
+            "key": "Title_Global_40",
+            "value": "Çabuk Eller"
+        },
+        {
+            "key": "Title_Global_50",
+            "value": "Diziliş Uzmanı"
+        },
+        {
+            "key": "Title_Global_60",
+            "value": "Kaderi Karıştıran"
+        },
+        {
+            "key": "Title_Global_70",
+            "value": "Kart Ustası"
+        },
+        {
+            "key": "Title_Global_80",
+            "value": "Deneyimli Oyuncu"
+        },
+        {
+            "key": "Title_Global_90",
+            "value": "Deste Virtüözü"
+        },
+        {
+            "key": "Title_Global_100",
+            "value": "Solitaire Büyük Ustası"
+        },
+        {
+            "key": "Title_Global_110",
+            "value": "Serilerin Bekçisi"
+        },
+        {
+            "key": "Title_Global_120",
+            "value": "Kart Baronu"
+        },
+        {
+            "key": "Title_Global_130",
+            "value": "Oyunların Efendisi"
+        },
+        {
+            "key": "Title_Global_140",
+            "value": "Masa Efsanesi"
+        },
+        {
+            "key": "Title_Global_150",
+            "value": "Mutlak Şampiyon"
+        },
+        {
+            "key": "TitleUI_SelectTitle",
+            "value": "Unvan Seç"
+        },
+        {
+            "key": "Shop_Premium_Title",
+            "value": "Premium"
+        },
+        {
+            "key": "Shop_Premium_Desc",
+            "value": "<b><color=#ffbb00>Oyunun tüm potansiyelini ortaya çıkarın!</color></b>\n<color=#E14849>- Reklamlar sonsuza dek kaldırıldı</color>\n<color=#9FD25C>- +%20 kazanılan deneyim</color> (oyunlarda ve görevlerde)\n- Detaylı istatistiklere erişim\n- Kart ön yüzü tasarımlarını değiştirme\n- Son 4 günün görevlerine erişim"
+        },
+        {
+            "key": "Shop_Premium2_Desc",
+            "value": "<b><color=#ffbb00>Oyunun tüm potansiyelini ortaya çıkarın!</color></b>\n<color=#9FD25C>- +%20 kazanılan deneyim</color> (oyunlarda ve görevlerde)\n- Detaylı istatistiklere erişim\n- Kart ön yüzü tasarımlarını değiştirme\n- Son 4 günün görevlerine erişim"
+        },
+        {
+            "key": "Shop_NoAds_Title",
+            "value": "Reklamları Kaldır"
+        },
+        {
+            "key": "Shop_NoAds_Desc",
+            "value": "<color=#E14849><b>Oyundaki tüm reklamları kalıcı olarak kaldırır.</b></color>\nEn sevdiğiniz solitaire oyunlarının keyfini kesintisiz çıkarın!"
+        },
+        {
+            "key": "Shop_Purchased",
+            "value": "Satın Alındı"
+        },
+        {
+            "key": "Shop_Buy",
+            "value": "Satın Al"
+        },
+        {
+            "key": "Hint_Settings",
+            "value": "Oyununuzu özelleştirin! Güzel bir <color=#FCA311>arka plan</color> seçin ve favori <color=#FCA311>kart tasarımınızı</color> belirleyin."
+        },
+        {
+            "key": "Hint_Shop",
+            "value": "Kesintisiz oynayın! Buradan <color=#FCA311>reklamları kalıcı olarak kapatabilir</color> veya DP bonuslarıyla <color=#FCA311>Premium statüsünün</color> kilidini açabilirsiniz."
+        },
+        {
+            "key": "Hint_Stats",
+            "value": "İlerlemenizi takip edin! Burada <color=#FCA311>oyun istatistiklerinizi</color> ve en iyi <color=#FCA311>kişisel rekorlarınızı</color> bulabilirsiniz."
+        },
+        {
+            "key": "Hint_Leaderboard",
+            "value": "En iyilerle yarışın! <color=#FCA311>Liderlik tablosunda</color> kendi <color=#FCA311>sonuçlarınızı</color> diğer oyuncularla karşılaştırabilirsiniz."
         }
     ]
 }

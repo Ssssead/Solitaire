@@ -19,31 +19,34 @@ public class MontanaIntroController : MonoBehaviour, IIntroController
     public float uiSlideDuration = 0.5f;
     public float buttonStaggerDelay = 0.1f;
 
-    // Скрытые и начальные позиции
     private Vector2 topPanelStartPos;
     private Vector2 topPanelHiddenPos;
-
     private Vector2 topExtraButtonStartPos;
     private Vector2 topExtraButtonHiddenPos;
-
     private List<Vector2> bottomButtonsStartPos = new List<Vector2>();
     private List<Vector2> bottomButtonsHiddenPos = new List<Vector2>();
+
+    private bool isSkipping = false;
 
     private void Awake()
     {
         if (modeManager == null) modeManager = FindObjectOfType<MontanaModeManager>();
 
-        // Принудительно заставляем Unity просчитать все Layout-ы перед сохранением позиций
         Canvas.ForceUpdateCanvases();
         SaveInitialPositions();
-
-        // Прячем UI еще до первого кадра
         PrepareIntro(modeManager.isRestarting);
+    }
+
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+        {
+            isSkipping = true;
+        }
     }
 
     private void SaveInitialPositions()
     {
-        // Сохраняем позиции и высчитываем точку ЗА экраном (СВЕРХУ)
         if (topPanelMain != null)
         {
             topPanelStartPos = topPanelMain.anchoredPosition;
@@ -56,7 +59,6 @@ public class MontanaIntroController : MonoBehaviour, IIntroController
             topExtraButtonHiddenPos = topExtraButtonStartPos + new Vector2(0, 300f);
         }
 
-        // Сохраняем позиции кнопок и высчитываем точку ЗА экраном (СНИЗУ)
         bottomButtonsStartPos.Clear();
         bottomButtonsHiddenPos.Clear();
         foreach (var btn in bottomButtons)
@@ -71,11 +73,11 @@ public class MontanaIntroController : MonoBehaviour, IIntroController
 
     public void PrepareIntro(bool isRestarting)
     {
+        isSkipping = false;
         if (modeManager != null) modeManager.IsInputAllowed = false;
 
         if (isRestarting)
         {
-            // ПРИ РЕСТАРТЕ: Сразу ставим всё на финальные (видимые) позиции
             if (topPanelMain != null) topPanelMain.anchoredPosition = topPanelStartPos;
             if (topExtraButton != null) topExtraButton.anchoredPosition = topExtraButtonStartPos;
 
@@ -83,11 +85,10 @@ public class MontanaIntroController : MonoBehaviour, IIntroController
             {
                 if (bottomButtons[i] != null) bottomButtons[i].anchoredPosition = bottomButtonsStartPos[i];
             }
-            SetSlotsAlpha(1f); // Слоты сразу видимы
+            SetSlotsAlpha(1f);
         }
         else
         {
-            // ПРИ ПЕРВОМ ЗАПУСКЕ: Физически переносим элементы за пределы экрана
             if (topPanelMain != null) topPanelMain.anchoredPosition = topPanelHiddenPos;
             if (topExtraButton != null) topExtraButton.anchoredPosition = topExtraButtonHiddenPos;
 
@@ -95,58 +96,77 @@ public class MontanaIntroController : MonoBehaviour, IIntroController
             {
                 if (bottomButtons[i] != null) bottomButtons[i].anchoredPosition = bottomButtonsHiddenPos[i];
             }
-            SetSlotsAlpha(0f); // Слоты прозрачны
+            SetSlotsAlpha(0f);
         }
     }
 
     public IEnumerator PlayIntroSequence(bool isRestarting)
     {
-        // Если это рестарт, полностью пропускаем блок анимации UI
-        if (isRestarting)
-        {
-            yield break;
-        }
+        if (isRestarting) yield break;
 
-        // 1. Плавное проявление 56 слотов на столе
         yield return StartCoroutine(FadeInSlots(slotsFadeDuration));
 
-        // 2. Анимация въезда СВЕРХУ (панель и доп. кнопка одновременно)
+        // --- ИЗМЕНЕНИЕ: Звук панели передаем с флагом playSoundAtStart = true ---
         if (topPanelMain != null)
-            StartCoroutine(AnimateUIElement(topPanelMain, topPanelHiddenPos, topPanelStartPos, uiSlideDuration));
+            StartCoroutine(AnimateUIElement(topPanelMain, topPanelHiddenPos, topPanelStartPos, uiSlideDuration, "Panel_Slide_In", true));
 
         if (topExtraButton != null)
-            StartCoroutine(AnimateUIElement(topExtraButton, topExtraButtonHiddenPos, topExtraButtonStartPos, uiSlideDuration));
+            StartCoroutine(AnimateUIElement(topExtraButton, topExtraButtonHiddenPos, topExtraButtonStartPos, uiSlideDuration, "Panel_Slide_In", true));
 
-        // 3. Анимация въезда СНИЗУ (каждая кнопка по очереди с микро-задержкой)
         for (int i = 0; i < bottomButtons.Count; i++)
         {
             if (bottomButtons[i] != null)
             {
-                StartCoroutine(AnimateUIElement(bottomButtons[i], bottomButtonsHiddenPos[i], bottomButtonsStartPos[i], uiSlideDuration));
-                yield return new WaitForSeconds(buttonStaggerDelay);
+                // --- ИЗМЕНЕНИЕ: Звук кнопок играем В КОНЦЕ движения (playSoundAtStart = false) ---
+                StartCoroutine(AnimateUIElement(bottomButtons[i], bottomButtonsHiddenPos[i], bottomButtonsStartPos[i], uiSlideDuration, "UI_Drop", false));
+                yield return StartCoroutine(SkippableWait(buttonStaggerDelay));
             }
         }
 
-        yield return new WaitForSeconds(uiSlideDuration);
+        yield return StartCoroutine(SkippableWait(uiSlideDuration));
     }
 
-    // Универсальный метод перемещения UI
-    private IEnumerator AnimateUIElement(RectTransform target, Vector2 from, Vector2 to, float duration)
+    private IEnumerator SkippableWait(float duration)
     {
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            float t = elapsed / duration;
-            float easedT = t * t * (3f - 2f * t); // Мягкое торможение в конце (SmoothStep)
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            yield return null;
+        }
+    }
+
+    // --- ИЗМЕНЕНИЕ: Добавлен параметр bool playSoundAtStart ---
+    private IEnumerator AnimateUIElement(RectTransform target, Vector2 from, Vector2 to, float duration, string soundName, bool playSoundAtStart)
+    {
+        // Звук выезда панели логично играть СРАЗУ
+        if (playSoundAtStart && AudioManager.Instance != null && !string.IsNullOrEmpty(soundName))
+        {
+            AudioManager.Instance.PlaySound(soundName);
+        }
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float easedT = t * t * (3f - 2f * t);
 
             if (target != null) target.anchoredPosition = Vector2.Lerp(from, to, easedT);
             yield return null;
         }
+
         if (target != null) target.anchoredPosition = to;
+
+        // Звук падения/удара кнопок играем В КОНЦЕ
+        if (!playSoundAtStart && AudioManager.Instance != null && !string.IsNullOrEmpty(soundName))
+        {
+            AudioManager.Instance.PlaySound(soundName);
+        }
     }
 
-    // --- Логика прозрачности ТОЛЬКО для пустых слотов на доске ---
     private void SetSlotsAlpha(float alpha)
     {
         if (modeManager != null && modeManager.pileManager != null)
@@ -176,14 +196,16 @@ public class MontanaIntroController : MonoBehaviour, IIntroController
 
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            foreach (var cg in groups) if (cg != null) cg.alpha = elapsed / duration;
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            foreach (var cg in groups) if (cg != null) cg.alpha = t;
             yield return null;
         }
         foreach (var cg in groups) if (cg != null) cg.alpha = 1f;
     }
 
-    // --- Интерфейс IIntroController (Для совместимости с MenuController) ---
     public List<RectTransform> GetTopUIElements()
     {
         List<RectTransform> list = new List<RectTransform>();

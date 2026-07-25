@@ -201,6 +201,14 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
 
     private bool IsBottomCardInStack()
     {
+        // --- ИСПРАВЛЕНИЕ ДЛЯ ЮКОНА ---
+        // В Юконе перетаскиваемые карты вложены в главную карту. 
+        // Если у нас родитель - это другая карта, то мы внутри стопки и НЕ являемся началом тени.
+        if (transform.parent != null && transform.parent.GetComponent<CardController>() != null)
+        {
+            return false;
+        }
+
         if (transform.parent == null) return true;
 
         int myIndex = transform.GetSiblingIndex();
@@ -220,8 +228,6 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         if (prevCard == null) return true;
 
         // --- МАГИЯ ФИЗИЧЕСКОГО РАЗРЫВА ---
-        // Если предыдущая карта находится физически слишком далеко,
-        // значит мы оторвались от неё (например, летим) и начинаем свою тень!
         float dist = Vector2.Distance(myRect.anchoredPosition, prevCard.anchoredPosition);
         if (dist > GetStackBreakThreshold())
         {
@@ -234,6 +240,27 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
     private RectTransform FindLastCardInStack()
     {
         RectTransform last = myRect;
+
+        // --- 1. ИСПРАВЛЕНИЕ ДЛЯ ЮКОНА ---
+        // Проверяем, есть ли внутри нас вложенные карты (дети)
+        bool foundChildren = false;
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform child = transform.GetChild(i);
+            if (child.name == "Shadow_Monolith" || child.name == "CardShadow") continue;
+
+            if (child.GetComponent<CardController>() != null)
+            {
+                last = child as RectTransform;
+                foundChildren = true;
+            }
+        }
+
+        // Если нашли детей-карт, значит мы тянем монолит Юкона, возвращаем самую нижнюю карту
+        if (foundChildren) return last;
+
+        // --- 2. СТАНДАРТНАЯ ПРОВЕРКА (Косынка, Свободная ячейка) ---
+        // Ищем среди соседей (сиблингов)
         if (transform.parent != null)
         {
             for (int i = transform.GetSiblingIndex() + 1; i < transform.parent.childCount; i++)
@@ -246,9 +273,6 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
                 {
                     RectTransform nextRect = child as RectTransform;
 
-                    // --- МАГИЯ ФИЗИЧЕСКОГО РАЗРЫВА ---
-                    // Если следующая карта находится далеко, значит она не летит вместе с нами.
-                    // Обрываем монолитную тень, чтобы она не растягивалась до самого стола!
                     float dist = Vector2.Distance(last.anchoredPosition, nextRect.anchoredPosition);
                     if (dist > GetStackBreakThreshold())
                     {

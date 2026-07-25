@@ -5,7 +5,6 @@ public class SultanFoundationPile : MonoBehaviour, ICardContainer
 {
     public Transform Transform => transform;
     private SultanModeManager _mode;
-    private List<CardController> _cards = new List<CardController>();
 
     public void Initialize(SultanModeManager mode, RectTransform tf)
     {
@@ -14,8 +13,12 @@ public class SultanFoundationPile : MonoBehaviour, ICardContainer
 
     public CardController GetTopCard()
     {
-        if (_cards.Count == 0) return null;
-        return _cards[_cards.Count - 1];
+        // Иерархия Unity — единственный надежный источник истины при работе с UndoManager.
+        // Если карта была перемещена обратно через Undo, childCount изменится автоматически.
+        int childCount = transform.childCount;
+        if (childCount == 0) return null;
+
+        return transform.GetChild(childCount - 1).GetComponent<CardController>();
     }
 
     public bool CanAccept(CardController card)
@@ -23,12 +26,12 @@ public class SultanFoundationPile : MonoBehaviour, ICardContainer
         if (card == null) return false;
 
         CardController top = GetTopCard();
-        if (top == null) return false; // Пустые дома не принимают карты, они заполняются генератором
+        if (top == null) return false; // Базовые карты расставляются генератором
 
         // 1. Проверяем масть (должна совпадать)
         if (card.cardModel.suit != top.cardModel.suit) return false;
 
-        // 2. Расчет следующего ранга "по кругу" (Король 13 -> Туз 1)
+        // 2. Расчет следующего ранга "по кругу" (13-Король -> 1-Туз)
         int expectedRank = (top.cardModel.rank % 13) + 1;
 
         return card.cardModel.rank == expectedRank;
@@ -38,16 +41,20 @@ public class SultanFoundationPile : MonoBehaviour, ICardContainer
     {
         if (card == null) return;
 
-        _cards.Add(card);
         card.transform.SetParent(transform);
         card.rectTransform.anchoredPosition = Vector2.zero;
         card.transform.localRotation = Quaternion.identity;
         card.transform.SetAsLastSibling();
 
-        // В Домах карты нельзя брать обратно (классическое правило Султана)
         var cg = card.GetComponent<CanvasGroup>();
         if (cg != null) cg.blocksRaycasts = false;
+
+        // Старый трекинг GameQuestTracker.Instance?.RecordCardToFoundation УДАЛЕН.
+        // Теперь все безопасно считается в SultanModeManager.TrackSultanQuest!
     }
+
+    // Метод OnTransformChildrenChanged тоже УДАЛЕН, 
+    // так как откат квестов при Undo теперь работает централизованно.
 
     public bool IsComplete()
     {
@@ -57,11 +64,11 @@ public class SultanFoundationPile : MonoBehaviour, ICardContainer
     }
 
     public void OnCardIncoming(CardController card) { }
+
     public Vector2 GetDropAnchoredPosition(CardController card) => Vector2.zero;
 
     public void Clear()
     {
-        _cards.Clear();
         foreach (Transform child in transform) Destroy(child.gameObject);
     }
 }

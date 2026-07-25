@@ -12,7 +12,8 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public Canvas rootCanvas;
     public RectTransform dragLayer;
     public GameUIController gameUI;
-
+    public TriPeaksIntroController introController; // [NEW] Контроллер UI интро
+    public TriPeaksTutorialManager tutorialManager;
     [Header("Services")]
     public TriPeaksPileManager pileManager;
     public TriPeaksScoreManager scoreManager;
@@ -25,14 +26,15 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     [Header("HUD")]
     public TMP_Text movesText;
+    public TMP_Text scoreText;
+    public TMP_Text timeText;
 
     [Header("Animation Settings")]
-    public float dealFlyDuration = 0.3f;
-    public float totalDealDuration = 1.5f;
-    public float stockToWasteDuration = 0.25f;
+    public float dealFlyDuration = 0.25f;
+    public float totalDealDuration = 1.2f;
+    public float stockToWasteDuration = 0.15f;
     public float stockShiftDuration = 0.2f;
-    public float tableauToWasteDuration = 0.3f;
-    public float tableauFlipDuration = 0.25f;
+    public float tableauToWasteSpeed = 150f;
     public float flipWaitDelay = 0.3f;
     public float undoMoveDuration = 0.2f;
     public float undoAllMoveDuration = 0.08f;
@@ -41,16 +43,18 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     private int currentRound = 1;
     private int totalRounds = 1;
 
-    // Флаги состояний
     private bool _isInputAllowed = true;
     private bool _isSetupRunning = false;
     private bool _isUndoing = false;
-    private bool hasGameStarted = false;
+    
 
-    // Флаги статистики
     private bool _hasGameStarted = false;
     private bool _isGameEnded = false;
     private bool _isGameWon = false;
+
+    private float gameTimer = 0f;
+    private bool isTimerRunning = false;
+    private Coroutine _stockShiftCoroutine;
 
     private CardModel _logicTopCardModel;
     private Stack<TriPeaksMoveRecord> _undoStack = new Stack<TriPeaksMoveRecord>();
@@ -64,16 +68,32 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public float TableauVerticalGap => 0f;
     public StockDealMode StockDealMode => StockDealMode.Draw1;
     public GameType GameType => GameType.TriPeaks;
-
+    public ITutorialManager Tutorial => tutorialManager;
     public bool IsInputAllowed
     {
         get => _isInputAllowed && !_isSetupRunning && !_isUndoing && !_isGameEnded;
-        set => _isInputAllowed = value;
+        set
+        {
+            _isInputAllowed = value;
+
+            // ХИТРОСТЬ ДЛЯ ПАНЕЛИ ПОРАЖЕНИЯ:
+            // Глобальный GameUIController делает IsInputAllowed = true прямо перед тем, как 
+            // попытаться "нажать" основную кнопку отмены. Мы перехватываем этот момент!
+            if (value && _isGameEnded && !_isGameWon)
+            {
+                // Мгновенно снимаем статус проигрыша
+                _isGameEnded = false;
+                isTimerRunning = true;
+
+                // Мгновенно включаем кнопки ДО того, как контроллер проверит их статус
+                bool hasHistory = _undoStack.Count > 0;
+                if (undoButton != null) undoButton.interactable = hasHistory;
+                if (undoAllButton != null) undoAllButton.interactable = hasHistory;
+            }
+        }
     }
-    public bool IsMatchInProgress()
-    {
-        return hasGameStarted;
-    }
+    public bool IsMatchInProgress() => _hasGameStarted && !_isGameEnded && !_isGameWon;
+
     private void Start()
     {
         if (animationService == null) animationService = GetComponent<TriPeaksAnimationService>();
@@ -82,7 +102,6 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         if (undoButton != null) undoButton.onClick.AddListener(OnUndoAction);
         if (undoAllButton != null) undoAllButton.onClick.AddListener(OnUndoAllAction);
 
-        // Загрузка настроек
         currentDifficulty = GameSettings.CurrentDifficulty;
         totalRounds = GameSettings.RoundsCount;
         if (totalRounds < 1) totalRounds = 1;
@@ -92,25 +111,46 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     private void Update()
     {
+        // Кнопки зависят строго от того, разрешен ли ввод. 
+        // При проигрыше IsInputAllowed = false, и кнопки сами потухнут.
         bool canInteract = IsInputAllowed;
-        // Если игра проиграна, но есть история, разрешаем нажимать Undo (кнопки должны быть активны)
-        if (_isGameEnded && !_isGameWon && _undoStack.Count > 0)
-        {
-            canInteract = true;
-        }
 
         bool hasHistory = _undoStack.Count > 0;
-
         if (undoButton != null) undoButton.interactable = canInteract && hasHistory;
         if (undoAllButton != null) undoAllButton.interactable = canInteract && hasHistory;
 
-        if (!_isGameEnded && movesText != null && StatisticsManager.Instance != null)
+        if (isTimerRunning && !_isGameEnded && !_isGameWon)
         {
-            movesText.text = StatisticsManager.Instance.GetCurrentMoves().ToString();
+            gameTimer += Time.deltaTime;
+            UpdateTimeUI();
         }
     }
 
-    // --- ИНТЕГРАЦИЯ СТАТИСТИКИ ---
+    private void UpdateFullUI()
+    {
+        if (movesText != null)
+        {
+            if (!_hasGameStarted) movesText.text = "0";
+            else if (StatisticsManager.Instance != null) movesText.text = StatisticsManager.Instance.GetCurrentMoves().ToString();
+            else movesText.text = "0";
+        }
+        if (scoreText != null)
+        {
+            if (!_hasGameStarted) scoreText.text = "0";
+            else scoreText.text = $"{scoreManager?.CurrentScore ?? 0}";
+        }
+        if (!_hasGameStarted) UpdateTimeUI();
+    }
+
+    private void UpdateTimeUI()
+    {
+        if (timeText != null)
+        {
+            int totalSeconds = Mathf.FloorToInt(gameTimer);
+            timeText.text = string.Format("{0}:{1:00}", totalSeconds / 60, totalSeconds % 60);
+        }
+    }
+
     private void RegisterActivity()
     {
         if (!_hasGameStarted)
@@ -118,49 +158,57 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
             _hasGameStarted = true;
             if (StatisticsManager.Instance != null)
             {
-                StatisticsManager.Instance.OnGameStarted("TriPeaks", GameSettings.CurrentDifficulty, $"{totalRounds}Rounds");
+                string variant = GameSettings.GetCurrentVariantString(GameType.TriPeaks);
+                StatisticsManager.Instance.OnGameStarted("TriPeaks", GameSettings.CurrentDifficulty, variant);
             }
         }
 
-        if (StatisticsManager.Instance != null)
-        {
-            StatisticsManager.Instance.RegisterMove();
-        }
+        isTimerRunning = true;
+        if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
+        UpdateFullUI();
     }
 
     private void OnDestroy()
     {
         if (_hasGameStarted && !_isGameWon)
-        {
-            if (StatisticsManager.Instance != null)
-            {
-                StatisticsManager.Instance.OnGameAbandoned();
-            }
-        }
+            if (StatisticsManager.Instance != null) StatisticsManager.Instance.OnGameAbandoned();
     }
 
-    public void InitializeMode() { RestartGameInternal(true); }
+    public void InitializeMode()
+    {
+        // При инициализации (первом входе) делаем полный сброс и ИГРАЕМ интро
+        RestartGameInternal(true, true);
+    }
 
     public void RestartGame()
     {
-        if (_hasGameStarted && !_isGameWon)
-        {
-            if (StatisticsManager.Instance != null)
-                StatisticsManager.Instance.OnGameAbandoned();
-        }
-
         currentDifficulty = GameSettings.CurrentDifficulty;
-        RestartGameInternal(true);
+        totalRounds = GameSettings.RoundsCount;
+        if (totalRounds < 1) totalRounds = 1;
+
+        RestartGameInternal(true, false);
     }
 
-    private void RestartGameInternal(bool fullReset)
+    private void RestartGameInternal(bool fullReset, bool playIntro)
     {
         StopAllCoroutines();
 
         if (fullReset)
         {
+            // 1. Закрываем старую игру
+            if (_hasGameStarted && !_isGameWon && StatisticsManager.Instance != null)
+            {
+                StatisticsManager.Instance.OnGameAbandoned();
+            }
+
+            // 2. Инициализируем трекер
+            string variant = GameSettings.GetCurrentVariantString(GameType.TriPeaks) ?? "None";
+            GameQuestTracker.Instance?.StartMatch("TriPeaks", currentDifficulty, variant);
+
             _hasGameStarted = false;
             currentRound = 1;
+            gameTimer = 0f;
+            isTimerRunning = false;
             if (scoreManager != null) scoreManager.ResetScore();
         }
 
@@ -171,12 +219,23 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         _isUndoing = false;
         _undoStack.Clear();
 
+        UpdateFullUI();
+
         if (pileManager != null) pileManager.ClearAll();
 
-        StartCoroutine(SetupRoundRoutine());
+        // Интеграция Туториала
+        if (GameSettings.IsTutorialMode && tutorialManager != null && fullReset)
+        {
+            StartCoroutine(tutorialManager.PlayTutorialIntro(null));
+        }
+        else
+        {
+            StartCoroutine(SetupRoundRoutine(playIntro));
+        }
     }
 
-    private IEnumerator SetupRoundRoutine()
+    // [NEW] Единая переписанная корутина настройки раунда и интро
+    private IEnumerator SetupRoundRoutine(bool playIntro = false)
     {
         _isSetupRunning = true;
         if (pileManager == null) yield break;
@@ -187,79 +246,136 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
         if (deal == null) { _isSetupRunning = false; yield break; }
 
+        // --- 1. Анимация интерфейса ---
+        if (introController != null) introController.PrepareIntro(playIntro);
+
+        if (introController != null && playIntro)
+        {
+            yield return StartCoroutine(introController.PlayUIIntroSequence());
+        }
+
+        // --- 2. Генерация всех 52 карт ---
+        List<CardInstance> stockSource = new List<CardInstance>(deal.stock);
+        stockSource.Reverse();
+
+        CardInstance wasteInst = null;
+        if (stockSource.Count > 0)
+        {
+            wasteInst = stockSource[stockSource.Count - 1];
+            stockSource.RemoveAt(stockSource.Count - 1);
+        }
+
+        List<CardController> allCardsToFly = new List<CardController>();
+        List<CardController> stockCards = new List<CardController>();
         List<CardController> tableauCards = new List<CardController>();
+        CardController initialWasteCard = null;
+
+        for (int i = 0; i < stockSource.Count; i++)
+        {
+            CardController c = CreateFaceDownCard(stockSource[i].Card);
+            stockCards.Add(c);
+            pileManager.Stock.AddCard(c);
+        }
+
+        if (wasteInst != null)
+        {
+            initialWasteCard = CreateFaceDownCard(wasteInst.Card);
+        }
+
         int tableauIndex = 0;
         foreach (var cardList in deal.tableau)
         {
             if (tableauIndex >= pileManager.TableauPiles.Count) break;
             if (cardList == null || cardList.Count == 0) { tableauIndex++; continue; }
 
-            CardController card = cardFactory.CreateCard(cardList[0].Card, pileManager.Stock.transform, Vector2.zero);
-            var cardData = card.GetComponent<CardData>();
-            if (cardData != null) cardData.SetFaceUp(false, false);
-
-            card.OnClicked += OnCardClicked;
-            tableauCards.Add(card);
+            CardController c = CreateFaceDownCard(cardList[0].Card);
+            tableauCards.Add(c);
             tableauIndex++;
         }
 
-        List<CardInstance> stockSource = new List<CardInstance>(deal.stock);
-        stockSource.Reverse();
-
-        CardController initialWasteCard = null;
-        if (stockSource.Count > 0)
+        // Правильный порядок для визуального слоения: 
+        allCardsToFly.AddRange(stockCards);
+        if (initialWasteCard != null) allCardsToFly.Add(initialWasteCard);
+        for (int i = tableauCards.Count - 1; i >= 0; i--)
         {
-            CardInstance wInst = stockSource[stockSource.Count - 1];
-            stockSource.RemoveAt(stockSource.Count - 1);
-            initialWasteCard = cardFactory.CreateCard(wInst.Card, pileManager.Stock.transform, Vector2.zero);
-            var wd = initialWasteCard.GetComponent<CardData>();
-            if (wd != null) wd.SetFaceUp(false, false);
+            allCardsToFly.Add(tableauCards[i]);
         }
 
-        int stockCount = stockSource.Count;
-        for (int i = 0; i < stockCount; i++)
-        {
-            float targetX = (i - (stockCount - 1)) * (animationService ? pileManager.Stock.Gap : 5f);
-            CardController card = cardFactory.CreateCard(stockSource[i].Card, pileManager.Stock.transform, new Vector2(targetX, 0));
-            var cd = card.GetComponent<CardData>();
-            if (cd != null) cd.SetFaceUp(false, false);
+        // --- 3. Анимация: Вылет единой стопкой и раскрытие ---
+        float screenW = rootCanvas.GetComponent<RectTransform>().rect.width;
+        System.Func<bool> skipCheck = () => introController != null && introController.IsSkipping;
+        float gap = pileManager.Stock.Gap > 0 ? pileManager.Stock.Gap : 5f;
 
-            pileManager.Stock.AddCard(card);
-            card.gameObject.SetActive(true);
-            card.OnClicked += OnCardClicked;
+        if (animationService != null)
+        {
+            yield return StartCoroutine(animationService.AnimateDeckArrivalAndExpand(allCardsToFly, pileManager.Stock.transform, screenW, stockCards.Count, skipCheck, 1f, gap));
         }
 
-        pileManager.Stock.UpdateVisuals();
-        yield return new WaitForSeconds(0.1f);
-
+        // --- 4. Анимация: Разлет карт в Табло ---
         float delayPerCard = totalDealDuration / (tableauCards.Count + 1);
         for (int i = 0; i < tableauCards.Count; i++)
         {
             CardController card = tableauCards[i];
             TriPeaksTableauPile targetSlot = pileManager.TableauPiles[i];
             bool flyFaceUp = (i >= 18);
-
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Deal");
             StartCoroutine(animationService.AnimateMoveCard(card, targetSlot.transform, dealFlyDuration, flyFaceUp, () =>
             {
                 targetSlot.AddCard(card);
             }));
 
-            yield return new WaitForSeconds(delayPerCard);
+            float waitTimer = 0f;
+            while (waitTimer < delayPerCard)
+            {
+                float speed = skipCheck() ? 15f : 1f;
+                waitTimer += Time.deltaTime * speed;
+                yield return null;
+            }
         }
 
+        // --- 5. Анимация: Открытие первой карты в Waste ---
         if (initialWasteCard != null)
         {
             _logicTopCardModel = initialWasteCard.cardModel;
+
+            // <--- ЗВУК: ПЕРЕВОРОТ СТАРТОВОЙ КАРТЫ СБРОСА --->
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Flip");
+
+            Vector3 offset = pileManager.Waste.GetTargetLocalPositionForNextCard();
             yield return StartCoroutine(animationService.AnimateMoveCard(initialWasteCard, pileManager.Waste.transform, dealFlyDuration, true, () =>
             {
                 pileManager.Waste.AddCard(initialWasteCard);
-            }));
+
+                // Опционально: звук приземления карты в сброс
+                if (AudioManager.Instance != null)
+                    AudioManager.Instance.PlaySound("Card_Drop_Success");
+            }, offset));
         }
 
         yield return new WaitForSeconds(dealFlyDuration + 0.1f);
+
         ForceEnableInput();
+        pileManager.Stock.UpdateVisuals();
 
         _isSetupRunning = false;
+        _isInputAllowed = true;
+
+        // Запуск таймера при старте или переходе на новый раунд
+        if (_hasGameStarted)
+        {
+            isTimerRunning = true;
+        }
+    }
+
+    private CardController CreateFaceDownCard(CardModel model)
+    {
+        CardController c = cardFactory.CreateCard(model, pileManager.Stock.transform, Vector2.zero);
+        var cd = c.GetComponent<CardData>();
+        if (cd != null) cd.SetFaceUp(false, false);
+        c.OnClicked += OnCardClicked;
+        return c;
     }
 
     private void ForceEnableInput()
@@ -282,11 +398,24 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         TriPeaksTableauPile slot = pileManager.FindSlotWithCard(card);
         if (slot != null)
         {
-            if (slot.IsBlocked()) return;
+            // 1. ОШИБКА: Карта заблокирована другими картами сверху
+            if (slot.IsBlocked())
+            {
+                card.StopAllCoroutines(); // Прерываем предыдущую тряску от спам-кликов
+                card.StartCoroutine(animationService.AnimateShakeError(card));
+                return;
+            }
 
+            // 2. УСПЕХ: Карта подходит по правилам
             if (CheckMatch(card.cardModel, _logicTopCardModel))
             {
                 StartCoroutine(MoveToWasteRoutine(card, slot, pileManager.Waste));
+            }
+            // 3. ОШИБКА: Карта свободна, но не совпадает по рангу с Waste
+            else
+            {
+                card.StopAllCoroutines(); // Прерываем предыдущую тряску
+                card.StartCoroutine(animationService.AnimateShakeError(card));
             }
         }
     }
@@ -309,6 +438,14 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     {
         RegisterActivity();
 
+        // ---> ДОБАВИТЬ ЭТО: Трекинг колоды и сброс комбо <---
+        GameQuestTracker.Instance?.RecordMove();
+        GameQuestTracker.Instance?.RecordStockDraw();
+        // ----------------------------------------------------
+
+        // <--- ЗВУК 4: КЛИК ПО КАРТЕ СТОКА (ПЕРЕЛИСТЫВАНИЕ) --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Flip");
         _logicTopCardModel = card.cardModel;
 
         var record = new TriPeaksMoveRecord
@@ -320,21 +457,41 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         };
         _undoStack.Push(record);
 
+        // 1. Мгновенный логический перенос (исправляет мигание по центру экрана)
+        Vector3 offset = pileManager.Waste.GetTargetLocalPositionForNextCard();
         pileManager.Stock.RemoveCard(card);
-        if (animationService != null) StartCoroutine(animationService.AnimateStockShift(pileManager.Stock, stockShiftDuration));
+        pileManager.Waste.AddCard(card);
 
-        yield return StartCoroutine(animationService.AnimateMoveCard(card, pileManager.Waste.transform, stockToWasteDuration, true, () =>
+        // 2. Прерываем старую анимацию (если нажали отмену и тут же кликнули снова)
+        card.StopAllCoroutines();
+
+        // 3. Запускаем полет на самой карте
+        Coroutine moveRoutine = card.StartCoroutine(animationService.AnimateMoveCard(card, pileManager.Waste.transform, stockToWasteDuration, true, null, offset));
+
+        // 4. Безопасный сдвиг колоды
+        if (animationService != null)
         {
-            pileManager.Waste.AddCard(card);
-        }));
+            if (_stockShiftCoroutine != null) StopCoroutine(_stockShiftCoroutine);
+            _stockShiftCoroutine = StartCoroutine(animationService.AnimateStockShift(pileManager.Stock, stockShiftDuration));
+        }
 
         if (scoreManager) scoreManager.ResetStreak();
+        UpdateFullUI();
         CheckGameState();
+
+        yield return moveRoutine;
     }
 
     private IEnumerator MoveToWasteRoutine(CardController card, ICardContainer source, ICardContainer target)
     {
         RegisterActivity();
+
+        // ---> ДОБАВИТЬ ЭТО: Удаление карты в Три Вершины и Комбо <---
+        GameQuestTracker.Instance?.RecordMove();
+        GameQuestTracker.Instance?.SendEvent(QuestActionType.RemoveBoardCard, 1);
+        GameQuestTracker.Instance?.IncrementCombo(QuestActionType.ComboCardsWithoutDraw);
+        GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, 1, card.cardModel.rank.ToString());
+        // -------------------------------------------------------------
 
         _logicTopCardModel = card.cardModel;
 
@@ -353,21 +510,56 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         }
         _undoStack.Push(record);
 
-        if (source is TriPeaksTableauPile tSource) tSource.RemoveCard(card);
-
-        Coroutine moveRoutine = StartCoroutine(animationService.AnimateMoveCard(card, target.Transform, tableauToWasteDuration, true, () =>
+        // --- ИСПРАВЛЕНИЕ: Логический перенос СРАЗУ ---
+        if (source is TriPeaksTableauPile tSource)
         {
-            if (target is TriPeaksWastePile wTarget) wTarget.AddCard(card);
-        }));
+            tSource.RemoveCard(card);
+
+            // ---> ЗАДАНИЕ "ЧИСТЫЙ ГОРИЗОНТ" (Очистка вершин) <---
+            int pileIndex = pileManager.TableauPiles.IndexOf(tSource);
+            if (pileIndex == 0 || pileIndex == 1 || pileIndex == 2)
+            {
+                GameQuestTracker.Instance?.SendEvent(QuestActionType.ClearPeak, 1);
+            }
+            // ------------------------------------------------
+        }
+
+        Vector3 offset = Vector3.zero;
+        if (target is TriPeaksWastePile wTarget)
+        {
+            offset = wTarget.GetTargetLocalPositionForNextCard();
+            wTarget.AddCard(card);
+        }
+
+        // <--- ЗВУК 3 (ВЗЛЕТ): Карта срывается с места --->
+        if (AudioManager.Instance != null)
+        {
+            AudioSource whooshSource = AudioManager.Instance.PlaySound("Card_Whoosh_Out");
+            if (whooshSource != null)
+            {
+                whooshSource.pitch = 1.3f; // Повышаем питч (можешь подстроить значение, например 1.5f)
+            }
+        }
+
+        // ЗДЕСЬ ИСПОЛЬЗУЕМ НОВЫЙ БАЛЛИСТИЧЕСКИЙ МЕТОД
+        // Передаем звук приземления в коллбек onComplete
+        Coroutine moveRoutine = card.StartCoroutine(animationService.AnimateBallisticMoveCard(card, target.Transform, tableauToWasteSpeed, true, () =>
+        {
+            // <--- ЗВУК 3 (ПРИЗЕМЛЕНИЕ): Карта долетела до дома --->
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Foundation_Success");
+        }, offset));
 
         if (source is TriPeaksTableauPile)
         {
             if (scoreManager) scoreManager.AddStreakScore();
+            UpdateFullUI();
             StartCoroutine(UpdateTableauFacesRoutine(record));
         }
 
-        yield return moveRoutine;
         CheckGameState();
+
+        yield return moveRoutine;
     }
 
     private IEnumerator UpdateTableauFacesRoutine(TriPeaksMoveRecord record)
@@ -383,37 +575,144 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
                     cardData.SetFaceUp(true, true);
                     if (record != null) record.FlipList.Add(slot);
                     anyFlip = true;
+
+                    // ---> ДОБАВИТЬ ЭТО: Засчитываем открытие карты <---
+                    GameQuestTracker.Instance?.SendEvent(QuestActionType.FlipHiddenCards, 1);
+                    // ---------------------------------------------------
                 }
             }
         }
         if (anyFlip) yield return new WaitForSeconds(flipWaitDelay);
     }
 
-    // --- UNDO ---
-
     public void OnUndoAction()
     {
-        // Разрешаем Undo, если игра проиграна (Defeat), чтобы игрок мог спастись
         bool isDefeatState = _isGameEnded && !_isGameWon;
         if (!IsInputAllowed && !isDefeatState) return;
         if (_undoStack.Count == 0) return;
 
-        // Если отменяем поражение -> возвращаем игру в активное состояние
-        _isGameEnded = false;
+        // <--- ЗВУК 5: КЛИК ПО КНОПКЕ ОТМЕНЫ --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("UI_Back");
+
+        if (_isGameEnded)
+        {
+            _isGameEnded = false;
+            _isInputAllowed = true;
+            isTimerRunning = true;
+        }
 
         if (StatisticsManager.Instance != null)
             StatisticsManager.Instance.RegisterMove();
 
-        StartCoroutine(UndoLastMoveRoutine());
+        // ---> ДОБАВИТЬ СЮДА <---
+        GameQuestTracker.Instance?.RecordUndoUsed();
+        // -----------------------
+
+        UpdateFullUI();
+        UndoLastMoveImmediate();
+    }
+    private void UndoLastMoveImmediate()
+    {
+        TriPeaksMoveRecord record = _undoStack.Pop();
+
+        ApplyUndoLogic(record);
+
+        CardController card = record.MovedCard;
+
+        // <--- УМНЫЙ ЗВУК ОТМЕНЫ (ПАТТЕРН А) --->
+        if (AudioManager.Instance != null)
+        {
+            if (!record.IsFromStock)
+            {
+                // Возврат на стол: быстрый свист
+                AudioSource whooshSource = AudioManager.Instance.PlaySound("Card_Whoosh_Out");
+                if (whooshSource != null) whooshSource.pitch = 1.4f;
+            }
+            else
+            {
+                // Возврат в сток: просто звук перелистывания
+                AudioManager.Instance.PlaySound("Card_Flip");
+            }
+        }
+
+        // Защита от спама: если карта еще летела в сброс, прерываем её полет
+        card.StopAllCoroutines();
+        pileManager.Waste.RemoveCard(card);
+        // Ускоряем анимацию возврата для большей динамики
+        float fastUndoDuration = 0.12f;
+
+        if (record.IsFromStock)
+        {
+            var cd = card.GetComponent<CardData>();
+            if (cd != null) cd.SetFaceUp(false, true);
+
+            pileManager.Stock.AddCard(card);
+
+            // Фиксируем позицию, так как AddCard мог её слегка сбить
+            Vector3 startPos = card.transform.position;
+
+            card.StartCoroutine(animationService.AnimateMoveCard(card, pileManager.Stock.transform, fastUndoDuration, false, () =>
+            {
+                pileManager.Stock.UpdateVisuals();
+            }, Vector3.zero));
+
+            card.transform.position = startPos;
+
+            if (animationService != null)
+            {
+                if (_stockShiftCoroutine != null) StopCoroutine(_stockShiftCoroutine);
+                _stockShiftCoroutine = StartCoroutine(animationService.AnimateStockShift(pileManager.Stock, stockShiftDuration));
+            }
+        }
+        else
+        {
+            TriPeaksTableauPile targetSlot = record.SourcePile;
+
+            // Занимаем слот ТОЛЬКО логически. 
+            // Это решает проблему мгновенной телепортации и возвращает плавную анимацию
+            targetSlot.CurrentCard = card;
+
+            card.StartCoroutine(animationService.AnimateMoveCard(card, targetSlot.transform, fastUndoDuration, true, () =>
+            {
+                // Физически привязываем карту к слоту только когда она долетела
+                targetSlot.AddCard(card);
+            }, Vector3.zero));
+        }
+
+        CardController top = pileManager.Waste.TopCard;
+        if (top != null) _logicTopCardModel = top.cardModel;
     }
 
     private void ApplyUndoLogic(TriPeaksMoveRecord record)
     {
+        // ---> ОТКАТ КВЕСТОВ ПРИ ОТМЕНЕ ХОДА <---
+        if (!record.IsFromStock)
+        {
+            // Откат обычной убранной карты
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.RemoveBoardCard, -1);
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, -1, record.MovedCard.cardModel.rank.ToString());
+
+            // Откат очищенной вершины
+            if (record.SourcePile != null)
+            {
+                int pileIndex = pileManager.TableauPiles.IndexOf(record.SourcePile);
+                if (pileIndex == 0 || pileIndex == 1 || pileIndex == 2)
+                {
+                    GameQuestTracker.Instance?.SendEvent(QuestActionType.ClearPeak, -1);
+                }
+            }
+        }
+        // ---------------------------------------
         if (scoreManager)
             scoreManager.RestoreScoreAndStreak(record.PointsEarned, record.PreviousStreak);
 
         if (record.FlipList != null && record.FlipList.Count > 0)
         {
+            // ---> ДОБАВИТЬ ЭТО: Откат прогресса открытых карт <---
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.FlipHiddenCards, -record.FlipList.Count);
+            // ------------------------------------------------------
+
             foreach (var slot in record.FlipList)
             {
                 if (slot.CurrentCard != null)
@@ -423,111 +722,73 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
                 }
             }
         }
-    }
-
-    private IEnumerator UndoLastMoveRoutine()
-    {
-        _isUndoing = true;
-
-        TriPeaksMoveRecord record = _undoStack.Pop();
-        ApplyUndoLogic(record);
-
-        if (record.FlipList.Count > 0) yield return new WaitForSeconds(0.15f);
-
-        CardController card = record.MovedCard;
-        pileManager.Waste.RemoveCard(card);
-
-        if (record.IsFromStock)
-        {
-            var cd = card.GetComponent<CardData>();
-            if (cd != null) cd.SetFaceUp(false, true);
-
-            yield return StartCoroutine(animationService.AnimateMoveCard(card, pileManager.Stock.transform, undoMoveDuration, false, () =>
-            {
-                pileManager.Stock.AddCard(card);
-                if (animationService != null)
-                    StartCoroutine(animationService.AnimateStockShift(pileManager.Stock, stockShiftDuration));
-                else
-                    pileManager.Stock.UpdateVisuals();
-            }));
-        }
-        else
-        {
-            TriPeaksTableauPile targetSlot = record.SourcePile;
-            yield return StartCoroutine(animationService.AnimateMoveCard(card, targetSlot.transform, undoMoveDuration, true, () =>
-            {
-                targetSlot.AddCard(card);
-            }));
-        }
-
-        CardController top = pileManager.Waste.TopCard;
-        if (top != null) _logicTopCardModel = top.cardModel;
-
-        _isUndoing = false;
+        UpdateFullUI();
     }
 
     public void OnUndoAllAction()
     {
-        // Разрешаем Undo All при поражении
         bool isDefeatState = _isGameEnded && !_isGameWon;
         if (!IsInputAllowed && !isDefeatState) return;
         if (_undoStack.Count == 0) return;
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("UI_Back");
+        // Если игра была проиграна, мы ее "воскрешаем"
+        if (_isGameEnded)
+        {
+            _isGameEnded = false;
+            _isInputAllowed = true; // <--- ДОБАВЛЕНО: Возвращаем управление и включаем HUD-кнопки
+            isTimerRunning = true;
+        }
 
-        // --- ИСПРАВЛЕНИЕ: Добавляем +1 к ходам за нажатие кнопки (независимо от кол-ва карт) ---
         if (StatisticsManager.Instance != null)
             StatisticsManager.Instance.RegisterMove();
-        // ---------------------------------------------------------------------------------------
 
-        // Сбрасываем флаг поражения
-        _isGameEnded = false;
+        // ---> ДОБАВИТЬ СЮДА <---
+        GameQuestTracker.Instance?.RecordUndoUsed();
+        // -----------------------
 
-        StartCoroutine(UndoAllRoutine());
+        UpdateFullUI();
+
+        UndoAllImmediate();
     }
-
-    private IEnumerator UndoAllRoutine()
+    private void UndoAllImmediate()
     {
-        _isUndoing = true;
-
         while (_undoStack.Count > 0)
         {
             TriPeaksMoveRecord record = _undoStack.Pop();
             ApplyUndoLogic(record);
 
             CardController card = record.MovedCard;
+            card.StopAllCoroutines(); // Жестко прерываем любые полеты
             pileManager.Waste.RemoveCard(card);
 
             if (record.IsFromStock)
             {
                 var cd = card.GetComponent<CardData>();
-                if (cd != null) cd.SetFaceUp(false, true);
+                if (cd != null) cd.SetFaceUp(false, true); // true = мгновенный переворот без анимации
 
-                StartCoroutine(animationService.AnimateMoveCard(card, pileManager.Stock.transform, undoAllMoveDuration, false, () =>
-                {
-                    pileManager.Stock.AddCard(card);
-                    pileManager.Stock.UpdateVisuals();
-                }));
+                pileManager.Stock.AddCard(card);
             }
             else
             {
                 TriPeaksTableauPile targetSlot = record.SourcePile;
-                StartCoroutine(animationService.AnimateMoveCard(card, targetSlot.transform, undoAllMoveDuration, true, () =>
-                {
-                    targetSlot.AddCard(card);
-                }));
+                targetSlot.AddCard(card); // AddCard внутри себя мгновенно сбрасывает координаты в ноль
             }
-
-            yield return new WaitForSeconds(0.06f);
         }
 
-        yield return new WaitForSeconds(undoAllMoveDuration + 0.1f);
+        // Останавливаем сдвиг стопки, если он еще анимировался
+        if (animationService != null && _stockShiftCoroutine != null)
+        {
+            StopCoroutine(_stockShiftCoroutine);
+        }
 
+        // Мгновенно расставляем карты в стоке с правильными отступами
         pileManager.Stock.UpdateVisuals();
 
         CardController top = pileManager.Waste.TopCard;
         if (top != null) _logicTopCardModel = top.cardModel;
-
-        _isUndoing = false;
     }
+    
 
     private bool CheckMatch(CardModel a, CardModel b)
     {
@@ -540,44 +801,33 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void CheckGameState()
     {
-        // 1. Проверка на ПОБЕДУ (Табло пустое)
         if (pileManager.TableauPiles.All(p => !p.HasCard))
         {
             StartCoroutine(RoundWonRoutine());
             return;
         }
 
-        // --- 2. ИСПРАВЛЕНИЕ: Проверка на ПОРАЖЕНИЕ ---
-        // Условие: Сток пуст И ни одна открытая карта в табло не подходит к сбросу
         if (pileManager.Stock.IsEmpty)
         {
             bool anyMovePossible = false;
 
             foreach (var slot in pileManager.TableauPiles)
             {
-                // Проверяем только слоты с картами
-                if (slot.HasCard)
+                if (slot.HasCard && !slot.IsBlocked())
                 {
-                    // Проверяем только открытые (не заблокированные) карты
-                    if (!slot.IsBlocked())
+                    if (CheckMatch(slot.CurrentCard.cardModel, _logicTopCardModel))
                     {
-                        // Проверяем совпадение с текущей картой сброса
-                        if (CheckMatch(slot.CurrentCard.cardModel, _logicTopCardModel))
-                        {
-                            anyMovePossible = true;
-                            break; // Нашли хотя бы один ход, игра не окончена
-                        }
+                        anyMovePossible = true;
+                        break;
                     }
                 }
             }
 
-            // Если ходов нет -> Поражение
             if (!anyMovePossible)
             {
                 StartCoroutine(GameLostRoutine());
             }
         }
-        // --------------------------------------------
     }
 
     private IEnumerator GameLostRoutine()
@@ -585,15 +835,14 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         if (_isGameEnded) yield break;
 
         _isInputAllowed = false;
-        _isGameEnded = true; // Блокируем игру, но не ставим _isGameWon
+        _isGameEnded = true;
+        isTimerRunning = false;
 
         yield return new WaitForSeconds(1.0f);
 
-        // Отправляем данные о прерванной игре (поражении)
-        if (StatisticsManager.Instance != null)
-        {
-            StatisticsManager.Instance.OnGameAbandoned();
-        }
+        // УБРАНО: StatisticsManager.Instance.OnGameAbandoned();
+        // Мы НЕ завершаем сессию статистики здесь! Игрок еще может нажать "Отмена" и продолжить игру.
+        // Сессия закроется только если он реально выйдет в меню или нажмет рестарт.
 
         if (gameUI) gameUI.OnGameLost();
     }
@@ -601,8 +850,10 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     private IEnumerator RoundWonRoutine()
     {
         _isInputAllowed = false;
+        isTimerRunning = false;
 
         if (scoreManager) scoreManager.AddScore(1000 * currentRound);
+        UpdateFullUI();
 
         yield return new WaitForSeconds(0.5f);
 
@@ -619,7 +870,8 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
             _undoStack.Clear();
             pileManager.ClearAll();
 
-            StartCoroutine(NextRoundSequence());
+            // Переход на следующий раунд теперь использует общую функцию!
+            StartCoroutine(SetupRoundRoutine(false));
         }
         else
         {
@@ -642,110 +894,16 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
                 }
             }
 
+            // ---> ДОБАВИТЬ ЭТОТ БЛОК <---
+            if (GameQuestTracker.Instance != null && pileManager != null)
+            {
+                int remainingCards = pileManager.Stock.Count;
+                GameQuestTracker.Instance.SendEvent(QuestActionType.WinWithRemainingStock, remainingCards);
+            }
+            // -----------------------------
+
             if (gameUI) gameUI.OnGameWon(finalMoves);
         }
-    }
-
-    private IEnumerator NextRoundSequence()
-    {
-        Deal deal = null;
-        if (DealCacheSystem.Instance != null)
-            deal = DealCacheSystem.Instance.GetDeal(GameType.TriPeaks, currentDifficulty, totalRounds);
-
-        if (deal == null) { _isSetupRunning = false; _isInputAllowed = true; yield break; }
-
-        List<CardController> tableauCards = new List<CardController>();
-        int tableauIndex = 0;
-        foreach (var cardList in deal.tableau)
-        {
-            if (tableauIndex >= pileManager.TableauPiles.Count) break;
-            if (cardList == null || cardList.Count == 0) { tableauIndex++; continue; }
-
-            CardController card = cardFactory.CreateCard(cardList[0].Card, pileManager.Stock.transform, Vector2.zero);
-            var cardData = card.GetComponent<CardData>();
-            if (cardData != null) cardData.SetFaceUp(false, false);
-
-            card.OnClicked += OnCardClicked;
-            card.gameObject.SetActive(false);
-            tableauCards.Add(card);
-            tableauIndex++;
-        }
-
-        List<CardInstance> stockSource = new List<CardInstance>(deal.stock);
-        stockSource.Reverse();
-
-        CardController initialWasteCard = null;
-        if (stockSource.Count > 0)
-        {
-            CardInstance wInst = stockSource[stockSource.Count - 1];
-            stockSource.RemoveAt(stockSource.Count - 1);
-            initialWasteCard = cardFactory.CreateCard(wInst.Card, pileManager.Stock.transform, Vector2.zero);
-            var wd = initialWasteCard.GetComponent<CardData>();
-            if (wd != null) wd.SetFaceUp(false, false);
-        }
-
-        List<CardController> stockCardsForAnim = new List<CardController>();
-        for (int i = 0; i < stockSource.Count; i++)
-        {
-            CardController card = cardFactory.CreateCard(stockSource[i].Card, pileManager.Stock.transform, Vector2.zero);
-            var cd = card.GetComponent<CardData>();
-            if (cd != null) cd.SetFaceUp(false, false);
-            card.OnClicked += OnCardClicked;
-            stockCardsForAnim.Add(card);
-        }
-
-        if (initialWasteCard != null) stockCardsForAnim.Add(initialWasteCard);
-
-        if (animationService != null)
-        {
-            yield return StartCoroutine(animationService.AnimateStockEntry(stockCardsForAnim, pileManager.Stock, rootCanvas, 1.2f));
-        }
-        else
-        {
-            foreach (var c in stockCardsForAnim) pileManager.Stock.AddCard(c);
-            pileManager.Stock.UpdateVisuals();
-        }
-
-        if (initialWasteCard != null)
-        {
-            pileManager.Stock.RemoveCard(initialWasteCard);
-            _logicTopCardModel = initialWasteCard.cardModel;
-
-            yield return StartCoroutine(animationService.AnimateMoveCard(initialWasteCard, pileManager.Waste.transform, dealFlyDuration, true, () =>
-            {
-                pileManager.Waste.AddCard(initialWasteCard);
-            }));
-        }
-
-        float delayPerCard = totalDealDuration / (tableauCards.Count + 1);
-        for (int i = 0; i < tableauCards.Count; i++)
-        {
-            CardController card = tableauCards[i];
-            card.gameObject.SetActive(true);
-
-            TriPeaksTableauPile targetSlot = pileManager.TableauPiles[i];
-            bool flyFaceUp = (i >= 18);
-
-            StartCoroutine(animationService.AnimateMoveCard(card, targetSlot.transform, dealFlyDuration, flyFaceUp, () =>
-            {
-                targetSlot.AddCard(card);
-            }));
-            yield return new WaitForSeconds(delayPerCard);
-        }
-
-        yield return new WaitForSeconds(dealFlyDuration + 0.1f);
-
-        ForceEnableInput();
-
-        pileManager.Stock.UpdateVisuals();
-
-        if (pileManager.Waste.TopCard != null)
-            _logicTopCardModel = pileManager.Waste.TopCard.cardModel;
-        else if (initialWasteCard != null)
-            _logicTopCardModel = initialWasteCard.cardModel;
-
-        _isSetupRunning = false;
-        _isInputAllowed = true; // Включаем управление
     }
 
     public ICardContainer FindNearestContainer(CardController c, Vector2 p, float d) => null;

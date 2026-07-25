@@ -56,6 +56,12 @@ public class FreeCellTableauPile : TableauPile
             }
         }
 
+        // --- ИСПРАВЛЕНИЕ ---
+        // Если мы дошли до сюда, значит конкретно этот столбец готов принять карты.
+        // Очищаем ложный флаг ошибки, который мог остаться от соседнего пустого столбца!
+        if (modeManager != null) modeManager.JustFailedDueToLimit = false;
+        // -------------------
+
         return true;
     }
 

@@ -25,6 +25,15 @@ public class SultanAutoMoveService : MonoBehaviour
         if (card == null || _mode == null || !_mode.IsInputAllowed) return;
 
         var sultanCard = card.GetComponent<SultanCardController>();
+        ICardContainer source = card.transform.parent?.GetComponent<ICardContainer>();
+
+        // --- ИСПРАВЛЕНИЕ БАГА: Запрещаем авто-ход ИЗ Домов и Центра ---
+        if (source is SultanFoundationPile || source is SultanCenterPile)
+        {
+            // Карта просто потрясется, показывая, что ее нельзя отсюда забрать
+            StartCoroutine(ShakeCardRoutine(card));
+            return;
+        }
 
         // 1. ПРИОРИТЕТ 1: Проверяем Дома (Foundations)
         foreach (var foundation in _pileManager.Foundations)
@@ -39,7 +48,6 @@ public class SultanAutoMoveService : MonoBehaviour
 
         // 2. ПРИОРИТЕТ 2: Проверяем Резервы (Reserve Slots)
         // Не позволяем карте прыгать из резерва в резерв по двойному клику
-        ICardContainer source = card.transform.parent?.GetComponent<ICardContainer>();
         if (!(source is SultanReserveSlot))
         {
             foreach (var reserve in _pileManager.Reserves)
@@ -63,7 +71,13 @@ public class SultanAutoMoveService : MonoBehaviour
         var sultanCard = card.GetComponent<SultanCardController>();
         if (sultanCard != null) sultanCard.SetAnimating(true);
 
-        Transform oldParent = card.transform.parent;
+        // <--- ИСПРАВЛЕН ЗВУК: Быстрый свист с повышенным питчем --->
+        if (AudioManager.Instance != null)
+        {
+            AudioSource whoosh = AudioManager.Instance.PlaySound("Card_Whoosh_Out");
+            if (whoosh != null) whoosh.pitch = 1.3f; // Повышаем питч для легкости
+        }
+
         card.transform.SetParent(_dragLayer, true);
 
         Vector3 startPos = card.transform.position;
@@ -79,15 +93,35 @@ public class SultanAutoMoveService : MonoBehaviour
 
         targetPile.AcceptCard(card);
 
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
+
         if (sultanCard != null) sultanCard.SetAnimating(false);
 
-        // Вызываем метод менеджера, чтобы засчитать очки, ход и отправить запись в Undo
+        // ---> ВАЖНО: Завершаем ход через главный менеджер.
+        // Поскольку в SultanModeManager мы добавили универсальный трекинг квестов 
+        // прямо внутрь OnCardDroppedToContainer, все задания для авто-хода 
+        // будут засчитаны АВТОМАТИЧЕСКИ без необходимости дублировать код!
         _mode.OnCardDroppedToContainer(card, targetPile);
     }
 
     // Анимация отрицания (тряска), перенесенная из Klondike
     private IEnumerator ShakeCardRoutine(CardController card)
     {
+        // <--- ПОДГОТОВКА ЗВУКА --->
+        AudioSource scrapeSource = null;
+        float originalVolume = 1f;
+
+        if (AudioManager.Instance != null)
+        {
+            scrapeSource = AudioManager.Instance.PlaySound("Card_Shake"); // Берем ссылку на длинный звук трения
+
+            if (scrapeSource != null)
+            {
+                originalVolume = scrapeSource.volume; // Запоминаем дефолтную громкость
+            }
+        }
+
         Vector3 startPos = card.rectTransform.anchoredPosition;
         float elapsed = 0f;
 
@@ -95,16 +129,38 @@ public class SultanAutoMoveService : MonoBehaviour
         {
             elapsed += Time.unscaledDeltaTime;
 
-            // Расчет физики затухающего колебания
             float phase = Mathf.Sin(elapsed * 40f) * (1f - elapsed / shakeDuration);
-            float offsetX = Mathf.Sin(elapsed * 60f) * shakeAmplitude * phase;
 
+            // <--- ДИНАМИЧЕСКАЯ ГРОМКОСТЬ ОТ СКОРОСТИ --->
+            if (scrapeSource != null && scrapeSource.isPlaying)
+            {
+                // Abs(Cos) дает пульсацию от 0 до 1 синхронно с движением карты
+                float speedMultiplier = Mathf.Abs(Mathf.Cos(elapsed * 60f));
+
+                // Не уводим звук в абсолютный ноль (0.1f), чтобы не было "рваного" обрыва
+                float dynamicVolume = Mathf.Lerp(0.1f, 1f, speedMultiplier);
+
+                // Плавно глушим общий звук к самому концу анимации
+                float generalFade = 1f - (elapsed / shakeDuration);
+
+                // Применяем финальную громкость
+                scrapeSource.volume = originalVolume * dynamicVolume * generalFade;
+            }
+
+            float offsetX = Mathf.Sin(elapsed * 60f) * shakeAmplitude * phase;
             card.rectTransform.anchoredPosition = startPos + new Vector3(offsetX, 0f, 0f);
 
             yield return null;
         }
 
-        // Гарантированно возвращаем карту на идеальную исходную позицию
+        // Возвращаем в исходную позицию
         card.rectTransform.anchoredPosition = startPos;
+
+        // <--- ОСТАНОВКА И СБРОС ЗВУКА --->
+        if (scrapeSource != null)
+        {
+            scrapeSource.Stop(); // Жестко рубим длинный хвост файла
+            scrapeSource.volume = originalVolume; // ВАЖНО: возвращаем громкость, иначе пул сломается!
+        }
     }
 }

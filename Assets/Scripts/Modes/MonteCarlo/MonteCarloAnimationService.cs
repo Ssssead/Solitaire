@@ -29,7 +29,6 @@ public class MonteCarloAnimationService : MonoBehaviour
     private CardController heroCard1;
     private CardController heroCard2;
 
-    // --- УПРАВЛЕНИЕ ТЕНЯМИ ---
     public void SetShadowFlying(CardController card, bool flying)
     {
         if (card == null) return;
@@ -43,7 +42,6 @@ public class MonteCarloAnimationService : MonoBehaviour
         var sh = card.GetComponent<CardShadowController>();
         if (sh) sh.SetShadowVisible(visible);
     }
-    // -------------------------
 
     public void SetHeroes(CardController c1, CardController c2 = null)
     {
@@ -64,6 +62,10 @@ public class MonteCarloAnimationService : MonoBehaviour
         ResetAllCardsVisuals(allBoardCards, slots, selectedCard, previousCard);
 
         if (selectedCard == null) return;
+
+        // <--- ДОБАВЛЕН ЗВУК: Выделение (поднятие) карты --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_PickUp");
 
         if (activeColorFades.ContainsKey(selectedCard) && activeColorFades[selectedCard] != null)
         {
@@ -243,6 +245,10 @@ public class MonteCarloAnimationService : MonoBehaviour
         card.transform.localRotation = Quaternion.identity;
 
         SetShadowFlying(card, false);
+
+        // <--- ДОБАВЛЕН ЗВУК: Снятие выделения (возврат на место) --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
     }
 
     public IEnumerator FlyToCard(CardController flyingCard, CardController targetCard, float duration)
@@ -273,10 +279,16 @@ public class MonteCarloAnimationService : MonoBehaviour
         flyingCard.transform.position = targetCard.transform.position;
     }
 
-    public IEnumerator AnimatePairToFoundationWithRotation(CardController c1, CardController c2, Transform target, Action onComplete)
+    public IEnumerator AnimatePairToFoundationWithRotation(CardController c1, CardController c2, Transform target, Vector3 endPos1, Vector3 endPos2, Action onComplete)
     {
         if (c1.canvasGroup) c1.canvasGroup.interactable = false;
         if (c2.canvasGroup) c2.canvasGroup.interactable = false;
+
+        if (AudioManager.Instance != null)
+        {
+            AudioSource whoosh = AudioManager.Instance.PlaySound("Card_Whoosh_Out");
+            if (whoosh != null) whoosh.pitch = 1.3f;
+        }
 
         if (dragLayer)
         {
@@ -293,22 +305,29 @@ public class MonteCarloAnimationService : MonoBehaviour
         if (activeAnimations.ContainsKey(c1) && activeAnimations[c1] != null) StopCoroutine(activeAnimations[c1]);
         if (activeAnimations.ContainsKey(c2) && activeAnimations[c2] != null) StopCoroutine(activeAnimations[c2]);
 
-        Coroutine r1 = StartCoroutine(LinearFlightWithRotation(c1, target.position, moveAnimDuration));
-        Coroutine r2 = StartCoroutine(LinearFlightWithRotation(c2, target.position, moveAnimDuration));
+        // Изменено: карты летят в свои точные координаты с отступом
+        Coroutine r1 = StartCoroutine(LinearFlightWithRotation(c1, endPos1, moveAnimDuration));
+        Coroutine r2 = StartCoroutine(LinearFlightWithRotation(c2, endPos2, moveAnimDuration));
 
         yield return r1;
         yield return r2;
 
         c1.transform.SetParent(target); c2.transform.SetParent(target);
+
+        // Изменено: жестко фиксируем финальную позицию
+        c1.transform.position = endPos1; c2.transform.position = endPos2;
+
         c1.transform.localRotation = Quaternion.identity; c2.transform.localRotation = Quaternion.identity;
         c1.transform.localScale = Vector3.one; c2.transform.localScale = Vector3.one;
 
-        // --- ИСПРАВЛЕНИЕ: Гарантированный сброс летящей тени для ОБЕИХ карт ---
         SetShadowFlying(c1, false);
         SetShadowFlying(c2, false);
-        // ----------------------------------------------------------------------
 
         SetHeroes(null, null);
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Foundation_Success");
+
         onComplete?.Invoke();
     }
 
@@ -335,7 +354,8 @@ public class MonteCarloAnimationService : MonoBehaviour
         card.transform.localRotation = Quaternion.identity;
     }
 
-    public IEnumerator AnimateCardLinear(CardController card, Vector3 targetPos, float duration)
+    // --- ОБНОВЛЕНО: Добавлен Action onComplete ---
+    public IEnumerator AnimateCardLinear(CardController card, Vector3 targetPos, float duration, Action onComplete = null)
     {
         if (card == null) yield break;
         if (dragLayer) card.transform.SetParent(dragLayer, true);
@@ -352,5 +372,7 @@ public class MonteCarloAnimationService : MonoBehaviour
         }
         card.transform.position = targetPos;
         SetShadowFlying(card, false);
+
+        onComplete?.Invoke(); // Вызов коллбека для звука приземления
     }
 }

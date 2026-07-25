@@ -57,6 +57,10 @@ public class PyramidAnimationManager : MonoBehaviour
     {
         if (card == null) return;
 
+        // <--- ÇÂÓÊ 1: ÊÀĞÒÀ ÂÇËÅÒÀÅÒ (ÂÛÄÅËÅÍÈÅ) --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_PickUp");
+
         if (dragLayerRect) card.transform.SetParent(dragLayerRect, true);
         card.transform.SetAsLastSibling();
 
@@ -170,8 +174,13 @@ public class PyramidAnimationManager : MonoBehaviour
 
             SetCardShadowState(card, PyramidShadowController.ShadowState.Resting);
 
+            // <--- ÇÂÓÊ 2: ÊÀĞÒÀ ÏĞÈÇÅÌËÈËÀÑÜ ÎÁĞÀÒÍÎ (ÎÒÌÅÍÀ ÂÛÄÅËÅÍÈß) --->
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Drop_Success");
+
             if (slot == deckManager.wasteRoot || slot == deckManager.stockRoot)
                 card.transform.SetAsLastSibling();
+
 
             // --- ÍÎÂÎÅ: Îáíîâëÿåì ñòîïêè, ÷òîáû ñïğÿòàëè òåíè ---
             if (deckManager != null && deckManager.pileManager != null)
@@ -234,7 +243,8 @@ public class PyramidAnimationManager : MonoBehaviour
 
         float duration = 0.8f;
         float elapsed = 0f;
-
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Whoosh_In");
         while (elapsed < duration)
         {
             float speed = (isSkippingFunc != null && isSkippingFunc()) ? 15f : 1f;
@@ -257,6 +267,8 @@ public class PyramidAnimationManager : MonoBehaviour
         {
             if (cards[i] != null) cards[i].localPosition = targetLocalPos[i];
         }
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
     }
 
     public IEnumerator PlayNewRoundEntry(Transform stockRoot)
@@ -308,7 +320,8 @@ public class PyramidAnimationManager : MonoBehaviour
 
         float duration = 0.8f;
         float elapsed = 0f;
-
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Whoosh_Out");
         while (elapsed < duration)
         {
             float t = Mathf.Clamp01(elapsed / duration);
@@ -365,6 +378,10 @@ public class PyramidAnimationManager : MonoBehaviour
         if (card == null) yield break;
         PrepareCardForFlight(card);
 
+        // <--- ÇÂÓÊ: ØÅËÅÑÒ ĞÀÇÄÀ×È ÊÀĞÒÛ --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Deal");
+
         var info = card.GetComponent<CardInfoStorage>();
         Transform targetSlot = info != null ? info.LinkedSlot : deckManager.wasteRoot;
 
@@ -378,6 +395,10 @@ public class PyramidAnimationManager : MonoBehaviour
             card.transform.localRotation = Quaternion.identity;
 
             SetCardShadowState(card, PyramidShadowController.ShadowState.Resting);
+
+            // <--- ÇÂÓÊ: ÊÀĞÒÀ ÏĞÈÇÅÌËÈËÀÑÜ Â ÏÈĞÀÌÈÄÓ --->
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Drop_Success");
         }
     }
 
@@ -515,7 +536,21 @@ public class PyramidAnimationManager : MonoBehaviour
         foreach (var c in cards)
         {
             if (c == null) continue;
-            StartCoroutine(AnimateRemoveBallistic(c, target, () => { if (c) { c.gameObject.SetActive(false); Destroy(c.gameObject); } }));
+
+            // <--- ÇÂÓÊ 8: ÒĞÅÑÊ ÓÄÀËßÅÌÛÕ ÊÀĞÒ (Card_Flip äëÿ êàæäîé) --->
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Flip");
+
+            // Çàïóñêàåì áàëëèñòè÷åñêèé ïîëåò â ñáğîñ
+            StartCoroutine(AnimateRemoveBallistic(c, target, () => {
+                if (c)
+                {
+                    c.gameObject.SetActive(false);
+                    Destroy(c.gameObject);
+                }
+            }));
+
+            // Íåáîëüøàÿ çàäåğæêà ìåæäó êàğòàìè ñîçäàåò ıôôåêò "î÷åğåäè"
             yield return new WaitForSeconds(0.05f);
         }
         yield return new WaitForSeconds(duration);

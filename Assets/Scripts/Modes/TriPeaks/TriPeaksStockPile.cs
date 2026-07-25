@@ -9,7 +9,7 @@ public class TriPeaksStockPile : MonoBehaviour, ICardContainer
 
     [Header("Visual Settings")]
     public float Gap = 5f; // Убедитесь в инспекторе, что тут НЕ 0 (например, 5 или 10)
-
+    public int Count => _cards.Count;
     public bool IsEmpty => _cards.Count == 0;
 
     public void AddCard(CardController card)

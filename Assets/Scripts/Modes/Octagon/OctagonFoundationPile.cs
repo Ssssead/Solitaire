@@ -48,6 +48,8 @@ public class OctagonFoundationPile : MonoBehaviour, ICardContainer
         card.rectTransform.anchoredPosition = Vector2.zero;
         card.transform.localRotation = Quaternion.identity;
         card.transform.SetAsLastSibling();
+
+        // Старый трекинг GameQuestTracker.Instance?.RecordCardToFoundation УДАЛЕН!
     }
 
     public CardController GetTopCard()

@@ -5,6 +5,14 @@ using System.Collections.Generic;
 public class OctagonStockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
 {
     private OctagonModeManager _mode;
+
+    [Header("3D Stacking Effect")]
+    [Tooltip("Горизонтальный отступ между картами (положительный - вправо, отрицательный - влево)")]
+    public float offsetX = 2f;
+    [Tooltip("Вертикальный отступ между картами (положительный - вверх, отрицательный - вниз)")]
+    public float offsetY = -2f;
+
+    // --- ВЕРНУЛИ ВАШИ ОРИГИНАЛЬНЫЕ СВОЙСТВА И МЕТОДЫ ---
     public int CardCount => transform.childCount;
 
     private void Start()
@@ -26,61 +34,68 @@ public class OctagonStockPile : MonoBehaviour, ICardContainer, IPointerClickHand
         return transform.GetChild(transform.childCount - 1).GetComponent<CardController>();
     }
 
-    // --- НОВЫЙ МЕТОД: Взять и удалить из иерархии (для Refill) ---
     public CardController PopTopCard()
     {
         if (transform.childCount == 0) return null;
 
-        Transform t = transform.GetChild(transform.childCount - 1);
-        CardController c = t.GetComponent<CardController>();
-
-        if (c != null)
+        // Перебираем элементы сверху вниз
+        for (int i = transform.childCount - 1; i >= 0; i--)
         {
-            // Отсоединяем, чтобы следующий вызов взял следующую карту
-            // Но оставляем мировые координаты для анимации
-            c.transform.SetParent(_mode.RootCanvas.transform);
+            Transform t = transform.GetChild(i);
+            CardController c = t.GetComponent<CardController>();
+
+            if (c != null)
+            {
+                if (_mode != null && _mode.RootCanvas != null)
+                    c.transform.SetParent(_mode.RootCanvas.transform, true);
+                else
+                    c.transform.SetParent(null, true);
+
+                return c;
+            }
         }
-        return c;
+
+        return null;
     }
 
-    // Старый метод DrawCards можно оставить или удалить, он больше не используется в новом Refill
     public List<CardController> DrawCards(int count)
     {
         List<CardController> drawn = new List<CardController>();
-
-        // --- ИСПРАВЛЕНИЕ: Берем карты со смещением ---
         for (int i = 0; i < count; i++)
         {
-            // Нам нужно брать с конца, но с отступом i
-            // i=0 -> Самая верхняя (индекс Count-1)
-            // i=1 -> Предпоследняя (индекс Count-2)
             int index = transform.childCount - 1 - i;
-
-            // Если карт не хватает, прерываем
             if (index < 0) break;
 
             Transform t = transform.GetChild(index);
             CardController c = t.GetComponent<CardController>();
-            if (c != null)
-            {
-                drawn.Add(c);
-            }
+            if (c != null) drawn.Add(c);
         }
         return drawn;
     }
 
+    // --- ОБНОВЛЕННЫЙ ADDCARD С 3D-ОТСТУПОМ ---
     public void AddCard(CardController card)
     {
-        card.transform.SetParent(transform);
-        card.rectTransform.anchoredPosition = Vector2.zero;
+        if (card == null) return;
+
+        card.transform.SetParent(transform, true);
+        card.transform.SetAsLastSibling();
+
+        int cardIndex = transform.childCount - 1;
+        if (cardIndex < 0) cardIndex = 0;
+
+        card.transform.localPosition = new Vector3(cardIndex * offsetX, cardIndex * offsetY, 0f);
+        card.transform.localRotation = Quaternion.identity;
 
         var data = card.GetComponent<CardData>();
         if (data) data.SetFaceUp(false, false);
 
         var cg = card.GetComponent<CanvasGroup>();
-        if (cg) cg.blocksRaycasts = false;
+        // ---> ИСПРАВЛЕНО: Меняем false на true, чтобы карты ловили клики <---
+        if (cg) cg.blocksRaycasts = true;
     }
 
+    // --- ИНТЕРФЕЙС ICARDCONTAINER ---
     public Transform Transform => transform;
     public bool CanAccept(CardController card) => false;
     public void AcceptCard(CardController card) => AddCard(card);

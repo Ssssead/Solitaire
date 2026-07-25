@@ -10,15 +10,23 @@ public class SpiderDeckManager : MonoBehaviour
     public SpiderPileManager pileManager;
     public SpiderModeManager modeManager;
     public UndoManager undoManager;
-  
+    public Deal CurrentDeal { get; private set; }
 
     [Header("Error Feedback")]
     [Tooltip("Объект стрелочки (UI Image), который будет появляться при ошибке раздачи")]
     public GameObject emptyPileArrow;
     private bool isErrorAnimating = false;
-
+    public bool isSkippingIntro = false;
+    public bool isDealing = false;
     private List<CardController> deckCards = new List<CardController>();
 
+    private void Update()
+    {
+        if (isDealing && (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)))
+        {
+            isSkippingIntro = true;
+        }
+    }
     public void CreateAndDeal(int suitsCount, Difficulty difficulty)
     {
        
@@ -31,6 +39,7 @@ public class SpiderDeckManager : MonoBehaviour
 
             if (cachedDeal != null)
             {
+                CurrentDeal = cachedDeal;
                 var models = ReconstructDeckFromDeal(cachedDeal);
                 Debug.Log($"[Spider] Loaded Deal from Cache ({suitsCount} suits, {difficulty})");
                 SpawnCardsAndDeal(models);
@@ -80,6 +89,8 @@ public class SpiderDeckManager : MonoBehaviour
 
     public IEnumerator PlayIntroDeckArrival(float duration)
     {
+        isSkippingIntro = false;
+        isDealing = true; // Открываем возможность пропуска
         modeManager.IsInputAllowed = false;
 
         Vector3 targetPos = pileManager.StockPile.transform.position;
@@ -88,13 +99,17 @@ public class SpiderDeckManager : MonoBehaviour
 
         if (duration > 0f)
         {
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Whoosh_In");
+
             float elapsed = 0f;
             AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
             while (elapsed < duration)
             {
-                elapsed += Time.deltaTime;
-                float t = curve.Evaluate(elapsed / duration);
+                float speed = isSkippingIntro ? 15f : 1f; // Ускорение
+                elapsed += Time.deltaTime * speed;
+                float t = curve.Evaluate(Mathf.Clamp01(elapsed / duration));
+
                 foreach (var card in deckCards)
                 {
                     card.transform.position = Vector3.Lerp(offScreenPos, targetPos, t);
@@ -110,7 +125,17 @@ public class SpiderDeckManager : MonoBehaviour
         }
 
         pileManager.StockPile.ForceRecalculateLayout();
-        yield return new WaitForSeconds(0.1f);
+
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Drop_Success");
+
+        // Заменили yield return new WaitForSeconds(0.1f);
+        float wait1 = 0f;
+        while (wait1 < 0.1f)
+        {
+            float speed = isSkippingIntro ? 15f : 1f;
+            wait1 += Time.deltaTime * speed;
+            yield return null;
+        }
 
         yield return StartCoroutine(DealInitialLayout());
     }
@@ -156,17 +181,33 @@ public class SpiderDeckManager : MonoBehaviour
                 bool faceUp = (row == cardsPerCol[col] - 1);
 
                 MoveCardToPile(card, targetPile, faceUp, recordUndo: false);
-                yield return new WaitForSeconds(0.02f);
+
+                if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Deal");
+
+                // Заменили yield return new WaitForSeconds(0.02f);
+                float wait2 = 0f;
+                while (wait2 < 0.02f)
+                {
+                    float speed = isSkippingIntro ? 15f : 1f;
+                    wait2 += Time.deltaTime * speed;
+                    yield return null;
+                }
             }
         }
 
-        // Ждем пока самые последние карты долетят до слотов
-        yield return new WaitForSeconds(0.4f);
+        // Заменили yield return new WaitForSeconds(0.4f);
+        float wait3 = 0f;
+        while (wait3 < 0.4f)
+        {
+            float speed = isSkippingIntro ? 15f : 1f;
+            wait3 += Time.deltaTime * speed;
+            yield return null;
+        }
 
         // Открываем ввод - это позволит слотам принять наши отступы
         modeManager.IsInputAllowed = true;
+        isDealing = false; // Раздача полностью окончена
 
-        // НОВОЕ: Дергаем пересчет макета, чтобы карты мгновенно приняли "умное сжатие"
         if (modeManager != null)
         {
             modeManager.UpdateTableauLayouts();
@@ -220,6 +261,14 @@ public class SpiderDeckManager : MonoBehaviour
     {
         isErrorAnimating = true;
 
+        // <--- 1. ЗВУК ПРЕДУПРЕЖДЕНИЯ (ОШИБКИ) --->
+        if (AudioManager.Instance != null)
+        {
+            // Здесь отлично подойдет тот же звук, что и при попытке потянуть заблокированный ряд, 
+            // либо специальный "UI_Warning", привлекающий внимание к стрелочке.
+            AudioManager.Instance.PlaySound("Card_Error");
+        }
+
         StartCoroutine(ShakeStockPile());
 
         if (emptyPileArrow != null)
@@ -261,15 +310,43 @@ public class SpiderDeckManager : MonoBehaviour
         float duration = 0.4f;
         float elapsed = 0f;
 
+        // <--- 2. ПОДГОТОВКА ЗВУКА ТРЯСКИ КОЛОДЫ --->
+        AudioSource shakeSource = null;
+        float baseVolume = 1f;
+        if (AudioManager.Instance != null)
+        {
+            shakeSource = AudioManager.Instance.PlaySound("Card_Shake");
+            if (shakeSource != null) baseVolume = shakeSource.volume;
+        }
+
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            float xOffset = Mathf.Sin(elapsed * 40f) * 10f;
+            float percent = elapsed / duration;
+
+            // Визуальная тряска (добавлено плавное затухание амплитуды)
+            float speedMultiplier = 40f;
+            float xOffset = Mathf.Sin(elapsed * speedMultiplier) * 10f * (1f - percent);
             stockTransform.localPosition = originalPos + new Vector3(xOffset, 0, 0);
+
+            // <--- ДИНАМИЧЕСКАЯ ГРОМКОСТЬ ОТ СКОРОСТИ --->
+            if (shakeSource != null)
+            {
+                float movementSpeed = Mathf.Abs(Mathf.Cos(elapsed * speedMultiplier));
+                shakeSource.volume = baseVolume * (1f - percent) * movementSpeed;
+            }
+
             yield return null;
         }
 
         stockTransform.localPosition = originalPos;
+
+        // <--- СБРОС ЗВУКА --->
+        if (shakeSource != null)
+        {
+            shakeSource.Stop();
+            shakeSource.volume = baseVolume; // Возвращаем исходные настройки
+        }
     }
 
     private IEnumerator DealRowRoutine(List<CardController> cardsToDeal)
@@ -305,6 +382,10 @@ public class SpiderDeckManager : MonoBehaviour
             var pile = pileManager.TableauPiles[i];
 
             MoveCardToPile(card, pile, true, recordUndo: false, groupID: batchID);
+
+            // <--- ЗВУК: ШЕЛЕСТ ДОПОЛНИТЕЛЬНОЙ РАЗДАЧИ --->
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Deal");
+
             yield return new WaitForSeconds(0.05f);
         }
 

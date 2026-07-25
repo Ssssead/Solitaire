@@ -24,15 +24,12 @@ public class SpiderFoundationPile : MonoBehaviour, ICardContainer
             spiderMode = FindObjectOfType<SpiderModeManager>();
         }
 
-        // --- ИСПРАВЛЕНИЕ: Блокируем клики по всей стопке Foundation ---
-        // Поскольку в Пауке карты летят сюда сами, кликать по ним нельзя.
-        // Отключение лучей у родителя сделает ВСЕ карты внутри некликабельными!
+        // --- Блокируем клики по всей стопке Foundation ---
         CanvasGroup cg = GetComponent<CanvasGroup>();
         if (cg == null) cg = gameObject.AddComponent<CanvasGroup>();
 
         cg.blocksRaycasts = false;
         cg.interactable = false;
-        // ----------------------------------------------------------------
     }
 
     public void ResetFoundation()
@@ -56,6 +53,18 @@ public class SpiderFoundationPile : MonoBehaviour, ICardContainer
                 {
                     spiderMode.ScoreManager.RemoveRowBonus();
                 }
+
+                // Забираем прогресс 13 карт и 1 стопки
+                GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, -13);
+                GameQuestTracker.Instance?.SendEvent(QuestActionType.CompleteFoundationPile, -1);
+
+                // ---> ИСПРАВЛЕНИЕ: ОТКАТ РАНГОВ ДЛЯ ЗАДАНИЙ <---
+                // Забираем прогресс всех 13 рангов (Туз, Двойка... Король, Дама)
+                for (int i = 1; i <= 13; i++)
+                {
+                    GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, -1, i.ToString());
+                }
+                // ------------------------------------------------
             }
         }
     }
@@ -65,6 +74,19 @@ public class SpiderFoundationPile : MonoBehaviour, ICardContainer
         isFull = true;
         isReserved = false;
         Debug.Log($"Foundation completed: {suit}");
+
+        // Отправляем 13 карт и 1 собранную стопку
+        GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, 13);
+        GameQuestTracker.Instance?.SendEvent(QuestActionType.CompleteFoundationPile, 1);
+
+        // ---> ИСПРАВЛЕНИЕ: ВЫПОЛНЕНИЕ ЗАДАНИЙ НА РАНГИ <---
+        // Так как в Пауке стопка собирается целиком, в ней гарантированно есть все 13 рангов.
+        // Отправляем их в трекер через цикл:
+        for (int i = 1; i <= 13; i++)
+        {
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, 1, i.ToString());
+        }
+        // ----------------------------------------------------
     }
 
     // --- ICardContainer Реализация ---

@@ -227,7 +227,7 @@ public class StockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
     {
         // 1. Проверки
         if (eventData != null && eventData.button != PointerEventData.InputButton.Left) return;
-
+        GameQuestTracker.Instance?.RecordStockDraw();
         // 2. ДЕЛЕГИРОВАНИЕ: Передаем управление в DragManager
         if (manager != null)
         {

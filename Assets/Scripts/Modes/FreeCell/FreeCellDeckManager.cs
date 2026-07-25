@@ -21,14 +21,42 @@ public class FreeCellDeckManager : MonoBehaviour
     [Tooltip("Точка за пределами экрана снизу, откуда вылетают карты")]
     public Vector2 offscreenSpawnPoint = new Vector2(0, -2000f);
 
+    // Флаг пропуска анимации
+    private bool isSkippingIntro = false;
+
     private struct DealAction
     {
         public int columnIndex;
         public CardModel model;
     }
 
+    // --- ДОБАВЛЕНО: Отслеживаем клик для ускорения раздачи ---
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+        {
+            isSkippingIntro = true;
+        }
+    }
+    // --------------------------------------------------------
+
+    // --- ДОБАВЛЕНО: Кастомный таймер для пропуска ---
+    private IEnumerator SkippableWait(float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            yield return null;
+        }
+    }
+    // ------------------------------------------------
+
     public IEnumerator PlayIntroDeal(Deal deal)
     {
+        isSkippingIntro = false; // Сбрасываем перед началом
+
         // 1. Очистка стола
         cardFactory.DestroyAllCards();
 
@@ -70,18 +98,29 @@ public class FreeCellDeckManager : MonoBehaviour
         float elapsed = 0f;
         Vector2 targetPos = deckTargetPoint != null ? deckTargetPoint.anchoredPosition : Vector2.zero;
 
+        // <--- ЗВУК: КОЛОДА СРЫВАЕТСЯ С МЕСТА --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Whoosh_In");
+
         while (elapsed < cardFlyToDeckSpeed)
         {
-            elapsed += Time.deltaTime;
-            float t = AnimationCurve.EaseInOut(0, 0, 1, 1).Evaluate(elapsed / cardFlyToDeckSpeed);
+            // Ускоряем влет колоды
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+
+            float t = Mathf.Clamp01(elapsed / cardFlyToDeckSpeed);
+            float evaluatedT = AnimationCurve.EaseInOut(0, 0, 1, 1).Evaluate(t);
 
             foreach (var card in spawnedCards)
             {
-                // ИСПОЛЬЗУЕМ anchoredPosition ВМЕСТО localPosition
-                card.rectTransform.anchoredPosition = Vector2.Lerp(offscreenSpawnPoint, targetPos, t);
+                card.rectTransform.anchoredPosition = Vector2.Lerp(offscreenSpawnPoint, targetPos, evaluatedT);
             }
             yield return null;
         }
+
+        // <--- ЗВУК: КОЛОДА ПАДАЕТ НА СТОЛ --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
 
         // 5. Раздача карт по столбцам
         for (int i = 0; i < dealSequence.Count; i++)
@@ -102,22 +141,26 @@ public class FreeCellDeckManager : MonoBehaviour
             // Запускаем полет
             StartCoroutine(FlyCardToPile(card, card.rectTransform.anchoredPosition, finalPos, dealCardSpeed));
 
-            yield return new WaitForSeconds(delayBetweenCards);
+            // <--- ЗВУК: ШЕЛЕСТ РАЗДАЧИ КАРТЫ --->
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Deal");
+
+            // Пауза с возможностью пропуска
+            yield return StartCoroutine(SkippableWait(delayBetweenCards));
         }
+        // 6. Ждем, пока все карты физически долетят
+        yield return StartCoroutine(SkippableWait(dealCardSpeed + 0.1f));
 
-        // --- ИСПРАВЛЕНИЕ 1: Ждем, пока все карты физически долетят! ---
-        yield return new WaitForSeconds(dealCardSpeed + 0.1f);
-
-        // 6. Выравниваем стопки только когда полет полностью завершен
+        // Выравниваем стопки только когда полет полностью завершен
         foreach (var tab in pileManager.Tableau)
         {
             tab.StartLayoutAnimationPublic();
         }
 
-        // --- ИСПРАВЛЕНИЕ 2: Даем время внутренней анимации Tableau завершиться ---
-        yield return new WaitForSeconds(0.4f);
+        // Даем время внутренней анимации Tableau завершиться
+        yield return StartCoroutine(SkippableWait(0.4f));
 
-        // --- ИСПРАВЛЕНИЕ 3: ПРИНУДИТЕЛЬНАЯ РАЗБЛОКИРОВКА СТОПОК И КАРТ ---
+        // ПРИНУДИТЕЛЬНАЯ РАЗБЛОКИРОВКА СТОПОК И КАРТ
         foreach (var tab in pileManager.Tableau)
         {
             // Снимаем isLayoutLocked через рефлексию
@@ -139,9 +182,11 @@ public class FreeCellDeckManager : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            float t = elapsed / duration;
-            // ИСПОЛЬЗУЕМ anchoredPosition ВМЕСТО localPosition
+            // Ускоряем полет отдельной карты
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+
+            float t = Mathf.Clamp01(elapsed / duration);
             card.rectTransform.anchoredPosition = Vector2.Lerp(from, to, t);
             yield return null;
         }

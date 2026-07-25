@@ -29,7 +29,8 @@ public class DragManager : MonoBehaviour
     private TableauPile sourceTableau = null;
     private ICardContainer sourceContainer = null;
     private int sourceIndex = -1;
-
+    private Coroutine returnCoroutine;
+    private DragSnapshot lastDropSnapshot;
     /// <summary>
     /// Инициализация DragManager.
     /// </summary>
@@ -536,8 +537,7 @@ public class DragManager : MonoBehaviour
     {
         if (draggingStack != null && draggingStack.Count > 0)
         {
-            // 1. Создаем копию данных (Snapshot), чтобы передать в корутину
-            var snapshot = new DragSnapshot
+            lastDropSnapshot = new DragSnapshot
             {
                 cards = new List<CardController>(draggingStack),
                 parents = new List<Transform>(originalParents),
@@ -545,12 +545,10 @@ public class DragManager : MonoBehaviour
                 siblings = new List<int>(originalSiblingIndices)
             };
 
-            // 2. СРАЗУ очищаем состояние менеджера. 
-            // Это критично: система готова к новому клику, пока анимация возврата еще идет.
             ClearDraggingState();
 
-            // 3. Запускаем анимацию возврата
-            StartCoroutine(AnimateReturnDraggingStack(snapshot));
+            if (returnCoroutine != null) StopCoroutine(returnCoroutine);
+            returnCoroutine = StartCoroutine(AnimateReturnDraggingStack(lastDropSnapshot));
         }
         else
         {
@@ -723,6 +721,13 @@ public class DragManager : MonoBehaviour
         {
             tab.StartLayoutAnimationPublic();
         }
+
+        // --- НОВОЕ: Очищаем ссылки после завершения ---
+        if (lastDropSnapshot == data)
+        {
+            lastDropSnapshot = null;
+            returnCoroutine = null;
+        }
     }
 
     /// <summary>
@@ -796,8 +801,12 @@ public class DragManager : MonoBehaviour
         if (container is TableauPile targetTableau)
         {
             targetTableau.SetAnimatingCard(true);
-
             RecordMoveToUndo(removedSequence ?? draggingStack, container);
+
+            // --- ДОБАВИТЬ ЭТО: Трекинг ручной сортировки и стопок ---
+            if (sourceContainer is TableauPile) GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveTableauToTableau);
+            if (draggingStack != null && draggingStack.Count > 1) GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardSequence, draggingStack.Count);
+            // --------------------------------------------------------
 
             // >>> СТАТИСТИКА: ВЫЗОВ НОВОГО МЕТОДА <<<
             NotifyGameModeOnMove();
@@ -844,6 +853,9 @@ public class DragManager : MonoBehaviour
                     new List<Vector3> { Vector3.zero }, new List<int> { -1 }
                 );
             }
+
+            if (sourceContainer is WastePile) GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveFromWasteToFoundation);
+            // --------------------------------------------------------------
 
             // >>> СТАТИСТИКА <<<
             NotifyGameModeOnMove();
@@ -1145,9 +1157,17 @@ public class DragManager : MonoBehaviour
         {
             if (card.transform.parent != pileManager.StockPile.transform) return;
 
-            // Вызываем универсальный метод
+            // Вызываем универсальный метод для раздачи
             mode?.OnStockClicked();
             return;
+        }
+
+        // --- УНИВЕРСАЛЬНЫЙ ВЫЗОВ ---
+        // Проверяем, реализует ли текущий режим наш новый интерфейс.
+        // Если да (это один из 7 пасьянсов), вызываем метод. Если нет — просто игнорируем!
+        if (mode is ICardClickReceiver clickReceiver)
+        {
+            clickReceiver.OnCardClicked(card);
         }
     }
     /// <summary>
@@ -1237,7 +1257,68 @@ public class DragManager : MonoBehaviour
     #endregion
 
     #region Sequence Animation
+    /// <summary>
+    /// Мгновенно прерывает анимацию возврата и возвращает карты на исходные места.
+    /// Защищает логику авто-кликов от случайных микро-свайпов на мобильных.
+    /// </summary>
+    public void ForceSnapBackLastDrop()
+    {
+        if (returnCoroutine != null)
+        {
+            StopCoroutine(returnCoroutine);
+            returnCoroutine = null;
+        }
 
+        if (lastDropSnapshot != null)
+        {
+            for (int i = 0; i < lastDropSnapshot.cards.Count; i++)
+            {
+                var card = lastDropSnapshot.cards[i];
+                if (card == null) continue;
+
+                Transform savedParent = (i < lastDropSnapshot.parents.Count) ? lastDropSnapshot.parents[i] : null;
+                Vector3 savedLocal = (i < lastDropSnapshot.positions.Count) ? lastDropSnapshot.positions[i] : Vector3.zero;
+
+                if (savedParent != null)
+                {
+                    card.rectTransform.SetParent(savedParent, true);
+                    var tab = savedParent.GetComponent<TableauPile>();
+                    if (tab != null) tab.SetAnimatingCard(false); // разблокируем
+                }
+
+                card.rectTransform.anchoredPosition = new Vector2(savedLocal.x, savedLocal.y);
+                Vector3 lp = card.rectTransform.localPosition;
+                lp.z = savedLocal.z;
+                card.rectTransform.localPosition = lp;
+
+                if (i < lastDropSnapshot.siblings.Count && lastDropSnapshot.siblings[i] >= 0)
+                {
+                    int count = savedParent != null ? savedParent.childCount : 0;
+                    card.rectTransform.SetSiblingIndex(Mathf.Clamp(lastDropSnapshot.siblings[i], 0, Mathf.Max(0, count)));
+                }
+
+                if (card.canvasGroup != null)
+                {
+                    card.canvasGroup.blocksRaycasts = true;
+                    card.canvasGroup.interactable = true;
+                }
+            }
+
+            if (mode?.AnimationService != null)
+            {
+                HashSet<Transform> parentsToUpdate = new HashSet<Transform>();
+                foreach (var p in lastDropSnapshot.parents) if (p != null) parentsToUpdate.Add(p);
+                foreach (var p in parentsToUpdate) mode.AnimationService.ReorderContainerZ(p);
+            }
+
+            lastDropSnapshot = null;
+        }
+        else
+        {
+            // Если клик сработал до того, как палец отпустили
+            ReturnDraggingStackToOrigin();
+        }
+    }
     /// <summary>
     /// Анимирует перемещение всей последовательности карт в целевой tableau.
     /// </summary>

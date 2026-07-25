@@ -41,6 +41,12 @@ public class MontanaAutoMoveService : MonoBehaviour
         // 2. Выполняем действие
         if (targetSlot != null)
         {
+            // <--- ЗВУК ВЫЛЕТА КАРТЫ ПО ДВОЙНОМУ КЛИКУ --->
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySound("Card_Whoosh_Out");
+            }
+
             // Сохраняем слот, из которого улетаем (чтобы кнопка Undo работала)
             montanaCard.CaptureStateForUndo();
 
@@ -49,7 +55,7 @@ public class MontanaAutoMoveService : MonoBehaviour
         }
         else
         {
-            // 3. Подходящего места нет — красиво трясем карту
+            // 3. Подходящего места нет — красиво трясем карту со звуком
             StartCoroutine(ShakeCardRoutine(montanaCard));
         }
     }
@@ -57,6 +63,19 @@ public class MontanaAutoMoveService : MonoBehaviour
     private IEnumerator ShakeCardRoutine(MontanaCardController card)
     {
         card.SetAnimating(true); // Запрещаем перетаскивать карту мышью, пока она трясется
+
+        // <--- ПОДГОТОВКА ЗВУКА ТРЯСКИ --->
+        AudioSource scrapeSource = null;
+        float originalVolume = 1f;
+
+        if (AudioManager.Instance != null)
+        {
+            scrapeSource = AudioManager.Instance.PlaySound("Card_Shake");
+            if (scrapeSource != null)
+            {
+                originalVolume = scrapeSource.volume; // Запоминаем дефолтную громкость
+            }
+        }
 
         Vector3 startPos = card.rectTransform.anchoredPosition;
         float elapsed = 0f;
@@ -67,6 +86,19 @@ public class MontanaAutoMoveService : MonoBehaviour
             float phase = Mathf.Sin(elapsed * 40f) * (1f - elapsed / shakeDuration);
             float offsetX = Mathf.Sin(elapsed * 60f) * shakeAmplitude * phase;
 
+            // <--- ДИНАМИЧЕСКАЯ ГРОМКОСТЬ ОТ СКОРОСТИ ДВИЖЕНИЯ --->
+            if (scrapeSource != null && scrapeSource.isPlaying)
+            {
+                // Abs(Cos) дает пульсацию от 0 до 1 синхронно с движением карты
+                float speedMultiplier = Mathf.Abs(Mathf.Cos(elapsed * 60f));
+                // Не уводим звук в абсолютный ноль, чтобы не было рваного обрыва
+                float dynamicVolume = Mathf.Lerp(0.1f, 1f, speedMultiplier);
+                // Плавно глушим общий звук к самому концу анимации
+                float generalFade = 1f - (elapsed / shakeDuration);
+
+                scrapeSource.volume = originalVolume * dynamicVolume * generalFade;
+            }
+
             card.rectTransform.anchoredPosition = startPos + new Vector3(offsetX, 0f, 0f);
             yield return null;
         }
@@ -74,5 +106,12 @@ public class MontanaAutoMoveService : MonoBehaviour
         // Жестко возвращаем ровно на стартовую точку после анимации
         card.rectTransform.anchoredPosition = startPos;
         card.SetAnimating(false);
+
+        // <--- ОСТАНОВКА И СБРОС ЗВУКА --->
+        if (scrapeSource != null)
+        {
+            scrapeSource.Stop(); // Жестко рубим длинный хвост файла
+            scrapeSource.volume = originalVolume; // Возвращаем громкость для пула!
+        }
     }
 }

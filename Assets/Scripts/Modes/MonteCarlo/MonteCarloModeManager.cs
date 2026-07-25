@@ -14,7 +14,7 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
     public MonteCarloScoreManager scoreManager;
     public GameUIController gameUI;
     public SceneExitAnimator exitAnimator;
-
+    public MonteCarloTutorialManager tutorialManager;
     [Header("UI & HUD")]
     public TMP_Text movesText;
     public TMP_Text scoreText;
@@ -40,15 +40,27 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
     private bool hasGameStarted = false;
     private bool isUndoing = false;
     private bool isRestarting = false;
-    private bool isGameWon = false;
+    public bool isGameWon = false;
 
     private float gameTimer = 0f;
     private bool isTimerRunning = false;
 
-    // --- ICardGameMode Implementation ---
+    private Coroutine defeatRoutine;
+    public CardController SelectedCard => selectedCard;
     public string GameName => "MonteCarlo";
     public GameType GameType => GameType.MonteCarlo;
-    public bool IsInputAllowed { get; set; } = true;
+    public ITutorialManager Tutorial => tutorialManager;
+    private bool _isInputAllowed = true;
+    public bool IsInputAllowed
+    {
+        get => _isInputAllowed;
+        set
+        {
+            _isInputAllowed = value;
+            UpdateButtonsState();
+        }
+    }
+
     public RectTransform DragLayer => animationService ? animationService.dragLayer : null;
     public AnimationService AnimationService => null;
     public PileManager PileManager => null;
@@ -97,11 +109,7 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
 
     private void Update()
     {
-        bool canInteract = IsInputAllowed && !isUndoing && !isGameWon;
-        bool hasHistory = undoStack.Count > 0;
-
-        if (undoButton != null) undoButton.interactable = canInteract && hasHistory;
-        if (undoAllButton != null) undoAllButton.interactable = canInteract && hasHistory;
+        UpdateButtonsState();
 
         if (isTimerRunning && !isGameWon) gameTimer += Time.deltaTime;
 
@@ -118,8 +126,25 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
             scoreText.text = scoreManager.Score.ToString();
     }
 
+    private void UpdateButtonsState()
+    {
+        bool canInteract = _isInputAllowed && !isUndoing && !isGameWon;
+        bool hasHistory = undoStack.Count > 0;
+
+        if (undoButton != null) undoButton.interactable = canInteract && hasHistory;
+        if (undoAllButton != null) undoAllButton.interactable = canInteract && hasHistory;
+    }
+
     public void InitializeGame(Difficulty diff, int param)
     {
+        if (hasGameStarted && !isGameWon && StatisticsManager.Instance != null)
+        {
+            StatisticsManager.Instance.OnGameAbandoned();
+        }
+
+        // 2. ЗАТЕМ сообщаем трекеру настройки нового матча
+        string variant = is8Ways ? "8Ways" : "4Ways";
+        GameQuestTracker.Instance?.StartMatch("MonteCarlo", diff, variant);
         currentDifficulty = diff;
         currentGameParam = param;
         IsInputAllowed = false;
@@ -136,6 +161,8 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
 
     public void StartGame(Deal deal)
     {
+        if (defeatRoutine != null) { StopCoroutine(defeatRoutine); defeatRoutine = null; }
+
         undoStack.Clear();
         selectedCard = null;
         hasGameStarted = false;
@@ -144,8 +171,33 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
         gameTimer = 0f;
         isTimerRunning = false;
         if (scoreManager != null) scoreManager.ResetScore();
+        MonteCarloDataLogger.Instance?.StartSession(currentDifficulty.ToString(), is8Ways, deal);
 
-        StartCoroutine(IntroSequenceRoutine(deal));
+        // --- ИЗМЕНЕНО: Проверяем, запущен ли режим обучения из меню ---
+        if (GameSettings.IsTutorialMode && tutorialManager != null)
+        {
+            StartCoroutine(TutorialIntroRoutine());
+        }
+        else
+        {
+            StartCoroutine(IntroSequenceRoutine(deal));
+        }
+    }
+    private IEnumerator TutorialIntroRoutine()
+    {
+        IsInputAllowed = false;
+
+        // Прячем UI до начала анимации, чтобы не мелькало
+        if (introController != null) introController.PrepareIntro(false);
+
+        // Ждем 1 кадр, чтобы Unity обновила холст
+        yield return null;
+
+        // Запускаем подставной расклад из MonteCarloTutorialManager
+        yield return StartCoroutine(tutorialManager.PlayTutorialIntro(null));
+
+        isRestarting = false;
+        IsInputAllowed = true;
     }
 
     private IEnumerator IntroSequenceRoutine(Deal deal)
@@ -157,10 +209,53 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
             introController.PrepareIntro(isRestarting);
             deckManager.InstantiateDeal(deal, isIntro: true);
             yield return StartCoroutine(introController.PlayIntroSequence(isRestarting));
+
+            // --- ЖЕСТКАЯ ОСТАНОВКА ---
+            // Останавливаем все полёты до привязки карт к слотам.
+            if (animationService != null) animationService.StopAllCoroutines();
         }
         else
         {
             deckManager.InstantiateDeal(deal, isIntro: false);
+        }
+
+        for (int i = 0; i < 25; i++)
+        {
+            CardController c = pileManager.BoardCards[i];
+            if (c != null)
+            {
+                c.transform.SetParent(pileManager.TableauSlots[i], true);
+                c.transform.localPosition = Vector3.zero;
+                c.transform.localRotation = Quaternion.identity;
+                c.transform.localScale = Vector3.one;
+
+                if (c.canvasGroup != null)
+                {
+                    c.canvasGroup.alpha = 1f;
+                    c.canvasGroup.interactable = true;
+                    c.canvasGroup.blocksRaycasts = true;
+                }
+
+                if (animationService != null) animationService.SetShadowFlying(c, false);
+            }
+        }
+
+        for (int i = 0; i < pileManager.StockCards.Count; i++)
+        {
+            CardController c = pileManager.StockCards[i];
+            c.transform.SetParent(pileManager.StockRoot, true);
+            c.transform.localPosition = new Vector3(deckManager.stockCardOffset.x * i, deckManager.stockCardOffset.y * i, 0f);
+            c.transform.localRotation = Quaternion.identity;
+            c.transform.localScale = Vector3.one;
+
+            if (c.canvasGroup != null)
+            {
+                c.canvasGroup.alpha = 1f;
+                c.canvasGroup.interactable = true;
+                c.canvasGroup.blocksRaycasts = true;
+            }
+
+            if (animationService != null) animationService.SetShadowFlying(c, false);
         }
 
         pileManager.UpdateShadows();
@@ -172,7 +267,14 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
     {
         if (!IsInputAllowed || isUndoing || isGameWon) return;
         if (pileManager.StockCards.Contains(card)) return;
-
+        if (tutorialManager != null && tutorialManager.IsTutorialActive)
+        {
+            if (!tutorialManager.IsActionAllowed(TutorialActionType.MoveCard, card))
+            {
+                if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Error");
+                return;
+            }
+        }
         int clickedIdx = pileManager.GetCardIndex(card);
         if (clickedIdx == -1) return;
 
@@ -181,8 +283,11 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
             hasGameStarted = true;
             isTimerRunning = true;
 
-            string variantName = is8Ways ? "8Ways" : "4Ways";
-            if (StatisticsManager.Instance != null) StatisticsManager.Instance.OnGameStarted("MonteCarlo", currentDifficulty, variantName);
+            if (StatisticsManager.Instance != null)
+            {
+                string variant = GameSettings.GetCurrentVariantString(GameType.MonteCarlo);
+                StatisticsManager.Instance.OnGameStarted("MonteCarlo", currentDifficulty, variant);
+            }
         }
 
         if (selectedCard == card)
@@ -267,6 +372,9 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
         }
         else
         {
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Error");
+
             c2.transform.SetParent(pileManager.TableauSlots[idx2], true);
             yield return StartCoroutine(animationService.SmoothReturnToSlot(c1, pileManager.TableauSlots[idx1], 0.2f));
             selectedCard = null;
@@ -279,6 +387,7 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
         selectedCard = null;
 
         var move = new MonteCarloMoveRecord();
+        MonteCarloDataLogger.Instance?.LogMatch(idx1, idx2, c1.cardModel, c2.cardModel);
         move.Card1 = c1;
         move.Card2 = c2;
         move.PreviousBoardState = (CardController[])pileManager.BoardCards.Clone();
@@ -291,6 +400,16 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
 
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
 
+        // ---> ИСПРАВЛЕННЫЙ БЛОК (ДОБАВЛЕНЫ РАНГИ) <---
+        GameQuestTracker.Instance?.RecordMove();
+        GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, 2);
+        GameQuestTracker.Instance?.SendEvent(QuestActionType.RemoveBoardCard, 2);
+        GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, 2, c1.cardModel.rank.ToString());
+
+        // Отправляем сигнал о собранной паре ВМЕСТЕ С ЕЁ РАНГОМ
+        GameQuestTracker.Instance?.SendEvent(QuestActionType.RemoveMonteCarloPair, 1, c1.cardModel.rank.ToString());
+        // ----------------------------------------------
+
         if (scoreManager != null)
         {
             move.PointsEarned = scoreManager.CalculateAndAddMatchScore(idx1, idx2);
@@ -298,10 +417,23 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
 
         animationService.HighlightTwoCards(c1, c2);
 
+        if (tutorialManager != null && tutorialManager.IsTutorialActive)
+        {
+            tutorialManager.AdvanceStep();
+        }
+
         Coroutine collapseTask = StartCoroutine(CollapseBoardRoutine(move));
 
         yield return new WaitForSeconds(0.5f);
-        yield return StartCoroutine(animationService.AnimatePairToFoundationWithRotation(c1, c2, pileManager.FoundationRoot, null));
+
+        int fCount = pileManager.FoundationCards.Count;
+        Vector3 localPos1 = new Vector3(deckManager.foundationCardOffset.x * (fCount - 2), deckManager.foundationCardOffset.y * (fCount - 2), 0f);
+        Vector3 localPos2 = new Vector3(deckManager.foundationCardOffset.x * (fCount - 1), deckManager.foundationCardOffset.y * (fCount - 1), 0f);
+
+        Vector3 worldPos1 = pileManager.FoundationRoot.TransformPoint(localPos1);
+        Vector3 worldPos2 = pileManager.FoundationRoot.TransformPoint(localPos2);
+
+        yield return StartCoroutine(animationService.AnimatePairToFoundationWithRotation(c1, c2, pileManager.FoundationRoot, worldPos1, worldPos2, null));
         yield return collapseTask;
 
         animationService.ResetAllCardsVisuals(pileManager.BoardCards, pileManager.TableauSlots);
@@ -310,6 +442,14 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
         undoStack.Push(move);
         IsInputAllowed = true;
         CheckGameState();
+    }
+
+    // --- ДОБАВЛЕН ВСПОМОГАТЕЛЬНЫЙ МЕТОД ДЛЯ СИНХРОННЫХ ЗВУКОВ ---
+    private IEnumerator DelayedDropSound(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
     }
 
     private IEnumerator CollapseBoardRoutine(MonteCarloMoveRecord move)
@@ -327,6 +467,10 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
         int emptySlotsCount = 25 - remainingCards.Count;
         List<Coroutine> anims = new List<Coroutine>();
 
+        bool playedShiftSound = false;
+        bool willShiftCards = false;
+
+        // СДВИГ СТАРЫХ КАРТ
         for (int i = 0; i < remainingCards.Count; i++)
         {
             int newIdx = emptySlotsCount + i;
@@ -334,13 +478,29 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
 
             if (move.PreviousBoardState[newIdx] != remainingCards[i])
             {
-                anims.Add(StartCoroutine(animationService.AnimateCardLinear(remainingCards[i], pileManager.TableauSlots[newIdx].position, 0.25f)));
+                willShiftCards = true;
+
+                if (!playedShiftSound && AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlaySound("Card_Deal");
+                    playedShiftSound = true;
+                }
+
+                anims.Add(StartCoroutine(animationService.AnimateCardLinear(remainingCards[i], pileManager.TableauSlots[newIdx].position, 0.25f, null)));
             }
         }
 
+        if (willShiftCards)
+        {
+            StartCoroutine(DelayedDropSound(0.25f));
+        }
+
+        // РАЗДАЧА НОВЫХ КАРТ
+        bool willDealCards = false;
         for (int i = emptySlotsCount - 1; i >= 0; i--)
         {
             if (pileManager.StockCards.Count == 0) break;
+            willDealCards = true;
 
             CardController newCard = pileManager.StockCards[pileManager.StockCards.Count - 1];
             pileManager.StockCards.RemoveAt(pileManager.StockCards.Count - 1);
@@ -349,8 +509,19 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
             move.CardsDealtFromStock.Add(newCard);
             pileManager.UpdateShadows();
 
-            anims.Add(StartCoroutine(animationService.AnimateCardLinear(newCard, pileManager.TableauSlots[i].position, 0.2f)));
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Deal");
+
+            anims.Add(StartCoroutine(animationService.AnimateCardLinear(newCard, pileManager.TableauSlots[i].position, 0.2f, null)));
             yield return new WaitForSeconds(0.05f);
+        }
+
+        if (willDealCards)
+        {
+            StartCoroutine(DelayedDropSound(0.2f));
+
+            // ---> ДОБАВЛЕНО: Засчитываем использование стока <---
+            GameQuestTracker.Instance?.RecordStockDraw();
         }
 
         foreach (var a in anims) yield return a;
@@ -393,13 +564,30 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
 
     public void OnUndoAction()
     {
-        if (undoStack.Count == 0 || !IsInputAllowed || isUndoing || isGameWon) return;
+        if (undoStack.Count == 0 || !_isInputAllowed || isUndoing || isGameWon) return;
+        if (tutorialManager != null && tutorialManager.IsTutorialActive)
+        {
+            if (!tutorialManager.IsActionAllowed(TutorialActionType.Undo)) return;
+            tutorialManager.AdvanceStep();
+        }
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("UI_Back");
+
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
+        MonteCarloDataLogger.Instance?.LogUndo();
+
+        // ---> ДОБАВИТЬ ЭТО <---
+        GameQuestTracker.Instance?.RecordUndoUsed();
+        // ----------------------
+
         StartCoroutine(UndoRoutine(undoStack.Pop()));
     }
 
     private IEnumerator UndoRoutine(MonteCarloMoveRecord move)
     {
+        if (defeatRoutine != null) { StopCoroutine(defeatRoutine); defeatRoutine = null; }
+        if (hasGameStarted && !isGameWon) isTimerRunning = true;
+
         isUndoing = true;
         IsInputAllowed = false;
         animationService.ResetAllCardsVisuals(pileManager.BoardCards, pileManager.TableauSlots);
@@ -409,8 +597,17 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
 
         List<Coroutine> anims = new List<Coroutine>();
 
+        if (AudioManager.Instance != null)
+        {
+            AudioSource whoosh = AudioManager.Instance.PlaySound("Card_Whoosh_Out");
+            if (whoosh != null) whoosh.pitch = 1.4f;
+        }
+
+        // --- ВОЗВРАТ В КОЛОДУ ---
+        bool stockReturned = false;
         for (int i = move.CardsDealtFromStock.Count - 1; i >= 0; i--)
         {
+            stockReturned = true;
             var c = move.CardsDealtFromStock[i];
             pileManager.StockCards.Add(c);
             pileManager.UpdateShadows();
@@ -419,13 +616,31 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
             Vector3 localTarget = new Vector3(deckManager.stockCardOffset.x * stockIdx, deckManager.stockCardOffset.y * stockIdx, 0f);
             Vector3 worldTarget = pileManager.StockRoot.TransformPoint(localTarget);
 
-            anims.Add(StartCoroutine(animationService.AnimateCardLinear(c, worldTarget, 0.2f)));
+            anims.Add(StartCoroutine(animationService.AnimateCardLinear(c, worldTarget, 0.2f, null)));
+        }
+        if (stockReturned)
+        {
+            StartCoroutine(DelayedDropSound(0.2f));
         }
 
         pileManager.FoundationCards.Remove(move.Card1);
         pileManager.FoundationCards.Remove(move.Card2);
         pileManager.UpdateShadows();
 
+        // ---> ИСПРАВЛЕННЫЙ АНТИ-ЧИТ (ОТКАТ РАНГОВ И ПАР) <---
+        GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, -2);
+        GameQuestTracker.Instance?.SendEvent(QuestActionType.RemoveBoardCard, -2);
+
+        if (move.Card1 != null)
+        {
+            string rankStr = move.Card1.cardModel.rank.ToString();
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, -2, rankStr);
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.RemoveMonteCarloPair, -1, rankStr);
+        }
+        // -----------------------------------------------
+
+        // --- ВОЗВРАТ НА ДОСКУ ---
+        bool boardReturned = false;
         for (int i = 0; i < 25; i++)
         {
             CardController oldCard = move.PreviousBoardState[i];
@@ -438,19 +653,23 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
                     if (oldCard.canvasGroup) oldCard.canvasGroup.interactable = true;
                 }
 
-                // ИСПРАВЛЕНИЕ: Включаем полет только если карта сдвинулась с места
                 if (Vector3.Distance(oldCard.transform.position, pileManager.TableauSlots[i].position) > 0.01f)
                 {
-                    anims.Add(StartCoroutine(animationService.AnimateCardLinear(oldCard, pileManager.TableauSlots[i].position, 0.25f)));
+                    boardReturned = true;
+                    anims.Add(StartCoroutine(animationService.AnimateCardLinear(oldCard, pileManager.TableauSlots[i].position, 0.25f, null)));
                 }
                 else
                 {
-                    // Иначе просто привязываем к слоту и жестко выключаем тень
                     oldCard.transform.SetParent(pileManager.TableauSlots[i], true);
                     oldCard.transform.localPosition = Vector3.zero;
                     animationService.SetShadowFlying(oldCard, false);
                 }
             }
+        }
+
+        if (boardReturned)
+        {
+            StartCoroutine(DelayedDropSound(0.25f));
         }
 
         foreach (var a in anims) yield return a;
@@ -476,13 +695,26 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
 
     public void OnUndoAllAction()
     {
-        if (undoStack.Count == 0 || !IsInputAllowed || isUndoing || isGameWon) return;
+        if (undoStack.Count == 0 || !_isInputAllowed || isUndoing || isGameWon) return;
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("UI_Back");
+
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
+        MonteCarloDataLogger.Instance?.LogUndoAll();
+
+        // ---> ДОБАВИТЬ ЭТО <---
+        GameQuestTracker.Instance?.RecordUndoUsed();
+        // ----------------------
+
         StartCoroutine(UndoAllRoutine());
     }
 
     private IEnumerator UndoAllRoutine()
     {
+        if (defeatRoutine != null) { StopCoroutine(defeatRoutine); defeatRoutine = null; }
+        if (hasGameStarted && !isGameWon) isTimerRunning = true;
+
         isUndoing = true;
         IsInputAllowed = false;
         animationService.ResetAllCardsVisuals(pileManager.BoardCards, pileManager.TableauSlots);
@@ -504,6 +736,18 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
             pileManager.FoundationCards.Remove(move.Card1);
             pileManager.FoundationCards.Remove(move.Card2);
 
+            // ---> ИСПРАВЛЕННЫЙ АНТИ-ЧИТ (ОТКАТ РАНГОВ И ПАР ПРИ ПОЛНОЙ ОТМЕНЕ) <---
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, -2);
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.RemoveBoardCard, -2);
+
+            if (move.Card1 != null)
+            {
+                string rankStr = move.Card1.cardModel.rank.ToString();
+                GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, -2, rankStr);
+                GameQuestTracker.Instance?.SendEvent(QuestActionType.RemoveMonteCarloPair, -1, rankStr);
+            }
+            // -----------------------------------------------------------------
+
             for (int i = 0; i < 25; i++)
             {
                 CardController oldCard = move.PreviousBoardState[i];
@@ -521,6 +765,9 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
                 }
             }
         }
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
 
         if (scoreManager != null) scoreManager.ResetScore();
 
@@ -547,7 +794,52 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
             int finalScore = scoreManager != null ? scoreManager.Score : 0;
 
             if (StatisticsManager.Instance != null) StatisticsManager.Instance.OnGameWon(finalScore);
+            MonteCarloDataLogger.Instance?.EndSession("Won", gameTimer);
             if (gameUI != null) gameUI.OnGameWon(finalMoves);
+        }
+        else if (!isBoardEmpty)
+        {
+            if (!HasValidMove())
+            {
+                if (defeatRoutine != null) StopCoroutine(defeatRoutine);
+                defeatRoutine = StartCoroutine(ShowDefeatRoutine());
+            }
+        }
+    }
+
+    private bool HasValidMove()
+    {
+        for (int i = 0; i < 25; i++)
+        {
+            CardController c1 = pileManager.BoardCards[i];
+            if (c1 == null) continue;
+
+            for (int j = i + 1; j < 25; j++)
+            {
+                CardController c2 = pileManager.BoardCards[j];
+                if (c2 == null) continue;
+
+                if (c1.cardModel.rank == c2.cardModel.rank && IsAdjacent(i, j))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private IEnumerator ShowDefeatRoutine()
+    {
+        yield return new WaitForSeconds(1.0f);
+
+        if (!isGameWon && !HasValidMove())
+        {
+            isTimerRunning = false;
+            IsInputAllowed = false;
+
+            MonteCarloDataLogger.Instance?.LogDefeatPanel();
+
+            if (gameUI != null) gameUI.OnGameLost();
         }
     }
 
@@ -555,6 +847,8 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
 
     public void RestartGame()
     {
+        if (defeatRoutine != null) { StopCoroutine(defeatRoutine); defeatRoutine = null; }
+
         if (hasGameStarted && !isGameWon)
         {
             bool isBoardEmpty = true;
@@ -567,6 +861,32 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
 
         isRestarting = true;
         StopAllCoroutines();
+
+        // --- ЖЕСТКАЯ ОСТАНОВКА И СБРОС ---
+        // Убиваем визуальные корутины прошлой игры, чтобы они не сломали новую раздачу
+        if (animationService != null) animationService.StopAllCoroutines();
+
+        // Мгновенно фиксируем карты на доске перед анимацией их падения вниз
+        for (int i = 0; i < 25; i++)
+        {
+            CardController c = pileManager.BoardCards[i];
+            if (c != null)
+            {
+                c.transform.SetParent(pileManager.TableauSlots[i], true);
+                c.transform.localPosition = Vector3.zero;
+                c.transform.localScale = Vector3.one;
+            }
+        }
+        for (int i = 0; i < pileManager.StockCards.Count; i++)
+        {
+            CardController c = pileManager.StockCards[i];
+            if (c != null)
+            {
+                c.transform.SetParent(pileManager.StockRoot, true);
+                c.transform.localPosition = new Vector3(deckManager.stockCardOffset.x * i, deckManager.stockCardOffset.y * i, 0f);
+            }
+        }
+
         IsInputAllowed = false;
 
         if (exitAnimator != null)
@@ -594,6 +914,7 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
             foreach (var c in pileManager.BoardCards) if (c != null) { isBoardEmpty = false; break; }
             if (!(isBoardEmpty && pileManager.StockCards.Count == 0))
             {
+                MonteCarloDataLogger.Instance?.EndSession("Abandoned", gameTimer);
                 if (StatisticsManager.Instance != null) StatisticsManager.Instance.OnGameAbandoned();
             }
         }

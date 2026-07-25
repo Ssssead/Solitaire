@@ -310,13 +310,41 @@ public class SpiderTableauPile : TableauPile
 
         for (int i = sequence.Count - 1; i >= 0; i--)
         {
+            // <--- ÈÑÏĞÀÂËÅÍÈÅ ÁÀÃÀ: ÆÅÑÒÊÎÅ ÏĞÅĞÛÂÀÍÈÅ ÏĞÈ ÎÒÌÅÍÅ --->
+            if (spiderMode != null && spiderMode.undoManager != null && spiderMode.undoManager.IsUndoing)
+            {
+                // Åñëè èãğîê îòìåíèë õîä ïğÿìî ñåé÷àñ, îòìåíÿåì è ıòó àíèìàöèş
+                if (spiderMode != null) spiderMode.ActiveFoundationAnimations--;
+                isAssembling = false;
+                yield break;
+            }
+
             var card = sequence[i];
             if (card.canvasGroup) card.canvasGroup.blocksRaycasts = false;
+
+            if (AudioManager.Instance != null)
+            {
+                AudioSource source = AudioManager.Instance.PlaySound("Card_Foundation_Success");
+                if (source != null)
+                {
+                    float step = (sequence.Count - 1) - i;
+                    source.pitch = 1.0f + (step * 0.05f);
+                }
+            }
+
             StartCoroutine(AnimateCardToFoundation(card, foundation, flyDuration));
             yield return new WaitForSeconds(staggerDelay);
         }
 
         yield return new WaitForSeconds(flyDuration);
+
+        // Ïğîâåğÿåì åùå ğàç ïîñëå ïîëåòà
+        if (spiderMode != null && spiderMode.undoManager != null && spiderMode.undoManager.IsUndoing)
+        {
+            if (spiderMode != null) spiderMode.ActiveFoundationAnimations--;
+            isAssembling = false;
+            yield break;
+        }
 
         if (spiderMode != null) spiderMode.ActiveFoundationAnimations--;
         if (_pileCanvasGroup != null) _pileCanvasGroup.blocksRaycasts = true;
@@ -339,6 +367,9 @@ public class SpiderTableauPile : TableauPile
 
         while (t < duration)
         {
+            // <--- ÈÑÏĞÀÂËÅÍÈÅ ÁÀÃÀ: ÏĞÅĞÛÂÀÅÌ ÏÎËÅÒ ÊÎÍÊĞÅÒÍÎÉ ÊÀĞÒÛ --->
+            if (spiderMode != null && spiderMode.undoManager != null && spiderMode.undoManager.IsUndoing) yield break;
+
             t += Time.deltaTime;
             card.transform.position = Vector3.Lerp(startPos, targetPos, t / duration);
             yield return null;
@@ -358,5 +389,10 @@ public class SpiderTableauPile : TableauPile
     {
         base.AddCardsBatch(cardsToAdd, faceUp);
         CheckSuit();
+    }
+    public void ClearLogicalState()
+    {
+        cards.Clear();
+        faceUp.Clear();
     }
 }

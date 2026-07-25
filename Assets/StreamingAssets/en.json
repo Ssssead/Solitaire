@@ -121,6 +121,10 @@
             "value": "Daily Quests"
         },
         {
+            "key": "dailyquests2",
+            "value": "Daily Quests:"
+        },
+        {
             "key": "STATSGlobalStats",
             "value": "Global Stats"
         },
@@ -270,7 +274,7 @@
         },
         {
             "key": "ExpText",
-            "value": "Опыта получено:"
+            "value": "XP earned: "
         },
         {
             "key": "LossText",
@@ -297,556 +301,2317 @@
             "value": "New Global Level: {newLevel}!"
         },
         {
-            "key": "clue.l3.time.quarter_to",
-            "value": "The door will open at quarter to {hourWord} and {SS} seconds."
+            "key": "STATSGlobalFavGame",
+            "value": "Favorite game: "
         },
         {
-            "key": "clue.l3.time.minutes_to",
-            "value": "The door will open {nextminuteWord} minutes to {hourPointerWord} and {SS} seconds."
+            "key": "STATSGlobalTotalMoves",
+            "value": "Total moves: "
         },
         {
-            "key": "clue.l3.time.minutes_past",
-            "value": "The door will open {minuteWord} minutes past {hourWord} and {SS} seconds."
+            "key": "STATSGlobalTotalTime",
+            "value": "Total time: "
         },
         {
-            "key": "clue.l3.time.start_hour",
-            "value": "The door will open when the {nextHourStartWord} hour begins and {SS} seconds."
+            "key": "STATSGlobalQuestsCompleted",
+            "value": "Quests completed: "
         },
         {
-            "key": "word.nexthour_after.1",
-            "value": "one"
+            "key": "STATSGlobalTotalGlobalXPearned",
+            "value": "Total XP earned (Global): "
         },
         {
-            "key": "word.nexthour_after.2",
-            "value": "two"
+            "key": "STATSGlobalTotalGamesXPearned",
+            "value": "Total XP earned (Games): "
         },
         {
-            "key": "word.nexthour_after.3",
-            "value": "three"
+            "key": "STATSGlobalBestScore",
+            "value": "Best score: "
         },
         {
-            "key": "word.nexthour_after.4",
-            "value": "four"
+            "key": "STATSGlobalBestTime",
+            "value": "Best time: "
         },
         {
-            "key": "word.nexthour_after.5",
-            "value": "five"
+            "key": "STATSGlobalBestMoves",
+            "value": "Best moves: "
         },
         {
-            "key": "word.nexthour_after.6",
-            "value": "six"
+            "key": "STATSBaseBuyPrem",
+            "value": "Purchase Premium to view detailed statistics"
         },
         {
-            "key": "word.nexthour_after.7",
-            "value": "seven"
+            "key": "PurchasePremium",
+            "value": "Purchase Premium"
         },
         {
-            "key": "word.nexthour_after.8",
-            "value": "eight"
+            "key": "STATSGlobalQuestsStreaks",
+            "value": "QUESTS STREAKS:"
         },
         {
-            "key": "word.nexthour_after.9",
-            "value": "nine"
+            "key": "SmallStreak",
+            "value": "Small streak:"
         },
         {
-            "key": "word.nexthour_after.10",
-            "value": "ten"
+            "key": "BigStreak",
+            "value": "Big streak:"
         },
         {
-            "key": "word.nexthour_after.11",
-            "value": "eleven"
+            "key": "Diff2",
+            "value": "Difficulty:"
         },
         {
-            "key": "word.nexthour_after.12",
-            "value": "twelve"
+            "key": "Game",
+            "value": "Game:"
         },
         {
-            "key": "word.hour_pointer.1",
-            "value": "two"
+            "key": "Draw1",
+            "value": "Draw 1"
         },
         {
-            "key": "word.hour_pointer.2",
-            "value": "three"
+            "key": "Draw3",
+            "value": "Draw 3"
         },
         {
-            "key": "word.hour_pointer.3",
-            "value": "four"
+            "key": "Suit1",
+            "value": "1 suit"
         },
         {
-            "key": "word.hour_pointer.4",
-            "value": "five"
+            "key": "Suit2",
+            "value": "2 suit"
         },
         {
-            "key": "word.hour_pointer.5",
-            "value": "six"
+            "key": "Suit4",
+            "value": "4 suit"
         },
         {
-            "key": "word.hour_pointer.6",
-            "value": "seven"
+            "key": "Round1",
+            "value": "1 round"
         },
         {
-            "key": "word.hour_pointer.7",
-            "value": "eight"
+            "key": "Round2",
+            "value": "2 rounds"
         },
         {
-            "key": "word.hour_pointer.8",
-            "value": "nine"
+            "key": "Round3",
+            "value": "3 rounds"
         },
         {
-            "key": "word.hour_pointer.9",
-            "value": "ten"
+            "key": "SoundOn",
+            "value": "Sound ON"
         },
         {
-            "key": "word.hour_pointer.10",
-            "value": "eleven"
+            "key": "SoundOff",
+            "value": "Sound OFF"
         },
         {
-            "key": "word.hour_pointer.11",
-            "value": "twelve"
+            "key": "Confirm",
+            "value": "Confirm"
         },
         {
-            "key": "word.hour_pointer.12",
-            "value": "one"
+            "key": "ChangeBG",
+            "value": "Change Background"
         },
         {
-            "key": "ru",
-            "value": "Russian"
+            "key": "ChangeCards",
+            "value": "Change Cards"
         },
         {
-            "key": "en",
-            "value": "English"
+            "key": "SettingsSound",
+            "value": "Sound"
         },
         {
-            "key": "de",
-            "value": "German"
-        },
-        {
-            "key": "es",
-            "value": "Spanish"
-        },
-        {
-            "key": "pt",
-            "value": "Portugiese"
-        },
-        {
-            "key": "fr",
-            "value": "French"
-        },
-        {
-            "key": "tr",
-            "value": "Turkish"
-        },
-        {
-            "key": "ja",
-            "value": "Japaniese"
-        },
-        {
-            "key": "lang",
+            "key": "SettingsLanguage",
             "value": "Language"
         },
         {
-            "key": "setsound",
-            "value": "Sounds"
+            "key": "SettingsDesign",
+            "value": "Design"
         },
         {
-            "key": "PuzzleDiff",
-            "value": "Puzzle Difficulty"
+            "key": "ChangeBack",
+            "value": "Change Card Back"
         },
         {
-            "key": "PuzzleSettings",
-            "value": "Puzzle Settings"
+            "key": "ChangeDeck",
+            "value": "Change Card Deck"
         },
         {
-            "key": "PuzzleMode",
-            "value": "Puzzle Mode"
+            "key": "Yes2",
+            "value": "YES, change settings"
         },
         {
-            "key": "BookArabic",
-            "value": "Arabic Numerals"
+            "key": "NewRecord",
+            "value": "New Record!"
         },
         {
-            "key": "BookRoman",
-            "value": "Roman Numerals"
+            "key": "tutorial",
+            "value": "Tutorial"
         },
         {
-            "key": "BookPicture",
-            "value": "Picture"
+            "key": "Foundaton",
+            "value": "Foundations"
         },
         {
-            "key": "PuzzleSolved",
-            "value": "Puzzle Solved!"
+            "key": "Stock",
+            "value": "Stock"
         },
         {
-            "key": "BackToMenu",
-            "value": "Back to Menu"
+            "key": "Tableau",
+            "value": "Tableau"
         },
         {
-            "key": "hint_first_card",
-            "value": "{0} is the first card."
+            "key": "KlondikeTutorial1",
+            "value": "The goal of the game is to collect cards in the <color=#FCA311>'Foundations'</color> at the top.\nDrag the face-up <color=#8294FF>Six of Spades (6♠)</color> to the first <color=#FCA311>Foundation</color>."
         },
         {
-            "key": "hint_last_card",
-            "value": "{0} is the last card."
+            "key": "KlondikeTutorial2",
+            "value": "On the <color=#FCA311>Tableau</color>, cards are stacked in descending order with alternating colors.\nDrag the <color=#8294FF>black Ten of Clubs (10♣)</color> onto the <color=#FF6B6B>red Jack of Diamonds (J♦)</color>."
         },
         {
-            "key": "hint_immediately_after",
-            "value": "{0} is immediately after {1}."
+            "key": "KlondikeTutorial3",
+            "value": "Great, a hidden card has been revealed! They can be quickly sent to the <color=#FCA311>Foundation</color> with a double click.\nDouble-click on the <color=#FF6B6B>Six of Hearts (6♥)</color>."
         },
         {
-            "key": "hint_immediately_before",
-            "value": "{0} is immediately before {1}."
+            "key": "KlondikeTutorial4",
+            "value": "<color=#FCA311>ONLY</color> Kings can be placed in empty slots on the board.\nDrag the <color=#FF6B6B>King of Hearts (K♥)</color> to the first empty column."
         },
         {
-            "key": "hint_between",
-            "value": "{0} is between {1} and {2}."
+            "key": "KlondikeTutorial5",
+            "value": "You can move multiple face-up cards at once.\nMove the stack with the <color=#FF6B6B>red Ten of Diamonds (10♦)</color> onto the <color=#8294FF>black Jack of Clubs (J♣)</color>."
         },
         {
-            "key": "hint_left_of",
-            "value": "{0} is to the left of {1}."
+            "key": "KlondikeTutorial6",
+            "value": "No available moves? Use the <color=#FCA311>Stock</color> (top left). Click on it to draw a card."
         },
         {
-            "key": "hint_right_of",
-            "value": "{0} is to the right of {1}."
+            "key": "KlondikeTutorial7",
+            "value": "We drew a <color=#8294FF>Ten of Spades (10♠)</color>. Place it on the revealed <color=#FF6B6B>Jack of Hearts (J♥)</color>."
         },
         {
-            "key": "hint_one_false",
-            "value": "One hint is false."
+            "key": "KlondikeTutorial8",
+            "value": "Great move! But sometimes an action needs to be undone. Let's check how the <color=#FCA311>'Undo'</color> button at the bottom of the screen works."
         },
         {
-            "key": "hint_no_suit",
-            "value": "There are no {0} suit cards on the table."
+            "key": "KlondikeTutorial9",
+            "value": "Return the <color=#8294FF>Ten of Spades (10♠)</color> back to the <color=#FF6B6B>Jack of Hearts (J♥)</color>."
         },
         {
-            "key": "hint_no_rank",
-            "value": "There are no {0} cards on the table."
+            "key": "KlondikeTutorial10",
+            "value": "Sometimes it is beneficial to return a card from the <color=#FCA311>Foundation</color> back to the board.\nDrag the <color=#FF6B6B>Nine of Diamonds (9♦)</color> from the <color=#FCA311>Foundation</color> onto the <color=#8294FF>black Ten of Spades (10♠)</color>."
         },
         {
-            "key": "hint_no_even",
-            "value": "There are no even cards on the table."
+            "key": "KlondikeTutorial11",
+            "value": "There is one last card left in our tutorial <color=#FCA311>deck</color>. Let's draw it!\nClick on the deck."
         },
         {
-            "key": "hint_no_odd",
-            "value": "There are no odd cards on the table."
+            "key": "KlondikeTutorial12",
+            "value": "Place the <color=#FF6B6B>Nine of Hearts (9♥)</color> on the <color=#8294FF>Ten of Clubs (10♣)</color>."
         },
         {
-            "key": "hint_no_above_10",
-            "value": "There are no cards above 10 on the table."
+            "key": "KlondikeTutorial13",
+            "value": "The deck is empty! Now let's send the revealed cards to the <color=#FCA311>Foundation</color>.\nDouble-click on the <color=#8294FF>Seven of Spades (7♠)</color>."
         },
         {
-            "key": "hint_no_below_6",
-            "value": "There are no cards below 6 on the table."
+            "key": "KlondikeTutorial14",
+            "value": "Double-click on the <color=#FF6B6B>Seven of Hearts (7♥)</color>."
         },
         {
-            "key": "hint_has_suit",
-            "value": "There are {0} suit cards on the table."
+            "key": "KlondikeTutorial15",
+            "value": "All cards are revealed. Press the <color=#FCA311>'AUTO'</color> button!"
         },
         {
-            "key": "hint_has_rank",
-            "value": "There are cards with value {0} on the table."
+            "key": "KlondikeTutorialEnd",
+            "value": "<color=#FCA311>Congratulations!</color> You have mastered all the mechanics. Good luck in the game!"
         },
         {
-            "key": "hint_position_of_card",
-            "value": "{0} is at position {1}."
+            "key": "AutoButton",
+            "value": "Auto"
         },
         {
-            "key": "hint_not_first",
-            "value": "{0} is not at the first position."
+            "key": "SpiderTutorial1",
+            "value": "In Spider, cards are stacked in descending order.\nDrag the <color=#8294FF>Eight of Spades (8♠)</color> onto the <color=#8294FF>Nine of Spades (9♠)</color>."
         },
         {
-            "key": "hint_not_last",
-            "value": "{0} is not at the last position."
+            "key": "SpiderTutorial2",
+            "value": "Great, a hidden card has been revealed!\nStacks of the <color=#FCA311>same suit</color> can be moved as a whole. Move the <color=#8294FF>7♠-6♠-5♠</color> stack onto your Eight."
         },
         {
-            "key": "hint_not_neighbor",
-            "value": "{0} is not next to {1}."
+            "key": "SpiderTutorial3",
+            "value": "You can place cards on top of each other regardless of suit.\nPlace the <color=#FF6B6B>Four of Hearts (4♥)</color> onto the black <color=#8294FF>Five of Spades (5♠)</color>."
         },
         {
-            "key": "hint_exact_count_suit",
-            "value": "There are exactly {0} {1} suit cards on the table."
+            "key": "SpiderTutorial4",
+            "value": "Attention: mixed-suit stacks are <color=#FF6B6B>blocked</color>! They cannot be moved together.\nPress <color=#FCA311>'Undo'</color> to return the card."
         },
         {
-            "key": "hint_exact_count_rank",
-            "value": "There are exactly {0} cards with value {1} on the table."
+            "key": "SpiderTutorial5",
+            "value": "To deal new cards from the deck, there must be no empty slots on the tableau!\nMove the <color=#8294FF>King of Spades (K♠)</color> to the empty column on the right."
         },
         {
-            "key": "hint_even_position",
-            "value": "{0} is at an even position."
+            "key": "SpiderTutorial6",
+            "value": "Now all slots are filled. Click on the <color=#FCA311>deck</color> in the bottom right corner to deal a new row of cards."
         },
         {
-            "key": "hint_odd_position",
-            "value": "{0} is at an odd position."
+            "key": "SpiderTutorial7",
+            "value": "We got the Aces we needed! But the Twos are covered by new cards.\nMove the <color=#8294FF>Three of Spades (3♠)</color> onto the <color=#8294FF>Four of Spades (4♠)</color>."
         },
         {
-            "key": "hint_between_count",
-            "value": "There are exactly {2} card(s) between {0} and {1}."
+            "key": "SpiderTutorial8",
+            "value": "The path is clear! Move the <color=#FF6B6B>Ace of Hearts (A♥)</color> onto the <color=#FF6B6B>Two of Hearts (2♥)</color> to complete the sequence!"
         },
         {
-            "key": "false_there_is",
-            "value": "There is definitely {0} on the table."
+            "key": "SpiderTutorial9",
+            "value": "Great! Now let's free the second Two.\nMove the <color=#FF6B6B>Four of Hearts (4♥)</color> onto the <color=#8294FF>Five of Spades (5♠)</color>."
         },
         {
-            "key": "false_no",
-            "value": "There is no {0} on the table."
+            "key": "SpiderTutorial10",
+            "value": "And now move the <color=#8294FF>Ace of Spades (A♠)</color> onto the <color=#8294FF>Two of Spades (2♠)</color> in the last remaining stack."
         },
         {
-            "key": "false_first",
-            "value": "{0} is the first card."
+            "key": "SpiderTutorialEnd",
+            "value": "Congratulations! You have mastered all the mechanics of Spider!"
         },
         {
-            "key": "false_last",
-            "value": "{0} is the last card."
+            "key": "FreeCellTutorial1",
+            "value": "The main feature of this solitaire is the 4 <color=#FCA311>Free Cells</color>.\nThe <color=#8294FF>Ace of Spades (A♠)</color> is blocked. Move the <color=#FF6B6B>Eight of Hearts (8♥)</color> to a <color=#FCA311>Free Cell</color> (top left)."
         },
         {
-            "key": "false_immediately_after",
-            "value": "{0} is immediately after {1}."
+            "key": "FreeCellTutorial2",
+            "value": "The Ace is free! Press <color=#FCA311>'AUTO'</color> to send all available cards to the <color=#FCA311>Foundations</color>."
         },
         {
-            "key": "false_exact_count_suit",
-            "value": "There are exactly {0} {1} suit cards on the table."
+            "key": "FreeCellTutorial3",
+            "value": "Just like in Klondike, cards on the tableau alternate in color.\nMove the <color=#FF6B6B>Seven of Diamonds (7♦)</color> onto the <color=#8294FF>Eight of Clubs (8♣)</color>."
         },
         {
-            "key": "false_exact_count_rank",
-            "value": "There are exactly {0} cards with value {1} on the table."
+            "key": "FreeCellTutorial4",
+            "value": "The <color=#FCA311>indicator</color> next to the Auto button shows the max stack length you can move (currently 4).\nMove the <color=#FF6B6B>Ten of Diamonds (10♦)</color> into a <color=#FCA311>Free Cell</color> to free up the column."
         },
         {
-            "key": "false_position_of_card",
-            "value": "{0} is at position {1}."
+            "key": "FreeCellTutorial5",
+            "value": "The indicator has changed (6/3). The second number is the limit for an <color=#FCA311>empty column</color>.\nMove the stack (<color=#8294FF>6♠</color> and <color=#FF6B6B>5♥</color>) into the empty column."
         },
         {
-            "key": "false_neighbor",
-            "value": "{0} is next to {1}."
+            "key": "FreeCellTutorial6",
+            "value": "Any move can be undone. Let's check how the <color=#FCA311>'Undo'</color> button at the bottom of the screen works."
         },
         {
-            "key": "ArmorPuzzleInfo1",
-            "value": "Place the pieces of the armor in the correct order."
+            "key": "FreeCellTutorial7",
+            "value": "Now move this stack (<color=#8294FF>6♠</color> and <color=#FF6B6B>5♥</color>) onto the <color=#FF6B6B>Seven of Diamonds (7♦)</color>."
         },
         {
-            "key": "ArmorPuzzleInfo2",
-            "value": "Top slot — helmet, middle — breastplate, bottom — boots."
+            "key": "FreeCellTutorial8",
+            "value": "Tutorial completed! Press <color=#FCA311>'AUTO'</color> to collect the remaining cards and win!"
         },
         {
-            "key": "BalancePuzzleInfo",
-            "value": "Balance the scales by placing all the weights."
+            "key": "FreeCellTutorialEnd",
+            "value": "<color=#FCA311>Congratulations!</color> You have mastered all the rules of FreeCell. Good luck in the game!"
         },
         {
-            "key": "BookPuzzleInfo",
-            "value": "Place the books in the correct order."
+            "key": "FreeCellTutorInfo1",
+            "value": "Free Cells"
         },
         {
-            "key": "SlidersPuzzleInfo",
-            "value": "Arrange the tiles in order."
+            "key": "PyramidTutorial1",
+            "value": "In Pyramid, you need to remove cards in pairs that add up to <color=#FCA311>13</color>. A King equals 13 and can be removed with a single click.\nClick on the <color=#8294FF>King of Spades (K♠)</color>."
         },
         {
-            "key": "MazePuzzleInfo1",
-            "value": "Guide the red ball out of the maze."
+            "key": "PyramidTutorial2",
+            "value": "Queen (12) + Ace (1) = <color=#FCA311>13</color>.\nClick first on the <color=#FF6B6B>Queen of Diamonds (Q♦)</color> and then on the <color=#8294FF>Ace of Clubs (A♣)</color> to remove them."
         },
         {
-            "key": "MazePuzzleInfo2",
-            "value": "Controls: WASD."
+            "key": "PyramidTutorial3",
+            "value": "Forgot a card's value? Press the <color=#FCA311>'Hint'</color> button at the top."
         },
         {
-            "key": "ClockPuzzleInfo1",
-            "value": "Set the time on the clock according to the hint."
+            "key": "PyramidTutorial4",
+            "value": "There are no matching pairs on the table. Click the <color=#FCA311>button</color> under the deck to reveal new cards. Note: only <color=#FCA311>2 redeals</color> are available!"
         },
         {
-            "key": "ClockPuzzleInfo2",
-            "value": "Set the time on the clock according to the hints. Some hints are false."
+            "key": "PyramidTutorial5",
+            "value": "Great! Five (5) + Eight (8) = <color=#FCA311>13</color>.\nMatch the <color=#8294FF>Five of Spades (5♠)</color> from the deck with the <color=#8294FF>Eight of Spades (8♠)</color> on the table."
         },
         {
-            "key": "ClockPuzzleInfo3",
-            "value": "A — rotate counterclockwise."
+            "key": "PyramidTutorial6",
+            "value": "Great move! But sometimes an action needs to be undone. Press the <color=#FCA311>'Undo'</color> button at the bottom of the screen."
         },
         {
-            "key": "ClockPuzzleInfo4",
-            "value": "D — rotate clockwise."
+            "key": "PyramidTutorial7",
+            "value": "Now let's match the <color=#8294FF>Five of Spades (5♠)</color> and the <color=#8294FF>Eight of Spades (8♠)</color> again."
         },
         {
-            "key": "ClockPuzzleInfo5",
-            "value": "E — switch the clock hand."
+            "key": "PyramidTutorial8",
+            "value": "Nine (9) + Four (4) = <color=#FCA311>13</color>.\nMatch the <color=#FF6B6B>Nine of Hearts (9♥)</color> in the deck with the <color=#8294FF>Four of Clubs (4♣)</color>."
         },
         {
-            "key": "ClockPuzzleInfo6",
-            "value": "Controls:"
+            "key": "PyramidTutorial9",
+            "value": "The path is clear! There's a Seven at the peak and our Six in the waste.\nClick on the <color=#FF6B6B>Six of Diamonds (6♦)</color> and the <color=#FF6B6B>Seven of Hearts (7♥)</color>!"
         },
         {
-            "key": "ClockPuzzleInfo7",
-            "value": "You need to set the time on the clock based on the hints. Some hints are false. The hands affect each other's movement."
+            "key": "PyramidTutorialEnd",
+            "value": "<color=#FCA311>Congratulations!</color> You have mastered Pyramid!"
         },
         {
-            "key": "CardsPuzzleInfo1",
-            "value": "Build a row of cards according to the conditions."
+            "key": "TriPeaksTutorial1",
+            "value": "The goal is to <color=#FCA311>remove all cards</color>. Choose face-up cards that are <color=#FCA311>1 rank higher or lower</color> than the card in the waste pile (currently it's <color=#8294FF>5♠</color>). Build long <color=#FCA311>combos</color> for points!\nRemove: <color=#FF6B6B>6♥</color> -> <color=#8294FF>7♣</color> -> <color=#FF6B6B>8♦</color>."
         },
         {
-            "key": "CardsPuzzleInfo2",
-            "value": "You can place cards that may satisfy the conditions into the yellow-circle area."
+            "key": "TriPeaksTutorial3",
+            "value": "There are no more available moves. Draw a new card from the <color=#FCA311>deck</color>."
         },
         {
-            "key": "CardsPuzzleInfo3",
-            "value": "You can place cards that definitely do not meet the conditions into the red-cross area."
+            "key": "TriPeaksTutorial4",
+            "value": "We drew a <color=#FF6B6B>Queen (Q♦)</color>. Card ranks go <color=#FCA311>in a loop</color>: an <color=#FF6B6B>Ace (A)</color> can be played on a <color=#8294FF>King (K)</color>, and a <color=#8294FF>Two (2)</color> on an Ace. Complete this chain!"
         },
         {
-            "key": "DicesPuzzleInfo1",
-            "value": "Place the dice into the top area so that the equation is correct."
+            "key": "TriPeaksTutorial7",
+            "value": "Let's check how the <color=#FCA311>'Undo'</color> button works. Click on it."
         },
         {
-            "key": "DicesPuzzleInfo2",
-            "value": "Right mouse button — change the number on a die."
+            "key": "TriPeaksTutorial8",
+            "value": "Great! Return the <color=#8294FF>Two of Clubs (2♣)</color> and clear the board: <color=#8294FF>2</color> -> <color=#FF6B6B>3</color> -> <color=#8294FF>4</color> -> <color=#FF6B6B>5</color>!"
         },
         {
-            "key": "DicesPuzzleInfo3",
-            "value": "Conditions:"
+            "key": "TriPeaksTutorialEnd",
+            "value": "<color=#FCA311>Congratulations!</color> You have mastered TriPeaks!"
         },
         {
-            "key": "DicesPuzzleInfo4",
-            "value": "This condition means that the first slot must contain a die with the value 1."
+            "key": "YukonTutorial1",
+            "value": "Our game has two variants: <color=#FCA311>'Classic'</color> and <color=#FCA311>'Russian'</color>. In Classic, cards alternate in color.\nMove the <color=#8294FF>black Ten of Spades (10♠)</color> onto the <color=#FF6B6B>red Jack of Hearts (J♥)</color>."
         },
         {
-            "key": "DicesPuzzleInfo5",
-            "value": "This condition means that dice with the value 1 cannot be used."
+            "key": "YukonTutorial2",
+            "value": "The rules of the <color=#FCA311>'Russian'</color> variant are different — cards are stacked strictly by suit.\nLet's move that same <color=#8294FF>Ten of Spades (10♠)</color> onto the <color=#8294FF>Jack of Spades (J♠)</color> to see how it works."
         },
         {
-            "key": "DicesPuzzleInfo6",
-            "value": "This condition means that there must be fewer than two dice with the value 1."
+            "key": "YukonTutorial3",
+            "value": "Great! Now we know both variants. Let's undo this move and continue the tutorial with classic rules.\nPress the <color=#FCA311>'Undo'</color> button."
         },
         {
-            "key": "DicesPuzzleInfo7",
-            "value": "This condition means that there must be more than two dice with the value 1."
+            "key": "YukonTutorial4",
+            "value": "The main feature of Yukon is moving stacks. You can grab <color=#FCA311>ANY</color> face-up card and drag the entire massive stack on top of it!\nTake the <color=#8294FF>black Queen of Clubs (Q♣)</color> from the last column and move it onto the <color=#FF6B6B>red King of Hearts (K♥)</color>."
         },
         {
-            "key": "DicesPuzzleInfo8",
-            "value": "Left mouse button — change the color of a die."
+            "key": "YukonTutorial5",
+            "value": "Cards can be quickly sent to the <color=#FCA311>Foundations</color> with a double click.\nLet's send the <color=#8294FF>Ten of Clubs (10♣)</color> there!"
         },
         {
-            "key": "DicesPuzzleInfo9",
-            "value": "This condition means there must not be more than two black dice in a row."
+            "key": "YukonTutorial6",
+            "value": "<color=#FCA311>ONLY</color> Kings can be placed in empty slots on the board.\nMove the <color=#8294FF>King of Spades (K♠)</color> into the empty column to reveal the card underneath."
         },
         {
-            "key": "DicesPuzzleInfo10",
-            "value": "This condition means that the first slot must contain a white die."
+            "key": "YukonTutorial7",
+            "value": "You have mastered all the mechanics! There are no more face-down cards on the board.\nPress the <color=#FCA311>'AUTO'</color> button to quickly finish the game!"
         },
         {
-            "key": "DicesPuzzleInfo11",
-            "value": "This condition means that black and white dice must alternate."
+            "key": "YukonTutorialEnd",
+            "value": "<color=#FCA311>Congratulations!</color> You have mastered all the mechanics of Yukon. Good luck in the game!"
         },
         {
-            "key": "SkipPuzzle",
-            "value": "Skip"
+            "key": "MonteCarloTutorial1",
+            "value": "In Monte Carlo, you need to remove pairs of identical cards.\nFirst is the <color=#FCA311>'8 Ways'</color> rule. Click on two adjacent Fives: <color=#FF6B6B>(5♥)</color> and <color=#8294FF>(5♠)</color>."
         },
         {
-            "key": "ContinuePuzzle",
-            "value": "Continue"
+            "key": "MonteCarloTutorial2",
+            "value": "The cards have shifted! Now the <color=#FCA311>'4 Ways'</color> mode (cross-shaped) is active.\nThe Sevens ended up on top of each other. Remove <color=#FF6B6B>(7♦)</color> and <color=#8294FF>(7♣)</color>!"
         },
         {
-            "key": "NewItem",
-            "value": "New item!"
+            "key": "MonteCarloTutorial3",
+            "value": "Back to the <color=#FCA311>'8 Ways'</color> mode! Now you can match diagonally as well.\nRemove the two Kings: <color=#FF6B6B>(K♥)</color> and <color=#8294FF>(K♠)</color>."
         },
         {
-            "key": "ItemSuitable",
-            "value": "Item fits."
+            "key": "MonteCarloTutorial4",
+            "value": "Great move! But let's check how <color=#FCA311>'Undo'</color> works.\nPress the Undo button at the bottom of the screen."
         },
         {
-            "key": "ItemNotSuitable",
-            "value": "Item not suitable."
+            "key": "MonteCarloTutorial5",
+            "value": "The Kings are back in place. You know all the rules!\nFinish the game by removing all remaining pairs."
         },
         {
-            "key": "InventoryFull",
-            "value": "Inventory is full."
+            "key": "MonteCarloTutorial6",
+            "value": "Keep removing pairs until total victory!"
         },
         {
-            "key": "ItemBall",
-            "value": "Red ball"
+            "key": "MonteCarloTutorialEnd",
+            "value": "<color=#FCA311>Congratulations!</color> You have mastered the rules of Monte Carlo!"
         },
         {
-            "key": "ItemBook",
-            "value": "Book"
+            "key": "SultanTutorial1",
+            "value": "The goal of the game is to collect all cards in the <color=#FCA311>Foundations</color> around the Sultan (King of Hearts).\nMove the <color=#FF6B6B>Jack of Hearts (J♥)</color> from the <color=#FCA311>Reserve</color> to the appropriate Foundation."
         },
         {
-            "key": "ItemCards",
-            "value": "Playing cards"
+            "key": "SultanTutorial2",
+            "value": "In 'Sultan', the deck can be flipped through <color=#FCA311>only 2 times</color> during the entire game!\nClick on the <color=#FCA311>deck</color> to reveal a new card."
         },
         {
-            "key": "ItemClockHand",
-            "value": "Clock hand"
+            "key": "SultanTutorial3",
+            "value": "We drew a <color=#8294FF>Jack of Clubs (J♣)</color>. It is not needed right now, since the Clubs Foundations need Tens first.\nMove it to an <color=#FCA311>empty Reserve slot</color>."
         },
         {
-            "key": "ItemDices",
-            "value": "Dice"
+            "key": "SultanTutorial4",
+            "value": "Great move! But empty spots in the reserve are very valuable, so it's better to save them.\nPress the <color=#FCA311>'Undo'</color> button at the bottom of the screen."
         },
         {
-            "key": "ItemExitKey",
-            "value": "Round key"
+            "key": "SultanTutorial5",
+            "value": "Let's see what the next card is.\nClick on the <color=#FCA311>deck</color> one more time."
         },
         {
-            "key": "ItemGoldenKey",
-            "value": "Golden key"
+            "key": "SultanTutorial6",
+            "value": "It's a <color=#FF6B6B>Jack of Diamonds (J♦)</color>! It fits perfectly.\nSend it from the waste directly to the correct <color=#FCA311>Foundation</color>."
         },
         {
-            "key": "ItemHelmet",
-            "value": "Helmet"
+            "key": "SultanTutorial7",
+            "value": "Cards can be quickly moved with a <color=#FCA311>double click</color>. The game will choose the spot itself: checking Foundations first, then the Reserve.\nDouble-click on the <color=#8294FF>Jack of Clubs (J♣)</color>."
         },
         {
-            "key": "ItemIronKey",
-            "value": "Iron key"
+            "key": "SultanTutorial8",
+            "value": "Great! The Jack flew into the empty Reserve. Now let's draw another card from the <color=#FCA311>deck</color>."
         },
         {
-            "key": "ItemWeight",
-            "value": "Weight (for scales)"
+            "key": "SultanTutorial9",
+            "value": "It's a <color=#8294FF>Ten of Clubs (10♣)</color>, and the Foundations need it! Click on it <color=#FCA311>twice</color>, and it will fly straight to the base."
         },
         {
-            "key": "ItemLight",
-            "value": "Torch"
+            "key": "SultanTutorial10",
+            "value": "You have mastered all the rules of Sultan solitaire!\nFinish the game on your own by distributing the <color=#FCA311>remaining cards</color>."
         },
         {
-            "key": "ItemPreciousKey",
-            "value": "Precious key"
+            "key": "SultanTutorialEnd",
+            "value": "<color=#FCA311>Congratulations!</color> You have successfully mastered Sultan solitaire!"
         },
         {
-            "key": "ItemStonePlate",
-            "value": "Stone plate"
+            "key": "OctagonTutorial1",
+            "value": "Welcome to Octagon! Victory is just around the corner. Let's reveal some new cards: click on the <color=#FCA311>deck</color>. Note: you can flip through the deck <color=#FCA311>only 2 times</color> per game!"
         },
         {
-            "key": "GameOver",
-            "value": "You died!"
+            "key": "OctagonTutorial2",
+            "value": "On the table, cards are stacked in descending order, and the suit can be <color=#FCA311>ANY</color>.\nMove the <color=#FF6B6B>Queen of Hearts (Q♥)</color> from the waste onto the <color=#8294FF>King of Clubs (K♣)</color> on the table."
         },
         {
-            "key": "LevelComplete",
-            "value": "Level complete!"
+            "key": "OctagonTutorial3",
+            "value": "Only one card is left in the left group of slots. Move the <color=#8294FF>Jack of Clubs (J♣)</color> onto our <color=#FF6B6B>Queen of Hearts (Q♥)</color>. The group will empty and <color=#FCA311>automatically fill up</color> with new cards!"
         },
         {
-            "key": "RestartLevel",
-            "value": "Restart level"
+            "key": "OctagonTutorial4",
+            "value": "The new cards didn't help us right now, and the Jack blocked the card we needed. Let's return everything back! Press the <color=#FCA311>'Undo'</color> button."
         },
         {
-            "key": "NextLevel",
-            "value": "Next level"
+            "key": "OctagonTutorial5",
+            "value": "Sometimes, to save the situation, you can take a needed card directly from a Foundation! (You just can't take Aces and Kings). Pull the <color=#FF6B6B>Queen of Diamonds (Q♦)</color> from the Foundation and place it on the <color=#8294FF>King of Spades (K♠)</color>."
         },
         {
-            "key": "EndPuzzleInfo1",
-            "value": "You need to rotate the fragments of the bas-relief to restore it."
+            "key": "OctagonTutorial6",
+            "value": "Brilliant! A double click sends a card to a Foundation, OR to the table, but on the table <color=#FCA311>the suit must match exactly</color>. Double-click on the <color=#FF6B6B>Jack of Diamonds (J♦)</color>."
         },
         {
-            "key": "EndPuzzleInfo2",
-            "value": "E - switch the round key"
+            "key": "OctagonTutorial7",
+            "value": "By removing the Jack, we unlocked the final cards! Now double-click on the revealed <color=#FF6B6B>King of Hearts (K♥)</color>, and it will go straight to the Foundation."
         },
         {
-            "key": "DoorWrongSide",
-            "value": "The door opens from the other side."
+            "key": "OctagonTutorial8",
+            "value": "You have mastered all the mechanics of Octagon!\nThere are only a few face-up cards left on the table. Distribute them among the <color=#FCA311>Foundations</color> and finish the game!"
         },
         {
-            "key": "NoFuel",
-            "value": "You need fire to light the torch!"
+            "key": "OctagonTutorialEnd",
+            "value": "<color=#FCA311>Congratulations!</color> You have successfully completed the tutorial and solved Octagon solitaire!"
         },
         {
-            "key": "Settings",
-            "value": "Settings"
+            "key": "CarpetTutorial1",
+            "value": "The goal of 'Montana' is to arrange the cards by suit from Ace to King in 4 rows. Only Aces can be placed in empty slots on the LEFT. Drag the <color=#8294FF>Ace of Spades (A♠)</color> into the first empty slot."
         },
         {
-            "key": "Restart",
-            "value": "Restart"
+            "key": "CarpetTutorialUndo",
+            "value": "Great move! But sometimes an action needs to be undone. Let's check how the <color=#FCA311>'Undo'</color> button at the bottom of the screen works. Click on it."
         },
         {
-            "key": "SkipPanelText",
-            "value": "Solve the puzzle to unlock."
+            "key": "CarpetTutorial2",
+            "value": "The Ace is back! Cards can be quickly sent to their place with a double click. Double-click on the <color=#8294FF>Ace of Spades (A♠)</color>."
+        },
+        {
+            "key": "CarpetTutorial3",
+            "value": "A Two of the same suit must follow an Ace. Double-click on the <color=#8294FF>Two of Spades (2♠)</color>."
+        },
+        {
+            "key": "CarpetTutorial4",
+            "value": "Continue the row! Send the <color=#8294FF>Three of Spades (3♠)</color> to the Two with a double click."
+        },
+        {
+            "key": "CarpetTutorial5",
+            "value": "Great! Keep moving Spades as long as there are available moves!"
+        },
+        {
+            "key": "CarpetTutorialAces",
+            "value": "Now send the remaining Aces into the empty slots on the left with a double click! Start with the <color=#8294FF>Ace of Clubs (A♣)</color>."
+        },
+        {
+            "key": "CarpetTutorialAces2",
+            "value": "And now the <color=#FF6B6B>Ace of Diamonds (A♦)</color>."
+        },
+        {
+            "key": "CarpetTutorial6",
+            "value": "You've hit a dead end! All empty slots ended up strictly behind Kings, and you cannot place cards after Kings. Press <color=#FCA311>'Redeal'</color>!"
+        },
+        {
+            "key": "CarpetTutorial7",
+            "value": "The <color=#FCA311>'Hard'</color> mode is currently active: empty slots after a redeal ONLY appear at the end of a row. Move the <color=#FF6B6B>Jack of Hearts (J♥)</color> into the empty slot behind the Ten."
+        },
+        {
+            "key": "CarpetTutorial8",
+            "value": "A slot behind the Seven of Spades has opened up! Now confidently send the <color=#8294FF>Eight of Spades (8♠)</color> there with a double click."
+        },
+        {
+            "key": "CarpetTutorial9",
+            "value": "Another dead end! Press <color=#FCA311>'Redeal'</color> once more. We are returning to the <color=#FCA311>'Classic'</color> mode — empty slots will conveniently appear right behind the assembled cards!"
+        },
+        {
+            "key": "CarpetTutorial10",
+            "value": "Almost done! The cards miraculously came together, just the final push remains. Send the <color=#FF6B6B>Jack of Hearts (J♥)</color> to its place."
+        },
+        {
+            "key": "CarpetTutorial11",
+            "value": "Great! Now the <color=#FF6B6B>Queen of Hearts (Q♥)</color>."
+        },
+        {
+            "key": "CarpetTutorial12",
+            "value": "And finally, the <color=#FF6B6B>King of Hearts (K♥)</color> for an absolute victory!"
+        },
+        {
+            "key": "CarpetTutorialEnd",
+            "value": "<color=#FCA311>Congratulations!</color> You have masterfully learned the rules of Montana!"
+        },
+        {
+            "key": "Leaderboard_Global",
+            "value": "Global Leaderboard"
+        },
+        {
+            "key": "Leaderboard_Klondike",
+            "value": "Klondike Leaderboard"
+        },
+        {
+            "key": "Leaderboard_Spider",
+            "value": "Spider Leaderboard"
+        },
+        {
+            "key": "Leaderboard_FreeCell",
+            "value": "FreeCell Leaderboard"
+        },
+        {
+            "key": "Leaderboard_Pyramid",
+            "value": "Pyramid Leaderboard"
+        },
+        {
+            "key": "Leaderboard_TriPeaks",
+            "value": "TriPeaks Leaderboard"
+        },
+        {
+            "key": "Leaderboard_Sultan",
+            "value": "Sultan Leaderboard"
+        },
+        {
+            "key": "Leaderboard_MonteCarlo",
+            "value": "Monte Carlo Leaderboard"
+        },
+        {
+            "key": "Leaderboard_Montana",
+            "value": "Montana Leaderboard"
+        },
+        {
+            "key": "Leaderboard_Octagon",
+            "value": "Octagon Leaderboard"
+        },
+        {
+            "key": "Leaderboard_Yukon",
+            "value": "Yukon Leaderboard"
+        },
+        {
+            "key": "Quest_General_Easy_01_Title",
+            "value": "Card Marathon"
+        },
+        {
+            "key": "Quest_General_Easy_01_Desc",
+            "value": "Make a total of <color=#ffbb00>{0} moves</color> across all games played today."
+        },
+        {
+            "key": "Quest_General_Easy_02_Title",
+            "value": "Explorer"
+        },
+        {
+            "key": "Quest_General_Easy_02_Desc",
+            "value": "Reveal <color=#ffbb00>{0} face-down cards</color> in the tableau in games with this mechanic (<color=#a8d9e0>Klondike</color>, <color=#a8d9e0>Spider</color>, <color=#a8d9e0>Yukon</color>)."
+        },
+        {
+            "key": "Quest_General_Easy_03_Title",
+            "value": "Avid Gamer"
+        },
+        {
+            "key": "Quest_General_Easy_03_Desc",
+            "value": "Fully complete <color=#ffbb00>{0} games</color>."
+        },
+        {
+            "key": "Quest_General_Easy_04_Title",
+            "value": "Homeward Bound"
+        },
+        {
+            "key": "Quest_General_Easy_04_Desc",
+            "value": "Move a total of <color=#ffbb00>{0} cards</color> to the <color=#ffbb00>Foundations</color> across all supported games."
+        },
+        {
+            "key": "Quest_General_Easy_05_Title",
+            "value": "The Sampler"
+        },
+        {
+            "key": "Quest_General_Easy_05_Desc",
+            "value": "Play at least one game in <color=#ffbb00>{0} different Solitaire modes</color> (e.g., <color=#a8d9e0>Klondike</color>, <color=#a8d9e0>Sultan</color>, <color=#a8d9e0>Yukon</color>)."
+        },
+        {
+            "key": "Quest_General_Easy_06_Title",
+            "value": "Time at the Table"
+        },
+        {
+            "key": "Quest_General_Easy_06_Desc",
+            "value": "Spend a total of <color=#ffbb00>{0} minutes</color> in-game."
+        },
+        {
+            "key": "Quest_General_Easy_07_Title",
+            "value": "Royal Court"
+        },
+        {
+            "key": "Quest_General_Easy_07_Desc",
+            "value": "Clear from the board or move to the <color=#ffbb00>Foundations</color> a total of <color=#ffbb00>{0} Kings and Queens</color> across any games."
+        },
+        {
+            "key": "Quest_General_Easy_08_Title",
+            "value": "Active Player"
+        },
+        {
+            "key": "Quest_General_Easy_08_Desc",
+            "value": "Draw a total of <color=#ffbb00>{0} cards</color> from the <color=#ffbb00>Stock</color> across all games played today."
+        },
+        {
+            "key": "Quest_General_Easy_09_Title",
+            "value": "Determined Rookie"
+        },
+        {
+            "key": "Quest_General_Easy_09_Desc",
+            "value": "Win <color=#ffbb00>{0} games</color> strictly on <color=#9fd25c>Easy difficulty</color>."
+        },
+        {
+            "key": "Quest_General_Easy_10_Title",
+            "value": "Lower Ranks"
+        },
+        {
+            "key": "Quest_General_Easy_10_Desc",
+            "value": "Clear from the board or move to the <color=#ffbb00>Foundations</color> a total of <color=#ffbb00>{0} Aces and Twos</color> across all games played today."
+        },
+        {
+            "key": "Quest_General_Medium_01_Title",
+            "value": "Double Success"
+        },
+        {
+            "key": "Quest_General_Medium_01_Desc",
+            "value": "Win any <color=#ffbb00>{0} games</color> today."
+        },
+        {
+            "key": "Quest_General_Medium_02_Title",
+            "value": "All-Rounder"
+        },
+        {
+            "key": "Quest_General_Medium_02_Desc",
+            "value": "Win games in <color=#ffbb00>{0} different Solitaire modes</color>."
+        },
+        {
+            "key": "Quest_General_Medium_03_Title",
+            "value": "Winning Streak"
+        },
+        {
+            "key": "Quest_General_Medium_03_Desc",
+            "value": "Win any <color=#ffbb00>{0} games in a row</color>."
+        },
+        {
+            "key": "Quest_General_Medium_04_Title",
+            "value": "Happy Medium"
+        },
+        {
+            "key": "Quest_General_Medium_04_Desc",
+            "value": "Win any <color=#ffbb00>{0} game</color> specifically on <color=#eeae32>Medium difficulty</color> or higher."
+        },
+        {
+            "key": "Quest_General_Medium_05_Title",
+            "value": "Steady Hand"
+        },
+        {
+            "key": "Quest_General_Medium_05_Desc",
+            "value": "Win any <color=#ffbb00>{0} game</color> without using Undo."
+        },
+        {
+            "key": "Quest_General_Medium_06_Title",
+            "value": "Time Master"
+        },
+        {
+            "key": "Quest_General_Medium_06_Desc",
+            "value": "Win any game in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_General_Medium_07_Title",
+            "value": "Marathoner"
+        },
+        {
+            "key": "Quest_General_Medium_07_Desc",
+            "value": "Win any game taking more than <color=#ffbb00>{0} moves</color>."
+        },
+        {
+            "key": "Quest_General_Medium_08_Title",
+            "value": "Diligence"
+        },
+        {
+            "key": "Quest_General_Medium_08_Desc",
+            "value": "Fully complete any <color=#ffbb00>{0} games</color>, including at least 1 win."
+        },
+
+        {
+            "key": "Quest_General_Hard_01_Title",
+            "value": "Grandmaster"
+        },
+        {
+            "key": "Quest_General_Hard_01_Desc",
+            "value": "Win any <color=#ffbb00>{0} game</color> specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_General_Hard_02_Title",
+            "value": "Nerves of Steel"
+        },
+        {
+            "key": "Quest_General_Hard_02_Desc",
+            "value": "Win any <color=#ffbb00>{0} games in a row</color>."
+        },
+        {
+            "key": "Quest_General_Hard_03_Title",
+            "value": "Perfect Day"
+        },
+        {
+            "key": "Quest_General_Hard_03_Desc",
+            "value": "Win any <color=#ffbb00>{0} game</color> on <color=#e14849>Hard difficulty</color> without using Undo."
+        },
+        {
+            "key": "Quest_General_Hard_04_Title",
+            "value": "Multi-Master"
+        },
+        {
+            "key": "Quest_General_Hard_04_Desc",
+            "value": "Win games in <color=#ffbb00>{0} different Solitaire modes</color> in a single day."
+        },
+        {
+            "key": "Quest_General_Hard_05_Title",
+            "value": "Speedrunner"
+        },
+        {
+            "key": "Quest_General_Hard_05_Desc",
+            "value": "Win any <color=#ffbb00>{0} games</color>, each in under 3 minutes."
+        },
+        {
+            "key": "Quest_Klondike_Easy_01_Title",
+            "value": "The Way Home"
+        },
+        {
+            "key": "Quest_Klondike_Easy_01_Desc",
+            "value": "Move <color=#ffbb00>{0} cards</color> to the <color=#ffbb00>Foundations</color> in <color=#a8d9e0>Klondike</color> (<color=#a8d9e0>Draw 1</color> or <color=#a8d9e0>Draw 3</color>)."
+        },
+        {
+            "key": "Quest_Klondike_Easy_02_Title",
+            "value": "Scout"
+        },
+        {
+            "key": "Quest_Klondike_Easy_02_Desc",
+            "value": "Reveal <color=#ffbb00>{0} face-down cards</color> in the tableau in <color=#a8d9e0>Klondike</color> (<color=#a8d9e0>Draw 1</color>)."
+        },
+        {
+            "key": "Quest_Klondike_Easy_03_Title",
+            "value": "Royal Court"
+        },
+        {
+            "key": "Quest_Klondike_Easy_03_Desc",
+            "value": "Complete <color=#ffbb00>{0} full Foundation piles</color> in <color=#a8d9e0>Klondike</color>."
+        },
+        {
+            "key": "Quest_Klondike_Easy_04_Title",
+            "value": "Active Reserve"
+        },
+        {
+            "key": "Quest_Klondike_Easy_04_Desc",
+            "value": "Move <color=#ffbb00>{0} cards</color> directly from the <color=#ffbb00>Stock</color> to the <color=#ffbb00>Foundations</color> in <color=#a8d9e0>Klondike</color>."
+        },
+        {
+            "key": "Quest_Klondike_Easy_05_Title",
+            "value": "Strict Approach"
+        },
+        {
+            "key": "Quest_Klondike_Easy_05_Desc",
+            "value": "Move <color=#ffbb00>{0} cards</color> to the <color=#ffbb00>Foundations</color> in <color=#a8d9e0>Klondike</color> specifically on <color=#9fd25c>Easy difficulty</color>."
+        },
+
+        {
+            "key": "Quest_Klondike_Medium_01_Title",
+            "value": "Triple Draw"
+        },
+        {
+            "key": "Quest_Klondike_Medium_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Klondike</color> (<color=#a8d9e0>Draw 3</color>)."
+        },
+        {
+            "key": "Quest_Klondike_Medium_02_Title",
+            "value": "Time Master"
+        },
+        {
+            "key": "Quest_Klondike_Medium_02_Desc",
+            "value": "Win a game of <color=#a8d9e0>Klondike</color> in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_Klondike_Medium_03_Title",
+            "value": "Flawless Plan"
+        },
+        {
+            "key": "Quest_Klondike_Medium_03_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Klondike</color> without using Undo."
+        },
+        {
+            "key": "Quest_Klondike_Medium_04_Title",
+            "value": "Intermediate"
+        },
+        {
+            "key": "Quest_Klondike_Medium_04_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Klondike</color> specifically on <color=#eeae32>Medium difficulty</color> or higher."
+        },
+
+        {
+            "key": "Quest_Klondike_Hard_01_Title",
+            "value": "Major League"
+        },
+        {
+            "key": "Quest_Klondike_Hard_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Klondike</color> specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_Klondike_Hard_02_Title",
+            "value": "Lightning Deal"
+        },
+        {
+            "key": "Quest_Klondike_Hard_02_Desc",
+            "value": "Win a game of <color=#a8d9e0>Klondike</color> (<color=#a8d9e0>Draw 3</color>) in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_Klondike_Hard_03_Title",
+            "value": "No Compromises"
+        },
+        {
+            "key": "Quest_Klondike_Hard_03_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Klondike</color> (<color=#a8d9e0>Draw 3</color>) without using Undo."
+        },
+        {
+            "key": "Quest_Spider_Easy_01_Title",
+            "value": "Weaving Webs"
+        },
+        {
+            "key": "Quest_Spider_Easy_01_Desc",
+            "value": "Complete <color=#ffbb00>{0} full sequences</color> in <color=#a8d9e0>Spider</color> (<color=#a8d9e0>1 Suit</color>)."
+        },
+        {
+            "key": "Quest_Spider_Easy_02_Title",
+            "value": "Deep Analysis"
+        },
+        {
+            "key": "Quest_Spider_Easy_02_Desc",
+            "value": "Reveal <color=#ffbb00>{0} face-down cards</color> in the tableau in <color=#a8d9e0>Spider</color> (<color=#a8d9e0>1 or 2 Suits</color>)."
+        },
+        {
+            "key": "Quest_Spider_Easy_03_Title",
+            "value": "Cleanup"
+        },
+        {
+            "key": "Quest_Spider_Easy_03_Desc",
+            "value": "Completely empty <color=#ffbb00>{0} tableau columns</color> in <color=#a8d9e0>Spider</color>."
+        },
+        {
+            "key": "Quest_Spider_Easy_04_Title",
+            "value": "Sorting"
+        },
+        {
+            "key": "Quest_Spider_Easy_04_Desc",
+            "value": "Make <color=#ffbb00>{0} successful card moves</color> between tableau columns in <color=#a8d9e0>Spider</color> (<color=#a8d9e0>1 Suit</color>)."
+        },
+        {
+            "key": "Quest_Spider_Easy_05_Title",
+            "value": "Nimble Weaver"
+        },
+        {
+            "key": "Quest_Spider_Easy_05_Desc",
+            "value": "Complete <color=#ffbb00>{0} full sequences</color> in <color=#a8d9e0>Spider</color> specifically on <color=#9fd25c>Easy difficulty</color>."
+        },
+
+        {
+            "key": "Quest_Spider_Medium_01_Title",
+            "value": "Double Threat"
+        },
+        {
+            "key": "Quest_Spider_Medium_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Spider</color> (<color=#a8d9e0>2 Suits</color>)."
+        },
+        {
+            "key": "Quest_Spider_Medium_02_Title",
+            "value": "Speed Weaving"
+        },
+        {
+            "key": "Quest_Spider_Medium_02_Desc",
+            "value": "Win a game of <color=#a8d9e0>Spider</color> in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_Spider_Medium_03_Title",
+            "value": "Clean Victory"
+        },
+        {
+            "key": "Quest_Spider_Medium_03_Desc",
+            "value": "Win a game of <color=#a8d9e0>Spider</color> using Undo no more than <color=#ffbb00>{0} times</color>."
+        },
+        {
+            "key": "Quest_Spider_Medium_04_Title",
+            "value": "Intermediate"
+        },
+        {
+            "key": "Quest_Spider_Medium_04_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Spider</color> specifically on <color=#eeae32>Medium difficulty</color> or higher."
+        },
+
+        {
+            "key": "Quest_Spider_Hard_01_Title",
+            "value": "Lord of the Web"
+        },
+        {
+            "key": "Quest_Spider_Hard_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Spider</color> (<color=#a8d9e0>4 Suits</color>)."
+        },
+        {
+            "key": "Quest_Spider_Hard_02_Title",
+            "value": "Arachnophobia"
+        },
+        {
+            "key": "Quest_Spider_Hard_02_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Spider</color> specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_Spider_Hard_03_Title",
+            "value": "Perfect Web"
+        },
+        {
+            "key": "Quest_Spider_Hard_03_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Spider</color> (<color=#a8d9e0>2 or 4 Suits</color>) without using Undo."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_01_Title",
+            "value": "Liberation"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_01_Desc",
+            "value": "Move <color=#ffbb00>{0} cards</color> to the <color=#ffbb00>Foundations</color> in <color=#a8d9e0>FreeCell</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_02_Title",
+            "value": "Transit"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_02_Desc",
+            "value": "Use the <color=#ffbb00>Free Cells</color> <color=#ffbb00>{0} times</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_03_Title",
+            "value": "First Steps"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_03_Desc",
+            "value": "Move all <color=#ffbb00>4 Aces</color> and all <color=#ffbb00>4 Twos</color> to the <color=#ffbb00>Foundations</color> in <color=#ffbb00>{0} game</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_04_Title",
+            "value": "Long Chains"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_04_Desc",
+            "value": "Move stacks of <color=#ffbb00>3 or more cards</color> in a single move <color=#ffbb00>{0} times</color> in <color=#a8d9e0>FreeCell</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_05_Title",
+            "value": "Systematic Approach"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_05_Desc",
+            "value": "Move <color=#ffbb00>{0} cards</color> to the <color=#ffbb00>Foundations</color> specifically on <color=#9fd25c>Easy difficulty</color>."
+        },
+
+        {
+            "key": "Quest_FreeCell_Medium_01_Title",
+            "value": "Careful Planning"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>FreeCell</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Medium_02_Title",
+            "value": "Quick Thinker"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_02_Desc",
+            "value": "Win a game of <color=#a8d9e0>FreeCell</color> in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Medium_03_Title",
+            "value": "Empty Cell"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_03_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> without ever filling all <color=#ffbb00>4 Free Cells</color> at once (maximum of 3)."
+        },
+        {
+            "key": "Quest_FreeCell_Medium_04_Title",
+            "value": "Intermediate"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_04_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>FreeCell</color> specifically on <color=#eeae32>Medium difficulty</color> or higher."
+        },
+
+        {
+            "key": "Quest_FreeCell_Hard_01_Title",
+            "value": "Master Class"
+        },
+        {
+            "key": "Quest_FreeCell_Hard_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>FreeCell</color> specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Hard_02_Title",
+            "value": "Claustrophobia"
+        },
+        {
+            "key": "Quest_FreeCell_Hard_02_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> without ever filling more than <color=#ffbb00>2 Free Cells</color> at once."
+        },
+        {
+            "key": "Quest_FreeCell_Hard_03_Title",
+            "value": "Mastermind"
+        },
+        {
+            "key": "Quest_FreeCell_Hard_03_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>FreeCell</color> (on <color=#eeae32>Medium</color> or <color=#e14849>Hard</color> difficulty) without using Undo."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_01_Title",
+            "value": "Demolition"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_01_Desc",
+            "value": "Remove <color=#ffbb00>{0} pairs of cards</color> in <color=#a8d9e0>Pyramid</color> (Kings do not count, <color=#a8d9e0>1 or 2 rounds</color>)."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_02_Title",
+            "value": "Excavation"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_02_Desc",
+            "value": "Remove <color=#ffbb00>{0} cards</color> directly from the pyramid structure."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_03_Title",
+            "value": "Outside Help"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_03_Desc",
+            "value": "Match <color=#ffbb00>{0} pairs</color> where at least one card is drawn from the <color=#ffbb00>Stock</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_04_Title",
+            "value": "King Hunt"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_04_Desc",
+            "value": "Remove <color=#ffbb00>{0} Kings</color> in <color=#a8d9e0>Pyramid</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_05_Title",
+            "value": "A Walk in the Park"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_05_Desc",
+            "value": "Remove <color=#ffbb00>{0} pairs of cards</color> in <color=#a8d9e0>Pyramid</color> specifically on <color=#9fd25c>Easy difficulty</color>."
+        },
+
+        {
+            "key": "Quest_Pyramid_Medium_01_Title",
+            "value": "Double Excavation"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Pyramid</color> (<color=#a8d9e0>2 Rounds</color>)."
+        },
+        {
+            "key": "Quest_Pyramid_Medium_02_Title",
+            "value": "Combo Master"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_02_Desc",
+            "value": "Make a combo by removing <color=#ffbb00>{0} pairs of cards in a row</color> without drawing from the <color=#ffbb00>Stock</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Medium_03_Title",
+            "value": "Reserve Strength"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_03_Desc",
+            "value": "Win a game of <color=#a8d9e0>Pyramid</color> leaving at least <color=#ffbb00>{0} unused cards</color> in the <color=#ffbb00>Stock</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Medium_04_Title",
+            "value": "Intermediate"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_04_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Pyramid</color> specifically on <color=#eeae32>Medium difficulty</color> or higher."
+        },
+
+        {
+            "key": "Quest_Pyramid_Hard_01_Title",
+            "value": "Pharaoh"
+        },
+        {
+            "key": "Quest_Pyramid_Hard_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Pyramid</color> (<color=#a8d9e0>3 Rounds</color>)."
+        },
+        {
+            "key": "Quest_Pyramid_Hard_02_Title",
+            "value": "Curse of the Tomb"
+        },
+        {
+            "key": "Quest_Pyramid_Hard_02_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Pyramid</color> specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Hard_03_Title",
+            "value": "Flawless Sweep"
+        },
+        {
+            "key": "Quest_Pyramid_Hard_03_Desc",
+            "value": "Make a combo by removing <color=#ffbb00>{0} pairs of cards in a row</color> without drawing from the <color=#ffbb00>Stock</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_01_Title",
+            "value": "Mountaineering"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_01_Desc",
+            "value": "Remove <color=#ffbb00>{0} cards</color> from the board in <color=#a8d9e0>TriPeaks</color> (<color=#a8d9e0>1 Round</color>)."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_02_Title",
+            "value": "Avalanche"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_02_Desc",
+            "value": "Make a streak (combo) of <color=#ffbb00>{0} cards removed in a row</color> without drawing from the <color=#ffbb00>Stock</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_03_Title",
+            "value": "Clear Horizon"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_03_Desc",
+            "value": "Completely clear <color=#ffbb00>{0} peak(s)</color> out of three on the board."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_04_Title",
+            "value": "Economy"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_04_Desc",
+            "value": "Remove <color=#ffbb00>{0} cards</color> from the board while drawing no more than 10 cards from the <color=#ffbb00>Stock</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_05_Title",
+            "value": "Tourist"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_05_Desc",
+            "value": "Remove <color=#ffbb00>{0} cards</color> from the board in <color=#a8d9e0>TriPeaks</color> specifically on <color=#9fd25c>Easy difficulty</color>."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Medium_01_Title",
+            "value": "Long Trek"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>TriPeaks</color> (<color=#a8d9e0>2 Rounds</color>)."
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_02_Title",
+            "value": "Streak Master"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_02_Desc",
+            "value": "Make an unbroken streak of <color=#ffbb00>{0} cards removed in a row</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_03_Title",
+            "value": "Conserving Reserves"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_03_Desc",
+            "value": "Win a game of <color=#a8d9e0>TriPeaks</color>, leaving at least <color=#ffbb00>{0} cards</color> in the <color=#ffbb00>draw pile</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_04_Title",
+            "value": "Intermediate"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_04_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>TriPeaks</color> specifically on <color=#eeae32>Medium difficulty</color> or higher."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Hard_01_Title",
+            "value": "Peaks Marathon"
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>TriPeaks</color> (<color=#a8d9e0>3 Rounds</color>)."
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_02_Title",
+            "value": "Conqueror"
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_02_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>TriPeaks</color> specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_03_Title",
+            "value": "Super Avalanche"
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_03_Desc",
+            "value": "Make an unbroken streak (combo) of <color=#ffbb00>{0} cards removed in a row</color>."
+        },
+        {
+            "key": "Quest_Yukon_Easy_01_Title",
+            "value": "Gold Mine"
+        },
+        {
+            "key": "Quest_Yukon_Easy_01_Desc",
+            "value": "Move <color=#ffbb00>{0} cards</color> to the <color=#ffbb00>Foundations</color> in <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Classic</color>)."
+        },
+        {
+            "key": "Quest_Yukon_Easy_02_Title",
+            "value": "Snowmelt"
+        },
+        {
+            "key": "Quest_Yukon_Easy_02_Desc",
+            "value": "Reveal <color=#ffbb00>{0} face-down cards</color> in the tableau."
+        },
+        {
+            "key": "Quest_Yukon_Easy_03_Title",
+            "value": "Active Sorting"
+        },
+        {
+            "key": "Quest_Yukon_Easy_03_Desc",
+            "value": "Move <color=#ffbb00>{0} cards</color> between tableau columns in <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Russian</color>)."
+        },
+        {
+            "key": "Quest_Yukon_Easy_04_Title",
+            "value": "Gathering Suits"
+        },
+        {
+            "key": "Quest_Yukon_Easy_04_Desc",
+            "value": "Complete <color=#ffbb00>{0} full Foundation piles</color>."
+        },
+        {
+            "key": "Quest_Yukon_Easy_05_Title",
+            "value": "Meteorologist"
+        },
+        {
+            "key": "Quest_Yukon_Easy_05_Desc",
+            "value": "Reveal <color=#ffbb00>{0} face-down cards</color> in <color=#a8d9e0>Yukon</color> specifically on <color=#9fd25c>Easy difficulty</color>."
+        },
+
+        {
+            "key": "Quest_Yukon_Medium_01_Title",
+            "value": "Russian Winter"
+        },
+        {
+            "key": "Quest_Yukon_Medium_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Russian</color>)."
+        },
+        {
+            "key": "Quest_Yukon_Medium_02_Title",
+            "value": "Speedrun"
+        },
+        {
+            "key": "Quest_Yukon_Medium_02_Desc",
+            "value": "Win a game of <color=#a8d9e0>Yukon</color> in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_Yukon_Medium_03_Title",
+            "value": "Surefooted"
+        },
+        {
+            "key": "Quest_Yukon_Medium_03_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Yukon</color> (any mode) without using Undo."
+        },
+        {
+            "key": "Quest_Yukon_Medium_04_Title",
+            "value": "Intermediate"
+        },
+        {
+            "key": "Quest_Yukon_Medium_04_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Yukon</color> specifically on <color=#eeae32>Medium difficulty</color> or higher."
+        },
+
+        {
+            "key": "Quest_Yukon_Hard_01_Title",
+            "value": "Siberian Frost"
+        },
+        {
+            "key": "Quest_Yukon_Hard_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Russian</color>) specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_Yukon_Hard_02_Title",
+            "value": "Cold Calculation"
+        },
+        {
+            "key": "Quest_Yukon_Hard_02_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Classic</color>) specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_Yukon_Hard_03_Title",
+            "value": "Northern Speedrunner"
+        },
+        {
+            "key": "Quest_Yukon_Hard_03_Desc",
+            "value": "Win a game of <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Russian</color>) in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_01_Title",
+            "value": "Lucky Neighbors"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_01_Desc",
+            "value": "Remove <color=#ffbb00>{0} pairs of cards</color> in <color=#a8d9e0>Monte-Carlo</color> (<color=#a8d9e0>8-Ways</color>)."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_02_Title",
+            "value": "Verticals and Horizontals"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_02_Desc",
+            "value": "Remove <color=#ffbb00>{0} pairs of cards</color> in <color=#a8d9e0>Monte-Carlo</color> (<color=#a8d9e0>4-Ways</color>)."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_03_Title",
+            "value": "Casino Faces"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_03_Desc",
+            "value": "Find and remove <color=#ffbb00>{0} pairs of face cards</color> (Jacks, Queens, or Kings) in <color=#a8d9e0>Monte-Carlo</color> (any mode)."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_04_Title",
+            "value": "Magic Numbers"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_04_Desc",
+            "value": "Remove <color=#ffbb00>{0} pairs of number cards</color> (2 through 10) in <color=#a8d9e0>Monte-Carlo</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_05_Title",
+            "value": "Casino"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_05_Desc",
+            "value": "Remove <color=#ffbb00>{0} pairs of cards</color> in <color=#a8d9e0>Monte-Carlo</color> specifically on <color=#9fd25c>Easy difficulty</color>."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Medium_01_Title",
+            "value": "Strict Rules"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Monte-Carlo</color> (<color=#a8d9e0>4-Ways</color>)."
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_02_Title",
+            "value": "Quick Decisions"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_02_Desc",
+            "value": "Win a game of <color=#a8d9e0>Monte-Carlo</color> in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_03_Title",
+            "value": "Perfect Memory"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_03_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Monte-Carlo</color> (any mode) without using Undo."
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_04_Title",
+            "value": "Intermediate"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_04_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Monte-Carlo</color> specifically on <color=#eeae32>Medium difficulty</color> or higher."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Hard_01_Title",
+            "value": "Advanced Mathematics"
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Monte-Carlo</color> (<color=#a8d9e0>8-Ways</color>) specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_02_Title",
+            "value": "Precise Geometry"
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_02_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Monte-Carlo</color> (<color=#a8d9e0>4-Ways</color>) specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_03_Title",
+            "value": "Phenomenal Memory"
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_03_Desc",
+            "value": "Win a game of <color=#a8d9e0>Monte-Carlo</color> (<color=#a8d9e0>4-Ways</color>) in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_01_Title",
+            "value": "Gifts to the Sultan"
+        },
+        {
+            "key": "Quest_Sultan_Easy_01_Desc",
+            "value": "Place <color=#ffbb00>{0} cards</color> on the <color=#ffbb00>Foundations</color> around the center in <color=#a8d9e0>Sultan</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_02_Title",
+            "value": "Entourage"
+        },
+        {
+            "key": "Quest_Sultan_Easy_02_Desc",
+            "value": "Play cards from the <color=#ffbb00>6 reserve spaces</color> at least <color=#ffbb00>{0} times</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_03_Title",
+            "value": "Harem"
+        },
+        {
+            "key": "Quest_Sultan_Easy_03_Desc",
+            "value": "Complete <color=#ffbb00>{0} full Foundation piles</color> around the Sultan."
+        },
+        {
+            "key": "Quest_Sultan_Easy_04_Title",
+            "value": "Direct Delivery"
+        },
+        {
+            "key": "Quest_Sultan_Easy_04_Desc",
+            "value": "Move <color=#ffbb00>{0} cards</color> directly from the <color=#ffbb00>Stock</color> to the <color=#ffbb00>Foundations</color> around the Sultan, bypassing the 6 reserve spaces."
+        },
+        {
+            "key": "Quest_Sultan_Easy_05_Title",
+            "value": "Ruler's Favor"
+        },
+        {
+            "key": "Quest_Sultan_Easy_05_Desc",
+            "value": "Place <color=#ffbb00>{0} cards</color> on the <color=#ffbb00>Foundations</color> in <color=#a8d9e0>Sultan</color> specifically on <color=#9fd25c>Easy difficulty</color>."
+        },
+
+        {
+            "key": "Quest_Sultan_Medium_01_Title",
+            "value": "Grand Vizier"
+        },
+        {
+            "key": "Quest_Sultan_Medium_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Sultan</color>."
+        },
+        {
+            "key": "Quest_Sultan_Medium_02_Title",
+            "value": "Speed of Thought"
+        },
+        {
+            "key": "Quest_Sultan_Medium_02_Desc",
+            "value": "Win a game of <color=#a8d9e0>Sultan</color> in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_Sultan_Medium_03_Title",
+            "value": "Flawless Service"
+        },
+        {
+            "key": "Quest_Sultan_Medium_03_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Sultan</color> without using Undo."
+        },
+        {
+            "key": "Quest_Sultan_Medium_04_Title",
+            "value": "Intermediate"
+        },
+        {
+            "key": "Quest_Sultan_Medium_04_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Sultan</color> specifically on <color=#eeae32>Medium difficulty</color> or higher."
+        },
+
+        {
+            "key": "Quest_Sultan_Hard_01_Title",
+            "value": "Grand Sultan"
+        },
+        {
+            "key": "Quest_Sultan_Hard_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Sultan</color> specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_Sultan_Hard_02_Title",
+            "value": "Wise Ruler"
+        },
+        {
+            "key": "Quest_Sultan_Hard_02_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Sultan</color> on <color=#e14849>Hard difficulty</color> without using Undo."
+        },
+        {
+            "key": "Quest_Sultan_Hard_03_Title",
+            "value": "Split-Second Decision"
+        },
+        {
+            "key": "Quest_Sultan_Hard_03_Desc",
+            "value": "Win a game of <color=#a8d9e0>Sultan</color> in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_Montana_Easy_01_Title",
+            "value": "Restoring Order"
+        },
+        {
+            "key": "Quest_Montana_Easy_01_Desc",
+            "value": "Arrange <color=#ffbb00>{0} cards</color> in sequence by suit in <color=#a8d9e0>Montana</color> (<color=#a8d9e0>Classic</color>)."
+        },
+        {
+            "key": "Quest_Montana_Easy_02_Title",
+            "value": "Precision Work"
+        },
+        {
+            "key": "Quest_Montana_Easy_02_Desc",
+            "value": "Successfully fill gaps <color=#ffbb00>{0} times</color>."
+        },
+        {
+            "key": "Quest_Montana_Easy_03_Title",
+            "value": "Perfect Rows"
+        },
+        {
+            "key": "Quest_Montana_Easy_03_Desc",
+            "value": "Complete <color=#ffbb00>{0} full rows</color> in <color=#a8d9e0>Montana</color>."
+        },
+        {
+            "key": "Quest_Montana_Easy_04_Title",
+            "value": "No Reshuffles"
+        },
+        {
+            "key": "Quest_Montana_Easy_04_Desc",
+            "value": "Fill <color=#ffbb00>{0} gaps in a row</color> before using the Redeal button."
+        },
+        {
+            "key": "Quest_Montana_Easy_05_Title",
+            "value": "Easy Start"
+        },
+        {
+            "key": "Quest_Montana_Easy_05_Desc",
+            "value": "Arrange <color=#ffbb00>{0} cards</color> in the correct order in <color=#a8d9e0>Montana</color> specifically on <color=#9fd25c>Easy difficulty</color>."
+        },
+
+        {
+            "key": "Quest_Montana_Medium_01_Title",
+            "value": "Master Arranger"
+        },
+        {
+            "key": "Quest_Montana_Medium_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Montana</color> (<color=#a8d9e0>Classic</color>)."
+        },
+        {
+            "key": "Quest_Montana_Medium_02_Title",
+            "value": "Speed Assembly"
+        },
+        {
+            "key": "Quest_Montana_Medium_02_Desc",
+            "value": "Win a game of <color=#a8d9e0>Montana</color> in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_Montana_Medium_03_Title",
+            "value": "Backup Plan"
+        },
+        {
+            "key": "Quest_Montana_Medium_03_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Montana</color> leaving at least 1 redeal (shuffle) unused."
+        },
+        {
+            "key": "Quest_Montana_Medium_04_Title",
+            "value": "Intermediate"
+        },
+        {
+            "key": "Quest_Montana_Medium_04_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Montana</color> specifically on <color=#eeae32>Medium difficulty</color> or higher."
+        },
+
+        {
+            "key": "Quest_Montana_Hard_01_Title",
+            "value": "Intricate Layout"
+        },
+        {
+            "key": "Quest_Montana_Hard_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Montana</color> (<color=#a8d9e0>Hard mode</color>)."
+        },
+        {
+            "key": "Quest_Montana_Hard_02_Title",
+            "value": "Sequence Master"
+        },
+        {
+            "key": "Quest_Montana_Hard_02_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Montana</color> (<color=#a8d9e0>Classic</color>) specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_Montana_Hard_03_Title",
+            "value": "No Turning Back"
+        },
+        {
+            "key": "Quest_Montana_Hard_03_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Montana</color> (<color=#a8d9e0>Hard mode</color>) without using Undo."
+        },
+        {
+            "key": "Quest_Octagon_Easy_01_Title",
+            "value": "Filling the Rays"
+        },
+        {
+            "key": "Quest_Octagon_Easy_01_Desc",
+            "value": "Move <color=#ffbb00>{0} cards</color> to the <color=#ffbb00>Foundations</color> in <color=#a8d9e0>Octagon</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_02_Title",
+            "value": "Unlocking the Corners"
+        },
+        {
+            "key": "Quest_Octagon_Easy_02_Desc",
+            "value": "Successfully move <color=#ffbb00>{0} cards</color> from the corner reserve piles to the <color=#ffbb00>Foundations</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_03_Title",
+            "value": "Double Power"
+        },
+        {
+            "key": "Quest_Octagon_Easy_03_Desc",
+            "value": "Complete <color=#ffbb00>{0} full Foundation piles</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_04_Title",
+            "value": "Central Supply"
+        },
+        {
+            "key": "Quest_Octagon_Easy_04_Desc",
+            "value": "Move <color=#ffbb00>{0} cards</color> directly from the <color=#ffbb00>Stock</color> to the <color=#ffbb00>Foundations</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_05_Title",
+            "value": "Simple Geometry"
+        },
+        {
+            "key": "Quest_Octagon_Easy_05_Desc",
+            "value": "Move <color=#ffbb00>{0} cards</color> to the <color=#ffbb00>Foundations</color> in <color=#a8d9e0>Octagon</color> specifically on <color=#9fd25c>Easy difficulty</color>."
+        },
+
+        {
+            "key": "Quest_Octagon_Medium_01_Title",
+            "value": "Perfect Shape"
+        },
+        {
+            "key": "Quest_Octagon_Medium_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Octagon</color>."
+        },
+        {
+            "key": "Quest_Octagon_Medium_02_Title",
+            "value": "Sharp Reflexes"
+        },
+        {
+            "key": "Quest_Octagon_Medium_02_Desc",
+            "value": "Win a game of <color=#a8d9e0>Octagon</color> in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "Quest_Octagon_Medium_03_Title",
+            "value": "Unlocked Potential"
+        },
+        {
+            "key": "Quest_Octagon_Medium_03_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Octagon</color> without using Undo."
+        },
+        {
+            "key": "Quest_Octagon_Medium_04_Title",
+            "value": "Intermediate"
+        },
+        {
+            "key": "Quest_Octagon_Medium_04_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Octagon</color> specifically on <color=#eeae32>Medium difficulty</color> or higher."
+        },
+
+        {
+            "key": "Quest_Octagon_Hard_01_Title",
+            "value": "Flawless Geometry"
+        },
+        {
+            "key": "Quest_Octagon_Hard_01_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Octagon</color> specifically on <color=#e14849>Hard difficulty</color>."
+        },
+        {
+            "key": "Quest_Octagon_Hard_02_Title",
+            "value": "Absolute Calculation"
+        },
+        {
+            "key": "Quest_Octagon_Hard_02_Desc",
+            "value": "Win <color=#ffbb00>{0} game</color> of <color=#a8d9e0>Octagon</color> on <color=#e14849>Hard difficulty</color> without using Undo."
+        },
+        {
+            "key": "Quest_Octagon_Hard_03_Title",
+            "value": "Masterful Reflexes"
+        },
+        {
+            "key": "Quest_Octagon_Hard_03_Desc",
+            "value": "Win a game of <color=#a8d9e0>Octagon</color> in under <color=#ffbb00>{0} seconds</color>."
+        },
+        {
+            "key": "General",
+            "value": "Global"
+        },
+        {
+            "key": "Month_1",
+            "value": "January"
+        },
+        {
+            "key": "Month_2",
+            "value": "February"
+        },
+        {
+            "key": "Month_3",
+            "value": "March"
+        },
+        {
+            "key": "Month_4",
+            "value": "April"
+        },
+        {
+            "key": "Month_5",
+            "value": "May"
+        },
+        {
+            "key": "Month_6",
+            "value": "June"
+        },
+        {
+            "key": "Month_7",
+            "value": "July"
+        },
+        {
+            "key": "Month_8",
+            "value": "August"
+        },
+        {
+            "key": "Month_9",
+            "value": "September"
+        },
+        {
+            "key": "Month_10",
+            "value": "October"
+        },
+        {
+            "key": "Month_11",
+            "value": "November"
+        },
+        {
+            "key": "Month_12",
+            "value": "December"
+        },
+        {
+            "key": "Quests_Reset",
+            "value": "Resets in:"
+        },
+        {
+            "key": "Claim_Reward",
+            "value": "Claim reward"
+        },
+        {
+            "key": "Quest_Notifications_On",
+            "value": "Notifications ON"
+        },
+        {
+            "key": "Quest_Notifications_Off",
+            "value": "Notifications OFF"
+        },
+        {
+            "key": "Reward_Available",
+            "value": "Available: {0}"
+        },
+        {
+            "key": "Reward_Desc",
+            "value": "Distribute the reward! Each booster gives <color=#ffbb00>x2 XP</color> for the <color=#ffbb00>next {0} games</color>."
+        },
+        {
+            "key": "Stats_QuestsInARow",
+            "value": "Quests in a row:"
+        },
+        {
+            "key": "Stats_QuestStreakBest",
+            "value": "Best quest streak:"
+        },
+        {
+            "key": "Stats_DayStreakCurrent",
+            "value": "Day streak:"
+        },
+        {
+            "key": "Stats_DayStreakBest",
+            "value": "Best day streak:"
+        },
+        {
+            "key": "Stats_PerfectDaysTotal",
+            "value": "Perfect days:"
+        },
+        {
+            "key": "Stats_PerfectStreakCurrent",
+            "value": "Perfect days streak:"
+        },
+        {
+            "key": "Stats_PerfectStreakBest",
+            "value": "Best perfect streak:"
+        },
+        {
+            "key": "TitleUI_Unlocked",
+            "value": "Unlocked"
+        },
+        {
+            "key": "TitleUI_Selected",
+            "value": "Selected"
+        },
+        {
+            "key": "TitleUI_Requirement",
+            "value": "Requires level {0}"
+        },
+        {
+            "key": "TitleUI_GlobalLevel",
+            "value": "Global Level"
+        },
+
+        {
+            "key": "Title_Klondike_1",
+            "value": "Newcomer"
+        },
+        {
+            "key": "Title_Klondike_5",
+            "value": "Seeker"
+        },
+        {
+            "key": "Title_Klondike_10",
+            "value": "Digger"
+        },
+        {
+            "key": "Title_Klondike_15",
+            "value": "Prospector"
+        },
+        {
+            "key": "Title_Klondike_20",
+            "value": "Gold Miner"
+        },
+        {
+            "key": "Title_Klondike_25",
+            "value": "Klondike Tycoon"
+        },
+        {
+            "key": "Title_Klondike_30",
+            "value": "Legend of the Rush"
+        },
+
+        {
+            "key": "Title_Spider_1",
+            "value": "Tangled"
+        },
+        {
+            "key": "Title_Spider_5",
+            "value": "Catcher"
+        },
+        {
+            "key": "Title_Spider_10",
+            "value": "Spinner"
+        },
+        {
+            "key": "Title_Spider_15",
+            "value": "Web Weaver"
+        },
+        {
+            "key": "Title_Spider_20",
+            "value": "Venomous Hunter"
+        },
+        {
+            "key": "Title_Spider_25",
+            "value": "Master of the Web"
+        },
+        {
+            "key": "Title_Spider_30",
+            "value": "Arachnid King"
+        },
+
+        {
+            "key": "Title_FreeCell_1",
+            "value": "Amateur"
+        },
+        {
+            "key": "Title_FreeCell_5",
+            "value": "Apprentice"
+        },
+        {
+            "key": "Title_FreeCell_10",
+            "value": "Analyst"
+        },
+        {
+            "key": "Title_FreeCell_15",
+            "value": "Tactician"
+        },
+        {
+            "key": "Title_FreeCell_20",
+            "value": "Logician"
+        },
+        {
+            "key": "Title_FreeCell_25",
+            "value": "Strategist"
+        },
+        {
+            "key": "Title_FreeCell_30",
+            "value": "Calculation Genius"
+        },
+
+        {
+            "key": "Title_Pyramid_1",
+            "value": "Oasis Seeker"
+        },
+        {
+            "key": "Title_Pyramid_5",
+            "value": "Mason"
+        },
+        {
+            "key": "Title_Pyramid_10",
+            "value": "Builder"
+        },
+        {
+            "key": "Title_Pyramid_15",
+            "value": "Overseer"
+        },
+        {
+            "key": "Title_Pyramid_20",
+            "value": "Priest"
+        },
+        {
+            "key": "Title_Pyramid_25",
+            "value": "Architect"
+        },
+        {
+            "key": "Title_Pyramid_30",
+            "value": "Unyielding Pharaoh"
+        },
+
+        {
+            "key": "Title_TriPeaks_1",
+            "value": "Walker"
+        },
+        {
+            "key": "Title_TriPeaks_5",
+            "value": "Traveler"
+        },
+        {
+            "key": "Title_TriPeaks_10",
+            "value": "Tourist"
+        },
+        {
+            "key": "Title_TriPeaks_15",
+            "value": "Rock Climber"
+        },
+        {
+            "key": "Title_TriPeaks_20",
+            "value": "Alpinist"
+        },
+        {
+            "key": "Title_TriPeaks_25",
+            "value": "Conqueror"
+        },
+        {
+            "key": "Title_TriPeaks_30",
+            "value": "Lord of the Mountains"
+        },
+
+        {
+            "key": "Title_Yukon_1",
+            "value": "Stranger"
+        },
+        {
+            "key": "Title_Yukon_5",
+            "value": "Hunter"
+        },
+        {
+            "key": "Title_Yukon_10",
+            "value": "Tracker"
+        },
+        {
+            "key": "Title_Yukon_15",
+            "value": "Winterer"
+        },
+        {
+            "key": "Title_Yukon_20",
+            "value": "Master of the Taiga"
+        },
+        {
+            "key": "Title_Yukon_25",
+            "value": "Conqueror of the North"
+        },
+        {
+            "key": "Title_Yukon_30",
+            "value": "Spirit of Yukon"
+        },
+
+        {
+            "key": "Title_MonteCarlo_1",
+            "value": "Spectator"
+        },
+        {
+            "key": "Title_MonteCarlo_5",
+            "value": "Gambler"
+        },
+        {
+            "key": "Title_MonteCarlo_10",
+            "value": "Risk-Taker"
+        },
+        {
+            "key": "Title_MonteCarlo_15",
+            "value": "Lucky One"
+        },
+        {
+            "key": "Title_MonteCarlo_20",
+            "value": "Card Sharp"
+        },
+        {
+            "key": "Title_MonteCarlo_25",
+            "value": "Casino Regular"
+        },
+        {
+            "key": "Title_MonteCarlo_30",
+            "value": "Aristocrat of Fortune"
+        },
+
+        {
+            "key": "Title_Sultan_1",
+            "value": "Foreigner"
+        },
+        {
+            "key": "Title_Sultan_5",
+            "value": "Guard"
+        },
+        {
+            "key": "Title_Sultan_10",
+            "value": "Loyal Servant"
+        },
+        {
+            "key": "Title_Sultan_15",
+            "value": "Advisor"
+        },
+        {
+            "key": "Title_Sultan_20",
+            "value": "Vizier"
+        },
+        {
+            "key": "Title_Sultan_25",
+            "value": "Ruler"
+        },
+        {
+            "key": "Title_Sultan_30",
+            "value": "Lord of the East"
+        },
+
+        {
+            "key": "Title_Octagon_1",
+            "value": "Sketch"
+        },
+        {
+            "key": "Title_Octagon_5",
+            "value": "Geometry Student"
+        },
+        {
+            "key": "Title_Octagon_10",
+            "value": "Draftsman"
+        },
+        {
+            "key": "Title_Octagon_15",
+            "value": "Designer"
+        },
+        {
+            "key": "Title_Octagon_20",
+            "value": "Illusionist"
+        },
+        {
+            "key": "Title_Octagon_25",
+            "value": "Master of Shapes"
+        },
+        {
+            "key": "Title_Octagon_30",
+            "value": "Grandmaster of the Octagon"
+        },
+
+        {
+            "key": "Title_Montana_1",
+            "value": "Onlooker"
+        },
+        {
+            "key": "Title_Montana_5",
+            "value": "Apprentice"
+        },
+        {
+            "key": "Title_Montana_10",
+            "value": "Embroiderer"
+        },
+        {
+            "key": "Title_Montana_15",
+            "value": "Artisan"
+        },
+        {
+            "key": "Title_Montana_20",
+            "value": "Master of Threads"
+        },
+        {
+            "key": "Title_Montana_25",
+            "value": "Skilful Weaver"
+        },
+        {
+            "key": "Title_Montana_30",
+            "value": "Keeper of Patterns"
+        },
+
+        {
+            "key": "Title_Global_1",
+            "value": "Club Guest"
+        },
+        {
+            "key": "Title_Global_10",
+            "value": "Card Table Novice"
+        },
+        {
+            "key": "Title_Global_20",
+            "value": "Confident Player"
+        },
+        {
+            "key": "Title_Global_30",
+            "value": "Solitaire Lover"
+        },
+        {
+            "key": "Title_Global_40",
+            "value": "Sleight of Hand"
+        },
+        {
+            "key": "Title_Global_50",
+            "value": "Layout Expert"
+        },
+        {
+            "key": "Title_Global_60",
+            "value": "Fate Shuffler"
+        },
+        {
+            "key": "Title_Global_70",
+            "value": "Card Master"
+        },
+        {
+            "key": "Title_Global_80",
+            "value": "Experienced Gambler"
+        },
+        {
+            "key": "Title_Global_90",
+            "value": "Deck Virtuoso"
+        },
+        {
+            "key": "Title_Global_100",
+            "value": "Solitaire Grandmaster"
+        },
+        {
+            "key": "Title_Global_110",
+            "value": "Keeper of Suits"
+        },
+        {
+            "key": "Title_Global_120",
+            "value": "Card Baron"
+        },
+        {
+            "key": "Title_Global_130",
+            "value": "Lord of Games"
+        },
+        {
+            "key": "Title_Global_140",
+            "value": "Table Legend"
+        },
+        {
+            "key": "Title_Global_150",
+            "value": "Absolute Champion"
+        },
+        {
+            "key": "TitleUI_SelectTitle",
+            "value": "Select Title"
+        },
+        {
+            "key": "Shop_Premium_Title",
+            "value": "Premium"
+        },
+        {
+            "key": "Shop_Premium_Desc",
+            "value": "<b><color=#ffbb00>Unlock the full potential of the game!</color></b>\n<color=#E14849>- Ads removed forever</color>\n<color=#9FD25C>- +20% XP gained</color> (in games and quests)\n- Access to detailed statistics\n- Change card face designs\n- Access to quests from the last 4 days"
+        },
+        {
+            "key": "Shop_Premium2_Desc",
+            "value": "<b><color=#ffbb00>Unlock the full potential of the game!</color></b>\n<color=#9FD25C>- +20% XP gained</color> (in games and quests)\n- Access to detailed statistics\n- Change card face designs\n- Access to quests from the last 4 days"
+        },
+        {
+            "key": "Shop_NoAds_Title",
+            "value": "Remove Ads"
+        },
+        {
+            "key": "Shop_NoAds_Desc",
+            "value": "<color=#E14849><b>Permanently removes all ads in the game.</b></color>\nEnjoy your favorite solitaires without interruptions!"
+        },
+        {
+            "key": "Shop_Purchased",
+            "value": "Purchased"
+        },
+        {
+            "key": "Shop_Buy",
+            "value": "Purchase"
+        },
+        {
+            "key": "Hint_Settings",
+            "value": "Customize your game! Choose a <color=#FCA311>beautiful background</color> and pick your favorite <color=#FCA311>card design</color>."
+        },
+        {
+            "key": "Hint_Shop",
+            "value": "Play without interruptions! Here you can permanently <color=#FCA311>disable ads</color> or unlock <color=#FCA311>Premium status</color> with XP bonuses."
+        },
+        {
+            "key": "Hint_Stats",
+            "value": "Track your progress! Here you can find your <color=#FCA311>game statistics</color> and best <color=#FCA311>personal records</color>."
+        },
+        {
+            "key": "Hint_Leaderboard",
+            "value": "Compete with the best! In the <color=#FCA311>leaderboard</color>, you can compare your <color=#FCA311>results</color> with other players."
         }
     ]
-}
+}     
+

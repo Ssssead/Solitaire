@@ -6,9 +6,12 @@ namespace YG
     {
         public int idSave;
 
-        // --- ДОБАВЛЕНО ---
+        
         public string dealCacheJson = "";
-        // -----------------
         public string statsDataJson = "";
+        public string questDataJson = "";
+        public bool isPremium = false;
+        public bool isAdsDisabled = false;
+        
     }
 }

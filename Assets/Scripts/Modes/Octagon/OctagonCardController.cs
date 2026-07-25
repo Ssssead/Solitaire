@@ -8,10 +8,9 @@ public class OctagonCardController : CardController
     private Transform _originalParent;
     private int _originalIndex;
     private bool _isAnimating = false;
-
-    // --- НОВОЕ: Запоминаем источник для нашей системы Undo ---
+    private Transform _lastParent;
+    // Запоминаем источник для нашей системы Undo и для радара блокировки
     public ICardContainer SourceContainer { get; private set; }
-    // --------------------------------------------------------
 
     private void Start()
     {
@@ -20,19 +19,94 @@ public class OctagonCardController : CardController
         if (rectTransform == null) rectTransform = GetComponent<RectTransform>();
         this.OnDoubleClick += HandleDoubleClick;
     }
+    private void Update()
+    {
+        // Как только карта меняет родителя (например, ее взяли или положили)
+        if (transform.parent != _lastParent)
+        {
+            _lastParent = transform.parent;
 
+            // Пытаемся понять, является ли новый родитель игровым контейнером
+            ICardContainer newContainer = _lastParent != null ? _lastParent.GetComponent<ICardContainer>() : null;
+
+            // Если это легальный контейнер (Сброс, Слот, Дом) — обновляем память.
+            // Если карту схватил DragManager и кинул в DragLayer, newContainer будет null.
+            // В этом случае свойство SourceContainer НЕ перезапишется и сохранит правильный источник!
+            if (newContainer != null)
+            {
+                SourceContainer = newContainer;
+            }
+        }
+    }
     private void OnDestroy() { this.OnDoubleClick -= HandleDoubleClick; }
     private void HandleDoubleClick(CardController card) { if (_mode != null) _mode.OnCardDoubleClicked(this); }
 
+    // =========================================================
+    // НОВОЕ: УМНАЯ ЗАЩИТА ОТ "GHOST DRAG" (Только для Восьмиугольника)
+    // =========================================================
+    private bool IsContainerLockedByFlyingCard()
+    {
+        if (_mode == null || _mode.DragLayer == null) return false;
+
+        // В каком контейнере мы сейчас лежим?
+        ICardContainer myContainer = GetComponentInParent<ICardContainer>();
+        if (myContainer == null) return false;
+
+        // Проверяем все карты, которые сейчас находятся в полете (в DragLayer)
+        for (int i = 0; i < _mode.DragLayer.childCount; i++)
+        {
+            var flyingCard = _mode.DragLayer.GetChild(i).GetComponent<OctagonCardController>();
+
+            // Если чужая летящая карта возвращается в НАШ контейнер -> блокируем слот!
+            if (flyingCard != null && flyingCard != this && flyingCard.SourceContainer == myContainer)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    // =========================================================
+
     public override void OnPointerClick(PointerEventData eventData)
     {
+        if (IsContainerLockedByFlyingCard()) return;
+
+        if (GetComponentInParent<OctagonStockPile>() != null)
+        {
+            if (_mode != null && _mode.IsInputAllowed) _mode.OnStockClicked();
+            return;
+        }
+
         var data = GetComponent<CardData>();
         if (data != null && !data.IsFaceUp()) return;
+
+        // ВАЖНО: Вызываем базовый метод до проверки clickCount
         base.OnPointerClick(eventData);
+
+        if (eventData.clickCount == 1)
+        {
+            if (_mode != null && _mode.IsInputAllowed)
+            {
+                _mode.OnCardClicked(this);
+            }
+        }
     }
 
     public override void OnBeginDrag(PointerEventData eventData)
     {
+        // 1. Блокируем захват, если сверху падает другая карта
+        if (IsContainerLockedByFlyingCard())
+        {
+            eventData.pointerDrag = null; // Принудительно отменяем системный Drag!
+            return;
+        }
+
+        if (GetComponentInParent<OctagonStockPile>() != null)
+        {
+            eventData.pointerDrag = null;
+            return;
+        }
+
         if (_isAnimating) { eventData.pointerDrag = null; return; }
         if (_mode != null && !_mode.IsInputAllowed) { eventData.pointerDrag = null; return; }
 
@@ -45,10 +119,9 @@ public class OctagonCardController : CardController
         _originalParent = transform.parent;
         _originalIndex = transform.GetSiblingIndex();
 
-        // --- ЗАПИСЬ ИСТОЧНИКА ---
+        // ЗАПИСЬ ИСТОЧНИКА
         if (_originalParent != null)
             SourceContainer = _originalParent.GetComponent<ICardContainer>();
-        // ------------------------
 
         if (canvasGroup != null) canvasGroup.blocksRaycasts = false;
         if (_mode != null && _mode.DragLayer != null) { transform.SetParent(_mode.DragLayer, true); transform.SetAsLastSibling(); }
@@ -118,6 +191,12 @@ public class OctagonCardController : CardController
             true,
             () =>
             {
+                // Звук неудачного броска (остался с предыдущих настроек)
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlaySound("Card_Drop_Fail");
+                }
+
                 if (_originalParent != null)
                 {
                     transform.SetParent(_originalParent);

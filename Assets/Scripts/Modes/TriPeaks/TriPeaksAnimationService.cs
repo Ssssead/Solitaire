@@ -7,9 +7,12 @@ public class TriPeaksAnimationService : MonoBehaviour
     [Header("Settings")]
     public float stockGap = 5f;
 
-    // --- СТАНДАРТНАЯ АНИМАЦИЯ (Оставляем как было, чтобы не ломать скейл) ---
-    public IEnumerator AnimateMoveCard(CardController card, Transform targetTransform, float duration, bool targetFaceUp, System.Action onComplete)
+    public IEnumerator AnimateMoveCard(CardController card, Transform targetTransform, float duration, bool targetFaceUp, System.Action onComplete, Vector3 localOffset = default)
     {
+        // --- ИНТЕГРАЦИЯ ТЕНИ (СТАРТ) ---
+        var shadow = card.GetComponent<TriPeaksCardShadow>();
+        if (shadow != null) shadow.SetState(TriPeaksCardShadow.ShadowState.Flying);
+
         Canvas canvas = card.GetComponentInParent<Canvas>();
         if (canvas != null) card.transform.SetParent(canvas.transform);
         else card.transform.SetParent(card.transform.root);
@@ -17,7 +20,8 @@ public class TriPeaksAnimationService : MonoBehaviour
         card.transform.SetAsLastSibling();
 
         Vector3 startPos = card.transform.position;
-        Vector3 endPos = targetTransform.position;
+        // Переводим желаемый локальный отступ в мировые координаты для полета
+        Vector3 endPos = targetTransform.TransformPoint(localOffset);
         card.transform.rotation = Quaternion.identity;
 
         var cardData = card.GetComponent<CardData>();
@@ -43,7 +47,6 @@ public class TriPeaksAnimationService : MonoBehaviour
                 if (t >= 0.5f && !flipTriggered && cardData != null)
                 {
                     cardData.SetFaceUp(targetFaceUp, false);
-                    // Восстанавливаем scale, так как мгновенная смена может сбросить его
                     card.transform.localScale = new Vector3(scaleX, 1f, 1f);
                     flipTriggered = true;
                 }
@@ -58,21 +61,132 @@ public class TriPeaksAnimationService : MonoBehaviour
 
         card.transform.position = endPos;
         card.transform.SetParent(targetTransform);
-        card.transform.localPosition = Vector3.zero;
+        // Финально применяем точный отступ
+        card.transform.localPosition = localOffset;
         card.transform.localScale = Vector3.one;
         card.transform.localRotation = Quaternion.identity;
 
         if (cardData != null) cardData.SetFaceUp(targetFaceUp, false);
 
+        // --- ИНТЕГРАЦИЯ ТЕНИ (ФИНИШ) ---
+        if (shadow != null) shadow.SetState(TriPeaksCardShadow.ShadowState.Resting);
+
         onComplete?.Invoke();
     }
+    public IEnumerator AnimateBallisticMoveCard(CardController card, Transform targetTransform, float speed, bool targetFaceUp, System.Action onComplete, Vector3 localOffset = default)
+    {
+        // --- ИНТЕГРАЦИЯ ТЕНИ (СТАРТ) ---
+        var shadow = card.GetComponent<TriPeaksCardShadow>();
+        if (shadow != null) shadow.SetState(TriPeaksCardShadow.ShadowState.Flying);
 
+        Canvas canvas = card.GetComponentInParent<Canvas>();
+        if (canvas != null) card.transform.SetParent(canvas.transform);
+        else card.transform.SetParent(card.transform.root);
+
+        card.transform.SetAsLastSibling();
+
+        Vector3 startPos = card.transform.position;
+        Vector3 endPos = targetTransform.TransformPoint(localOffset);
+        card.transform.rotation = Quaternion.identity;
+
+        var cardData = card.GetComponent<CardData>();
+        bool startFaceUp = cardData != null && cardData.IsFaceUp();
+        bool needsFlip = (startFaceUp != targetFaceUp);
+        bool flipTriggered = false;
+
+        float elapsed = 0f;
+
+        // 1. Расстояние по прямой
+        float distance = Vector3.Distance(startPos, endPos);
+
+        // 2. Высота параболы
+        float arcHeight = 10f + (distance * 0.15f);
+
+        // 3. Вычисляем длину самой дуги (прямая + прыжок вверх и вниз)
+        float pathLength = distance + (arcHeight * 2f);
+
+        // 4. Время считается от ПОЛНОГО пути карты
+        float duration = pathLength / speed;
+        if (duration <= 0.05f) duration = 0.05f; // Минимальная защита
+
+        // 5. Угол зависит от времени
+        float maxRotation = duration * 120f; // 120 градусов в секунду
+        maxRotation = Mathf.Clamp(maxRotation, 5f, 35f);
+
+        if (startPos.x < endPos.x) maxRotation = Mathf.Abs(maxRotation);
+        else maxRotation = -Mathf.Abs(maxRotation);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            // Баллистическая дуга
+            Vector3 currentPos = Vector3.Lerp(startPos, endPos, t);
+            float parabola = 4f * arcHeight * t * (1f - t);
+            currentPos.y += parabola;
+
+            card.transform.position = currentPos;
+
+            // Вращение
+            float currentRotZ = 0f;
+            if (t <= 0.75f)
+            {
+                float tRot = t / 0.75f;
+                currentRotZ = Mathf.Lerp(0f, maxRotation, Mathf.Sin(tRot * Mathf.PI * 0.5f));
+            }
+            else
+            {
+                float tRot = (t - 0.75f) / 0.25f;
+                currentRotZ = Mathf.SmoothStep(maxRotation, 0f, tRot);
+            }
+            card.transform.localRotation = Quaternion.Euler(0f, 0f, currentRotZ);
+
+            // Переворот
+            if (needsFlip)
+            {
+                float scaleX = Mathf.Abs(2f * t - 1f);
+                card.transform.localScale = new Vector3(scaleX, 1f, 1f);
+
+                if (t >= 0.5f && !flipTriggered && cardData != null)
+                {
+                    cardData.SetFaceUp(targetFaceUp, false);
+                    card.transform.localScale = new Vector3(scaleX, 1f, 1f);
+                    flipTriggered = true;
+                }
+            }
+            else
+            {
+                card.transform.localScale = Vector3.one;
+            }
+
+            yield return null;
+        }
+
+        // Жестко фиксируем позицию и угол в конце
+        card.transform.position = endPos;
+        card.transform.SetParent(targetTransform);
+        card.transform.localPosition = localOffset;
+        card.transform.localScale = Vector3.one;
+        card.transform.localRotation = Quaternion.identity;
+
+        if (cardData != null) cardData.SetFaceUp(targetFaceUp, false);
+
+        // --- ИНТЕГРАЦИЯ ТЕНИ (ФИНИШ) ---
+        if (shadow != null) shadow.SetState(TriPeaksCardShadow.ShadowState.Resting);
+
+        onComplete?.Invoke();
+    }
     public IEnumerator AnimateStockShift(TriPeaksStockPile stockPile, float duration)
     {
         List<Transform> cardsInStock = new List<Transform>();
         foreach (Transform child in stockPile.transform)
         {
-            if (child.gameObject.activeSelf) cardsInStock.Add(child);
+            // --- ИСПРАВЛЕНИЕ: Берем только настоящие карты, игнорируем объект тени! ---
+            if (child.gameObject.activeSelf && child.GetComponent<CardController>() != null)
+            {
+                cardsInStock.Add(child);
+            }
         }
 
         int count = cardsInStock.Count;
@@ -109,15 +223,11 @@ public class TriPeaksAnimationService : MonoBehaviour
         }
     }
 
-    // --- НОВЫЕ МЕТОДЫ (ИСПРАВЛЕННЫЕ) ---
-
-    // 1. Очистка стола (карты летят стеной вправо)
     public IEnumerator AnimateRoundClear(TriPeaksPileManager pileManager, Canvas rootCanvas, float duration)
     {
-        // Сначала быстро перекидываем Stock в Waste (визуально)
+        // 1. ПЕРЕХОД ИЗ СТОКА В СБРОС
         if (!pileManager.Stock.IsEmpty)
         {
-            // Берем только трансформы, чтобы не нарушать логику стопки раньше времени
             List<CardController> leftovers = new List<CardController>();
             foreach (Transform t in pileManager.Stock.transform)
             {
@@ -125,16 +235,41 @@ public class TriPeaksAnimationService : MonoBehaviour
                 if (c) leftovers.Add(c);
             }
 
+            // <--- ИСПРАВЛЕНИЕ 1: Переворачиваем список --->
+            // Теперь мы берем карты с конца списка (то есть с верхушки колоды)
+            leftovers.Reverse();
+
             foreach (var c in leftovers)
             {
-                // Микро-анимация перелета в Waste
-                StartCoroutine(FastFlyTo(c, pileManager.Waste.transform.position, 0.2f, pileManager.Waste.transform));
-                yield return new WaitForSeconds(0.03f);
+                pileManager.Stock.RemoveCard(c);
+
+                Vector3 offset = pileManager.Waste.GetTargetLocalPositionForNextCard();
+                pileManager.Waste.AddCard(c);
+
+                if (AudioManager.Instance != null)
+                    AudioManager.Instance.PlaySound("Card_Flip");
+
+                Vector3 targetWorld = pileManager.Waste.transform.TransformPoint(offset);
+
+                // <--- ИСПРАВЛЕНИЕ 2: Золотая середина скорости --->
+                // Полет карты: 0.2f (быстро, но глаз успевает заметить дугу)
+                StartCoroutine(FastFlyTo(c, targetWorld, 0.2f, pileManager.Waste.transform, offset));
+
+                // Задержка между выстрелами: 0.04f (быстрый пулеметный шелест)
+                yield return new WaitForSeconds(0.04f);
             }
-            yield return new WaitForSeconds(0.3f);
+
+            yield return new WaitForSeconds(0.2f);
         }
 
-        // Теперь все карты в Waste (или визуально там). Отправляем их вправо.
+        // 2. ВСЯ СТОПКА УЛЕТАЕТ ЗА ЭКРАН
+
+        if (AudioManager.Instance != null)
+        {
+            AudioSource whoosh = AudioManager.Instance.PlaySound("Card_Whoosh_Out");
+            if (whoosh != null) whoosh.pitch = 1.6f;
+        }
+
         List<CardController> allCards = new List<CardController>();
         foreach (Transform t in pileManager.Waste.transform)
         {
@@ -142,104 +277,107 @@ public class TriPeaksAnimationService : MonoBehaviour
             if (c) allCards.Add(c);
         }
 
-        // Вычисляем точку за правым краем экрана
         float screenWidth = 2000f;
         if (rootCanvas != null) screenWidth = rootCanvas.GetComponent<RectTransform>().rect.width;
-        Vector3 targetPos = pileManager.Waste.transform.position + Vector3.right * (screenWidth * 1.5f);
 
-        // ЗАПУСКАЕМ ВСЕ РАЗОМ (без yield внутри цикла)
+        float flyOutDuration = 1.1f;
+
+        // Запускаем полет всех карт АБСОЛЮТНО ОДНОВРЕМЕННО (в одном кадре)
         foreach (var c in allCards)
         {
-            StartCoroutine(FlyAndDestroy(c, targetPos, 0.6f));
+            Vector3 targetPos = c.transform.position + (Vector3.right * (screenWidth * 1.5f));
+            StartCoroutine(FlyAndDestroy(c, targetPos, flyOutDuration));
+
+            // УБРАНО: yield return new WaitForSeconds(0.015f);
         }
 
-        // Ждем пока улетят
-        yield return new WaitForSeconds(0.7f);
+        // Ждем, пока завершится полет всей стопки, прежде чем начать новый раунд
+        yield return new WaitForSeconds(flyOutDuration + 0.1f);
     }
 
-    // 2. Влет нового стока (паровозиком слева)
-    public IEnumerator AnimateStockEntry(List<CardController> cards, TriPeaksStockPile stockPile, Canvas rootCanvas, float speedFactor)
+    // НОВЫЙ МЕТОД: Влет всех карт и их раскрытие
+    public IEnumerator AnimateDeckArrivalAndExpand(
+        List<CardController> cards,
+        Transform stockTransform,
+        float screenWidth,
+        int finalStockCount,
+        System.Func<bool> skipCheck,
+        float flightGap = 1f,
+        float finalGap = 5f)
     {
-        float screenWidth = 2000f;
-        if (rootCanvas != null) screenWidth = rootCanvas.GetComponent<RectTransform>().rect.width;
-
-        // Стартовая точка: далеко слева
-        // Используем локальные координаты относительно StockPile для надежности
-        float startOffsetLocal = -(screenWidth / 1.5f + 500f);
-
         int count = cards.Count;
-        float[] targetXPositions = new float[count];
-        bool[] arrived = new bool[count];
+        if (count == 0) yield break;
 
-        // Инициализация позиций
+        float duration = 1.1f; // Одноэтапная динамичная анимация
+
+        // Вычисляем индекс верхней карты стока (чтобы она легла ровно в 0)
+        int stockTopIndex = Mathf.Max(0, finalStockCount - 1);
+
+        // Стартовая позиция базы колоды (глубоко за левым краем)
+        float startDeckBaseX = -screenWidth - 800f;
+
+        // Рассчитываем финальные целевые позиции для всех карт
+        float[] targetX = new float[count];
         for (int i = 0; i < count; i++)
         {
-            CardController c = cards[i];
-            c.gameObject.SetActive(true);
-
-            // Кладем в StockPile сразу, чтобы локальные координаты работали корректно
-            stockPile.AddCard(c);
-
-            // Целевая позиция X (по формуле стока)
-            targetXPositions[i] = (i - (count - 1)) * stockGap;
-
-            // Ставим в начало (слева)
-            c.transform.localPosition = new Vector3(targetXPositions[i] + startOffsetLocal, 0, 0);
-            c.transform.localRotation = Quaternion.identity;
-            c.transform.localScale = Vector3.one;
-
-            arrived[i] = false;
+            targetX[i] = (i - stockTopIndex) * finalGap;
         }
 
-        bool allArrived = false;
-        // Скорость в пикселях/сек (подбирается экспериментально)
-        float speed = 2500f * speedFactor;
-        float timeOut = 5.0f; // Защита от зависания
+        // Чтобы самая верхняя карта достигла своей цели,
+        // база летящей колоды должна пролететь дальше
+        float endDeckBaseX = targetX[count - 1] - (count - 1) * flightGap;
 
-        while (!allArrived && timeOut > 0)
+        // 1. Ставим все карты за экран в плотную стопку
+        for (int i = 0; i < count; i++)
         {
-            allArrived = true;
-            float dt = Time.deltaTime;
-            timeOut -= dt;
+            cards[i].gameObject.SetActive(true);
+            cards[i].transform.localPosition = new Vector3(startDeckBaseX + i * flightGap, 0, 0);
+            cards[i].transform.localRotation = Quaternion.identity;
+            cards[i].transform.localScale = Vector3.one;
+            cards[i].transform.SetAsLastSibling();
+        }
+
+        // 2. Фаза полета и сброса
+        float elapsed = 0f;
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Whoosh_In");
+        while (elapsed < duration)
+        {
+            float speed = (skipCheck != null && skipCheck()) ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+
+            // Текущая позиция базы летящей колоды
+            float currentDeckBaseX = Mathf.Lerp(startDeckBaseX, endDeckBaseX, t);
 
             for (int i = 0; i < count; i++)
             {
-                if (arrived[i]) continue;
+                // Где карта должна быть сейчас, если бы летела в плотной стопке
+                float flyingX = currentDeckBaseX + i * flightGap;
 
-                CardController c = cards[i];
-                Vector3 pos = c.transform.localPosition;
-                float targetX = targetXPositions[i];
+                // ЛОГИКА СБРОСА: Карта двигается вместе с колодой, но как только
+                // доезжает до своей финальной позиции - "застревает" на ней.
+                float clampedX = Mathf.Min(flyingX, targetX[i]);
 
-                // Двигаем вправо
-                pos.x += speed * dt;
-
-                // Если перелетели цель -> фиксируем
-                if (pos.x >= targetX)
-                {
-                    pos.x = targetX;
-                    arrived[i] = true;
-                }
-                else
-                {
-                    allArrived = false; // Кто-то еще летит
-                }
-
-                c.transform.localPosition = pos;
+                cards[i].transform.localPosition = new Vector3(clampedX, 0, 0);
             }
             yield return null;
         }
 
-        stockPile.UpdateVisuals();
+        // 3. Гарантируем точные финальные координаты в конце анимации
+        for (int i = 0; i < count; i++)
+        {
+            cards[i].transform.localPosition = new Vector3(targetX[i], 0, 0);
+        }
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
     }
 
-    // --- Helpers ---
-
-    private IEnumerator FastFlyTo(CardController card, Vector3 targetWorld, float duration, Transform finalParent)
+    private IEnumerator FastFlyTo(CardController card, Vector3 targetWorld, float duration, Transform finalParent, Vector3 localOffset = default)
     {
         Vector3 start = card.transform.position;
         float e = 0f;
-
-        // Сразу открываем, чтобы красиво летела
         var cd = card.GetComponent<CardData>();
         if (cd) cd.SetFaceUp(true, false);
 
@@ -250,10 +388,12 @@ public class TriPeaksAnimationService : MonoBehaviour
             card.transform.position = Vector3.Lerp(start, targetWorld, e / duration);
             yield return null;
         }
+
         if (card != null)
         {
             card.transform.SetParent(finalParent);
-            card.transform.localPosition = Vector3.zero;
+            // Применяем точный отступ вместо старого Vector3.zero
+            card.transform.localPosition = localOffset;
         }
     }
 
@@ -261,7 +401,10 @@ public class TriPeaksAnimationService : MonoBehaviour
     {
         if (card == null) yield break;
 
-        // Отцепляем от родителя, чтобы летела плавно
+        // --- ИНТЕГРАЦИЯ ТЕНИ (СТАРТ) ---
+        var shadow = card.GetComponent<TriPeaksCardShadow>();
+        if (shadow != null) shadow.SetState(TriPeaksCardShadow.ShadowState.Flying);
+
         card.transform.SetParent(card.transform.root);
         Vector3 start = card.transform.position;
         float e = 0f;
@@ -271,10 +414,62 @@ public class TriPeaksAnimationService : MonoBehaviour
             e += Time.deltaTime;
             if (card == null) yield break;
             float t = e / duration;
-            t = t * t; // Ускорение
+            t = t * t;
             card.transform.position = Vector3.Lerp(start, targetWorld, t);
             yield return null;
         }
+
         if (card != null) Destroy(card.gameObject);
+    }
+    public IEnumerator AnimateShakeError(CardController card)
+    {
+        float duration = 0.35f;
+        float elapsed = 0f;
+        float maxAngle = 12f; // На сколько градусов отклоняется карта
+
+        // <--- ЗВУК 2: ГЛУХОЙ СТУК И ШУРШАНИЕ --->
+        AudioSource shakeSource = null;
+        float baseShakeVolume = 1f;
+
+        if (AudioManager.Instance != null)
+        {
+           // AudioManager.Instance.PlaySound("Card_Error"); // Глухой отказ
+            shakeSource = AudioManager.Instance.PlaySound("Card_Shake");
+            if (shakeSource != null) baseShakeVolume = shakeSource.volume;
+        }
+
+        // Сбрасываем вращение на случай, если игрок быстро кликает несколько раз
+        card.transform.localRotation = Quaternion.identity;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            float phase = 1f - t; // Затухание от 1 до 0
+
+            // Формула затухающей синусоиды
+            float angle = Mathf.Sin(t * Mathf.PI * 6f) * maxAngle * phase;
+            card.transform.localRotation = Quaternion.Euler(0f, 0f, angle);
+
+            // --- ДИНАМИЧЕСКАЯ ГРОМКОСТЬ (ПАТТЕРН Б) ---
+            if (shakeSource != null && shakeSource.isPlaying)
+            {
+                // Производная (скорость вращения) для громкости
+                float velocityFactor = Mathf.Abs(Mathf.Cos(t * Mathf.PI * 6f));
+                shakeSource.volume = baseShakeVolume * velocityFactor * phase;
+            }
+
+            yield return null;
+        }
+
+        // Жестко выравниваем карту в конце
+        card.transform.localRotation = Quaternion.identity;
+
+        // Останавливаем шуршание
+        if (shakeSource != null && shakeSource.isPlaying)
+        {
+            shakeSource.Stop();
+            shakeSource.volume = baseShakeVolume;
+        }
     }
 }

@@ -138,75 +138,35 @@ public class SpiderDefeatManager : MonoBehaviour
     {
         var topOfSeq = draggedSeq[0];
 
-        // 1. Освобождение пустой колонки всегда полезно
-        if (sourceIdx == 0) return true;
+        // 1. Освобождение пустой колонки - это всегда полезно, так как дает пустой слот для любых манипуляций
+        if (sourceIdx == 0 && targetPile.cards.Count > 0) return true;
 
-        var cardBelow = sourcePile.cards[sourceIdx - 1];
+        // Перемещение всей колонки с пустого слота на пустой слот - бессмысленно
+        if (sourceIdx == 0 && targetPile.cards.Count == 0) return false;
 
-        // 2. Открытие рубашки всегда полезно
-        if (!cardBelow.GetComponent<CardData>().IsFaceUp()) return true;
-
-        bool isCurrentMatch = cardBelow.cardModel.suit == topOfSeq.cardModel.suit;
-
-        if (targetPile.cards.Count > 0)
+        if (sourceIdx > 0)
         {
-            var targetTop = targetPile.cards[targetPile.cards.Count - 1];
-            bool isTargetMatch = targetTop.cardModel.suit == topOfSeq.cardModel.suit;
+            var cardBelow = sourcePile.cards[sourceIdx - 1];
 
-            // 3. Сборка масти (была разная, стала одинаковая)
-            if (isTargetMatch && !isCurrentMatch) return true;
+            // 2. Открытие рубашки скрытой карты - всегда продвигает игру
+            if (!cardBelow.GetComponent<CardData>().IsFaceUp()) return true;
 
-            // Разрывать масть ради другой масти нет смысла
-            if (isCurrentMatch && !isTargetMatch) return false;
-
-            // Перекладывание "Шило на мыло" (та же масть и тот же ранг)
-            if (targetTop.cardModel.suit == cardBelow.cardModel.suit &&
-                targetTop.cardModel.rank == cardBelow.cardModel.rank)
+            // 3. Шило на мыло (бессмысленный перенос между одинаковыми картами)
+            if (targetPile.cards.Count > 0)
             {
-                return false;
-            }
-        }
-        else
-        {
-            // 4. Перенос на пустую ячейку (полезно для мусора, вредно для собранной масти)
-            if (isCurrentMatch) return false;
-            return true;
-        }
-
-        // --- 5. МНОГОХОДОВКА (Перенос мусора на мусор) ---
-        // Ищем любую косвенную выгоду на столе
-        for (int k = 0; k < 10; k++)
-        {
-            var p = pileManager.TableauPiles[k];
-            if (p == sourcePile || p == targetPile) continue;
-
-            // Если на столе есть пустая колонка, игра не может быть проиграна
-            // Пустая колонка дает место для любых маневров
-            if (p.cards.Count == 0) return true;
-
-            var pTop = p.cards[p.cards.Count - 1];
-
-            // Выгода А: Сможет ли освободившаяся карта лечь по масти куда-то еще?
-            if (pTop.cardModel.suit == cardBelow.cardModel.suit &&
-                pTop.cardModel.rank == cardBelow.cardModel.rank + 1) return true;
-
-            var otherSeqs = GetAllMovableSequences(p);
-            foreach (var oSeq in otherSeqs)
-            {
-                var oTop = oSeq[0];
-
-                // Выгода Б: Сможет ли кто-то лечь по масти на освободившуюся карту?
-                if (oTop.cardModel.suit == cardBelow.cardModel.suit &&
-                    oTop.cardModel.rank == cardBelow.cardModel.rank - 1) return true;
-
-                // Выгода В: Сможет ли перемещенная стопка принять на себя карту по масти?
-                var bottomOfDraggedSeq = draggedSeq[draggedSeq.Count - 1];
-                if (oTop.cardModel.suit == bottomOfDraggedSeq.cardModel.suit &&
-                    oTop.cardModel.rank == bottomOfDraggedSeq.cardModel.rank - 1) return true;
+                var targetTop = targetPile.cards[targetPile.cards.Count - 1];
+                // Если переносим карту на точно такую же по рангу и масти (например, с 5 Пик на 5 Пик)
+                if (targetTop.cardModel.suit == cardBelow.cardModel.suit &&
+                    targetTop.cardModel.rank == cardBelow.cardModel.rank)
+                {
+                    return false;
+                }
             }
         }
 
-        return false; // Это абсолютный тупик
+        // 4. ВО ВСЕХ ОСТАЛЬНЫХ СЛУЧАЯХ ход МОЖЕТ быть частью сложной многоходовочки.
+        // Перенос собранной части масти на пустой слот, перенос на другую масть для освобождения нужной карты и т.д.
+        return true;
     }
 
     // --- Находит все доступные для отрыва части цепочки ---

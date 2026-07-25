@@ -35,6 +35,15 @@ public class SultanCardController : CardController
         var data = GetComponent<CardData>();
         if (data != null && !data.IsFaceUp()) return;
         base.OnPointerClick(eventData);
+
+        // --- ИСПРАВЛЕНИЕ: Отправляем одиночный клик напрямую в менеджер! ---
+        if (eventData.clickCount == 1)
+        {
+            if (_mode != null && _mode.IsInputAllowed)
+            {
+                _mode.OnCardClicked(this);
+            }
+        }
     }
 
     // --- ФИКСАЦИЯ СОСТОЯНИЯ ДЛЯ UNDO ---
@@ -56,13 +65,25 @@ public class SultanCardController : CardController
         var data = GetComponent<CardData>();
         if (data != null && !data.IsFaceUp()) { eventData.pointerDrag = null; return; }
 
-        if (transform.parent != null && transform.parent.GetComponent<SultanCenterPile>() != null)
+        // --- ИСПРАВЛЕНИЕ БАГА: Запрещаем брать карты из Центра и из Домов ---
+        if (transform.parent != null)
         {
-            eventData.pointerDrag = null; return;
+            if (transform.parent.GetComponent<SultanCenterPile>() != null ||
+                transform.parent.GetComponent<SultanFoundationPile>() != null)
+            {
+              
+
+                eventData.pointerDrag = null;
+                return;
+            }
         }
 
         // Запоминаем состояние перед отрывом от стола
         CaptureStateForUndo();
+
+        // <--- ДОБАВЛЕН ЗВУК: Взятие карты --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_PickUp");
 
         transform.SetParent(_mode.DragLayer, true);
         transform.SetAsLastSibling();
@@ -82,8 +103,18 @@ public class SultanCardController : CardController
 
         ICardContainer target = _mode.FindNearestContainer(this, eventData.position, 0f);
 
-        if (target != null) AnimateMoveTo(target);
-        else AnimateReturn();
+        if (target != null)
+        {
+            AnimateMoveTo(target);
+        }
+        else
+        {
+            // <--- ДОБАВЛЕН ЗВУК: Ошибка при отпускании (мимо слота) --->
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Card_Drop_Fail");
+
+            AnimateReturn();
+        }
     }
 
     private void AnimateMoveTo(ICardContainer target)
@@ -91,6 +122,18 @@ public class SultanCardController : CardController
         _isAnimating = true;
         StartCoroutine(MoveRoutine(target.Transform, target.GetDropAnchoredPosition(this), () =>
         {
+            // <--- ДОБАВЛЕН ЗВУК: Успешное приземление --->
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySound("Card_Drop_Success");
+
+                // Если нужно, можно добавить звук для фундамента (как в других режимах)
+                if (target is SultanFoundationPile)
+                {
+                    AudioManager.Instance.PlaySound("Card_Foundation_Success");
+                }
+            }
+
             target.AcceptCard(this);
             if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
 

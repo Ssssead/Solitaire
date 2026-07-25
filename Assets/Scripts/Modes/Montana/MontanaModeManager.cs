@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using TMPro;
+using YG;
 
-public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
+public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICardClickReceiver
 {
     [Header("Core References")]
     public CardFactory cardFactory;
@@ -22,7 +24,7 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public TMP_Text reshufflesText;
 
     [Header("Settings")]
-    public bool IsHardMode = false; // 0 = Classic (пусто слева), 1 = Hard (пусто справа)
+    public bool IsHardMode = false;
 
     [Header("Services")]
     public MontanaPileManager pileManager;
@@ -32,6 +34,9 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public MontanaAnimationService animationService;
     public MontanaAutoMoveService autoMoveService;
     public MontanaScoreManager scoreManager;
+    public MontanaTutorialManager tutorialManager;
+
+    [HideInInspector] public MontanaPuzzleManager puzzleManager;
 
     // --- ICardGameMode Свойства ---
     public bool IsInputAllowed { get; set; } = true;
@@ -52,24 +57,31 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public bool isRestarting = false;
     private float gameTimer = 0f;
     private ICardContainer lastInteractionSource;
+
     [Header("UI Buttons")]
     public UnityEngine.UI.Button undoButton;
     public UnityEngine.UI.Button undoAllButton;
+    public UnityEngine.UI.Button reshuffleButton;
 
     private Stack<MontanaMoveRecord> undoStack = new Stack<MontanaMoveRecord>();
     private bool isUndoing = false;
+    public ITutorialManager Tutorial => tutorialManager;
 
-    // --- НОВОЕ: Снимок начальной расстановки для Undo All ---
     private Dictionary<CardController, MontanaSlot> initialBoardState = new Dictionary<CardController, MontanaSlot>();
 
-    // --- ЛОГИКА ПЕРЕСДАЧ ---
     public int MaxReshuffles => IsHardMode ? 5 : 3;
     public int CurrentReshufflesLeft { get; private set; }
+
+    private bool isDefeatPending = false;
+    private Coroutine reshufflePulseCoroutine;
+    private Vector3 originalReshuffleScale = Vector3.one;
 
     #region Initialization & Core Loop
 
     private void Awake()
     {
+        puzzleManager = gameObject.AddComponent<MontanaPuzzleManager>();
+
         pileManager.Initialize(this);
         deckManager.Initialize(this, cardFactory, pileManager);
         dragManager?.Initialize(this, rootCanvas, dragLayer, undoManager);
@@ -77,7 +89,9 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
         animationService.Initialize(this);
 
         if (undoButton != null) undoButton.onClick.AddListener(OnUndoButtonClicked);
-        if (undoAllButton != null) undoAllButton.onClick.AddListener(OnUndoAllButtonClicked); // <--- ПОДПИСКА
+        if (undoAllButton != null) undoAllButton.onClick.AddListener(OnUndoAllButtonClicked);
+
+        if (reshuffleButton != null) originalReshuffleScale = reshuffleButton.transform.localScale;
     }
 
     private void Start() => StartNewGame();
@@ -101,24 +115,31 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void StartNewGame()
     {
-        // --- ЧТЕНИЕ НАСТРОЕК ИЗ МЕНЮ ---
         IsHardMode = GameSettings.MontanaHard;
 
         if (hasGameStarted && !hasWonGame && StatisticsManager.Instance != null)
+        {
             StatisticsManager.Instance.OnGameAbandoned();
+        }
+
+        // 2. ЗАТЕМ сообщаем трекеру настройки
+        string variant = IsHardMode ? "Hard" : "Standard";
+        GameQuestTracker.Instance?.StartMatch("Montana", GameSettings.CurrentDifficulty, variant);
 
         IsInputAllowed = false;
         hasGameStarted = false;
         hasWonGame = false;
+        isDefeatPending = false;
         gameTimer = 0f;
         CurrentReshufflesLeft = MaxReshuffles;
 
-        // --- НОВОЕ: Сброс локального Undo ---
+        StopReshufflePulse();
+
         undoStack.Clear();
         UpdateUndoButton();
 
         scoreManager.ResetScore();
-        undoManager?.ResetHistory(); // Глобальный (на всякий случай)
+        undoManager?.ResetHistory();
         cardFactory.DestroyAllCards();
 
         pileManager.CreatePiles();
@@ -143,16 +164,18 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
     {
         if (!IsInputAllowed) return;
 
+        // ---> ДОБАВИТЬ ЭТО <---
+        GameQuestTracker.Instance?.RecordMove();
+        // ----------------------
+
         if (!hasGameStarted)
         {
             hasGameStarted = true;
-
             if (StatisticsManager.Instance != null)
             {
-                // Берем сложность и вариант игры из GameSettings
                 Difficulty diff = GameSettings.CurrentDifficulty;
-                string variant = IsHardMode ? "Hard" : "Classic";
-                StatisticsManager.Instance.OnGameStarted(GameName, diff, variant);
+                string variant = GameSettings.GetCurrentVariantString(GameType.Montana);
+                StatisticsManager.Instance.OnGameStarted("Montana", diff, variant);
             }
         }
 
@@ -164,11 +187,9 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void CheckGameState()
     {
-        if (hasWonGame) return;
+        if (hasWonGame || isDefeatPending) return;
 
         UpdateLockedCards();
-
-        // --- НОВОЕ: Синхронизируем состояние кнопок ---
         UpdateUndoButton();
 
         if (IsGameWon())
@@ -176,6 +197,14 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
             hasWonGame = true;
             IsInputAllowed = false;
             undoManager?.ClearAndLock();
+            StopReshufflePulse();
+
+            // ---> ДОБАВИТЬ ЭТО <---
+            if (!GameSettings.IsTutorialMode)
+            {
+                GameQuestTracker.Instance?.SendEvent(QuestActionType.WinWithRemainingShuffles, CurrentReshufflesLeft);
+            }
+            // ----------------------
 
             if (StatisticsManager.Instance != null)
             {
@@ -185,8 +214,96 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
                 StatisticsManager.Instance.OnGameWon(finalScore);
                 if (gameUI != null) gameUI.OnGameWon(finalMoves);
             }
+            return;
+        }
+
+        if (!HasAvailableMoves())
+        {
+            if (CurrentReshufflesLeft <= 0)
+            {
+                StopReshufflePulse();
+                StartCoroutine(ShowDefeatPanelRoutine(1f));
+            }
+            else
+            {
+                StartReshufflePulse();
+            }
+        }
+        else
+        {
+            StopReshufflePulse();
         }
     }
+
+    private IEnumerator ShowDefeatPanelRoutine(float delay)
+    {
+        isDefeatPending = true;
+        IsInputAllowed = false;
+
+        yield return new WaitForSeconds(delay);
+
+        if (gameUI != null) gameUI.OnGameLost();
+
+        isDefeatPending = false;
+    }
+
+    private void StartReshufflePulse()
+    {
+        if (reshufflePulseCoroutine != null || reshuffleButton == null) return;
+        reshufflePulseCoroutine = StartCoroutine(ReshufflePulseRoutine());
+    }
+
+    private void StopReshufflePulse()
+    {
+        if (reshufflePulseCoroutine != null)
+        {
+            StopCoroutine(reshufflePulseCoroutine);
+            reshufflePulseCoroutine = null;
+            if (reshuffleButton != null) reshuffleButton.transform.localScale = originalReshuffleScale;
+        }
+    }
+
+    private IEnumerator ReshufflePulseRoutine()
+    {
+        float elapsed = 0f;
+        float speed = 5f;
+        float maxScale = 1.15f;
+
+        while (true)
+        {
+            elapsed += Time.deltaTime * speed;
+            float scale = Mathf.Lerp(1f, maxScale, (Mathf.Sin(elapsed) + 1f) / 2f);
+
+            if (reshuffleButton != null)
+            {
+                reshuffleButton.transform.localScale = originalReshuffleScale * scale;
+            }
+            yield return null;
+        }
+    }
+
+    private bool HasAvailableMoves()
+    {
+        for (int r = 0; r < 4; r++)
+        {
+            for (int c = 0; c < 14; c++)
+            {
+                var slot = pileManager.GetSlot(r, c);
+                if (slot.GetTopCard() == null)
+                {
+                    if (c == 0) return true;
+
+                    var leftCard = pileManager.GetSlot(r, c - 1).GetTopCard();
+                    if (leftCard != null && leftCard.cardModel.rank != 13)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public void SaveInitialState()
     {
         initialBoardState.Clear();
@@ -200,52 +317,79 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
         }
         UpdateUndoButton();
     }
+
     public void UpdateLockedCards()
     {
-        // 1. Сначала снимаем блокировку со всех карт на поле (нужно для корректной работы Undo)
         foreach (var slot in pileManager.Slots)
         {
             var card = slot.GetTopCard();
-            if (card != null)
-            {
-                card.GetComponent<MontanaCardController>()?.SetLockedState(false);
-            }
+            if (card != null) card.GetComponent<MontanaCardController>()?.SetLockedState(false);
         }
 
-        // 2. Идем по рядам (сверху вниз) и ищем правильные цепочки слева направо
+        Dictionary<MontanaCardController, int> levitatingCards = new Dictionary<MontanaCardController, int>();
+
         for (int r = 0; r < 4; r++)
         {
             var firstCard = pileManager.GetSlot(r, 0).GetTopCard();
 
-            // Цепочка блокируется ТОЛЬКО если она начинается с Туза в нулевой колонке
             if (firstCard != null && firstCard.cardModel.rank == 1)
             {
-                firstCard.GetComponent<MontanaCardController>()?.SetLockedState(true);
+                int currentChain = 1;
+                var mFirstCard = firstCard.GetComponent<MontanaCardController>();
+                if (mFirstCard != null) mFirstCard.SetLockedState(true);
+
+                List<MontanaCardController> lockedCardsInRow = new List<MontanaCardController>();
+                if (mFirstCard != null) lockedCardsInRow.Add(mFirstCard);
 
                 for (int c = 1; c < 13; c++)
                 {
                     var card = pileManager.GetSlot(r, c).GetTopCard();
                     var prevCard = pileManager.GetSlot(r, c - 1).GetTopCard();
 
-                    if (card == null || prevCard == null) break; // Слот пустой — цепочка обрывается
+                    if (card == null || prevCard == null) break;
 
-                    // Если карта подходит к предыдущей (одна масть и на 1 старше), блокируем и её
                     if (card.cardModel.suit == prevCard.cardModel.suit &&
                         card.cardModel.rank == prevCard.cardModel.rank + 1)
                     {
-                        card.GetComponent<MontanaCardController>()?.SetLockedState(true);
+                        var mCard = card.GetComponent<MontanaCardController>();
+                        if (mCard != null)
+                        {
+                            mCard.SetLockedState(true);
+                            lockedCardsInRow.Add(mCard);
+                        }
+                        currentChain++;
                     }
-                    else
+                    else break;
+                }
+
+                if (currentChain == 13)
+                {
+                    for (int i = 0; i < lockedCardsInRow.Count; i++)
                     {
-                        break; // Карта не подходит — цепочка обрывается
+                        levitatingCards[lockedCardsInRow[i]] = i;
                     }
                 }
             }
         }
+
+        float waveDelay = 0.055f;
+        foreach (var slot in pileManager.Slots)
+        {
+            var card = slot.GetTopCard();
+            if (card != null)
+            {
+                var mCard = card.GetComponent<MontanaCardController>();
+                if (mCard != null)
+                {
+                    if (levitatingCards.ContainsKey(mCard)) mCard.SetLevitating(true, levitatingCards[mCard] * waveDelay);
+                    else mCard.SetLevitating(false, slot.Col * waveDelay);
+                }
+            }
+        }
     }
+
     public bool IsGameWon()
     {
-        // Проверяем, что в каждом ряду первые 13 колонок собраны от Туза до Короля
         for (int r = 0; r < 4; r++)
         {
             var firstCard = pileManager.GetSlot(r, 0).GetTopCard();
@@ -260,22 +404,40 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
                 if (card.cardModel.suit != prevCard.cardModel.suit ||
                     card.cardModel.rank != prevCard.cardModel.rank + 1) return false;
             }
-            // 14-я колонка (индекс 13) должна быть пустой
         }
         return true;
     }
 
-    // Вызов пересдачи (Привяжите к кнопке в UI)
     public void PerformReshuffle()
     {
+        // === ЖЕСТКИЙ ПЕРЕХВАТ ДЛЯ ТУТОРИАЛА ===
+        if (GameSettings.IsTutorialMode)
+        {
+            // Если ссылка в инспекторе слетела, находим скрипт принудительно
+            if (tutorialManager == null)
+                tutorialManager = GetComponent<MontanaTutorialManager>();
+
+            if (tutorialManager != null && tutorialManager.isActiveAndEnabled)
+            {
+                // Запускаем обучающую пересдачу и БЛОКИРУЕМ удаление карт!
+                tutorialManager.OnTutorialReshuffleClicked();
+                return;
+            }
+        }
+        // ======================================
+
         if (!IsInputAllowed || CurrentReshufflesLeft <= 0) return;
 
+        // ---> ДОБАВИТЬ ЭТО: Считаем пересдачу как обращение к колоде (для комбо) <---
+        GameQuestTracker.Instance?.RecordStockDraw();
+        GameQuestTracker.Instance?.ResetCombo();
+        // ----------------------------------------------------------------------------
+
+        StopReshufflePulse();
         RegisterMoveAndStartIfNeeded();
 
         CurrentReshufflesLeft--;
 
-        // --- ОЧИЩАЕМ ЛОКАЛЬНУЮ ИСТОРИЮ ХОДОВ ---
-        undoStack.Clear();
         UpdateUndoButton();
 
         UpdateFullUI();
@@ -287,23 +449,51 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
     #region User Interactions
 
     public void OnUndoAction() { }
+
+    // --- ОТМЕНА ОДНОГО ХОДА ---
     private IEnumerator UndoRoutine()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Back");
+
         isUndoing = true;
         IsInputAllowed = false;
 
         var record = undoStack.Pop();
         UpdateUndoButton();
 
-        // 1. Логически и физически вынимаем карту из текущего слота
-        record.TargetSlot.RemoveCard(record.Card);
+        // ---> ИСПРАВЛЕННЫЙ ОТКАТ ПРОГРЕССА КВЕСТОВ <---
+        GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveTableauToTableau, -1);
 
-        // 2. Анимация полета назад
+        if (record.WasCorrectChain)
+        {
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.FillMontanaGap, -1);
+
+            // ---> ОТКАТ ДЛЯ ОБЩИХ ЗАДАНИЙ НА ДОМ И РАНГИ КАРТ <---
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, -1);
+            if (record.Card != null)
+            {
+                GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, -1, record.Card.cardModel.rank.ToString());
+            }
+            // -----------------------------------------------------
+        }
+        if (record.CompletedRow)
+        {
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.CompleteMontanaRow, -1);
+        }
+        // ----------------------------------------------
+
+        record.TargetSlot.RemoveCard(record.Card);
         record.Card.transform.SetParent(DragLayer, true);
         record.Card.transform.SetAsLastSibling();
 
         var mCard = record.Card.GetComponent<MontanaCardController>();
-        if (mCard != null) mCard.SetAnimating(true);
+        if (mCard != null)
+        {
+            mCard.SetAnimating(true);
+            mCard.SetLockedState(false); // Делаем карту белой в полете
+        }
+
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Whoosh_Out");
 
         Vector3 startPos = record.Card.transform.position;
         Vector3 endPos = record.SourceSlot.Transform.position;
@@ -314,29 +504,124 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
         {
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
-            float eased = t * t * (3f - 2f * t); // Мягкое торможение
+            float eased = t * t * (3f - 2f * t);
             record.Card.transform.position = Vector3.Lerp(startPos, endPos, eased);
             yield return null;
         }
 
         record.Card.transform.position = endPos;
 
-        // 3. Возвращаем карту логически в старый слот
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Drop_Success");
+
         record.SourceSlot.AcceptCard(record.Card);
         if (mCard != null) mCard.SetAnimating(false);
 
-        // 4. Откатываем очки и фиксируем отмену как новый ход (стандарт Klondike/MonteCarlo)
         RegisterMoveAndStartIfNeeded();
         scoreManager.OnUndo();
-
-        // 5. Пересчитываем затемнение карт
         UpdateLockedCards();
 
-        // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
         isUndoing = false;
         IsInputAllowed = true;
-        UpdateUndoButton(); // <--- ДОБАВЛЕНО: Обновляем кнопку, когда блокировки уже сняты!
+        UpdateUndoButton();
+
         UpdateFullUI();
+        CheckGameState();
+    }
+
+    // --- ОТМЕНА ПЕРЕСДАЧИ ---
+    private IEnumerator UndoReshuffleRoutine()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Back");
+
+        isUndoing = true;
+        IsInputAllowed = false;
+
+        var record = undoStack.Pop();
+        UpdateUndoButton();
+
+        List<CardController> movingCards = new List<CardController>();
+        List<Vector3> startPositions = new List<Vector3>();
+        List<MontanaSlot> targetSlots = new List<MontanaSlot>();
+
+        foreach (var kvp in record.BoardState)
+        {
+            var card = kvp.Key;
+            var oldSlot = kvp.Value;
+            var currentSlot = pileManager.Slots.Find(s => s.GetTopCard() == card);
+
+            if (currentSlot != oldSlot)
+            {
+                movingCards.Add(card);
+                startPositions.Add(card.transform.position);
+                targetSlots.Add(oldSlot);
+
+                if (currentSlot != null) currentSlot.RemoveCard(card);
+                card.transform.SetParent(DragLayer, true);
+
+                var mCard = card.GetComponent<MontanaCardController>();
+                if (mCard != null)
+                {
+                    mCard.SetAnimating(true);
+                    mCard.SetLockedState(false); // Делаем светлой в полете
+                }
+            }
+        }
+
+        yield return new WaitForSeconds(0.1f);
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySoundWithAutoFade("Card_Whoosh_In", 0.4f, 0.1f);
+
+        Vector3 gatherPos = pileManager.Slots[55].Transform.position;
+        float gatherDuration = 0.4f;
+        float gatherElapsed = 0f;
+
+        while (gatherElapsed < gatherDuration)
+        {
+            gatherElapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(gatherElapsed / gatherDuration);
+            t = t * t * (3f - 2f * t);
+
+            for (int i = 0; i < movingCards.Count; i++)
+            {
+                movingCards[i].transform.position = Vector3.Lerp(startPositions[i], gatherPos, t);
+            }
+            yield return null;
+        }
+
+        foreach (var c in movingCards) c.transform.position = gatherPos;
+
+        yield return new WaitForSeconds(0.2f);
+
+        float dealSpeed = 0.02f;
+        float cardMoveDuration = 0.25f;
+
+        var sortedIndices = Enumerable.Range(0, movingCards.Count)
+            .OrderBy(i => pileManager.Slots.IndexOf(targetSlots[i]))
+            .ToList();
+
+        for (int i = 0; i < sortedIndices.Count; i++)
+        {
+            var card = movingCards[sortedIndices[i]];
+            var targetSlot = targetSlots[sortedIndices[i]];
+            StartCoroutine(UndoMoveCardToSlotRoutine(card, targetSlot, cardMoveDuration));
+            yield return new WaitForSeconds(dealSpeed);
+        }
+
+        yield return new WaitForSeconds(cardMoveDuration);
+
+        CurrentReshufflesLeft++;
+        if (puzzleManager != null) puzzleManager.UndoCheckpoint();
+
+        RegisterMoveAndStartIfNeeded();
+        scoreManager.OnUndo();
+        UpdateLockedCards();
+
+        isUndoing = false;
+        IsInputAllowed = true;
+        UpdateUndoButton();
+        UpdateFullUI();
+        CheckGameState();
     }
 
     public void OnCardDroppedToContainer(CardController card, ICardContainer container)
@@ -344,108 +629,332 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
         var montanaCard = card.GetComponent<MontanaCardController>();
         ICardContainer source = montanaCard != null ? montanaCard.SourceContainer : lastInteractionSource;
 
-        // 1. Сохраняем ход локально
         if (source is MontanaSlot sourceSlot && container is MontanaSlot targetSlot)
         {
+            // Проверяем условия выполнения заданий
+            bool isRowComplete = CheckIfRowCompleted(targetSlot.Row);
+            bool isCorrectChain = IsSlotInCorrectChain(targetSlot.Row, targetSlot.Col);
+
             undoStack.Push(new MontanaMoveRecord
             {
+                IsReshuffle = false,
                 Card = card,
                 SourceSlot = sourceSlot,
-                TargetSlot = targetSlot
+                TargetSlot = targetSlot,
+                CompletedRow = isRowComplete,
+                WasCorrectChain = isCorrectChain // Запоминаем для Undo
             });
             UpdateUndoButton();
-        }
 
-        // 2. УДАЛЕНО: Вызов глобального dragManager
+            // ---> ТРЕКИНГ ЗАДАНИЙ КОВРИКА <---
+            if (!GameSettings.IsTutorialMode)
+            {
+                // Задание "Точечная работа": Успешно заполнить любой пробел
+                GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveTableauToTableau, 1);
+
+                // Задания "Наведение порядка" и "Легкий старт": Учитываем ТОЛЬКО правильный порядок ряда
+                if (isCorrectChain)
+                {
+                    GameQuestTracker.Instance?.SendEvent(QuestActionType.FillMontanaGap, 1);
+
+                    // ---> ДОБАВЛЕНО ДЛЯ ОБЩИХ ЗАДАНИЙ (Перенос в дом и Ранги карт) <---
+                    GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, 1);
+                    GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, 1, card.cardModel.rank.ToString());
+                    // ------------------------------------------------------------------
+
+                    // Задание "Без перетасовок": Серия заполнения пробелов подряд
+                    GameQuestTracker.Instance?.IncrementCombo(QuestActionType.ComboGapsWithoutShuffle);
+                }
+
+                // Задание "Идеальные ряды" (Полностью собранный ряд до Короля)
+                if (isRowComplete)
+                {
+                    GameQuestTracker.Instance?.SendEvent(QuestActionType.CompleteMontanaRow, 1);
+                }
+            }
+            // -------------------------------------
+        }
 
         RegisterMoveAndStartIfNeeded();
         if (source != null) scoreManager.OnCardMove(source, container);
 
         UpdateFullUI();
         CheckGameState();
+
+        if (montanaCard != null && montanaCard.IsLockedCard)
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySound("Card_Foundation_Success");
+            }
+        }
+    }
+
+    public void PushReshuffleRecord(Dictionary<CardController, MontanaSlot> state)
+    {
+        undoStack.Push(new MontanaMoveRecord
+        {
+            IsReshuffle = true,
+            BoardState = state
+        });
+        UpdateUndoButton();
+    }
+    private bool CheckIfRowCompleted(int r)
+    {
+        var firstCard = pileManager.GetSlot(r, 0).GetTopCard();
+        if (firstCard == null || firstCard.cardModel.rank != 1) return false;
+
+        for (int c = 1; c < 13; c++)
+        {
+            var card = pileManager.GetSlot(r, c).GetTopCard();
+            var prevCard = pileManager.GetSlot(r, c - 1).GetTopCard();
+
+            if (card == null || prevCard == null) return false;
+            if (card.cardModel.suit != prevCard.cardModel.suit ||
+                card.cardModel.rank != prevCard.cardModel.rank + 1) return false;
+        }
+        return true;
     }
     private void UpdateUndoButton()
     {
         bool canUndo = (undoStack.Count > 0 && !isUndoing && IsInputAllowed);
-        // Undo All активна, если есть ходы в стеке ИЛИ если мы делали пересдачу
         bool canUndoAll = ((undoStack.Count > 0 || CurrentReshufflesLeft < MaxReshuffles) && !isUndoing && IsInputAllowed);
 
         if (undoButton != null) undoButton.interactable = canUndo;
         if (undoAllButton != null) undoAllButton.interactable = canUndoAll;
     }
 
-    // Обработчик нажатия на UI кнопку
     public void OnUndoButtonClicked()
     {
         if (undoStack.Count == 0 || isUndoing || !IsInputAllowed) return;
-        StartCoroutine(UndoRoutine());
+
+        // ---> ДОБАВИТЬ ЭТО <---
+        GameQuestTracker.Instance?.RecordUndoUsed();
+        // ----------------------
+
+        var record = undoStack.Peek();
+        if (record.IsReshuffle)
+        {
+            StartCoroutine(UndoReshuffleRoutine());
+        }
+        else
+        {
+            StartCoroutine(UndoRoutine());
+        }
     }
+
     public void OnUndoAllButtonClicked()
     {
-        // Кнопка срабатывает, если есть ходы ИЛИ если мы тратили пересдачу
         bool canUndoAll = (undoStack.Count > 0 || CurrentReshufflesLeft < MaxReshuffles);
-
-        // Если условия не выполнены, идет анимация или заблокирован ввод — игнорируем клик
         if (!canUndoAll || isUndoing || !IsInputAllowed) return;
+
+        // ---> ДОБАВИТЬ ЭТО <---
+        GameQuestTracker.Instance?.RecordUndoUsed();
+        // ----------------------
 
         StartCoroutine(UndoAllRoutine());
     }
+
+    // --- ОТМЕНА ВСЕХ ХОДОВ И ПЕРЕСДАЧ ---
     private IEnumerator UndoAllRoutine()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Back");
+
+        // ---> УМНЫЙ АНТИ-ЧИТ ПРИ ПОЛНОЙ ОТМЕНЕ С УЧЕТОМ ЦЕПОЧЕК <---
+        int movesToRollback = undoStack.Count(r => !r.IsReshuffle);
+        int correctChainsToRollback = undoStack.Count(r => !r.IsReshuffle && r.WasCorrectChain);
+        int rowsToRollback = undoStack.Count(r => !r.IsReshuffle && r.CompletedRow);
+
+        if (movesToRollback > 0) GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveTableauToTableau, -movesToRollback);
+
+        if (correctChainsToRollback > 0)
+        {
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.FillMontanaGap, -correctChainsToRollback);
+
+            // ---> ОТКАТ ОБЩИХ ЗАДАНИЙ НА ДОМ И РАНГИ ПРИ ПОЛНОМ СБРОСЕ <---
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, -correctChainsToRollback);
+
+            foreach (var record in undoStack)
+            {
+                if (!record.IsReshuffle && record.WasCorrectChain && record.Card != null)
+                {
+                    GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, -1, record.Card.cardModel.rank.ToString());
+                }
+            }
+            // --------------------------------------------------------------
+        }
+
+        if (rowsToRollback > 0) GameQuestTracker.Instance?.SendEvent(QuestActionType.CompleteMontanaRow, -rowsToRollback);
+        // ----------------------------------------------------------
+
         isUndoing = true;
         IsInputAllowed = false;
 
-        // ЭТАП 1: Изымаем все карты из их текущих слотов
-        foreach (var kvp in initialBoardState)
-        {
-            var card = kvp.Key;
-            var currentSlot = card.GetComponentInParent<MontanaSlot>();
-            if (currentSlot != null) currentSlot.RemoveCard(card);
-        }
+        List<CardController> allCards = new List<CardController>();
+        List<Vector3> startPositions = new List<Vector3>();
+        List<MontanaSlot> targetSlots = new List<MontanaSlot>();
 
-        // ЭТАП 2: Раскладываем их по стартовым слотам
+        // Собираем абсолютно все карты со стола
         foreach (var kvp in initialBoardState)
         {
             var card = kvp.Key;
             var initialSlot = kvp.Value;
 
-            initialSlot.AcceptCard(card);
+            allCards.Add(card);
+            startPositions.Add(card.transform.position);
+            targetSlots.Add(initialSlot);
+
+            var currentSlot = card.GetComponentInParent<MontanaSlot>();
+            if (currentSlot != null) currentSlot.RemoveCard(card);
+
+            card.transform.SetParent(DragLayer, true);
 
             var mCard = card.GetComponent<MontanaCardController>();
-            if (mCard != null) mCard.SetAnimating(false);
+            if (mCard != null)
+            {
+                mCard.SetAnimating(true);
+                mCard.SetLockedState(false); // Делаем белой в полете
+            }
         }
 
+        yield return new WaitForSeconds(0.1f);
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySoundWithAutoFade("Card_Whoosh_In", 0.5f, 0.1f);
+
+        // All 52 cards gather at the deck position
+        Vector3 gatherPos = pileManager.Slots[55].Transform.position;
+        float gatherDuration = 0.5f;
+        float gatherElapsed = 0f;
+
+        while (gatherElapsed < gatherDuration)
+        {
+            float t = Mathf.Clamp01(gatherElapsed / gatherDuration);
+            t = t * t * (3f - 2f * t);
+
+            for (int i = 0; i < allCards.Count; i++)
+            {
+                allCards[i].transform.position = Vector3.Lerp(startPositions[i], gatherPos, t);
+            }
+            yield return null;
+        }
+
+        foreach (var c in allCards) c.transform.position = gatherPos;
+
+        yield return new WaitForSeconds(0.2f);
+
+        float dealSpeed = 0.015f;
+        float cardMoveDuration = 0.25f;
+
+        var sortedIndices = Enumerable.Range(0, allCards.Count)
+            .OrderBy(i => pileManager.Slots.IndexOf(targetSlots[i]))
+            .ToList();
+
+        for (int i = 0; i < sortedIndices.Count; i++)
+        {
+            var card = allCards[sortedIndices[i]];
+            var targetSlot = targetSlots[sortedIndices[i]];
+
+            StartCoroutine(UndoMoveCardToSlotRoutine(card, targetSlot, cardMoveDuration));
+            yield return new WaitForSeconds(dealSpeed);
+        }
+
+        yield return new WaitForSeconds(cardMoveDuration);
+
+        // Сброс статистики
         undoStack.Clear();
         CurrentReshufflesLeft = MaxReshuffles;
         scoreManager.ResetScore();
+        if (puzzleManager != null) puzzleManager.ResetCheckpoints();
 
         RegisterMoveAndStartIfNeeded();
         UpdateLockedCards();
 
-        // --- ИСПРАВЛЕНИЕ ЗДЕСЬ (Правильный порядок) ---
         isUndoing = false;
         IsInputAllowed = true;
-        UpdateUndoButton(); // <--- ПЕРЕНЕСЕНО СЮДА
+        UpdateUndoButton();
         UpdateFullUI();
 
-        yield break;
+        CheckGameState();
     }
+
+    // Вспомогательная корутина для анимации полета одной карты из стопки на стол
+    private IEnumerator UndoMoveCardToSlotRoutine(CardController card, MontanaSlot targetSlot, float duration)
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Deal");
+
+        Vector3 startPos = card.transform.position;
+        Vector3 endPos = targetSlot.Transform.position;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float easedT = t * t * (3f - 2f * t);
+            card.transform.position = Vector3.Lerp(startPos, endPos, easedT);
+            yield return null;
+        }
+
+        card.transform.position = endPos;
+        targetSlot.AcceptCard(card);
+
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Drop_Success");
+
+        var mCard = card.GetComponent<MontanaCardController>();
+        if (mCard != null) mCard.SetAnimating(false);
+    }
+
     public void OnCardClicked(CardController card)
     {
         if (!IsInputAllowed) return;
+
+        // Запоминаем источник на всякий случай
         lastInteractionSource = card.GetComponentInParent<ICardContainer>();
-        dragManager?.OnCardClicked(card);
+
+        // На мобилках и планшетах запускаем авто-перенос
+        if (YG.YG2.envir.isMobile || YG.YG2.envir.isTablet)
+        {
+            // Защита от микро-свайпов: отменяем технический захват карты
+            var mCard = card as MontanaCardController;
+            if (mCard != null && mCard.transform.parent == dragLayer)
+            {
+                mCard.StopAllCoroutines();
+                mCard.SetAnimating(false);
+                if (mCard.OriginalParent != null)
+                {
+                    mCard.transform.SetParent(mCard.OriginalParent, true);
+                    mCard.transform.localPosition = mCard.OriginalLocalPosition;
+                    mCard.transform.SetSiblingIndex(mCard.OriginalSiblingIndex);
+                }
+            }
+
+            ExecuteAutoMove(card);
+        }
+
+        // ВНИМАНИЕ: Блок else для ПК удален! 
+        // Одинарный клик на ПК ничего не делает, поэтому бесконечного цикла больше не будет.
     }
 
     public void OnCardDoubleClicked(CardController card)
     {
+        if (!IsInputAllowed) return;
+
+        // На ПК авто-перенос срабатывает только по двойному клику
+        if (!YG2.envir.isDesktop) return;
+
+        ExecuteAutoMove(card);
+    }
+
+    private void ExecuteAutoMove(CardController card)
+    {
         lastInteractionSource = card.GetComponentInParent<ICardContainer>();
-        autoMoveService.OnCardRightClicked(card);
+        // Передаем управление сервису авто-хода (он сам найдет пустое место)
+        autoMoveService?.OnCardRightClicked(card);
     }
 
     public void OnCardLongPressed(CardController card) => dragManager?.OnCardLongPressed(card);
 
-    // Вспомогательный поиск контейнеров через Overlap (Геометрию), переписанный для Montana
     public ICardContainer FindNearestContainer(CardController card, Vector2 anchoredPosition, float maxDistance)
     {
         ICardContainer bestContainer = null;
@@ -476,20 +985,17 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
     #region UI & Helpers
     public void RegisterCardEvents(CardController card)
     {
-        // Привязываем карту к текущему режиму игры и менеджеру перетаскивания
         card.CardmodeManager = this;
         card.dragManager = dragManager;
     }
+
     private void UpdateFullUI()
     {
         if (scoreText != null)
             scoreText.text = scoreManager.CurrentScore.ToString();
 
-        // Берем ходы строго из статистики, как в Клондайке
         if (movesText != null)
-        {
             movesText.text = (!hasGameStarted) ? "0" : (StatisticsManager.Instance != null ? StatisticsManager.Instance.GetCurrentMoves().ToString() : "0");
-        }
 
         if (reshufflesText != null)
             reshufflesText.text = CurrentReshufflesLeft.ToString();
@@ -506,7 +1012,6 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
         }
     }
 
-    // Математика для Overlap прямоугольников
     private Rect GetWorldRect(RectTransform rt)
     {
         Vector3[] corners = new Vector3[4];
@@ -534,12 +1039,45 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode
         float w = xMax - xMin, h = yMax - yMin;
         return (w > 0 && h > 0) ? w * h : 0f;
     }
+    private bool IsSlotInCorrectChain(int row, int col)
+    {
+        // Проверяем всю цепочку от начала ряда до текущей выбранной колонки
+        for (int c = 0; c <= col; c++)
+        {
+            var slot = pileManager.GetSlot(row, c);
+            var card = slot?.GetTopCard();
+            if (card == null) return false;
 
+            if (c == 0)
+            {
+                // Самая первая карта в ряду (колонка 0) обязана быть Тузом (ранг 1)
+                if (card.cardModel.rank != 1) return false;
+            }
+            else
+            {
+                var prevSlot = pileManager.GetSlot(row, c - 1);
+                var prevCard = prevSlot?.GetTopCard();
+                if (prevCard == null) return false;
+
+                // Каждая следующая карта должна строго совпадать по масти и быть на 1 ранг старше
+                if (card.cardModel.suit != prevCard.cardModel.suit || card.cardModel.rank != prevCard.cardModel.rank + 1)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     #endregion
 }
+
 public class MontanaMoveRecord
 {
+    public bool IsReshuffle;
     public CardController Card;
     public MontanaSlot SourceSlot;
     public MontanaSlot TargetSlot;
+    public Dictionary<CardController, MontanaSlot> BoardState;
+    public bool CompletedRow;
+    public bool WasCorrectChain; // <--- ДОБАВЛЕНО: Была ли карта частью правильного ряда
 }

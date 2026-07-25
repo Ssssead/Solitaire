@@ -163,7 +163,7 @@ public class LocalizationManager : MonoBehaviour
 
         try
         {
-            // ≈сли уже тот же €зык Ч применим локально (и обновим state / prefs)
+            // ≈сли уже тот же €зык Ч применим локально
             if (string.Equals(PlayerPrefs.GetString(PREF_SELECTED_LANG, defaultLanguage), normalized, StringComparison.OrdinalIgnoreCase))
             {
                 PlayerPrefs.SetString(PREF_SELECTED_LANG, normalized);
@@ -176,8 +176,7 @@ public class LocalizationManager : MonoBehaviour
                 return;
             }
 
-            // —охран€ем выбор заранее Ч чтобы другие системы видели актуальный код €зыка,
-            // но реальную загрузку локализации ожидаем от YG2.onSwitchLang callback'а.
+            // —охран€ем выбор заранее
             PlayerPrefs.SetString(PREF_SELECTED_LANG, normalized);
             PlayerPrefs.Save();
 
@@ -185,10 +184,17 @@ public class LocalizationManager : MonoBehaviour
             suppressYGEvent = true;
             YG2.SwitchLanguage(normalized);
             suppressYGEvent = false;
+
+            // --- Ќќ¬џ…  ќƒ: ѕ–»ћ≈Ќя≈ћ я«џ  Ћќ јЋ№Ќќ —–ј«” ---
+            CurrentLanguage = normalized;
+            processedTmpInstanceIds.Clear();
+            SetLanguageInternal(normalized);
+            // ------------------------------------------------
+
         }
         catch (Exception)
         {
-            // ѕлагин недоступен Ч просто применим локально и обновим состо€ние
+            // ѕлагин недоступен Ч просто применим локально
             PlayerPrefs.SetString(PREF_SELECTED_LANG, normalized);
             PlayerPrefs.Save();
 
@@ -204,6 +210,10 @@ public class LocalizationManager : MonoBehaviour
     private void SetLanguageInternal(string normalized)
     {
         if (string.IsNullOrEmpty(normalized)) return;
+
+        // ---> »—ѕ–ј¬Ћ≈Ќ»≈: ќбновл€ем текущий €зык дл€ всей остальной логики игры <---
+        CurrentLanguage = normalized;
+
         PlayerPrefs.SetString(PREF_SELECTED_LANG, normalized);
         PlayerPrefs.Save();
 

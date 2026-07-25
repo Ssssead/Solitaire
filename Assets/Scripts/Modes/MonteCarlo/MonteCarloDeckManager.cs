@@ -9,8 +9,8 @@ public class MonteCarloDeckManager : MonoBehaviour
     public CardFactory cardFactory;
 
     [Header("Stock Visual Settings")]
-    public Vector2 stockCardOffset = new Vector2(2f, 0f);
-
+    public Vector2 stockCardOffset = new Vector2(1f, 0f);
+    public Vector2 foundationCardOffset = new Vector2(-1f, 0f); // <--- ÄÎÁÀÂËÅÍÎ: Îòñòóï âëåâî
     public void InstantiateDeal(Deal deal, bool isIntro = false)
     {
         ClearBoard();

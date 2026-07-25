@@ -20,6 +20,9 @@ public class CardFactory : MonoBehaviour
     [Tooltip("Премиум база данных спрайтов (Premium)")]
     public CardSpriteDatabase premiumSpriteDb;
 
+    [Tooltip("Третья база данных спрайтов")]
+    public CardSpriteDatabase thirdSpriteDb;
+
     // Это свойство заменяет старую переменную. Оно вернет нужную базу, 
     // и FoundationPile.cs больше не будет выдавать ошибку.
     public CardSpriteDatabase spriteDb
@@ -27,10 +30,8 @@ public class CardFactory : MonoBehaviour
         get
         {
             int selectedIndex = PlayerPrefs.GetInt("SelectedDeckStyle", 0);
-            if (selectedIndex == 1 && premiumSpriteDb != null)
-            {
-                return premiumSpriteDb;
-            }
+            if (selectedIndex == 1 && premiumSpriteDb != null) return premiumSpriteDb;
+            if (selectedIndex == 2 && thirdSpriteDb != null) return thirdSpriteDb;
             return baseSpriteDb;
         }
     }

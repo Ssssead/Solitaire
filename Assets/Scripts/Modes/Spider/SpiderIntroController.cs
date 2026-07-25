@@ -22,6 +22,9 @@ public class SpiderIntroController : MonoBehaviour, IIntroController
     private List<Vector2> buttonsStartPos = new List<Vector2>();
     private List<Vector2> buttonsHiddenPos = new List<Vector2>();
 
+    // --- НОВОЕ: Флаг ускорения анимации ---
+    private bool isSkipping = false;
+
     public List<RectTransform> GetTopUIElements() => new List<RectTransform> { topPanel };
     public List<RectTransform> GetBottomUIElements() => bottomButtons;
 
@@ -30,8 +33,18 @@ public class SpiderIntroController : MonoBehaviour, IIntroController
         if (modeManager == null) modeManager = GetComponent<SpiderModeManager>();
     }
 
+    // --- НОВОЕ: Отслеживаем клик для пропуска ---
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+        {
+            isSkipping = true;
+        }
+    }
+
     public void SetupIntro(bool skipUI)
     {
+        isSkipping = false; // Сбрасываем флаг перед началом
         Canvas.ForceUpdateCanvases();
 
         // Запоминаем оригинальные позиции UI
@@ -69,24 +82,29 @@ public class SpiderIntroController : MonoBehaviour, IIntroController
         // 1 ФАЗА: Появление слотов и выезд UI (пропускаем при рестарте)
         if (!skipUI)
         {
-            yield return new WaitForSeconds(startDelay);
+            yield return StartCoroutine(SkippableWait(startDelay)); // Заменили WaitForSeconds
 
             StartCoroutine(FadeInSlots(slotsFadeDuration));
 
             if (topPanel != null)
+            {
+                if (AudioManager.Instance != null)
+                    AudioManager.Instance.PlaySound("Panel_Slide_In");
+
                 StartCoroutine(AnimateUIElement(topPanel, topPanelHiddenPos, topPanelStartPos, uiSlideDuration));
+            }
 
             for (int i = 0; i < bottomButtons.Count; i++)
             {
                 if (bottomButtons[i] != null)
                 {
                     StartCoroutine(AnimateUIElement(bottomButtons[i], buttonsHiddenPos[i], buttonsStartPos[i], uiSlideDuration));
-                    yield return new WaitForSeconds(buttonStaggerDelay);
+                    yield return StartCoroutine(SkippableWait(buttonStaggerDelay)); // Заменили WaitForSeconds
                 }
             }
 
             // Ждем окончания UI анимации
-            yield return new WaitForSeconds(uiSlideDuration);
+            yield return StartCoroutine(SkippableWait(uiSlideDuration)); // Заменили WaitForSeconds
         }
         else
         {
@@ -101,17 +119,33 @@ public class SpiderIntroController : MonoBehaviour, IIntroController
         }
     }
 
+    // --- НОВОЕ: Пропускаемый таймер ---
+    private IEnumerator SkippableWait(float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            yield return null;
+        }
+    }
+
     private IEnumerator AnimateUIElement(RectTransform target, Vector2 from, Vector2 to, float duration)
     {
         float elapsed = 0f;
         AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            if (target != null) target.anchoredPosition = Vector2.Lerp(from, to, curve.Evaluate(elapsed / duration));
+            float speed = isSkipping ? 15f : 1f; // Ускорение
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(elapsed / duration);
+            if (target != null) target.anchoredPosition = Vector2.Lerp(from, to, curve.Evaluate(t));
             yield return null;
         }
         if (target != null) target.anchoredPosition = to;
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("UI_Drop");
     }
 
     private IEnumerator FadeInSlots(float duration)
@@ -119,8 +153,9 @@ public class SpiderIntroController : MonoBehaviour, IIntroController
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            SetSlotsAlpha(elapsed / duration);
+            float speed = isSkipping ? 15f : 1f; // Ускорение
+            elapsed += Time.deltaTime * speed;
+            SetSlotsAlpha(Mathf.Clamp01(elapsed / duration));
             yield return null;
         }
         SetSlotsAlpha(1f);
@@ -135,7 +170,8 @@ public class SpiderIntroController : MonoBehaviour, IIntroController
             if (t != null)
             {
                 var cg = t.GetComponent<CanvasGroup>();
-                if (cg) cg.alpha = alpha;
+                if (cg == null) cg = t.gameObject.AddComponent<CanvasGroup>();
+                cg.alpha = alpha;
             }
         }
         foreach (var f in modeManager.pileManager.FoundationPiles)
@@ -143,15 +179,16 @@ public class SpiderIntroController : MonoBehaviour, IIntroController
             if (f != null)
             {
                 var cg = f.GetComponent<CanvasGroup>();
-                if (cg) cg.alpha = alpha;
+                if (cg == null) cg = f.gameObject.AddComponent<CanvasGroup>();
+                cg.alpha = alpha;
             }
         }
 
-        // Скрываем подложку стока, чтобы она не светилась до прилета карт
         if (modeManager.pileManager.StockPile != null)
         {
             var cg = modeManager.pileManager.StockPile.GetComponent<CanvasGroup>();
-            if (cg) cg.alpha = alpha;
+            if (cg == null) cg = modeManager.pileManager.StockPile.gameObject.AddComponent<CanvasGroup>();
+            cg.alpha = alpha;
         }
     }
 }

@@ -24,7 +24,10 @@ public class SultanStockPile : MonoBehaviour, ICardContainer, IPointerClickHandl
     }
 
     public bool CanAccept(CardController card) => false;
-    public void AcceptCard(CardController card) { }
+    public void AcceptCard(CardController card)
+    {
+        AddCard(card, false);
+    }
 
     public void AddCard(CardController card, bool faceUp)
     {

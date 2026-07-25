@@ -12,22 +12,47 @@ public class FreeCellAutoMove : MonoBehaviour
     public FreeCellScoreManager scoreManager;
 
     [Header("Settings")]
-    [SerializeField] private float delayBetweenMoves = 0.15f; // Скорость полета карт
-    [SerializeField] private bool smartMove = true; // Безопасный режим (как в Windows)
+    [SerializeField] private float delayBetweenMoves = 0.15f; // Начальная скорость
+    [SerializeField] private bool smartMove = true;
 
     private bool isAutoMoving = false;
 
-    // Этот метод привяжите к кнопке UI
+    // --- НОВОЕ: Виртуальный счетчик домов для мгновенной логики ---
+    private Dictionary<Suit, int> virtualFoundationRanks = new Dictionary<Suit, int>();
+
     public void OnAutoMoveButtonClicked()
     {
-        if (isAutoMoving || modeManager == null) return;
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+
+        // --- ИНТЕГРАЦИЯ ТУТОРИАЛА ---
+        if (modeManager != null && modeManager.Tutorial != null)
+        {
+            var tut = modeManager.Tutorial as FreeCellTutorialManager;
+            if (tut != null && tut.IsTutorialActive)
+            {
+                // Передаем запрос в туториал. Менеджер сам запустит полет карт по сценарию!
+                tut.IsActionAllowed(TutorialActionType.ClickAuto);
+                return;
+            }
+        }
+        // -----------------------------
+
+        // Блокируем запуск в обычной игре, если ввод запрещен
+        if (isAutoMoving || modeManager == null || !modeManager.IsInputAllowed) return;
+
         StartCoroutine(AutoMoveRoutine());
     }
 
     private IEnumerator AutoMoveRoutine()
     {
         isAutoMoving = true;
+        modeManager.IsInputAllowed = false; // Жесткая блокировка стола на время полета
+
+        // Инициализируем виртуальные дома текущим физическим состоянием стола
+        InitVirtualFoundations();
+
         bool cardMoved;
+        int movedInRow = 0;
 
         do
         {
@@ -42,8 +67,9 @@ public class FreeCellAutoMove : MonoBehaviour
                 if (card != null && TryMoveToFoundation(card, cell))
                 {
                     cardMoved = true;
-                    yield return new WaitForSeconds(delayBetweenMoves);
-                    break; // Прерываем цикл, чтобы начать проверку заново
+                    movedInRow++;
+                    yield return new WaitForSeconds(CalculateDynamicDelay(movedInRow));
+                    break;
                 }
             }
 
@@ -54,35 +80,63 @@ public class FreeCellAutoMove : MonoBehaviour
             {
                 if (tab.cards.Count == 0) continue;
 
-                var card = tab.cards[tab.cards.Count - 1]; // Берем верхнюю карту
+                var card = tab.cards[tab.cards.Count - 1];
                 if (card != null && TryMoveToFoundation(card, tab))
                 {
                     cardMoved = true;
-                    yield return new WaitForSeconds(delayBetweenMoves);
+                    movedInRow++;
+                    yield return new WaitForSeconds(CalculateDynamicDelay(movedInRow));
                     break;
                 }
             }
 
-        } while (cardMoved); // Повторяем, пока находятся карты для переноса
+        } while (cardMoved);
 
-        // Проверяем победу в конце серии ходов
+        modeManager.IsInputAllowed = true; // Разблокируем стол
         modeManager.CheckGameState();
         isAutoMoving = false;
     }
 
+    private float CalculateDynamicDelay(int count)
+    {
+        if (count <= 5) return delayBetweenMoves;
+        float reduction = (count - 5) * 0.02f;
+        return Mathf.Max(0.04f, delayBetweenMoves - reduction);
+    }
+
+    private void InitVirtualFoundations()
+    {
+        virtualFoundationRanks.Clear();
+        // Заполняем базовые значения (ноль для всех мастей)
+        virtualFoundationRanks[Suit.Hearts] = 0;
+        virtualFoundationRanks[Suit.Diamonds] = 0;
+        virtualFoundationRanks[Suit.Spades] = 0;
+        virtualFoundationRanks[Suit.Clubs] = 0;
+
+        // Считываем реальное положение на столе ПЕРЕД началом лавины автосбора
+        foreach (var f in pileManager.Foundations)
+        {
+            if (f.Count > 0)
+            {
+                var topCard = f.GetTopCard();
+                if (topCard != null)
+                {
+                    virtualFoundationRanks[topCard.cardModel.suit] = topCard.cardModel.rank;
+                }
+            }
+        }
+    }
+
     private bool TryMoveToFoundation(CardController card, ICardContainer sourceContainer)
     {
-        // Находим подходящий Foundation
         foreach (var foundation in pileManager.Foundations)
         {
             if (foundation.CanAccept(card))
             {
-                // --- ПРОВЕРКА БЕЗОПАСНОСТИ (Smart Move) ---
                 if (smartMove && !IsSafeToAutoMove(card))
                 {
                     continue;
                 }
-                // -------------------------------------------
 
                 PerformMove(card, sourceContainer, foundation);
                 return true;
@@ -93,49 +147,49 @@ public class FreeCellAutoMove : MonoBehaviour
 
     private void PerformMove(CardController card, ICardContainer source, FoundationPile target)
     {
-        // 1. Подготовка данных для Undo
         var prevParent = card.transform.parent;
         var prevSib = card.transform.GetSiblingIndex();
+        Vector3 prevPos = card.transform.localPosition;
 
-        // 2. Логическое изъятие из источника
+        // <--- ГЛАВНОЕ ИСПРАВЛЕНИЕ: ОЧИСТКА ХВОСТОВ ОТ СВОБОДНОЙ ЯЧЕЙКИ --->
+        // 1. Убиваем анимацию центрирования ячейки, если она еще не закончилась
+        card.StopAllCoroutines();
+
+        // 2. Удаляем временный Canvas, который мог остаться от прерванной анимации
+        Canvas tempCanvas = card.GetComponent<Canvas>();
+        if (tempCanvas != null) Destroy(tempCanvas);
+
+        // 3. Гарантируем, что карта снова кликабельна
+        if (card.canvasGroup != null) card.canvasGroup.blocksRaycasts = true;
+        // ------------------------------------------------------------------
+
         if (source is TableauPile tab)
         {
             int idx = tab.IndexOfCard(card);
-            if (idx != -1)
-            {
-                tab.RemoveSequenceFrom(idx);
-            }
+            if (idx != -1) tab.RemoveSequenceFrom(idx);
         }
 
-        // --- ИСПРАВЛЕНИЕ: МГНОВЕННАЯ РЕЗЕРВАЦИЯ ---
-        // Сообщаем Foundation, что карта уже "как бы" там.
-        // Теперь CanAccept для 2-ки вернет true, даже если Туз еще в полете.
+        if (modeManager != null && modeManager.DragLayer != null)
+        {
+            card.rectTransform.SetParent(modeManager.DragLayer, true);
+            card.rectTransform.SetAsLastSibling();
+        }
+
         target.ReserveCard(card);
-        // ------------------------------------------
-
-        // 3. Анимация (Snap) 
-        // ForceSnapToContainer вызовет AcceptCard в конце, но ReserveCard это не сломает
         card.ForceSnapToContainer(target);
-        if (modeManager != null)
-        {
-            modeManager.OnMoveMade();
-        }
 
-        // 4. Очки
-        if (scoreManager != null)
-        {
-            scoreManager.OnCardMove(source, target);
-        }
+        virtualFoundationRanks[card.cardModel.suit] = card.cardModel.rank;
 
-        // 5. Запись в Undo
+        if (modeManager != null) modeManager.OnMoveMade();
+        if (scoreManager != null) scoreManager.OnCardMove(source, target);
+
         if (undoManager != null)
         {
             undoManager.RecordMove(
                 new List<CardController> { card },
-                source,
-                target,
+                source, target,
                 new List<Transform> { prevParent },
-                new List<Vector3> { Vector3.zero },
+                new List<Vector3> { prevPos },
                 new List<int> { prevSib }
             );
         }
@@ -149,61 +203,40 @@ public class FreeCellAutoMove : MonoBehaviour
         bool isRed = (card.cardModel.suit == Suit.Diamonds || card.cardModel.suit == Suit.Hearts);
         bool safeByStandardRules = true;
 
-        // --- 1. СТАНДАРТНАЯ ПРОВЕРКА (SMART MOVE) ---
-        // Идея: Не убирать карту X, пока карты (X-1) другого цвета не вышли.
-        // Иначе некуда будет класть (X-1).
-        foreach (var f in pileManager.Foundations)
+        // --- 1. СТАНДАРТНАЯ ПРОВЕРКА ЧЕРЕЗ МГНОВЕННЫЕ ВИРТУАЛЬНЫЕ ДОМА ---
+        if (isRed)
         {
-            if (f.Count == 0) continue;
-
-            var topCard = f.GetTopCard();
-            if (topCard == null) continue;
-
-            bool topIsRed = (topCard.cardModel.suit == Suit.Diamonds || topCard.cardModel.suit == Suit.Hearts);
-
-            // Если масть противоположная (Красная против Черной)
-            if (topIsRed != isRed)
+            // Красная карта безопасна, если обе черные масти имеют ранг не ниже (наш - 1)
+            if (virtualFoundationRanks[Suit.Spades] < rank - 1 ||
+                virtualFoundationRanks[Suit.Clubs] < rank - 1)
             {
-                // Проверяем ранг противоположного цвета
-                // Если он меньше чем (наш - 1), значит наша карта еще нужна на столе
-                if (topCard.cardModel.rank < rank - 1)
-                {
-                    safeByStandardRules = false;
-                    break;
-                }
+                safeByStandardRules = false;
+            }
+        }
+        else
+        {
+            // Черная карта безопасна, если обе красные масти имеют ранг не ниже (наш - 1)
+            if (virtualFoundationRanks[Suit.Hearts] < rank - 1 ||
+                virtualFoundationRanks[Suit.Diamonds] < rank - 1)
+            {
+                safeByStandardRules = false;
             }
         }
 
-        // Если по стандартам всё ок — разрешаем
         if (safeByStandardRules) return true;
 
-
-        // --- 2. НОВАЯ ЛОГИКА: "ПРОГЛЯДЫВАНИЕ ВГЛУБЬ" (LOOKAHEAD) ---
-        // Если стандарт запрещает, но карта блокирует другую карту,
-        // которая СРАЗУ ЖЕ может улететь в дом — разрешаем ход.
-
+        // --- 2. ЛОГИКА LOOKAHEAD (Прогляд вглубь) ---
         if (card.transform.parent != null)
         {
             var tableau = card.transform.parent.GetComponent<TableauPile>();
 
-            // Проверяем, что карта лежит в столбце (Tableau) и под ней что-то есть
             if (tableau != null && tableau.cards.Count >= 2)
             {
-                // card - это верхняя карта (последняя в списке).
-                // Нам нужна та, что под ней (предпоследняя).
                 var cardBelow = tableau.cards[tableau.cards.Count - 2];
 
-                // Проверяем, готова ли нижняя карта лететь в какой-нибудь Foundation
                 foreach (var f in pileManager.Foundations)
                 {
-                    // CanAccept проверяет масть и ранг. 
-                    // Если нижняя карта подходит — значит, текущая карта блокирует прогресс.
-                    // Убираем блокировку!
-                    if (f.CanAccept(cardBelow))
-                    {
-                        // Debug.Log($"SmartMove Override: Moving {card.name} because it blocks {cardBelow.name}");
-                        return true;
-                    }
+                    if (f.CanAccept(cardBelow)) return true;
                 }
             }
         }

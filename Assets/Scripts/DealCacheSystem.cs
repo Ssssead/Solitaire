@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
-using YG; // ������������ ���� �������
+
 
 public class DealCacheSystem : MonoBehaviour
 {
@@ -35,19 +35,27 @@ public class DealCacheSystem : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private int defaultBufferSize = 10;
 
-    [Header("Starter Pack (��������� ������)")]
+    [Header("Optimization")]
+    [Tooltip("Задержка между сохранениями в секундах (защита от спама диска)")]
+    [SerializeField] private float saveCooldown = 5f;
+    private float lastSaveTime = 0f;
+    private bool isDirty = false; // Флаг: есть ли несохраненные изменения
+
+    [Header("Starter Pack (Аварийный резерв)")]
     public DealDatabase database;
 
     private Queue<CacheKey> generationQueue = new Queue<CacheKey>();
     private bool isGenerating = false;
 
     private HashSet<GameType> dirtyTypes = new HashSet<GameType>();
+    private HashSet<GameType> quarantinedTypes = new HashSet<GameType>();
 
     public bool IsReady { get; private set; } = false;
 
     private Deal currentActiveDeal = null;
     private CacheKey currentActiveKey;
     private bool dealWasPlayed = false;
+    private bool cloudDataReceived = false;
 
     private void Awake()
     {
@@ -59,7 +67,6 @@ public class DealCacheSystem : MonoBehaviour
             InitializeCacheConfigs();
             RegisterGenerators();
 
-#if UNITY_EDITOR
             LoadAllLocalCacheFiles();
 
             if (IsCacheEmpty())
@@ -70,40 +77,72 @@ public class DealCacheSystem : MonoBehaviour
 
             IsReady = true;
             CheckBufferHealth();
-#else
-            GetData();
-#endif
+
+            
         }
         else Destroy(gameObject);
     }
 
-#if !UNITY_EDITOR
-    private void OnEnable() => YG2.onGetSDKData += GetData;
-    private void OnDisable() => YG2.onGetSDKData -= GetData;
-#endif
 
     private void OnApplicationQuit()
     {
         ReturnActiveDealToQueue();
-        SaveData();
+        // Принудительно сохраняем при выходе, если есть изменения
+        if (isDirty) SaveData();
+    }
+
+    // [NEW] Умный метод отметки изменений (вместо мгновенного сохранения)
+    private void MarkAsDirty(GameType type)
+    {
+        dirtyTypes.Add(type);
+        isDirty = true;
     }
 
     private void SaveData()
     {
-#if UNITY_EDITOR
-        SaveDirtyFilesSync();
-#else
-        SaveToCloud();
-#endif
-    }
+        if (!isDirty && dirtyTypes.Count == 0) return;
 
-    // --- API ������ � ��������� ������ ---
+        isDirty = false;
+        lastSaveTime = Time.realtimeSinceStartup;
+
+        SaveDirtyFilesSync();
+
+        if (GlobalSaveManager.Instance != null)
+            GlobalSaveManager.Instance.MarkAsDirty();
+        else
+            isDirty = true; // не теряем флаг, попробуем сохранить позже из Update()
+    }
+    public string GetCloudData()
+    {
+        try
+        {
+            CompressedWrapper wrapper = new CompressedWrapper();
+            wrapper.entries = new List<CompressedEntry>();
+
+            foreach (var kvp in dealCache)
+            {
+                if (kvp.Value.Count == 0) continue;
+                CompressedEntry entry = new CompressedEntry { gType = (int)kvp.Key.GameType, diff = (int)kvp.Key.Difficulty, param = kvp.Key.Param, deals = new List<string>() };
+                foreach (var deal in kvp.Value) if (IsDealValid(deal)) entry.deals.Add(DealSerializer.Serialize(deal));
+                wrapper.entries.Add(entry);
+            }
+
+            string json = JsonUtility.ToJson(wrapper);
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
+            return Convert.ToBase64String(bytes);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[DealCache] Save Preparation Failed: {e.Message}");
+            return "";
+        }
+    }
+    // --- API МЕТОДЫ И АВАРИЙНЫЙ РЕЗЕРВ ---
     public Deal GetDeal(GameType type, Difficulty diff, int param)
     {
         ReturnActiveDealToQueue();
         var key = new CacheKey(type, diff, param);
 
-        // 1. ���� � ����
         if (dealCache.ContainsKey(key))
         {
             var queue = dealCache[key];
@@ -116,10 +155,7 @@ public class DealCacheSystem : MonoBehaviour
                     currentActiveKey = key;
                     dealWasPlayed = false;
 
-#if UNITY_EDITOR
-                    dirtyTypes.Add(type);
-#endif
-                    SaveData();
+                    MarkAsDirty(type); // Просто помечаем, сохранит Update()
                     CheckBufferHealth();
 
                     Debug.Log($"[DealCache] Served Deal for {type} {diff} (P:{param}). Remaining: {queue.Count}");
@@ -128,16 +164,13 @@ public class DealCacheSystem : MonoBehaviour
                 else
                 {
                     queue.Dequeue();
-#if UNITY_EDITOR
-                    dirtyTypes.Add(type);
-#endif
+                    MarkAsDirty(type);
                 }
             }
         }
 
-        // 2. ��������� ������ (���� ��� ���� ��� ������)
         Debug.LogWarning($"[DealCache] Cache Empty for {type} {diff}! Pinging generator and using Emergency Reserve.");
-        CheckBufferHealth(); // ���������� ��������� ��������
+        CheckBufferHealth();
 
         Deal emergencyDeal = GetEmergencyDeal(type, diff, param);
         if (emergencyDeal != null)
@@ -149,7 +182,7 @@ public class DealCacheSystem : MonoBehaviour
             return currentActiveDeal;
         }
 
-        return null; // ������ ����, ����� DeckManager ��������� ��������� � �������� �������
+        return null;
     }
 
     private Deal GetEmergencyDeal(GameType type, Difficulty diff, int param)
@@ -182,10 +215,7 @@ public class DealCacheSystem : MonoBehaviour
             if (!dealCache.ContainsKey(currentActiveKey)) dealCache[currentActiveKey] = new Queue<Deal>();
             dealCache[currentActiveKey].Enqueue(currentActiveDeal);
 
-#if UNITY_EDITOR
-            dirtyTypes.Add(currentActiveKey.GameType);
-#endif
-            SaveData();
+            MarkAsDirty(currentActiveKey.GameType);
         }
         currentActiveDeal = null;
     }
@@ -198,47 +228,36 @@ public class DealCacheSystem : MonoBehaviour
     }
 
     // =========================================================
-    //               ������ ����� (YANDEX CLOUD)
+    //               ЛОГИКА БИЛДА (YANDEX CLOUD)
     // =========================================================
-#if !UNITY_EDITOR
-    public void GetData()
+
+    public void LoadFromCloud(string cloudJson)
     {
-        if (IsReady && dealCache.Count > 0) return;
-
-        string cloudJson = YG2.saves.dealCacheJson;
-        if (string.IsNullOrEmpty(cloudJson)) LoadStarterPack();
-        else DeserializeAndUnpack(cloudJson);
-
+        cloudDataReceived = true;
+        if (!string.IsNullOrEmpty(cloudJson))
+        {
+            DeserializeAndUnpack(cloudJson);
+        }
         IsReady = true;
         CheckBufferHealth();
     }
 
-    private void SaveToCloud()
-    {
-        try
-        {
-            CompressedWrapper wrapper = new CompressedWrapper();
-            wrapper.entries = new List<CompressedEntry>();
+   
 
-            foreach (var kvp in dealCache)
-            {
-                if (kvp.Value.Count == 0) continue;
-                CompressedEntry entry = new CompressedEntry { gType = (int)kvp.Key.GameType, diff = (int)kvp.Key.Difficulty, param = kvp.Key.Param, deals = new List<string>() };
-                foreach (var deal in kvp.Value) if (IsDealValid(deal)) entry.deals.Add(DealSerializer.Serialize(deal));
-                wrapper.entries.Add(entry);
-            }
-
-            YG2.saves.dealCacheJson = JsonUtility.ToJson(wrapper);
-            YG2.SaveProgress();
-        }
-        catch (Exception e) { Debug.LogError($"[DealCache] Save Failed: {e.Message}"); }
-    }
-
-    private void DeserializeAndUnpack(string json)
+    private void DeserializeAndUnpack(string data)
     {
         dealCache.Clear();
         try
         {
+            string json = data;
+
+            // ---> ИЗМЕНЕНИЕ 2: Читаем из Base64 (если это он) <---
+            if (!string.IsNullOrEmpty(data) && !data.StartsWith("{"))
+            {
+                byte[] bytes = Convert.FromBase64String(data);
+                json = System.Text.Encoding.UTF8.GetString(bytes);
+            }
+
             CompressedWrapper wrapper = JsonUtility.FromJson<CompressedWrapper>(json);
             if (wrapper != null && wrapper.entries != null)
             {
@@ -257,12 +276,12 @@ public class DealCacheSystem : MonoBehaviour
         }
         catch { LoadStarterPack(); }
     }
-#endif
+
 
     // =========================================================
-    //               ������ ��������� (LOCAL FILES)
+    //               ЛОГИКА РЕДАКТОРА (LOCAL FILES)
     // =========================================================
-#if UNITY_EDITOR
+
     private string GetFilePathForGame(GameType type) => Path.Combine(Application.persistentDataPath, $"Deals_{type}.json");
 
     private void LoadAllLocalCacheFiles()
@@ -271,31 +290,48 @@ public class DealCacheSystem : MonoBehaviour
         foreach (GameType type in System.Enum.GetValues(typeof(GameType)))
         {
             string path = GetFilePathForGame(type);
-            if (File.Exists(path)) LoadFileIntoCache(path);
+            if (File.Exists(path)) LoadFileIntoCache(path, type);
         }
     }
 
-    private void LoadFileIntoCache(string path)
+    private void LoadFileIntoCache(string path, GameType type)
     {
         try
         {
             string json = File.ReadAllText(path);
-            SaveDataWrapper wrapper = JsonUtility.FromJson<SaveDataWrapper>(json);
-            if (wrapper == null || wrapper.queues == null) return;
 
-            foreach (var qData in wrapper.queues)
+            if (string.IsNullOrWhiteSpace(json))
             {
-                var key = new CacheKey(qData.type, qData.diff, qData.param);
+                Debug.LogWarning($"[DealCache] File {type} is empty (0 bytes)! Quarantining to prevent overwrite.");
+                quarantinedTypes.Add(type);
+                return;
+            }
+
+            CompressedWrapper wrapper = JsonUtility.FromJson<CompressedWrapper>(json);
+            if (wrapper == null || wrapper.entries == null)
+            {
+                Debug.LogWarning($"[DealCache] JSON parse failed for {type}. Quarantining.");
+                quarantinedTypes.Add(type);
+                return;
+            }
+
+            foreach (var qData in wrapper.entries)
+            {
+                var key = new CacheKey((GameType)qData.gType, (Difficulty)qData.diff, qData.param);
                 if (!dealCache.ContainsKey(key)) dealCache[key] = new Queue<Deal>();
 
                 foreach (var sDeal in qData.deals)
                 {
-                    Deal d = UnpackDeal(sDeal);
+                    Deal d = DealSerializer.Deserialize(sDeal);
                     if (IsDealValid(d)) dealCache[key].Enqueue(d);
                 }
             }
         }
-        catch (Exception e) { Debug.LogWarning($"[DealCache] Failed to load {Path.GetFileName(path)}: {e.Message}"); }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[DealCache] Failed to load {type}: {e.Message}. Quarantining.");
+            quarantinedTypes.Add(type);
+        }
     }
 
     private void SaveDirtyFilesSync()
@@ -304,33 +340,50 @@ public class DealCacheSystem : MonoBehaviour
 
         foreach (var type in dirtyTypes)
         {
-            // ��������������: �� �������������� ����, ���� ������ �����
+            if (quarantinedTypes.Contains(type)) continue;
+
             int totalDealsCount = dealCache.Where(kvp => kvp.Key.GameType == type).Sum(kvp => kvp.Value.Count);
             string path = GetFilePathForGame(type);
 
-            if (totalDealsCount == 0 && File.Exists(path))
-            {
-                Debug.Log($"[DealCache] Save for {type} skipped: memory is empty. Keeping old file as backup.");
-                continue;
-            }
+            if (totalDealsCount == 0 && File.Exists(path)) continue;
 
             var entries = dealCache.Where(kvp => kvp.Key.GameType == type).ToList();
-            SaveDataWrapper wrapper = new SaveDataWrapper();
-            wrapper.queues = new List<QueueSaveData>();
+
+            // Используем CompressedWrapper вместо SaveDataWrapper
+            CompressedWrapper wrapper = new CompressedWrapper();
+            wrapper.entries = new List<CompressedEntry>();
 
             foreach (var kvp in entries)
             {
-                QueueSaveData qData = new QueueSaveData { type = kvp.Key.GameType, diff = kvp.Key.Difficulty, param = kvp.Key.Param, deals = new List<SerializedDeal>() };
-                foreach (var deal in kvp.Value) if (IsDealValid(deal)) qData.deals.Add(PackDeal(deal));
-                wrapper.queues.Add(qData);
+                CompressedEntry qData = new CompressedEntry
+                {
+                    gType = (int)kvp.Key.GameType,
+                    diff = (int)kvp.Key.Difficulty,
+                    param = kvp.Key.Param,
+                    deals = new List<string>()
+                };
+                foreach (var deal in kvp.Value)
+                {
+                    // Сжимаем в Base64
+                    if (IsDealValid(deal)) qData.deals.Add(DealSerializer.Serialize(deal));
+                }
+                wrapper.entries.Add(qData);
             }
 
             try
             {
-                File.WriteAllText(path, JsonUtility.ToJson(wrapper, true));
-                Debug.Log($"[DealCache] Saved local file: {Path.GetFileName(path)}");
+                // Убираем true (pretty print), чтобы сэкономить еще больше места
+                string json = JsonUtility.ToJson(wrapper);
+                string tempPath = path + ".tmp";
+
+                File.WriteAllText(tempPath, json);
+
+                if (File.Exists(path)) File.Replace(tempPath, path, null);
+                else File.Move(tempPath, path);
+
+                Debug.Log($"[DealCache] SAFE Saved COMPRESSED file: {Path.GetFileName(path)} ({totalDealsCount} deals)");
             }
-            catch (Exception e) { Debug.LogError($"[DealCache] Failed to save {type}: {e.Message}"); }
+            catch (Exception e) { Debug.LogError($"[DealCache] Failed to safe-save {type}: {e.Message}"); }
         }
         dirtyTypes.Clear();
     }
@@ -351,15 +404,15 @@ public class DealCacheSystem : MonoBehaviour
         return sd;
     }
 
+    // ---> ИЗМЕНЕНИЕ 3: Исправлена ошибка билда CS0234 <---
+#if UNITY_EDITOR
     [ContextMenu("Open Local Cache Folder")]
-    private void OpenLocalCacheFolder()
-    {
-        UnityEditor.EditorUtility.RevealInFinder(Application.persistentDataPath);
-    }
+    private void OpenLocalCacheFolder() { UnityEditor.EditorUtility.RevealInFinder(Application.persistentDataPath); }
 #endif
 
+
     // =========================================================
-    //               ����� ������ � ����������
+    //               ОБЩИЕ МЕТОДЫ И ГЕНЕРАТОРЫ
     // =========================================================
     private void LoadStarterPack()
     {
@@ -387,16 +440,17 @@ public class DealCacheSystem : MonoBehaviour
             {
                 try
                 {
-                    SaveDataWrapper wrapper = JsonUtility.FromJson<SaveDataWrapper>(file.text);
-                    if (wrapper != null && wrapper.queues != null)
+                    CompressedWrapper wrapper = JsonUtility.FromJson<CompressedWrapper>(file.text);
+                    if (wrapper != null && wrapper.entries != null)
                     {
-                        foreach (var qData in wrapper.queues)
+                        foreach (var qData in wrapper.entries)
                         {
-                            var key = new CacheKey(qData.type, qData.diff, qData.param);
+                            var key = new CacheKey((GameType)qData.gType, (Difficulty)qData.diff, qData.param);
                             if (!dealCache.ContainsKey(key)) dealCache[key] = new Queue<Deal>();
+
                             foreach (var sDeal in qData.deals)
                             {
-                                Deal d = UnpackDeal(sDeal);
+                                Deal d = DealSerializer.Deserialize(sDeal);
                                 if (IsDealValid(d)) dealCache[key].Enqueue(d);
                             }
                         }
@@ -407,15 +461,51 @@ public class DealCacheSystem : MonoBehaviour
             }
         }
 
-        if (dataFound) SaveData();
+        if (dataFound)
+        {
+            isDirty = true;
+            SaveData();
+        }
     }
 
     private void Update()
     {
+
+        // [NEW] ЗАЩИТА ОТ ДОМЕННОЙ ПЕРЕЗАГРУЗКИ (Hot-Reload)
+        // Если Instance стал null, значит Unity только что перекомпилировала скрипты
+        // и стерла всю оперативную память (dealCache).
+        if (Instance == null)
+        {
+            Debug.LogWarning("[DealCache] Domain Reload detected! Restoring memory from disk to prevent data loss...");
+            Instance = this;
+
+            // Сбрасываем зависшие статусы (Unity убила старую корутину при перезагрузке)
+            isGenerating = false;
+            isDirty = false;
+            generationQueue.Clear();
+            dirtyTypes.Clear();
+
+            // Заново читаем наши большие файлы с диска в оперативную память
+            LoadAllLocalCacheFiles();
+            CheckBufferHealth();
+
+            return; // Пропускаем этот кадр, даем системе прийти в себя
+        }
+
+
+        // --- ВАШ СТАРЫЙ КОД НИЖЕ ---
+
+        // 1. Фоமைப்பு генерация
         if (!isGenerating && generationQueue.Count > 0)
         {
             var key = generationQueue.Dequeue();
             StartCoroutine(GenerateInBackground(key));
+        }
+
+        // 2. Автосохранение (Пакетная запись)
+        if (isDirty && Time.realtimeSinceStartup - lastSaveTime > saveCooldown)
+        {
+            SaveData();
         }
     }
 
@@ -439,18 +529,26 @@ public class DealCacheSystem : MonoBehaviour
         if (generatedDeal != null && IsDealValid(generatedDeal))
         {
             if (!dealCache.ContainsKey(key)) dealCache[key] = new Queue<Deal>();
+
             dealCache[key].Enqueue(generatedDeal);
 
-#if UNITY_EDITOR
-            dirtyTypes.Add(key.GameType);
-#endif
-            SaveData();
+            // --- БАГФИКС: ЖЕСТКИЙ ЛИМИТ КЭША (Hard Cap) ---
+            int targetLimit = GetTargetBufferLimit(key);
+
+            // Если в кэше оказалось больше раскладов, чем нужно (например, 11 вместо 10),
+            // мы просто удаляем самый старый (тот, что лежит на дне очереди).
+            while (dealCache[key].Count > targetLimit)
+            {
+                dealCache[key].Dequeue();
+                Debug.Log($"[DealCache] Dropped oldest deal to respect buffer limit ({targetLimit}) for {key.GameType} {key.Difficulty}");
+            }
+
+            MarkAsDirty(key.GameType); // Вместо SaveData() помечаем как "грязный"
         }
         else
         {
-            // ������ �� ���������: ��������� �� ���������, ������� ��� ��� ���� �����
             yield return new WaitForSeconds(0.5f);
-            generationQueue.Enqueue(key);
+            generationQueue.Enqueue(key); // Если генерация провалилась, пробуем еще раз
         }
 
         isGenerating = false;
@@ -469,13 +567,35 @@ public class DealCacheSystem : MonoBehaviour
                 if (!dealCache.ContainsKey(key)) dealCache[key] = new Queue<Deal>();
 
                 int currentCount = dealCache[key].Count;
-                // ������� ������� ����� ��� � �������, ����� �� �������
                 int queuedCount = generationQueue.Count(k => k.Equals(key));
+
+                // Проверяем, сколько нам не хватает до идеала
                 int needed = config.TargetBufferSize - (currentCount + queuedCount);
 
-                for (int i = 0; i < needed; i++) generationQueue.Enqueue(key);
+                // Добавляем задания в очередь только если есть дефицит
+                for (int i = 0; i < needed; i++)
+                {
+                    generationQueue.Enqueue(key);
+                }
+
+                // --- БАГФИКС (На всякий случай): Если кэш раздут прямо при запуске, чистим его ---
+                while (dealCache[key].Count > config.TargetBufferSize)
+                {
+                    dealCache[key].Dequeue();
+                    MarkAsDirty(gType);
+                }
             }
         }
+    }
+    private int GetTargetBufferLimit(CacheKey key)
+    {
+        if (cacheRequirements.ContainsKey(key.GameType))
+        {
+            var config = cacheRequirements[key.GameType].FirstOrDefault(c => c.Diff == key.Difficulty && c.Param == key.Param);
+            // Возвращаем лимит (обычно 10). Если по какой-то причине не нашли, возвращаем defaultBufferSize
+            return config.TargetBufferSize > 0 ? config.TargetBufferSize : defaultBufferSize;
+        }
+        return defaultBufferSize;
     }
 
     private bool IsDealValid(Deal deal)
@@ -493,7 +613,7 @@ public class DealCacheSystem : MonoBehaviour
         return true;
     }
 
-    // ������������ ����������: ����������� ������������� ���� �������
+    // ВАЖНО: Я вернул абсолютно безопасную версию распаковки, чтобы ничего не крашилось
     private Deal UnpackDeal(SerializedDeal sDeal)
     {
         Deal d = new Deal();
@@ -546,7 +666,9 @@ public class DealCacheSystem : MonoBehaviour
         ConfigureStandardGame(GameType.Yukon, new int[] { 0, 1 }, baseBuffer);
         ConfigureStandardGame(GameType.MonteCarlo, new int[] { 0, 1 }, baseBuffer);
         ConfigureStandardGame(GameType.Sultan, new int[] { 0 }, baseBuffer);
-        ConfigureStandardGame(GameType.Octagon, new int[] { 0 }, baseBuffer);
+        List<CacheConfig> octagonConfigs = new List<CacheConfig>();
+        octagonConfigs.Add(new CacheConfig { Diff = Difficulty.Medium, Param = 0, TargetBufferSize = baseBuffer });
+        cacheRequirements[GameType.Octagon] = octagonConfigs;
         ConfigureStandardGame(GameType.Montana, new int[] { 0, 1 }, baseBuffer);
     }
 
@@ -575,7 +697,52 @@ public class DealCacheSystem : MonoBehaviour
         foreach (var gen in GetComponentsInChildren<BaseGenerator>())
             if (!generatorRegistry.ContainsKey(gen.GameType)) generatorRegistry.Add(gen.GameType, gen);
     }
+#if UNITY_EDITOR
+    [ContextMenu("Compress Resources Files")]
+    private void CompressOldResourcesFiles()
+    {
+        TextAsset[] files = Resources.LoadAll<TextAsset>("InitialDeals");
+        foreach (var file in files)
+        {
+            // Читаем по СТАРОМУ формату
+            SaveDataWrapper oldWrapper = JsonUtility.FromJson<SaveDataWrapper>(file.text);
+            if (oldWrapper != null && oldWrapper.queues != null)
+            {
+                // Перекладываем в НОВЫЙ формат
+                CompressedWrapper newWrapper = new CompressedWrapper();
+                newWrapper.entries = new List<CompressedEntry>();
 
+                foreach (var qData in oldWrapper.queues)
+                {
+                    CompressedEntry newEntry = new CompressedEntry
+                    {
+                        gType = (int)qData.type,
+                        diff = (int)qData.diff,
+                        param = qData.param,
+                        deals = new List<string>()
+                    };
+
+                    foreach (var sDeal in qData.deals)
+                    {
+                        // Распаковываем старым методом и сразу запаковываем новым
+                        Deal d = UnpackDeal(sDeal);
+                        newEntry.deals.Add(DealSerializer.Serialize(d));
+                    }
+                    newWrapper.entries.Add(newEntry);
+                }
+
+                // Сохраняем рядом новый сжатый файл
+                string newJson = JsonUtility.ToJson(newWrapper);
+                string savePath = Application.dataPath + "/Resources/InitialDeals/" + file.name + "_Compressed.json";
+
+                // Убедитесь, что папка существует или измените путь под вашу структуру
+                System.IO.File.WriteAllText(savePath, newJson);
+                Debug.Log($"Конвертирован файл {file.name}. Размер стал: {newJson.Length} байт.");
+            }
+        }
+        UnityEditor.AssetDatabase.Refresh();
+    }
+#endif
     [Serializable] private class CompressedWrapper { public List<CompressedEntry> entries; }
     [Serializable] private class CompressedEntry { public int gType; public int diff; public int param; public List<string> deals; }
     [Serializable] private class SaveDataWrapper { public List<QueueSaveData> queues; }

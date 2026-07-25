@@ -1,4 +1,4 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEngine.UI;
 
 public class FreeCellPile : MonoBehaviour, ICardContainer
@@ -13,13 +13,26 @@ public class FreeCellPile : MonoBehaviour, ICardContainer
 
     private void RefreshState()
     {
+        var oldCard = _currentCard; // Р—Р°РїРѕРјРёРЅР°РµРј, РєС‚Рѕ Р±С‹Р» РґРѕ РѕР±РЅРѕРІР»РµРЅРёСЏ
         _currentCard = null;
+
         foreach (Transform child in transform)
         {
             if (!child.gameObject.activeSelf) continue;
             CardController card = child.GetComponent<CardController>();
             if (card != null) { _currentCard = card; break; }
         }
+
+        // ---> Р”РћР‘РђР’РРўР¬ Р­РўРћ: РћС‚РЅРёРјР°РµРј РїСЂРѕРіСЂРµСЃСЃ, РµСЃР»Рё РєР°СЂС‚Сѓ СѓР±СЂР°Р»Рё С‡РµСЂРµР· РѕС‚РјРµРЅСѓ С…РѕРґР° <---
+        if (oldCard != null && _currentCard == null)
+        {
+            var mode = FindObjectOfType<FreeCellModeManager>();
+            if (mode != null && mode.undoManager != null && mode.undoManager.IsUndoing)
+            {
+                GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveToFreeCell, -1);
+            }
+        }
+        // ------------------------------------------------------------------------------
     }
 
     public bool CanAccept(CardController card)
@@ -38,20 +51,55 @@ public class FreeCellPile : MonoBehaviour, ICardContainer
         return true;
     }
 
-    // --- ИСПРАВЛЕННЫЙ МЕТОД ---
     public void AcceptCard(CardController card)
     {
         if (card == null) return;
 
-        // 1. Обновляем логическую ссылку
+        // 1. Р‘СЂРѕРЅРёСЂСѓРµРј СЃР»РѕС‚
         _currentCard = card;
 
-        // 2. Удочеряем карту слоту, но ВАЖНО: сохраняем мировую позицию (true)!
-        // Мы удалили принудительное обнуление координат (anchoredPosition = Vector2.zero).
-        // Теперь скрипт анимации не будет перебиваться и плавно доставит карту в центр ячейки.
-        card.rectTransform.SetParent(transform, true);
+        // 2. РЎР§РРўРђР•Рњ Р Р•РђР›Р¬РќРћР• РљРћР›РР§Р•РЎРўР’Рћ РљРђР Рў (РР“РќРћР РР РЈРЇ РЎРўРђР Р«Р• РЎРЎР«Р›РљР)
+        var fcManager = FindObjectOfType<FreeCellPileManager>();
+        int occupied = 0;
+        if (fcManager != null)
+        {
+            foreach (var fc in fcManager.FreeCells)
+            {
+                if (fc == this)
+                {
+                    // Р­С‚Сѓ СЏС‡РµР№РєСѓ РјС‹ С‚РѕР»СЊРєРѕ С‡С‚Рѕ Р·Р°РЅСЏР»Рё С†РµР»РµРІРѕР№ РєР°СЂС‚РѕР№
+                    occupied++;
+                }
+                else
+                {
+                    // РџСЂРѕРІРµСЂСЏРµРј С„РёР·РёС‡РµСЃРєРё РґРµС‚РµР№ РІ РѕСЃС‚Р°Р»СЊРЅС‹С… СЏС‡РµР№РєР°С…
+                    bool hasRealCard = false;
+                    foreach (Transform child in fc.transform)
+                    {
+                        if (!child.gameObject.activeSelf) continue;
 
-        // 3. Рисуем поверх
+                        CardController c = child.GetComponent<CardController>();
+                        // Р•СЃР»Рё РІ СЏС‡РµР№РєРµ СЂРµР°Р»СЊРЅРѕ Р»РµР¶РёС‚ РєР°СЂС‚Р°, Рё СЌС‚Рѕ РќР• С‚Р° РєР°СЂС‚Р°, РєРѕС‚РѕСЂСѓСЋ РјС‹ СЃРµР№С‡Р°СЃ РїРµСЂРµРЅРѕСЃРёРј
+                        if (c != null && c != card)
+                        {
+                            hasRealCard = true;
+                            break;
+                        }
+                    }
+
+                    if (hasRealCard) occupied++;
+                }
+            }
+        }
+        Debug.Log($"<color=cyan>[FreeCellPile]</color> РљР°СЂС‚Р° {card.name} Р»РµС‚РёС‚ РІ СЏС‡РµР№РєСѓ. РќР°СЃС‡РёС‚Р°Р»Рё Р·Р°РЅСЏС‚С‹С…: {occupied}");
+        GameQuestTracker.Instance?.RecordFreeCellOccupied(occupied);
+
+        // 3. Р•СЃР»Рё РєР°СЂС‚Р° РµС‰С‘ Р»РµС‚РёС‚ вЂ” С„РёР·РёРєСѓ РґРµР»Р°РµС‚ SnapRoutine, РІС‹С…РѕРґРёРј
+        if (card.IsAnimating) return;
+
+        // 4. Р¤РёР·РёС‡РµСЃРєР°СЏ РїСЂРёРІСЏР·РєР° (РµСЃР»Рё Р°РЅРёРјР°С†РёРё РЅРµС‚)
+        card.rectTransform.SetParent(transform, false);
+        card.rectTransform.anchoredPosition = Vector2.zero;
         card.transform.SetAsLastSibling();
     }
 

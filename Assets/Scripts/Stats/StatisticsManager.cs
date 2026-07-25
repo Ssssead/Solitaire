@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.IO;
 using YG;
+using System.Collections.Generic;
 
 public class StatisticsManager : MonoBehaviour
 {
@@ -9,7 +10,7 @@ public class StatisticsManager : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool showDebugLogs = true;
 
-    private GameStatistics stats;
+    public GameStatistics stats;
     private string filePath;
 
     // Таймер
@@ -27,10 +28,14 @@ public class StatisticsManager : MonoBehaviour
     private int currentMoves = 0;
 
     public bool IsUserPremium = false;
+    public bool IsAdsDisabled = false;
 
     // События для UI (чтобы показать красивые анимации Level Up)
     public event System.Action<int> OnXPGained; // int = кол-во полученного опыта
     public event System.Action<string, int> OnLevelUp; // string = где апнули (Global/Klondike), int = новый уровень
+    // --- СИСТЕМА БЕЗОПАСНОЙ ОТПРАВКИ В ЛИДЕРБОРДЫ (Обход лимита Яндекса) ---
+    private Queue<System.Tuple<string, int>> leaderboardQueue = new Queue<System.Tuple<string, int>>();
+    private Coroutine leaderboardCoroutine;
 
     private void Awake()
     {
@@ -46,25 +51,58 @@ public class StatisticsManager : MonoBehaviour
         }
     }
 
-#if !UNITY_EDITOR
-    private void OnEnable() => YG2.onGetSDKData += LoadStatsCloud;
-    private void OnDisable() => YG2.onGetSDKData -= LoadStatsCloud;
-#endif
+    private void OnEnable()
+    {
+
+        
+
+        // Подписываемся на успешные покупки ВСЕГДА, так как этот менеджер живет на всех сценах
+        YG2.onPurchaseSuccess += HandlePurchaseSuccess;
+    }
+
+    private void OnDisable()
+    {
+
+        
+
+        YG2.onPurchaseSuccess -= HandlePurchaseSuccess;
+    }
+
+    private void Start()
+    {
+        // При старте игры автоматически просим Яндекс "консумировать" (обработать) все зависшие покупки
+        // Если они есть, Яндекс вызовет событие onPurchaseSuccess, и мы выдадим награду
+        if (YG2.isSDKEnabled)
+        {
+            YG2.ConsumePurchases(true);
+        }
+    }
+
+    private void HandlePurchaseSuccess(string purchasedId)
+    {
+        Debug.Log($"[StatisticsManager] Выдача награды за покупку: {purchasedId}");
+
+        // ---> ДОБАВЛЕНО: || purchasedId == "Premium2" <---
+        if (purchasedId == "Premium" || purchasedId == "Premium2")
+        {
+            GrantPremium();
+            DisableAds();
+        }
+        else if (purchasedId == "NoADS")
+        {
+            DisableAds();
+        }
+    }
 
     private void Initialize()
     {
         filePath = Path.Combine(Application.persistentDataPath, "solitaire_stats.json");
 
-#if UNITY_EDITOR
+
         // Загрузка в редакторе (через локальный файл JSON)
         LoadStatsLocal();
-#else
-        // Загрузка в билде (через Яндекс Игры)
-        if (YG2.isSDKEnabled) 
-        {
-            LoadStatsCloud();
-        }
-#endif
+
+       
     }
 
     public void OnGameStarted(string gameName, Difficulty difficulty, string variant)
@@ -75,12 +113,12 @@ public class StatisticsManager : MonoBehaviour
         LastGameTime = 0f;
         currentMoves = 0;
 
-        LastXPGained = 0; // [FIX] Сброс прошлого опыта
-        IsNewScoreRecord = false; // [FIX] Сброс рекордов
+        LastXPGained = 0; // Сброс прошлого опыта
+        IsNewScoreRecord = false; // Сброс рекордов
         IsNewTimeRecord = false;
         IsNewMovesRecord = false;
 
-        // [FIX] В режиме обучения обнуляем счетчики, но НЕ пишем +1 к запускам игры
+        // В режиме обучения обнуляем счетчики, но НЕ пишем +1 к запускам игры
         if (GameSettings.IsTutorialMode) return;
 
         // 2. ФОРМИРОВАНИЕ КЛЮЧЕЙ
@@ -92,7 +130,6 @@ public class StatisticsManager : MonoBehaviour
         stats.GetData(currentGameKey).gamesStarted++;
         stats.GetData(gameGlobalKey).gamesStarted++;
         stats.GetData(appGlobalKey).gamesStarted++;
-
         SaveStats();
         Log($"Game Started: {currentGameKey}");
     }
@@ -123,7 +160,7 @@ public class StatisticsManager : MonoBehaviour
         float duration = Time.time - gameStartTime;
         LastGameTime = duration;
 
-        // [FIX] Если это обучение, просто выходим. Никакого опыта и сохранений.
+        // Если это обучение, просто выходим. Никакого опыта и сохранений.
         if (GameSettings.IsTutorialMode)
         {
             LastXPGained = 0; // Опыт на экране победы будет 0
@@ -150,10 +187,9 @@ public class StatisticsManager : MonoBehaviour
             gType = GameType.Klondike; // Фолбэк на случай ошибки
         }
 
-        string gameGlobalKey = $"{gameName}_Global"; // Klondike_Global
-        string appGlobalKey = "Global";              // Global
+        string gameGlobalKey = $"{gameName}_Global"; 
+        string appGlobalKey = "Global";              
 
-        // --- ДОБАВЛЕНО: ПРОВЕРКА РЕКОРДОВ ---
         // Получаем текущие данные ДО их обновления, чтобы сравнить с новым результатом
         StatData modeData = stats.GetData(currentGameKey);
 
@@ -164,7 +200,6 @@ public class StatisticsManager : MonoBehaviour
         IsNewScoreRecord = hasPreviousWins && (finalScore > modeData.bestScore);
         IsNewTimeRecord = hasPreviousWins && (modeData.bestTime == 0 || duration < modeData.bestTime);
         IsNewMovesRecord = hasPreviousWins && (modeData.fewestMoves == 0 || currentMoves < modeData.fewestMoves);
-        // ------------------------------------
 
         // 2. Получаем текущие данные игры, чтобы узнать УРОВЕНЬ
         StatData gameData = stats.GetData(gameGlobalKey);
@@ -172,6 +207,16 @@ public class StatisticsManager : MonoBehaviour
 
         // 3. РАСЧЕТ ОПЫТА 
         int xpGained = LevelingUtils.CalculateXP(gType, currentLevel, diffEnum, variantStr, IsUserPremium);
+
+        // ПРИМЕНЕНИЕ БИЛЕТОВ НА Х2 ОПЫТ (И СПИСАНИЕ ЗАРЯДА)
+        if (QuestManager.Instance != null && System.Enum.TryParse(gameName, out QuestCategory cat))
+        {
+            if (QuestManager.Instance.ConsumeXpBuffForGame(cat))
+            {
+                xpGained *= 2;
+                Debug.Log($"[XP System] Сработал билет X2! Опыт удвоен до {xpGained}");
+            }
+        }
 
         LastXPGained = xpGained;
 
@@ -182,7 +227,7 @@ public class StatisticsManager : MonoBehaviour
         stats.UpdateData(gameGlobalKey, true, duration, currentMoves, finalScore, difficultyStr, gameName, variantStr);
         stats.UpdateData(appGlobalKey, true, duration, currentMoves, finalScore, difficultyStr, gameName, variantStr);
 
-        // Б. Начисление опыта
+        // Начисление локального опыта
         StatData localStats = stats.GetData(gameGlobalKey);
         if (localStats.currentLevel == 1 && localStats.xpForNextLevel == 0) localStats.xpForNextLevel = 500;
 
@@ -193,6 +238,7 @@ public class StatisticsManager : MonoBehaviour
             OnLevelUp?.Invoke(gameName, localStats.currentLevel);
         }
 
+        // Начисление глобального опыта
         StatData globalStats = stats.GetData(appGlobalKey);
         if (globalStats.currentLevel == 1 && globalStats.xpForNextLevel == 0) globalStats.xpForNextLevel = 2000;
 
@@ -205,22 +251,30 @@ public class StatisticsManager : MonoBehaviour
 
         OnXPGained?.Invoke(xpGained);
         SaveStats();
+        var historyList = stats.GetData(currentGameKey)?.history;
+        if (historyList != null && historyList.Count > 0)
+        {
+            var lastEntry = historyList[historyList.Count - 1];
+            GameQuestTracker.Instance?.ReportMatchEnd(lastEntry, 0, 0);
+        }
+
+
+       
+
+
         currentMoves = 0;
     }
 
     public void OnGameAbandoned()
     {
-        // Если игра даже не началась (не было ходов), не записываем статистику
         if (!hasTimerStarted) return;
 
-        // 1. Рассчитываем реальное время игры
         float duration = Time.time - gameStartTime;
         LastGameTime = duration;
 
         isTimerRunning = false;
         hasTimerStarted = false;
 
-        // [FIX] В режиме обучения не пишем поражения
         if (GameSettings.IsTutorialMode)
         {
             currentMoves = 0;
@@ -235,12 +289,19 @@ public class StatisticsManager : MonoBehaviour
         string gameGlobalKey = $"{gameName}_Global";
         string appGlobalKey = "Global";
 
-        // 2. ПЕРЕДАЕМ duration И currentMoves ВМЕСТО 0
         stats.UpdateData(currentGameKey, false, duration, currentMoves, 0, difficultyStr, gameName, variantStr);
         stats.UpdateData(gameGlobalKey, false, duration, currentMoves, 0, difficultyStr, gameName, variantStr);
         stats.UpdateData(appGlobalKey, false, duration, currentMoves, 0, difficultyStr, gameName, variantStr);
 
         SaveStats();
+
+        var historyList = stats.GetData(currentGameKey)?.history;
+        if (historyList != null && historyList.Count > 0)
+        {
+            var lastEntry = historyList[historyList.Count - 1];
+            GameQuestTracker.Instance?.ReportMatchEnd(lastEntry, 0, 0);
+        }
+
         currentMoves = 0;
     }
 
@@ -248,34 +309,32 @@ public class StatisticsManager : MonoBehaviour
 
     private void SaveStats()
     {
-#if UNITY_EDITOR
-        // Сохранение в редакторе (стандартный JSON)
         string json = JsonUtility.ToJson(stats, true);
         File.WriteAllText(filePath, json);
         Log("Stats saved locally.");
-#else
-        // Сохранение в билде (сжимаем в Base64 и пушим в плагин)
-        try
-        {
-            YG2.saves.statsDataJson = StatsSerializer.Serialize(stats);
-            YG2.SaveProgress();
-            Log("Stats saved to cloud.");
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"[StatsManager] Cloud Save Failed: {e.Message}");
-        }
-#endif
+
+        GlobalSaveManager.Instance?.MarkAsDirty();
     }
-#if UNITY_EDITOR
+
     private void LoadStatsLocal()
     {
+        // Загружаем локальные флаги покупок
+        IsUserPremium = PlayerPrefs.GetInt("IsPremiumSaved", 0) == 1;
+        IsAdsDisabled = PlayerPrefs.GetInt("IsAdsDisabledSaved", 0) == 1;
+
         if (File.Exists(filePath))
         {
             try
             {
                 string json = File.ReadAllText(filePath);
                 stats = JsonUtility.FromJson<GameStatistics>(json);
+
+                if (stats.MigrateOldKeys())
+                {
+                    Log("Migrated old keys. Saving changes...");
+                    SaveStats(); 
+                }
+
                 stats.BuildLookup();
                 Log("Local stats loaded successfully.");
             }
@@ -291,52 +350,59 @@ public class StatisticsManager : MonoBehaviour
             Log("No local stats file found, creating new.");
         }
     }
-#endif
 
-#if !UNITY_EDITOR
-    private void LoadStatsCloud()
+
+
+    public void LoadFromCloud(string cloudJson)
     {
-        string cloudJson = YG2.saves.statsDataJson;
+        // IsUserPremium / IsAdsDisabled уже выставлены GlobalSaveManager-ом
+        // ДО этого вызова - здесь их трогать не нужно.
 
         if (string.IsNullOrEmpty(cloudJson))
         {
-            stats = new GameStatistics();
-            Log("Cloud stats empty, creating new.");
+            // Облако пустое (новый игрок ИЛИ преждевременный вызов до факт. загрузки) -
+            // оставляем то, что уже подняла LoadStatsLocal().
+            Log("Cloud stats empty, keeping local stats.");
+            return;
         }
-        else
+
+        try
         {
-            try
+            StatsSerializer.Deserialize(cloudJson, out stats);
+
+            if (stats.MigrateOldKeys())
             {
-                StatsSerializer.Deserialize(cloudJson, out stats);
-                stats.BuildLookup();
-                Log("Cloud stats loaded successfully.");
+                Log("Migrated old keys after cloud load.");
+                SaveStats();
             }
-            catch (System.Exception e)
-            {
-                stats = new GameStatistics();
-                Debug.LogError($"[StatsManager] Error loading cloud stats, creating new. {e.Message}");
-            }
+
+            stats.BuildLookup();
+            Log("Cloud stats loaded successfully.");
+           
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[StatsManager] Error loading cloud stats: {e.Message}");
+            // НЕ затираем stats - оставляем локальные данные как fallback
         }
     }
-#endif
- 
-    // --- API для UI ---
+    public string GetCloudData()
+    {
+        return StatsSerializer.Serialize(stats);
+    }
 
-    // Метод для получения статистики конкретного режима (Easy/Medium/Hard)
+
     public StatData GetStats(string gameName, Difficulty difficulty, string variant)
     {
         string key = $"{gameName}_{difficulty}_{variant}";
         return stats.GetData(key);
     }
 
-    // 2. Для ОБЩЕЙ статистики всего приложения (оставьте как есть, пригодится для главного меню)
     public StatData GetGlobalStats()
     {
         return stats.GetData("Global");
     }
 
-    // 3. --- НОВЫЙ МЕТОД ---
-    // Для глобальной статистики КОНКРЕТНОГО РЕЖИМА (например, "Klondike_Global")
     public StatData GetGameGlobalStats(string gameName)
     {
         return stats.GetData($"{gameName}_Global");
@@ -347,27 +413,88 @@ public class StatisticsManager : MonoBehaviour
         if (showDebugLogs) Debug.Log($"[StatsManager] {msg}");
     }
 
-    /// <summary>
-    /// Возвращает текущее количество ходов.
-    /// </summary>
     public int GetCurrentMoves()
     {
         return currentMoves;
     }
 
+    public void RegisterQuestCompleted(int currentQuestStreak, int currentDayStreak, int xpReward = 0)
+    {
+        StatData appGlobal = stats.GetData("Global");
+
+        appGlobal.questsCompleted++;
+        appGlobal.questStreak = currentQuestStreak;       
+        appGlobal.questDayStreak = currentDayStreak;      
+
+        if (xpReward > 0)
+        {
+            if (appGlobal.currentLevel == 1 && appGlobal.xpForNextLevel == 0)
+                appGlobal.xpForNextLevel = 2000;
+
+            if (IsUserPremium)
+            {
+                xpReward = Mathf.RoundToInt(xpReward * LevelingUtils.MULTIPLIER_PREMIUM);
+            }
+
+            bool leveledUp = appGlobal.AddExperience(xpReward, isGlobal: true);
+
+            if (leveledUp)
+            {
+                OnLevelUp?.Invoke("Global", appGlobal.currentLevel);
+            }
+            OnXPGained?.Invoke(xpReward);
+        }
+        SaveStats();
+
+        Log($"Квест выполнен! Всего: {appGlobal.questsCompleted}. Получено XP: {xpReward}");
+    }
+
     public float GetLastGameDurationFromHistory()
     {
-        // 1. Берем данные текущего режима
         var data = stats.GetData(currentGameKey);
 
-        // 2. Если история есть - берем последнюю запись
         if (data != null && data.history.Count > 0)
         {
-            // Последняя добавленная игра всегда в конце списка (или в начале, зависит от реализации, 
-            // но в вашем коде history.Add добавляет в конец, а удаляет RemoveAt(0))
             return data.history[data.history.Count - 1].time;
         }
 
         return 0f;
     }
+    
+    public void GrantPremium()
+    {
+        IsUserPremium = true;
+        PlayerPrefs.SetInt("IsPremiumSaved", 1);
+        SaveStats(); // -> GlobalSaveManager.MarkAsDirty(), он сам подхватит IsUserPremium в YG2.saves.isPremium
+
+        // ---> ПРЯЧЕМ STICKY БАННЕР СРАЗУ ПОСЛЕ ПОКУПКИ <---
+        if (AdManager.Instance != null) AdManager.Instance.UpdateStickyAd();
+    }
+
+    public void DisableAds()
+    {
+        IsAdsDisabled = true;
+        PlayerPrefs.SetInt("IsAdsDisabledSaved", 1);
+        SaveStats();
+
+        // ---> ПРЯЧЕМ STICKY БАННЕР СРАЗУ ПОСЛЕ ПОКУПКИ <---
+        if (AdManager.Instance != null) AdManager.Instance.UpdateStickyAd();
+    }
+
+    public List<StatEntry> GetAllEntriesRaw()
+    {
+        if (stats == null) return new List<StatEntry>();
+        return stats.entries;
+    }
+
+    public void ResetAllStatistics()
+    {
+        stats = new GameStatistics();
+        currentMoves = 0;
+        LastGameTime = 0f;
+        LastXPGained = 0;
+        SaveStats();
+        Debug.Log("[StatisticsManager] Вся статистика полностью сброшена!");
+    }
+
 }

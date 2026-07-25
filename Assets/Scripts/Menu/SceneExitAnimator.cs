@@ -48,9 +48,16 @@ public class SceneExitAnimator : MonoBehaviour
 
     private IEnumerator AnimateOutRoutine(System.Action onComplete, bool isExit)
     {
-        // 1. ИСЧЕЗНОВЕНИЕ ИНТЕРФЕЙСА И СЛОТОВ ТОЛЬКО ПРИ ВЫХОДЕ В МЕНЮ
+        // 1. ИСЧЕЗНОВЕНИЕ ИНТЕРФЕЙСА И СЛОТОВ
         if (isExit)
         {
+            // <--- ЗАМЕНЕНО: Теперь используем UI_Drop для старта уезда панелей --->
+            if (AudioManager.Instance != null)
+            {
+                // Играем один раз при старте ухода всего UI
+                AudioManager.Instance.PlaySound("UI_Drop");
+            }
+
             if (introController != null)
             {
                 foreach (var el in introController.GetTopUIElements())
@@ -60,7 +67,7 @@ public class SceneExitAnimator : MonoBehaviour
                     if (el != null) StartCoroutine(AnimateUIElement(el, el.anchoredPosition, el.anchoredPosition + new Vector2(0, -300f), 0.4f));
             }
 
-            // Прячем слоты ТОЛЬКО при выходе в меню
+            // Прячем слоты
             if (pileManager != null)
             {
                 foreach (var container in pileManager.GetAllContainers())
@@ -76,7 +83,15 @@ public class SceneExitAnimator : MonoBehaviour
             }
         }
 
-        // 2. ПАДЕНИЕ КАРТ ПРОИСХОДИТ ВСЕГДА (и при рестарте, и при выходе)
+        // <--- ЗВУК ПАДЕНИЯ КАРТ (проигрывается и при выходе, и при рестарте) --->
+        if (AudioManager.Instance != null)
+        {
+            // Используем Table_Sweep для общего шума разлетающихся карт.
+            // Длительность 0.7с + плавное затухание 0.2с идеально покроют фазу падения.
+            AudioManager.Instance.PlaySoundWithAutoFade("Card_Drop_Exit", 0.7f, 0.2f);
+        }
+
+        // 2. ПАДЕНИЕ КАРТ (физика)
         List<FallingCard> fallingCards = new List<FallingCard>();
         CardController[] allCards = FindObjectsOfType<CardController>();
 

@@ -29,12 +29,11 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     private Coroutine activeCoroutine;
     private bool isHovering = false;
-    private bool isInteractionAllowed = true; // Разрешен ли ховер вообще
-    private bool isSelectedMode = false;      // <--- НОВЫЙ ФЛАГ: Карта выбрана
+    private bool isInteractionAllowed = true;
+    private bool isSelectedMode = false;
 
     private float swingTimer;
     private float bobTimer;
-    private Canvas overrideCanvas;
 
     private void Awake()
     {
@@ -52,36 +51,28 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
         }
     }
 
-    /// <summary>
-    /// Включает режим "Выбрана": карта плавает сама по себе, мышь игнорируется.
-    /// </summary>
     public void SetSelectedMode(bool selected)
     {
         isSelectedMode = selected;
 
         if (selected)
         {
-            // 1. Останавливаем любые текущие анимации
             if (activeCoroutine != null) StopCoroutine(activeCoroutine);
 
-            // 2. Запоминаем текущую позицию (это уже позиция в Preview Anchor) как центр колебаний
             targetHoverPos = transform.localPosition;
-
-            // 3. Сбрасываем таймеры, чтобы движение было плавным
             swingTimer = 0f;
             bobTimer = 0f;
-
-            // 4. Запускаем вечное покачивание
             isHovering = true;
+
             activeCoroutine = StartCoroutine(IdleHoverRoutine());
         }
         else
         {
-            // Выключаем режим
             isHovering = false;
             if (activeCoroutine != null) StopCoroutine(activeCoroutine);
 
-            // Сбрасываем вращение в ноль, чтобы карта вернулась ровной
+            // ИСПРАВЛЕНИЕ: Обнуляем корутину, чтобы указать, что карта в покое
+            activeCoroutine = null;
             transform.localRotation = Quaternion.identity;
         }
     }
@@ -90,49 +81,36 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
     {
         isHovering = false;
         if (activeCoroutine != null) StopCoroutine(activeCoroutine);
+
+        // ИСПРАВЛЕНИЕ: Обнуляем корутину
+        activeCoroutine = null;
     }
-
-    // --- Приоритет отрисовки (Sorting Order) ---
-   /* public void SetPriorityRender(bool enable)
-    {
-        if (overrideCanvas == null)
-        {
-            overrideCanvas = GetComponent<Canvas>();
-            if (overrideCanvas == null) overrideCanvas = gameObject.AddComponent<Canvas>();
-            if (GetComponent<GraphicRaycaster>() == null) gameObject.AddComponent<GraphicRaycaster>();
-        }
-
-        if (enable)
-        {
-            overrideCanvas.overrideSorting = true;
-            overrideCanvas.sortingOrder = 1;
-        }
-        else
-        {
-            overrideCanvas.overrideSorting = false;
-            overrideCanvas.sortingOrder = 0;
-        }
-    }*/
 
     // --- События мыши ---
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        // Если запрещено, или уже наведена, или В РЕЖИМЕ SELECTED - игнорируем мышь
         if (!isInteractionAllowed || isHovering || isSelectedMode) return;
 
         bool isButtonActive = (targetButton == null || targetButton.interactable);
         if (!isButtonActive && !workEvenIfDisabled) return;
 
+        // ИСПРАВЛЕНИЕ ГЛАВНОГО БАГА (ГИГАНТСКАЯ КАРТА):
+        // Перезаписываем базовые значения ТОЛЬКО если сейчас не идет анимация ухода/появления.
+        if (activeCoroutine == null)
+        {
+            baseScale = transform.localScale;
+            basePos = transform.localPosition;
+            baseRot = transform.localRotation;
+
+            targetHoverScale = baseScale * hoverScaleMult;
+            targetHoverPos = basePos + new Vector3(0, hoverYOffset, 0);
+
+            // <--- ДОБАВИТЬ ЭТО: Звук при наведении курсора --->
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Hover");
+        }
+
         isHovering = true;
-
-        baseScale = transform.localScale;
-        basePos = transform.localPosition;
-        baseRot = transform.localRotation;
-
-        targetHoverScale = baseScale * hoverScaleMult;
-        targetHoverPos = basePos + new Vector3(0, hoverYOffset, 0);
-
         swingTimer = 0f;
         bobTimer = 0f;
 
@@ -142,9 +120,7 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        // Если карта выбрана (SelectedMode), мышь на нее не влияет
         if (isSelectedMode) return;
-
         if (!isInteractionAllowed || !isHovering) return;
         isHovering = false;
 
@@ -180,7 +156,6 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     private IEnumerator IdleHoverRoutine()
     {
-        // Бесконечный цикл покачивания
         while (isHovering)
         {
             swingTimer += Time.deltaTime * swingSpeed;
@@ -190,7 +165,6 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
             float yOffset = Mathf.Sin(bobTimer) * bobAmount;
 
             transform.localRotation = Quaternion.Euler(0, 0, zAngle);
-            // Колеблемся вокруг targetHoverPos
             transform.localPosition = targetHoverPos + new Vector3(0, yOffset, 0);
 
             yield return null;
@@ -216,5 +190,8 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
         transform.localScale = baseScale;
         transform.localPosition = basePos;
         transform.localRotation = baseRot;
+
+        // ИСПРАВЛЕНИЕ: Анимация завершена, карта снова в полном покое
+        activeCoroutine = null;
     }
 }

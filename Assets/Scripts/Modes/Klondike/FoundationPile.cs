@@ -8,7 +8,7 @@ using UnityEngine;
 /// </summary>
 public class FoundationPile : MonoBehaviour, ICardContainer
 {
-    private List<CardController> cards = new List<CardController>();
+    public List<CardController> cards = new List<CardController>();
     private KlondikeModeManager manager;
     private RectTransform rect;
     private AnimationService animationService;
@@ -175,6 +175,10 @@ public class FoundationPile : MonoBehaviour, ICardContainer
         UpdateInteractivity();
 
         animationService?.ReorderContainerZ(transform);
+        if (card != null)
+        {
+            GameQuestTracker.Instance?.RecordCardToFoundation(card.cardModel.rank);
+        }
     }
 
     /// <summary>
@@ -218,10 +222,15 @@ public class FoundationPile : MonoBehaviour, ICardContainer
         if (cards.Contains(card)) cards.Remove(card);
         else cards.RemoveAll(c => c == card);
 
-        // КРИТИЧНО: Обновляем состояние оставшихся карт
+        // --- ДОБАВИТЬ ЭТО: Отнимаем прогресс при изъятии карты ---
+        if (card.cardModel.rank > 0)
+        {
+            GameQuestTracker.Instance?.RecordCardRemovedFromFoundation(card.cardModel.rank);
+        }
+        // ---------------------------------------------------------
+
         UpdateInteractivity();
 
-        // У удаленной карты включаем raycast
         if (card.canvasGroup != null)
         {
             card.canvasGroup.blocksRaycasts = true;
@@ -282,10 +291,15 @@ public class FoundationPile : MonoBehaviour, ICardContainer
         CardController topCard = cards[lastIndex];
         cards.RemoveAt(lastIndex);
 
-        // КРИТИЧНО: При снятии карты нужно включить интерактивность у новой верхней карты
+        // --- ДОБАВИТЬ ЭТО: Отнимаем прогресс при изъятии карты через Undo ---
+        if (topCard != null && topCard.cardModel.rank > 0)
+        {
+            GameQuestTracker.Instance?.RecordCardRemovedFromFoundation(topCard.cardModel.rank);
+        }
+        // -------------------------------------------------------------------
+
         UpdateInteractivity();
 
-        // У снятой карты включаем raycast (чтобы её можно было нести)
         if (topCard.canvasGroup != null)
         {
             topCard.canvasGroup.blocksRaycasts = true;

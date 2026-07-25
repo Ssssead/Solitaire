@@ -5,8 +5,8 @@ using System.Diagnostics;
 
 public static class FreeCellSolver
 {
-    private const int MAX_DEPTH = 300;
-    private const int MAX_STATES = 100000;
+    private const int MAX_DEPTH = 500;
+    private const int MAX_STATES = 500000;
 
     public struct Card
     {
@@ -53,7 +53,14 @@ public static class FreeCellSolver
         public bool IsSolved;
         public int DeadEnds;
         public int VisualChaos;
-        public int Moves; // ВЕРНУЛИ ПОЛЕ ДЛИНЫ ПУТИ
+        public int Moves;
+        public int StatesVisited;
+
+        // --- НОВЫЕ МЕТРИКИ ДЛЯ АНАЛИЗА ---
+        public int MovesToFirstEmptyCol;
+        public int FoundationMoves;
+        public int TransitMoves; // Сумма ходов в FreeCell и обратно
+        public int TabToTabMoves;
     }
 
     private class SearchNode
@@ -87,11 +94,8 @@ public static class FreeCellSolver
     public static IEnumerator SolveAsync(Deal initialDeal, float frameBudgetMs, int allowedFreeCells, ExtendedSolverResult resultOut)
     {
         State rootState = ConvertToInternal(initialDeal);
-
-        // Вычисляем визуальный хаос один раз на старте
         resultOut.VisualChaos = CalculateVisualChaos(initialDeal);
 
-        // Блокируем лишние ячейки
         for (int i = allowedFreeCells; i < 4; i++)
         {
             rootState.freeCells[i] = new Card { suit = 255, rank = 255 };
@@ -100,7 +104,8 @@ public static class FreeCellSolver
         var openSet = new PriorityQueue<SearchNode>();
         var closedSet = new HashSet<ulong>();
 
-        openSet.Enqueue(new SearchNode(rootState, null, default, 0), GetHeuristic(rootState));
+        int rootH = GetHeuristic(rootState);
+        openSet.Enqueue(new SearchNode(rootState, null, default, 0), rootH);
 
         Stopwatch frameSw = Stopwatch.StartNew();
         int statesVisited = 0;
@@ -141,7 +146,10 @@ public static class FreeCellSolver
                 if (!closedSet.Contains(nsHash))
                 {
                     newUnvisitedStates++;
-                    openSet.Enqueue(new SearchNode(kvp.Value, current, kvp.Key, (short)(current.Depth + 1)), GetHeuristic(kvp.Value));
+                    short newDepth = (short)(current.Depth + 1);
+                    int h = GetHeuristic(kvp.Value);
+                    int f = h + (newDepth * 15);
+                    openSet.Enqueue(new SearchNode(kvp.Value, current, kvp.Key, newDepth), f);
                 }
             }
 
@@ -150,16 +158,90 @@ public static class FreeCellSolver
 
         resultOut.IsSolved = isSolved;
         resultOut.DeadEnds = deadEnds;
+        resultOut.StatesVisited = statesVisited;
 
-        // Быстрый расчет длины пути
         if (winningNode != null)
         {
             resultOut.Moves = winningNode.Depth;
+
+            // --- РЕТРОСПЕКТИВНЫЙ АНАЛИЗ ПУТИ РЕШЕНИЯ ---
+            int foundMoves = 0;
+            int transitMoves = 0;
+            int tabMoves = 0;
+            int emptyColDepth = -1;
+
+            SearchNode curr = winningNode;
+            while (curr.Parent != null)
+            {
+                if (curr.MoveMade.Type == MoveType.ToFoundation) foundMoves++;
+                else if (curr.MoveMade.Type == MoveType.ToFreeCell || curr.MoveMade.Type == MoveType.FreeCellToTab) transitMoves++;
+                else if (curr.MoveMade.Type == MoveType.TabToTab) tabMoves++;
+
+                bool hasEmpty = false;
+                for (int i = 0; i < 8; i++) if (curr.DealState.tabLens[i] == 0) { hasEmpty = true; break; }
+                if (hasEmpty) emptyColDepth = curr.Depth;
+
+                curr = curr.Parent;
+            }
+
+            resultOut.MovesToFirstEmptyCol = emptyColDepth;
+            resultOut.FoundationMoves = foundMoves;
+            resultOut.TransitMoves = transitMoves;
+            resultOut.TabToTabMoves = tabMoves;
         }
         else
         {
             resultOut.Moves = 0;
         }
+    }
+
+    private static int GetHeuristic(State s)
+    {
+        int h = 0;
+        for (int i = 0; i < 4; i++) h += (13 - s.foundations[i]) * 100;
+
+        for (int i = 0; i < 8; i++)
+        {
+            for (int j = 0; j < s.tabLens[i]; j++)
+            {
+                Card c = s.tableau[i][j];
+                if (c.rank == s.foundations[c.suit] + 1)
+                {
+                    int depth = (s.tabLens[i] - 1) - j;
+                    h += depth * 40;
+                }
+                if (j < s.tabLens[i] - 1)
+                {
+                    Card top = s.tableau[i][j + 1];
+                    if (c.IsRed == top.IsRed || top.rank != c.rank - 1) h += 15;
+                }
+            }
+        }
+        return h;
+    }
+
+    private static ulong ComputeSymmetricHash(State s)
+    {
+        ulong hash = 17;
+        ulong fHash = (ulong)s.foundations[0] | ((ulong)s.foundations[1] << 4) | ((ulong)s.foundations[2] << 8) | ((ulong)s.foundations[3] << 12);
+        hash = hash * 397 + fHash;
+
+        int[] fc = new int[4];
+        for (int i = 0; i < 4; i++) if (s.freeCells[i].rank > 0) fc[i] = (s.freeCells[i].suit << 4) | s.freeCells[i].rank;
+        Array.Sort(fc);
+        ulong fcHash = (ulong)fc[0] | ((ulong)fc[1] << 8) | ((ulong)fc[2] << 16) | ((ulong)fc[3] << 24);
+        hash = hash * 397 + fcHash;
+
+        ulong[] colHashes = new ulong[8];
+        for (int i = 0; i < 8; i++)
+        {
+            ulong ch = 19;
+            for (int j = 0; j < s.tabLens[i]; j++) ch = ch * 397 + (ulong)((s.tableau[i][j].suit << 4) | s.tableau[i][j].rank);
+            colHashes[i] = ch;
+        }
+        Array.Sort(colHashes);
+        for (int i = 0; i < 8; i++) hash = hash * 397 + colHashes[i];
+        return hash;
     }
 
     private static int CalculateVisualChaos(Deal d)
@@ -194,45 +276,6 @@ public static class FreeCellSolver
             }
         }
         return chaos;
-    }
-
-    private static ulong ComputeSymmetricHash(State s)
-    {
-        ulong hash = 17;
-        ulong fHash = (ulong)s.foundations[0] | ((ulong)s.foundations[1] << 4) | ((ulong)s.foundations[2] << 8) | ((ulong)s.foundations[3] << 12);
-        hash = hash * 31 + fHash;
-        int[] fc = new int[4];
-        for (int i = 0; i < 4; i++) if (s.freeCells[i].rank > 0) fc[i] = (s.freeCells[i].suit << 4) | s.freeCells[i].rank;
-        Array.Sort(fc);
-        ulong fcHash = (ulong)fc[0] | ((ulong)fc[1] << 8) | ((ulong)fc[2] << 16) | ((ulong)fc[3] << 24);
-        hash = hash * 31 + fcHash;
-        ulong[] colHashes = new ulong[8];
-        for (int i = 0; i < 8; i++)
-        {
-            ulong ch = 19;
-            for (int j = 0; j < s.tabLens[i]; j++) ch = ch * 31 + (ulong)((s.tableau[i][j].suit << 4) | s.tableau[i][j].rank);
-            colHashes[i] = ch;
-        }
-        Array.Sort(colHashes);
-        for (int i = 0; i < 8; i++) hash = hash * 31 + colHashes[i];
-        return hash;
-    }
-
-    private static int GetHeuristic(State s)
-    {
-        int fCount = s.foundations[0] + s.foundations[1] + s.foundations[2] + s.foundations[3];
-        int h = (52 - fCount) * 100;
-
-        for (int i = 0; i < 8; i++)
-        {
-            for (int j = 0; j < s.tabLens[i] - 1; j++)
-            {
-                Card bot = s.tableau[i][j];
-                Card top = s.tableau[i][j + 1];
-                if (bot.IsRed == top.IsRed || top.rank != bot.rank - 1) h += 15;
-            }
-        }
-        return h;
     }
 
     private static void PerformAutoPlay(State s)

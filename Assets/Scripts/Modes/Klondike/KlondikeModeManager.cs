@@ -7,8 +7,9 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
+using YG;
 
-public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
+public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICardClickReceiver
 {
     [Header("Core References")]
     public CardFactory cardFactory;
@@ -67,7 +68,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public StockDealMode StockDealMode => stockDealMode;
     public bool IsInputAllowed { get; set; } = true;
     public GameType GameType => GameType.Klondike;
-
+    public ITutorialManager Tutorial => tutorialManager;
     [Header("UI Controller")]
     public GameUIController gameUI;
 
@@ -243,9 +244,12 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void StartNewGame()
     {
+       
         if (hasGameStarted && !hasWonGame && StatisticsManager.Instance != null)
             StatisticsManager.Instance.OnGameAbandoned();
-
+        // Сообщаем трекеру настройки матча ДО раздачи
+        string variant = (GameSettings.KlondikeDrawCount == 3) ? "Draw3" : "Draw1";
+        GameQuestTracker.Instance?.StartMatch("Klondike", GameSettings.CurrentDifficulty, variant);
         IsInputAllowed = false;
         hasWonGame = false;
         hasGameStarted = false;
@@ -332,7 +336,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         // Если ввод заблокирован (идет анимация раздачи или авто-сбор),
         // мы игнорируем системные перемещения карт и не считаем их за ход.
         if (!IsInputAllowed) return;
-
+        GameQuestTracker.Instance?.RecordMove();
         if (!hasGameStarted)
         {
             hasGameStarted = true;
@@ -341,7 +345,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
             if (StatisticsManager.Instance != null)
             {
                 Difficulty diff = GameSettings.CurrentDifficulty;
-                string variant = (stockDealMode == StockDealMode.Draw3) ? "Draw3" : "Draw1";
+                string variant = GameSettings.GetCurrentVariantString(GameType.Klondike);
                 StatisticsManager.Instance.OnGameStarted(GameName, diff, variant);
             }
         }
@@ -458,24 +462,32 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
         UpdateFullUI();
     }
-    public void OnUndoAllAction()
+  public void OnUndoAllAction()
     {
-        // 1. Регистрируем это действие как ход (время идет, счетчик ходов +1)
         RegisterMoveAndStartIfNeeded();
 
-        // 2. Скрываем кнопку авто-победы
         isAutoWinVisible = false;
         if (autoWinButton != null) autoWinButton.gameObject.SetActive(false);
 
-        // 3. Сбрасываем Пат в DeckManager
         if (deckManager != null) deckManager.ResetStalemate();
-
-        // 4. СБРОС СЧЕТА В 0 (Исправление)
         if (scoreManager != null) scoreManager.ResetScore();
 
-        // 5. Обновляем UI
+        // <--- ЗАМЕНИЛИ ЗВУК: ИСПОЛЬЗУЕМ СТАНДАРТНУЮ ОТМЕНУ --->
+        if (AudioManager.Instance != null)
+        {
+            // Звук нажатия кнопки
+            AudioManager.Instance.PlaySound("UI_Back");
+            
+            // Поскольку полета нет, играем "шлепок" карт мгновенно
+            AudioManager.Instance.PlaySound("Card_Drop_Success"); 
+            
+            // Если хотите добавить немного шелеста, раскомментируйте строчку ниже:
+            // AudioManager.Instance.PlaySound("Card_Deal"); 
+        }
+
         UpdateFullUI();
     }
+
     public bool OnDropToBoard(CardController card, Vector2 anchoredPosition)
     {
         // --- [FIX] Строгая проверка туториала ---
@@ -510,20 +522,37 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     {
         if (!IsInputAllowed) return;
 
-        // [FIX] Используем GetComponentInParent, чтобы найти WastePile сквозь Slot_0
+        // Запоминаем, откуда уходит карта
         lastInteractionSource = card.GetComponentInParent<ICardContainer>();
 
-        // Отладка: Если кликнули в Waste, должно написать WastePile
-        // if (lastInteractionSource != null) Debug.Log($"Clicked in: {lastInteractionSource.GetType().Name}");
+        // Проверяем тип платформы через плагин YG2
+        // Если это мобильное устройство или планшет — запускаем авто-перенос
+        if (YG2.envir.isMobile || YG2.envir.isTablet)
+        {
+            // Отменяем анимацию микро-свайпа, которую добавили в прошлом шаге
+            dragManager?.ForceSnapBackLastDrop();
 
-        dragManager?.OnCardClicked(card);
+            // Запускаем перелет карты
+            ExecuteAutoMove(card);
+        }
+
+        // Для ПК (Desktop) мы ничего не делаем на одинарный клик, 
+        // так как авто-перенос срабатывает только на OnCardDoubleClicked.
     }
 
     public void OnCardDoubleClicked(CardController card)
     {
         if (!IsInputAllowed) return;
 
-        // --- [NEW] Проверка туториала ---
+        // На ПК (Desktop) авто-перемещение срабатывает только по двойному клику
+        if (YG2.envir.isDesktop)
+        {
+            ExecuteAutoMove(card);
+        }
+    }
+    private void ExecuteAutoMove(CardController card)
+    {
+        // --- Проверка туториала ---
         if (tutorialManager != null && tutorialManager.IsTutorialActive)
         {
             if (!tutorialManager.IsActionAllowed(TutorialActionType.DoubleClick, card)) return;
@@ -589,7 +618,10 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
             {
                 scoreManager.OnCardMove(source, container);
             }
-
+            if (container is FoundationPile && AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySound("Card_Foundation_Success");
+            }
             // --- [NEW] Шаг туториала вперед ---
             if (tutorialManager != null && tutorialManager.IsTutorialActive)
             {
@@ -746,9 +778,6 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public void ExecuteSoftRestart()
     {
         // --- ШАГ 0: ПРИМЕНЯЕМ НОВЫЕ НАСТРОЙКИ ---
-        // Игрок мог изменить их в Win/Defeat панели перед нажатием New Game.
-        // Мы должны обновить локальные переменные и DeckManager.
-
         this.stockDealMode = (GameSettings.KlondikeDrawCount == 3) ? StockDealMode.Draw3 : StockDealMode.Draw1;
 
         if (deckManager != null)
@@ -759,9 +788,13 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         Debug.Log($"[KMM] Soft Restarting with: {GameSettings.CurrentDifficulty}, {this.stockDealMode}");
         // -----------------------------------------
 
-        // 1. Сброс состояния игры
+        // 1. СНАЧАЛА честно закрываем старую игру
         if (hasGameStarted && !hasWonGame && StatisticsManager.Instance != null)
             StatisticsManager.Instance.OnGameAbandoned();
+
+        // 2. ЗАТЕМ сообщаем трекеру настройки нового матча
+        string variant = (GameSettings.KlondikeDrawCount == 3) ? "Draw3" : "Draw1";
+        GameQuestTracker.Instance?.StartMatch("Klondike", GameSettings.CurrentDifficulty, variant);
 
         IsInputAllowed = false;
         hasWonGame = false;
@@ -783,7 +816,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         pileManager.ClearAllPiles();
         cardFactory.DestroyAllCards();
 
-        // 4. Запуск цепочки (DeckManager теперь имеет правильные difficulty/drawMode)
+        // 4. Запуск цепочки
         StartCoroutine(RestartSequenceRoutine());
     }
 
@@ -852,12 +885,11 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     public void OnUndoAction()
     {
-        // --- [NEW] Проверка туториала ---
+        Debug.Log("Undo Action Triggered!");
         if (tutorialManager != null && tutorialManager.IsTutorialActive)
         {
             if (!tutorialManager.IsActionAllowed(TutorialActionType.Undo)) return;
         }
-        // --------------------------------
 
         RegisterMoveAndStartIfNeeded();
 
@@ -866,14 +898,33 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
         if (deckManager != null) deckManager.ResetStalemate();
         if (scoreManager != null) scoreManager.OnUndo();
 
-        // --- [NEW] Шаг туториала вперед ---
         if (tutorialManager != null && tutorialManager.IsTutorialActive)
         {
             tutorialManager.AdvanceStep();
         }
-        // ----------------------------------
+
+        // <--- ДОБАВЛЯЕМ ЗВУКИ ОТМЕНЫ В ОБХОД UNDO MANAGER --->
+        if (AudioManager.Instance != null)
+        {
+            // Звук нажатия на кнопку (глухой стук)
+            AudioManager.Instance.PlaySound("UI_Back");
+            // Звук полета карты назад
+           // AudioManager.Instance.PlaySound("Card_Deal");
+
+            // Запускаем таймер на 0.25 сек (стандартное время анимации Undo), 
+            // чтобы издать звук приземления ровно в момент прилета карты
+            StartCoroutine(DelayedUndoDropSound(0.25f));
+        }
 
         UpdateFullUI();
+    }
+    private IEnumerator DelayedUndoDropSound(float delay)
+    {
+        // Ждем, пока карта физически долетит до места
+        yield return new WaitForSeconds(delay);
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
     }
 
     private bool CanAutoWin()
@@ -925,6 +976,11 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode
     }
     private void OnAutoWinClicked()
     {
+        if (AudioManager.Instance != null)
+        {
+            // Обычный клик, чтобы игрок понял, что кнопка сработала
+            AudioManager.Instance.PlaySound("UI_Click");
+        }
         RegisterMoveAndStartIfNeeded();
 
         // --- НОВОЕ: Сразу отключаем ввод и жестко блокируем Undo ---

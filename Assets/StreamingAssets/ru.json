@@ -34,7 +34,7 @@
         },
         {
             "key": "Montana",
-            "value": "Ковёр"
+            "value": "Коврик"
         },
         {
             "key": "Octagon",
@@ -119,6 +119,10 @@
         {
             "key": "dailyquests",
             "value": "Ежедневные задания"
+        },
+        {
+            "key": "dailyquests2",
+            "value": "Ежедневные задания:"
         },
         {
             "key": "STATSGlobalStats",
@@ -246,11 +250,15 @@
         },
         {
             "key": "ConfirmExit2",
-            "value": "При выходе будет защитано поражение"
+            "value": "При выходе будет засчитано поражение"
         },
         {
             "key": "Yes",
             "value": "ДА"
+        },
+        {
+            "key": "Yes2",
+            "value": "ДА, изменить настройки"
         },
         {
             "key": "No",
@@ -262,7 +270,7 @@
         },
         {
             "key": "ConfirmNewGame2",
-            "value": "При запуске новой игры будет защитано поражение"
+            "value": "При запуске новой игры будет засчитано поражение"
         },
         {
             "key": "WinText",
@@ -350,7 +358,7 @@
         },
         {
             "key": "KlondikeTutorial8",
-            "value": "Отличный ход! Но иногда действие нужно отменить. Давайте проверим как работает кнопка <color=#FCA311>'Отмена'</color> внизу экрана."
+            "value": "Отличный ход! Но иногда действие нужно отменить. Давайте проверим как работает кнопка <color=#FCA311>'Отменить ход'</color> внизу экрана."
         },
         {
             "key": "KlondikeTutorial9",
@@ -389,549 +397,2773 @@
             "value": "Авто"
         },
         {
-            "key": "clue.l3.time.minutes_past",
-            "value": "Дверь откроется через {minuteWord} минут после {nextHourWord} и {SS} секунд."
+            "key": "STATSBaseBuyPrem",
+            "value": "Чтобы посмотреть подробную статистику, купите премиум"
         },
         {
-            "key": "clue.l3.time.start_hour",
-            "value": "Дверь откроется, когда начнётся {nextHourStartWord} час и {SS} секунд."
+            "key": "PurchasePremium",
+            "value": "Купить премиум"
         },
         {
-            "key": "word.nexthour_after.1",
-            "value": "двенадцати"
+            "key": "STATSGlobalFavGame",
+            "value": "Любимый пасьянс: "
         },
         {
-            "key": "word.nexthour_after.2",
-            "value": "часа"
+            "key": "STATSGlobalTotalMoves",
+            "value": "Ходов сделано: "
         },
         {
-            "key": "word.nexthour_after.3",
-            "value": "двух"
+            "key": "STATSGlobalTotalTime",
+            "value": "Времени в игре: "
         },
         {
-            "key": "word.nexthour_after.4",
-            "value": "трех"
+            "key": "STATSGlobalQuestsCompleted",
+            "value": "Выполнено заданий: "
         },
         {
-            "key": "word.nexthour_after.5",
-            "value": "четырех"
+            "key": "STATSGlobalTotalGlobalXPearned",
+            "value": "Опыта получено (Общий): "
         },
         {
-            "key": "word.nexthour_after.6",
-            "value": "пяти"
+            "key": "STATSGlobalTotalGamesXPearned",
+            "value": "Опыта получено (Пасьянсы): "
         },
         {
-            "key": "word.nexthour_after.7",
-            "value": "шести"
+            "key": "STATSGlobalBestScore",
+            "value": "Лучший Счет: "
         },
         {
-            "key": "word.nexthour_after.8",
-            "value": "семи"
+            "key": "STATSGlobalBestTime",
+            "value": "Лучшее время: "
         },
         {
-            "key": "word.nexthour_after.9",
-            "value": "восьми"
+            "key": "STATSGlobalBestMoves",
+            "value": "Наименьшее количество ходов: "
         },
         {
-            "key": "word.nexthour_after.10",
-            "value": "девяти"
+            "key": "STATSGlobalQuestsStreaks",
+            "value": "Серия выполненных заданий:"
         },
         {
-            "key": "word.nexthour_after.11",
-            "value": "десяти"
+            "key": "SmallStreak",
+            "value": "Маленькая серия:"
         },
         {
-            "key": "word.nexthour_after.12",
-            "value": "одиннадцати"
+            "key": "BigStreak",
+            "value": "Большая серия:"
         },
         {
-            "key": "word.hour_pointer.1",
-            "value": "единицу"
+            "key": "Game",
+            "value": "Пасьянс:"
         },
         {
-            "key": "word.hour_pointer.2",
-            "value": "двойку"
+            "key": "Draw1",
+            "value": "По 1 карте"
         },
         {
-            "key": "word.hour_pointer.3",
-            "value": "тройку"
+            "key": "Draw3",
+            "value": "По 3 карте"
         },
         {
-            "key": "word.hour_pointer.4",
-            "value": "четвёрку"
+            "key": "Suit1",
+            "value": "1 масть"
         },
         {
-            "key": "word.hour_pointer.5",
-            "value": "пятёрку"
+            "key": "Suit2",
+            "value": "2 масти"
         },
         {
-            "key": "word.hour_pointer.6",
-            "value": "шестёрку"
+            "key": "Suit4",
+            "value": "4 масти"
         },
         {
-            "key": "word.hour_pointer.7",
-            "value": "семёрку"
+            "key": "Round1",
+            "value": "1 раунд"
         },
         {
-            "key": "word.hour_pointer.8",
-            "value": "восьмёрку"
+            "key": "Round2",
+            "value": "2 раунда"
         },
         {
-            "key": "word.hour_pointer.9",
-            "value": "девятку"
+            "key": "Round3",
+            "value": "3 раунда"
         },
         {
-            "key": "word.hour_pointer.10",
-            "value": "десятку"
+            "key": "SoundOn",
+            "value": "Звук включен"
         },
         {
-            "key": "word.hour_pointer.11",
-            "value": "одиннадцать"
+            "key": "SoundOff",
+            "value": "Звук выключен"
         },
         {
-            "key": "word.hour_pointer.12",
-            "value": "двенадцать"
+            "key": "Confirm",
+            "value": "Принять"
         },
         {
-            "key": "ru",
-            "value": "Русский"
+            "key": "ChangeBG",
+            "value": "Изменить фон"
         },
         {
-            "key": "en",
-            "value": "Английский"
+            "key": "ChangeCards",
+            "value": "Изменить карты"
         },
         {
-            "key": "es",
-            "value": "Испанский"
+            "key": "SettingsSound",
+            "value": "Звук"
         },
         {
-            "key": "tr",
-            "value": "Турецкий"
-        },
-        {
-            "key": "pt",
-            "value": "Португальский"
-        },
-        {
-            "key": "fr",
-            "value": "Французский"
-        },
-        {
-            "key": "ja",
-            "value": "Японский"
-        },
-        {
-            "key": "de",
-            "value": "Немецкий"
-        },
-        {
-            "key": "lang",
+            "key": "SettingsLanguage",
             "value": "Язык"
         },
         {
-            "key": "setsound",
-            "value": "Звуки"
+            "key": "SettingsDesign",
+            "value": "Оформление"
         },
         {
-            "key": "PuzzleDiff",
-            "value": "Сложность головоломки"
+            "key": "ChangeBack",
+            "value": "Изменить рубашку"
         },
         {
-            "key": "PuzzleSettings",
-            "value": "Настройки головоломки"
+            "key": "ChangeDeck",
+            "value": "Изменить колоду"
         },
         {
-            "key": "PuzzleMode",
-            "value": "Режим головоломки"
+            "key": "SpiderTutorial1",
+            "value": "В Пауке карты складываются по убыванию.\nПеретащите <color=#8294FF>Восьмерку Пик (8♠)</color> на <color=#8294FF>Девятку Пик (9♠)</color>."
         },
         {
-            "key": "BookArabic",
-            "value": "Арабские цифры"
+            "key": "SpiderTutorial2",
+            "value": "Отлично, открылась скрытая карта!\nСтопки <color=#FCA311>одной масти</color> можно переносить целиком. Перенесите стопку <color=#8294FF>7♠-6♠-5♠</color> на вашу Восьмерку."
         },
         {
-            "key": "BookRoman",
-            "value": "Римские цифры"
+            "key": "SpiderTutorial3",
+            "value": "Вы можете класть карты друг на друга независимо от масти.\nПоложите <color=#FF6B6B>Четверку Червей (4♥)</color> на черную <color=#8294FF>Пятерку Пик (5♠)</color>."
         },
         {
-            "key": "BookPicture",
-            "value": "Картинка"
+            "key": "SpiderTutorial4",
+            "value": "Внимание: стопки из разных мастей <color=#FF6B6B>блокируются</color>! Их нельзя переносить вместе.\nНажмите <color=#FCA311>'Отменить ход'</color>, чтобы вернуть карту."
         },
         {
-            "key": "PuzzleSolved",
-            "value": "Головоломка решена!"
+            "key": "SpiderTutorial5",
+            "value": "Чтобы раздать новые карты из колоды, на столе не должно быть пустых ячеек!\nПеренесите <color=#8294FF>Короля Пик (K♠)</color> в пустую колонку справа."
         },
         {
-            "key": "BackToMenu",
-            "value": "Вернуться в меню"
+            "key": "SpiderTutorial6",
+            "value": "Теперь все ячейки заняты. Кликните по <color=#FCA311>колоде</color> в правом нижнем углу, чтобы раздать новый ряд карт."
         },
         {
-            "key": "hint_first_card",
-            "value": "{0} — первая карта."
+            "key": "SpiderTutorial7",
+            "value": "Нам выпали нужные Тузы! Но Двойки перекрыты новыми картами.\nУберите <color=#8294FF>Тройку Пик (3♠)</color> на <color=#8294FF>Четверку Пик (4♠)</color>."
         },
         {
-            "key": "hint_last_card",
-            "value": "{0} — последняя карта."
+            "key": "SpiderTutorial8",
+            "value": "Путь свободен! Перенесите <color=#FF6B6B>Туза Червей (A♥)</color> на <color=#FF6B6B>Двойку Червей (2♥)</color>, чтобы собрать полный ряд!"
         },
         {
-            "key": "hint_immediately_after",
-            "value": "{0} стоит сразу после {1}"
+            "key": "SpiderTutorial9",
+            "value": "Отлично! Теперь освободим вторую Двойку.\nУберите <color=#FF6B6B>Четверку Червей (4♥)</color> на <color=#8294FF>Пятерку Пик (5♠)</color>."
         },
         {
-            "key": "hint_immediately_before",
-            "value": "{0} стоит сразу перед {1}."
+            "key": "SpiderTutorial10",
+            "value": "И теперь перенесите <color=#8294FF>Туз Пик (A♠)</color> на <color=#8294FF>Двойку Пик (2♠)</color> в последней оставшейся стопке."
         },
         {
-            "key": "hint_between",
-            "value": "{0} стоит между {1} и {2}."
+            "key": "SpiderTutorialEnd",
+            "value": "Поздравляем! Вы освоили все механики Паука!"
         },
         {
-            "key": "hint_left_of",
-            "value": "{0} стоит левее {1}."
+            "key": "FreeCellTutorial1",
+            "value": "Главная особенность пасьянса — 4 <color=#FCA311>Свободные ячейки</color>.\n<color=#8294FF>Пиковый Туз(A♠)</color> заблокирован. Перемести <color=#FF6B6B>Червонную Восьмерку(8♥)</color> в <color=#FCA311>Свободную ячейку</color> (слева вверху)."
         },
         {
-            "key": "hint_right_of",
-            "value": "{0} стоит правее {1}."
+            "key": "FreeCellTutorial2",
+            "value": "Туз свободен! Нажми <color=#FCA311>'АВТО'</color>, чтобы отправить все доступные карты в <color=#FCA311>Дома</color>."
         },
         {
-            "key": "hint_one_false",
-            "value": "Одна подсказка ложная"
+            "key": "FreeCellTutorial3",
+            "value": "Как и в Косынке, на столе карты чередуются по цвету.\nПеремести <color=#FF6B6B>Бубновую Семерку(7♦)</color> на <color=#8294FF>Трефовую Восьмерку(8♣)</color>."
         },
         {
-            "key": "hint_no_suit",
-            "value": "На столе нет карт масти {0}."
+            "key": "FreeCellTutorial4",
+            "value": "<color=#FCA311>Индикатор</color> у кнопки Авто показывает макс. длину переносимой стопки (сейчас 4).\nПеремести <color=#FF6B6B>Десятку Бубен(10♦)</color> в <color=#FCA311>Свободную ячейку</color>, чтобы освободить колонку."
         },
         {
-            "key": "hint_no_rank",
-            "value": "На столе нет {0}."
+            "key": "FreeCellTutorial5",
+            "value": "Индикатор изменился (6/3). Второе число — лимит для <color=#FCA311>пустой колонки</color>.\nПеренеси стопку (<color=#8294FF>6♠</color> и <color=#FF6B6B>5♥</color>) в пустую колонку."
         },
         {
-            "key": "hint_no_even",
-            "value": "На столе нет чётных карт."
+            "key": "FreeCellTutorial6",
+            "value": "Любой ход можно отменить. Давайте проверим как работает кнопка <color=#FCA311>'Отменить ход'</color> внизу экрана."
         },
         {
-            "key": "hint_no_odd",
-            "value": "На столе нет нечётных карт."
+            "key": "FreeCellTutorial7",
+            "value": "Теперь перенеси эту стопку (<color=#8294FF>6♠</color> и <color=#FF6B6B>5♥</color>) на <color=#FF6B6B>Бубновую Семерку(7♦)</color>."
         },
         {
-            "key": "hint_no_above_10",
-            "value": "На столе нет карт со значением выше 10."
+            "key": "FreeCellTutorial8",
+            "value": "Обучение пройдено! Жми <color=#FCA311>'АВТО'</color>, чтобы собрать оставшиеся карты и победить!"
         },
         {
-            "key": "hint_no_below_6",
-            "value": "На столе нет карт со значением ниже 6."
+            "key": "FreeCellTutorialEnd",
+            "value": "<color=#FCA311>Поздравляем!</color> Вы освоили все правила Свободной ячейки. Удачи в игре!"
         },
         {
-            "key": "hint_has_suit",
-            "value": "На столе есть карты масти {0}."
+            "key": "FreeCellTutorInfo1",
+            "value": "Свободные ячейки"
         },
         {
-            "key": "hint_has_rank",
-            "value": "На столе есть карты со значением {0}."
+            "key": "PyramidTutorial1",
+            "value": "В Пирамиде нужно убирать карты парами, дающими в сумме <color=#FCA311>13</color>. Король равен 13, его можно убрать одним кликом.\nКликните на <color=#8294FF>Короля Пик(K♠)</color>."
         },
         {
-            "key": "hint_position_of_card",
-            "value": "{0} находится на позиции {1}."
+            "key": "PyramidTutorial2",
+            "value": "Дама(12) + Туз(1) = <color=#FCA311>13</color>.\nКликните сначала на <color=#FF6B6B>Даму Бубен(Q♦)</color>, а затем на <color=#8294FF>Туза Треф(A♣)</color>, чтобы убрать их."
         },
         {
-            "key": "hint_not_first",
-            "value": "{0} не находится на первой позиции."
+            "key": "PyramidTutorial3",
+            "value": "Забыли какая карта сколько стоит? Нажмите кнопку <color=#FCA311>'Подсказка'</color> сверху."
         },
         {
-            "key": "hint_not_last",
-            "value": "{0} не находится на последней позиции."
+            "key": "PyramidTutorial4",
+            "value": "На столе нет подходящих пар. Нажмите на <color=#FCA311> кнопку </color> под колодой, чтобы открыть новые карты. Обратите внимание: доступно только <color=#FCA311>2 пересдачи</color>!"
         },
         {
-            "key": "hint_not_neighbor",
-            "value": "{0} не соседствует с {1}."
+            "key": "PyramidTutorial5",
+            "value": "Отлично! Пятерка(5) + Восьмерка(8) = <color=#FCA311>13</color>.\nСоедините <color=#8294FF>Пятерку Пик(5♠)</color> в колоде с <color=#8294FF>Восьмеркой Пик(8♠)</color> на столе."
         },
         {
-            "key": "hint_exact_count_suit",
-            "value": "На столе ровно {0} карт масти {1}."
+            "key": "PyramidTutorial6",
+            "value": "Отличный ход! Но иногда действие нужно отменить. Нажмите кнопку <color=#FCA311>'Отменить ход'</color> внизу экрана."
         },
         {
-            "key": "hint_exact_count_rank",
-            "value": "На столе ровно {0} карт со значением {1}."
+            "key": "PyramidTutorial7",
+            "value": "Теперь давайте снова соединим <color=#8294FF>Пятерку Пик(5♠)</color> и <color=#8294FF>Восьмерку Пик(8♠)</color>."
         },
         {
-            "key": "hint_even_position",
-            "value": "{0} находится на чётной позиции."
+            "key": "PyramidTutorial8",
+            "value": "Девятка(9) + Четверка(4) = <color=#FCA311>13</color>.\nСоедините <color=#FF6B6B>Девятку Червей(9♥)</color> в колоде с <color=#8294FF>Четверкой Треф(4♣)</color>."
         },
         {
-            "key": "hint_odd_position",
-            "value": "{0} находится на нечётной позиции."
+            "key": "PyramidTutorial9",
+            "value": "Путь свободен! Осталась Семерка на вершине и наша Шестерка в отбое.\nКликните по <color=#FF6B6B>Шестерке Бубен(6♦)</color> и <color=#FF6B6B>Семерке Червей(7♥)</color>!"
         },
         {
-            "key": "hint_between_count",
-            "value": "Между {0} и {1} ровно {2} карт(ы)."
+            "key": "PyramidTutorialEnd",
+            "value": "<color=#FCA311>Поздравляем!</color> Вы освоили Пирамиду!"
         },
         {
-            "key": "false_there_is",
-            "value": "На столе точно есть {0}."
+            "key": "TriPeaksTutorial1",
+            "value": "Цель — <color=#FCA311>убрать все карты</color>. Выбирайте открытые карты на <color=#FCA311>1 ранг старше или младше</color> карты в сбросе (сейчас это <color=#8294FF>5♠</color>). Собирайте длинные <color=#FCA311>комбо</color> ради очков!\nСнимите: <color=#FF6B6B>6♥</color> -> <color=#8294FF>7♣</color> -> <color=#FF6B6B>8♦</color>."
         },
         {
-            "key": "false_no",
-            "value": "На столе нет {0}."
+            "key": "TriPeaksTutorial3",
+            "value": "Доступных ходов больше нет. Возьмите новую карту из <color=#FCA311>колоды</color>."
         },
         {
-            "key": "false_first",
-            "value": "{0} — первая карта."
+            "key": "TriPeaksTutorial4",
+            "value": "Нам выпала <color=#FF6B6B>Дама(Q♦)</color>. Ранги карт идут <color=#FCA311>по кругу</color>: на <color=#8294FF>Короля(K)</color> можно положить <color=#FF6B6B>Туза(A)</color>, а на Туза — <color=#8294FF>Двойку(2)</color>. Соберите эту цепочку!"
         },
         {
-            "key": "false_last",
-            "value": "{0} — последняя карта."
+            "key": "TriPeaksTutorial7",
+            "value": "Давайте проверим как работает кнопка <color=#FCA311>'Отменить ход'</color>. Нажмите на неё."
         },
         {
-            "key": "false_immediately_after",
-            "value": "{0} стоит сразу после {1}."
+            "key": "TriPeaksTutorial8",
+            "value": "Отлично! Верните <color=#8294FF>Двойку Треф(2♣)</color> и очистите стол: <color=#8294FF>2</color> -> <color=#FF6B6B>3</color> -> <color=#8294FF>4</color> -> <color=#FF6B6B>5</color>!"
         },
         {
-            "key": "false_exact_count_suit",
-            "value": "На столе ровно {0} карт(а) масти {1}."
+            "key": "TriPeaksTutorialEnd",
+            "value": "<color=#FCA311>Поздравляем!</color> Вы освоили Три Пика!"
         },
         {
-            "key": "false_exact_count_rank",
-            "value": "На столе ровно {0} карт(а) со значением {1}."
+            "key": "YukonTutorial1",
+            "value": "В нашей игре есть два варианта: <color=#FCA311>'Классический'</color> и <color=#FCA311>'Русский'</color>. В Классическом карты чередуются по цвету.\nПеренесите <color=#8294FF>черную Десятку Пик (10♠)</color> на <color=#FF6B6B>красного Валета Червей (J♥)</color>."
         },
         {
-            "key": "false_position_of_card",
-            "value": "{0} находится на позиции {1}."
+            "key": "YukonTutorial2",
+            "value": "Правила <color=#FCA311>'Русского'</color> варианта отличаются — там карты собираются строго в масть.\nДавайте перенесем ту же <color=#8294FF>Десятку Пик (10♠)</color> на <color=#8294FF>Валета Пик (J♠)</color>, чтобы посмотреть, как это работает."
         },
         {
-            "key": "false_neighbor",
-            "value": "{0} соседствует с {1}."
+            "key": "YukonTutorial3",
+            "value": "Отлично! Теперь мы знаем оба варианта. Давайте отменим этот ход и продолжим обучение по классическим правилам.\nНажмите кнопку <color=#FCA311>'Отменить ход'</color>."
         },
         {
-            "key": "ArmorPuzzleInfo1",
-            "value": "Нужно расставить части брони в правильном порядке."
+            "key": "YukonTutorial4",
+            "value": "Главная особенность Юкона — перенос стопок. Можно брать <color=#FCA311>ЛЮБУЮ</color> открытую карту и перетащить всю огромную стопку над ней!\nВозьмите <color=#8294FF>черную Даму Треф (Q♣)</color> из последней колонки и перенесите на <color=#FF6B6B>красного Короля Червей (K♥)</color>."
         },
         {
-            "key": "ArmorPuzzleInfo2",
-            "value": "В верхней ячейке — шлем, в средней — кираса, в нижней — ботинки."
+            "key": "YukonTutorial5",
+            "value": "Карты можно быстро отправлять в <color=#FCA311>Дома</color> двойным кликом.\nОтправим туда <color=#8294FF>Десятку Треф (10♣)</color>!"
         },
         {
-            "key": "BalancePuzzleInfo",
-            "value": "Нужно уравновесить весы, поставив все гири."
+            "key": "YukonTutorial6",
+            "value": "В пустые ячейки на поле можно класть <color=#FCA311>ТОЛЬКО</color> Королей.\nПеренесите <color=#8294FF>Короля Пик (K♠)</color> в пустую колонку, чтобы открыть карту под ним."
         },
         {
-            "key": "BookPuzzleInfo",
-            "value": "Нужно расставить книги в правильном порядке."
+            "key": "YukonTutorial7",
+            "value": "Вы освоили все механики! На столе больше нет закрытых карт.\nНажмите кнопку <color=#FCA311>'АВТО'</color>, чтобы быстро завершить игру!"
         },
         {
-            "key": "SlidersPuzzleInfo",
-            "value": "Нужно расположить плиты по порядку."
+            "key": "YukonTutorialEnd",
+            "value": "<color=#FCA311>Поздравляем!</color> Вы освоили все механики Юкона. Удачи в игре!"
         },
         {
-            "key": "MazePuzzleInfo1",
-            "value": "Нужно вывести красный шар из лабиринта."
+            "key": "MonteCarloTutorial1",
+            "value": "В Монте-Карло нужно убирать пары одинаковых карт.\nСначала правило <color=#FCA311>'8 сторон'</color>. Кликните на две стоящие рядом Пятерки: <color=#FF6B6B>(5♥)</color> и <color=#8294FF>(5♠)</color>."
         },
         {
-            "key": "MazePuzzleInfo2",
-            "value": "Управление: WASD."
+            "key": "MonteCarloTutorial2",
+            "value": "Карты сдвинулись! Теперь включен режим <color=#FCA311>'4 стороны'</color> (крестом).\nСемерки оказались друг над другом. Уберите <color=#FF6B6B>(7♦)</color> и <color=#8294FF>(7♣)</color>!"
         },
         {
-            "key": "ClockPuzzleInfo1",
-            "value": "Нужно поставить время на часах, исходя из подсказки."
+            "key": "MonteCarloTutorial3",
+            "value": "Снова режим <color=#FCA311>'8 сторон'</color>! Теперь можно спаривать и по диагонали.\nУберите двух Королей: <color=#FF6B6B>(K♥)</color> и <color=#8294FF>(K♠)</color>."
         },
         {
-            "key": "ClockPuzzleInfo2",
-            "value": "Нужно поставить время на часах, исходя из подсказок. Есть ложные подсказки."
+            "key": "MonteCarloTutorial4",
+            "value": "Отличный ход! Но давайте проверим как работает <color=#FCA311>'Отменить ход'</color>.\nНажмите кнопку отмены хода внизу экрана."
         },
         {
-            "key": "ClockPuzzleInfo3",
-            "value": "A — вращение против часовой стрелки."
+            "key": "MonteCarloTutorial5",
+            "value": "Короли вернулись на место. Вы знаете все правила!\nЗавершите игру, убрав все оставшиеся пары."
         },
         {
-            "key": "ClockPuzzleInfo4",
-            "value": "D — вращение по часовой стрелке."
+            "key": "MonteCarloTutorial6",
+            "value": "Продолжайте убирать пары до полной победы!"
         },
         {
-            "key": "ClockPuzzleInfo5",
-            "value": "E — смена стрелки."
+            "key": "MonteCarloTutorialEnd",
+            "value": "<color=#FCA311>Поздравляем!</color> Вы освоили правила Монте-Карло!"
         },
         {
-            "key": "ClockPuzzleInfo6",
-            "value": "Управление:"
+            "key": "SultanTutorial1",
+            "value": "Цель игры — собрать все карты в <color=#FCA311>Дома</color> вокруг Султана (Короля Червей).\nПеренесите <color=#FF6B6B>Валета Червей (J♥)</color> из <color=#FCA311>Резерва</color> в подходящий Дом."
         },
         {
-            "key": "ClockPuzzleInfo7",
-            "value": "Нужно поставить время на часах, исходя из подсказок. Есть ложные подсказки. Стрелки влияют на движение друг друга."
+            "key": "SultanTutorial2",
+            "value": "В 'Султане' колоду можно перелистывать <color=#FCA311>только 2 раза</color> за всю игру!\nНажмите на <color=#FCA311>колоду</color>, чтобы открыть новую карту."
         },
         {
-            "key": "CardsPuzzleInfo1",
-            "value": "Нужно составить ряд карт, исходя из условий."
+            "key": "SultanTutorial3",
+            "value": "Нам выпал <color=#8294FF>Валет Треф (J♣)</color>. Сейчас он не нужен, так как Домам Треф сначала нужны Десятки.\nПеренесите его в <color=#FCA311>пустую ячейку Резерва</color>."
         },
         {
-            "key": "CardsPuzzleInfo2",
-            "value": "В зону с жёлтым кругом можно поместить карты, которые могут подходить под условия."
+            "key": "SultanTutorial4",
+            "value": "Отличный ход! Но свободные места в резерве очень ценны, их лучше беречь.\nНажмите кнопку <color=#FCA311>'Отменить ход'</color> внизу экрана."
         },
         {
-            "key": "CardsPuzzleInfo3",
-            "value": "В зону с красным крестом можно поместить карты, которые точно не подходят под условия."
+            "key": "SultanTutorial5",
+            "value": "Давайте посмотрим, какая карта идет следующей.\nНажмите на <color=#FCA311>колоду</color> еще раз."
         },
         {
-            "key": "DicesPuzzleInfo1",
-            "value": "Нужно поместить кости в верхнюю часть так, чтобы уравнение стало верным."
+            "key": "SultanTutorial6",
+            "value": "Это <color=#FF6B6B>Валет Бубен (J♦)</color>! Он идеально подходит.\nОтправьте его из сброса прямо в нужный <color=#FCA311>Дом</color>."
         },
         {
-            "key": "DicesPuzzleInfo2",
-            "value": "Правая кнопка мыши — изменить число на кубике."
+            "key": "SultanTutorial7",
+            "value": "Карты можно быстро перемещать <color=#FCA311>двойным кликом</color>. Игра сама выберет место: сначала проверит Дома, затем Резерв.\nКликните дважды по <color=#8294FF>Валету Треф (J♣)</color>."
         },
         {
-            "key": "DicesPuzzleInfo3",
-            "value": "Условия:"
+            "key": "SultanTutorial8",
+            "value": "Отлично! Валет улетел в пустой Резерв. Теперь давайте возьмем еще одну карту из <color=#FCA311>колоды</color>."
         },
         {
-            "key": "DicesPuzzleInfo4",
-            "value": "Такое условие означает, что в первом слоте должен быть кубик со значением 1."
+            "key": "SultanTutorial9",
+            "value": "Это <color=#8294FF>Десятка Треф (10♣)</color>, и она нужна Домам! Кликните по ней <color=#FCA311>дважды</color>, и она полетит прямиком на базу."
         },
         {
-            "key": "DicesPuzzleInfo5",
-            "value": "Такое условие означает, что нельзя использовать кубики со значением 1."
+            "key": "SultanTutorial10",
+            "value": "Вы освоили все правила пасьянса Султан!\nЗавершите игру самостоятельно, распределив <color=#FCA311>оставшиеся карты</color>."
         },
         {
-            "key": "DicesPuzzleInfo6",
-            "value": "Такое условие означает, что кубиков со значением 1 должно быть менее двух."
+            "key": "SultanTutorialEnd",
+            "value": "<color=#FCA311>Поздравляем!</color> Вы успешно освоили пасьянс Султан!"
         },
         {
-            "key": "DicesPuzzleInfo7",
-            "value": "Такое условие означает, что кубиков со значением 1 должно быть более двух."
+            "key": "OctagonTutorial1",
+            "value": "Добро пожаловать в Восьмиугольник! До победы осталось совсем немного. Давайте открывать новые карты: кликните по <color=#FCA311>колоде</color>. Учтите: за всю игру колоду можно перелистать <color=#FCA311>только 2 раза</color>!"
         },
         {
-            "key": "DicesPuzzleInfo8",
-            "value": "Левая кнопка мыши — изменить цвет кубика."
+            "key": "OctagonTutorial2",
+            "value": "На столе карты собираются по убыванию, при этом масть может быть <color=#FCA311>ЛЮБОЙ</color>. Перенесите <color=#FF6B6B>Даму Червей (Q♥)</color> из сброса на <color=#8294FF>Короля Треф (K♣)</color> на столе."
         },
         {
-            "key": "DicesPuzzleInfo9",
-            "value": "Такое условие означает, что не должно быть более двух чёрных кубиков подряд."
+            "key": "OctagonTutorial3",
+            "value": "В левой группе ячеек осталась всего одна карта. Перенесите <color=#8294FF>Валета Треф (J♣)</color> на нашу <color=#FF6B6B>Даму Червей (Q♥)</color>. Группа опустеет и <color=#FCA311>автоматически заполнится</color> новыми картами!"
         },
         {
-            "key": "DicesPuzzleInfo10",
-            "value": "Такое условие означает, что в первом слоте должен быть белый кубик."
+            "key": "OctagonTutorial4",
+            "value": "Новые карты нам сейчас не помогли, а Валет перекрыл нужную нам карту. Давайте вернем всё назад! Нажмите кнопку <color=#FCA311>'Отменить ход'</color>."
         },
         {
-            "key": "DicesPuzzleInfo11",
-            "value": "Такое условие означает, что чёрные и белые кубики должны чередоваться."
+            "key": "OctagonTutorial5",
+            "value": "Иногда для спасения ситуации можно забрать нужную карту прямо из Дома! (Нельзя брать только Тузов и Королей). Вытащите <color=#FF6B6B>Даму Бубен (Q♦)</color> из Дома и положите её на <color=#8294FF>Короля Пик (K♠)</color>."
         },
         {
-            "key": "SkipPuzzle",
-            "value": "Пропустить"
+            "key": "OctagonTutorial6",
+            "value": "Блестяще! Двойной клик отправляет карту в Дом, ИЛИ на стол, но на столе <color=#FCA311>масть должна совпасть точь-в-точь</color>. Дважды кликните по <color=#FF6B6B>Валету Бубен (J♦)</color>."
         },
         {
-            "key": "ContinuePuzzle",
-            "value": "Продолжить"
+            "key": "OctagonTutorial7",
+            "value": "Убрав Валета, мы разблокировали финальные карты! Теперь дважды кликните по открывшемуся <color=#FF6B6B>Королю Червей (K♥)</color>, и он отправится прямиком в Дом."
         },
         {
-            "key": "NewItem",
-            "value": "Новый предмет!"
+            "key": "OctagonTutorial8",
+            "value": "Вы освоили все механики Восьмиугольника!\nНа столе осталось всего несколько открытых карт. Раскидайте их по <color=#FCA311>Домам</color> и завершите игру!"
         },
         {
-            "key": "ItemSuitable",
-            "value": "Предмет подошёл"
+            "key": "OctagonTutorialEnd",
+            "value": "<color=#FCA311>Поздравляем!</color> Вы успешно прошли обучение и собрали пасьянс Восьмиугольник!"
         },
         {
-            "key": "ItemNotSuitable",
-            "value": "Предмет не подходит"
+            "key": "CarpetTutorial1",
+            "value": "Цель пасьянса 'Коврик' — разложить карты по мастям от Туза до Короля в 4 ряда. В пустые ячейки СЛЕВА можно класть только Тузов. Перетащите <color=#8294FF>Туза Пик(A♠)</color> в первую пустую ячейку."
         },
         {
-            "key": "InventoryFull",
-            "value": "Инвентарь полон"
+            "key": "CarpetTutorialUndo",
+            "value": "Отличный ход! Но иногда действие нужно отменить. Давайте проверим как работает кнопка <color=#FCA311>'Отменить ход'</color> внизу экрана. Нажмите на неё."
         },
         {
-            "key": "ItemBall",
-            "value": "Красный шар"
+            "key": "CarpetTutorial2",
+            "value": "Туз вернулся! Карты можно быстро отправлять на место двойным кликом. Дважды кликните по <color=#8294FF>Тузу Пик(A♠)</color>."
         },
         {
-            "key": "ItemBook",
-            "value": "Книга"
+            "key": "CarpetTutorial3",
+            "value": "За Тузом должна идти Двойка той же масти. Дважды кликните по <color=#8294FF>Двойке Пик(2♠)</color>."
         },
         {
-            "key": "ItemCards",
-            "value": "Игральные карты"
+            "key": "CarpetTutorial4",
+            "value": "Продолжите ряд! Отправьте <color=#8294FF>Тройку Пик(3♠)</color> к Двойке двойным кликом."
         },
         {
-            "key": "ItemClockHand",
-            "value": "Стрелка часов"
+            "key": "CarpetTutorial5",
+            "value": "Отлично! Продолжайте переносить карты Пик, пока есть доступные ходы!"
         },
         {
-            "key": "ItemDices",
-            "value": "Игральные кости"
+            "key": "CarpetTutorialAces",
+            "value": "Теперь отправьте оставшихся Тузов в пустые ячейки слева двойным кликом! Начните с <color=#8294FF>Туза Треф(A♣)</color>."
         },
         {
-            "key": "ItemExitKey",
-            "value": "Круглый ключ"
+            "key": "CarpetTutorialAces2",
+            "value": "И теперь <color=#FF6B6B>Туза Бубен(A♦)</color>."
         },
         {
-            "key": "ItemGoldenKey",
-            "value": "Золотой ключ"
+            "key": "CarpetTutorial6",
+            "value": "Вы попали в тупик! Все пустые ячейки оказались строго за Королями, а после Королей класть карты нельзя. Жмите <color=#FCA311>'Пересдача'</color>!"
         },
         {
-            "key": "ItemHelmet",
-            "value": "Шлем"
+            "key": "CarpetTutorial7",
+            "value": "Сейчас включен <color=#FCA311>'Сложный'</color> режим: пустые ячейки после пересдачи появляются ТОЛЬКО в конце ряда. Перенесите <color=#FF6B6B>Валета Червей(J♥)</color> в пустую ячейку за Десяткой."
         },
         {
-            "key": "ItemIronKey",
-            "value": "Железный ключ"
+            "key": "CarpetTutorial8",
+            "value": "Освободилась ячейка за Семеркой Пик! Теперь смело отправляйте туда <color=#8294FF>Восьмерку Пик(8♠)</color> двойным кликом."
         },
         {
-            "key": "ItemWeight",
-            "value": "Грузик для весов"
+            "key": "CarpetTutorial9",
+            "value": "Снова тупик! Жмите <color=#FCA311>'Пересдача'</color> еще раз. Возвращаем <color=#FCA311>'Классический'</color> режим — пустые ячейки будут удобно появляться сразу за собранными картами!"
         },
         {
-            "key": "ItemLight",
-            "value": "Факел"
+            "key": "CarpetTutorial10",
+            "value": "Почти готово! Карты чудесным образом собрались, остался последний рывок. Отправьте <color=#FF6B6B>Валета Червей(J♥)</color> на своё место."
         },
         {
-            "key": "ItemPreciousKey",
-            "value": "Драгоценный ключ"
+            "key": "CarpetTutorial11",
+            "value": "Отлично! Теперь <color=#FF6B6B>Даму Червей(Q♥)</color>."
         },
         {
-            "key": "ItemStonePlate",
-            "value": "Каменная плита"
+            "key": "CarpetTutorial12",
+            "value": "И, наконец, <color=#FF6B6B>Короля Червей(K♥)</color> для абсолютной победы!"
         },
         {
-            "key": "LevelComplete",
-            "value": "Уровень пройден!"
+            "key": "CarpetTutorialEnd",
+            "value": "<color=#FCA311>Поздравляем!</color> Вы мастерски освоили правила пасьянса Коврик!"
         },
         {
-            "key": "RestartLevel",
-            "value": "Повторить уровень"
+            "key": "Leaderboard_Global",
+            "value": "Общая таблица лидеров"
         },
         {
-            "key": "NextLevel",
-            "value": "Следующий уровень"
+            "key": "Leaderboard_Klondike",
+            "value": "Таблица лидеров Косынки"
         },
         {
-            "key": "GameOver",
-            "value": "Вы погибли!"
+            "key": "Leaderboard_Spider",
+            "value": "Таблица лидеров Паука"
         },
         {
-            "key": "EndPuzzleInfo1",
-            "value": "Нужно вращать фрагменты барельефа чтобы его восстановить."
+            "key": "Leaderboard_FreeCell",
+            "value": "Таблица лидеров Свободной ячейки"
         },
         {
-            "key": "EndPuzzleInfo2",
-            "value": "E - смена круглого ключа"
+            "key": "Leaderboard_Pyramid",
+            "value": "Таблица лидеров Пирамиды"
         },
         {
-            "key": "DoorWrongSide",
-            "value": "Дверь открывается с другой стороны."
+            "key": "Leaderboard_TriPeaks",
+            "value": "Таблица лидеров Трех Вершин"
         },
         {
-            "key": "NoFuel",
-            "value": "Нужен огонь, чтобы зажечь факел!"
+            "key": "Leaderboard_Sultan",
+            "value": "Таблица лидеров Султана"
         },
         {
-            "key": "Settings",
-            "value": "Настройки"
+            "key": "Leaderboard_MonteCarlo",
+            "value": "Таблица лидеров Монте-Карло"
         },
         {
-            "key": "Restart",
-            "value": "Перезапустить"
+            "key": "Leaderboard_Montana",
+            "value": "Таблица лидеров Коврика"
         },
         {
-            "key": "SkipPanelText",
-            "value": "Решите пазл, чтобы разблокировать."
-        }
+            "key": "Leaderboard_Octagon",
+            "value": "Таблица лидеров Восьмиугольника"
+        },
+        {
+            "key": "Leaderboard_Yukon",
+            "value": "Таблица лидеров Юкона"
+        },
+        {
+            "key": "Quest_General_Easy_01_Title",
+            "value": "Карточный марафон"
+        },
+        {
+            "key": "Quest_General_Easy_01_Title",
+            "value": "Карточный марафон"
+        },
+        {
+            "key": "Quest_General_Easy_01_Desc_1",
+            "value": "Сделать суммарно <color=#ffbb00>{0} ход</color> во всех сыгранных за день пасьянсах."
+        },
+        {
+            "key": "Quest_General_Easy_01_Desc_2",
+            "value": "Сделать суммарно <color=#ffbb00>{0} хода</color> во всех сыгранных за день пасьянсах."
+        },
+        {
+            "key": "Quest_General_Easy_01_Desc_5",
+            "value": "Сделать суммарно <color=#ffbb00>{0} ходов</color> во всех сыгранных за день пасьянсах."
+        },
+        {
+            "key": "Quest_General_Easy_02_Title",
+            "value": "Первооткрыватель"
+        },
+        {
+            "key": "Quest_General_Easy_02_Desc_1",
+            "value": "Открыть на игровом столе <color=#ffbb00>{0} закрытую карту</color> (лежащую рубашкой вверх) во всех пасьянсах, где есть такая механика (<color=#a8d9e0>Косынка</color>, <color=#a8d9e0>Паук</color>, <color=#a8d9e0>Юкон</color>)."
+        },
+        {
+            "key": "Quest_General_Easy_02_Desc_2",
+            "value": "Открыть на игровом столе <color=#ffbb00>{0} закрытые карты</color> (лежащие рубашкой вверх) во всех пасьянсах, где есть такая механика (<color=#a8d9e0>Косынка</color>, <color=#a8d9e0>Паук</color>, <color=#a8d9e0>Юкон</color>)."
+        },
+        {
+            "key": "Quest_General_Easy_02_Desc_5",
+            "value": "Открыть на игровом столе <color=#ffbb00>{0} закрытых карт</color> (лежащих рубашкой вверх) во всех пасьянсах, где есть такая механика (<color=#a8d9e0>Косынка</color>, <color=#a8d9e0>Паук</color>, <color=#a8d9e0>Юкон</color>)."
+        },
+        {
+            "key": "Quest_General_Easy_03_Title",
+            "value": "Завзятый игрок"
+        },
+        {
+            "key": "Quest_General_Easy_03_Desc_2",
+            "value": "Полностью завершить <color=#ffbb00>{0} любые партии</color>."
+        },
+        {
+            "key": "Quest_General_Easy_04_Title",
+            "value": "Дорога в «дом»"
+        },
+        {
+            "key": "Quest_General_Easy_04_Desc_1",
+            "value": "Переместить в общей сложности <color=#ffbb00>{0} карту</color> в <color=#ffbb00>дома</color> во всех пасьянсах, где они есть."
+        },
+        {
+            "key": "Quest_General_Easy_04_Desc_2",
+            "value": "Переместить в общей сложности <color=#ffbb00>{0} карты</color> в <color=#ffbb00>дома</color> во всех пасьянсах, где они есть."
+        },
+        {
+            "key": "Quest_General_Easy_04_Desc_5",
+            "value": "Переместить в общей сложности <color=#ffbb00>{0} карт</color> в <color=#ffbb00>дома</color> во всех пасьянсах, где они есть."
+        },
+        {
+            "key": "Quest_General_Easy_05_Title",
+            "value": "Дегустатор"
+        },
+        {
+            "key": "Quest_General_Easy_05_Desc_2",
+            "value": "Сыграть хотя бы по одной партии в <color=#ffbb00>{0} разных видах</color> пасьянса (например, одна <color=#a8d9e0>Косынка</color>, один <color=#a8d9e0>Султан</color>, один <color=#a8d9e0>Юкон</color>)."
+        },
+        {
+            "key": "Quest_General_Easy_06_Title",
+            "value": "Время за картами"
+        },
+        {
+            "key": "Quest_General_Easy_06_Desc_5",
+            "value": "Провести в игровом процессе (непосредственно внутри раскладов) суммарно <color=#ffbb00>{0} минут</color>."
+        },
+        {
+            "key": "Quest_General_Easy_07_Title",
+            "value": "Королевский сбор"
+        },
+        {
+            "key": "Quest_General_Easy_07_Desc_1",
+            "value": "Убрать с поля или перенести в <color=#ffbb00>дом</color> суммарно <color=#ffbb00>{0} Короля или Даму</color> в любых играх."
+        },
+        {
+            "key": "Quest_General_Easy_07_Desc_2",
+            "value": "Убрать с поля или перенести в <color=#ffbb00>дом</color> суммарно <color=#ffbb00>{0} Королей и Дам</color> в любых играх."
+        },
+        {
+            "key": "Quest_General_Easy_07_Desc_5",
+            "value": "Убрать с поля или перенести в <color=#ffbb00>дом</color> суммарно <color=#ffbb00>{0} Королей и Дам</color> в любых играх."
+        },
+        {
+            "key": "Quest_General_Easy_08_Title",
+            "value": "Активный игрок"
+        },
+        {
+            "key": "Quest_General_Easy_08_Desc_1",
+            "value": "Перевернуть карты в <color=#ffbb00>колоде добора</color> суммарно <color=#ffbb00>{0} раз</color> во всех играх за день."
+        },
+        {
+            "key": "Quest_General_Easy_08_Desc_2",
+            "value": "Перевернуть карты в <color=#ffbb00>колоде добора</color> суммарно <color=#ffbb00>{0} раза</color> во всех играх за день."
+        },
+        {
+            "key": "Quest_General_Easy_08_Desc_5",
+            "value": "Перевернуть карты в <color=#ffbb00>колоде добора</color> суммарно <color=#ffbb00>{0} раз</color> во всех играх за день."
+        },
+        {
+            "key": "Quest_General_Easy_09_Title",
+            "value": "Упорный новичок"
+        },
+        {
+            "key": "Quest_General_Easy_09_Desc_2",
+            "value": "Выиграть <color=#ffbb00>{0} любые партии</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_General_Easy_10_Title",
+            "value": "Младший чин"
+        },
+        {
+            "key": "Quest_General_Easy_10_Desc_1",
+            "value": "Переместить в «дом» или убрать с игрового поля суммарно <color=#ffbb00>{0} Туза или Двойку</color> во всех пасьянсах за день."
+        },
+        {
+            "key": "Quest_General_Easy_10_Desc_2",
+            "value": "Переместить в «дом» или убрать с игрового поля суммарно <color=#ffbb00>{0} Тузов и Двоек</color> во всех пасьянсах за день."
+        },
+        {
+            "key": "Quest_General_Easy_10_Desc_5",
+            "value": "Переместить в «дом» или убрать с игрового поля суммарно <color=#ffbb00>{0} Тузов и Двоек</color> во всех пасьянсах за день."
+        },
+        {
+            "key": "Quest_General_Medium_01_Title",
+            "value": "Двойной успех"
+        },
+        {
+            "key": "Quest_General_Medium_01_Desc_2",
+            "value": "Выиграть суммарно <color=#ffbb00>{0} любые партии</color> за день."
+        },
+        {
+            "key": "Quest_General_Medium_02_Title",
+            "value": "Универсал"
+        },
+        {
+            "key": "Quest_General_Medium_02_Desc_2",
+            "value": "Выиграть партии в <color=#ffbb00>{0} разных видах</color> пасьянса."
+        },
+        {
+            "key": "Quest_General_Medium_03_Title",
+            "value": "Серия побед"
+        },
+        {
+            "key": "Quest_General_Medium_03_Desc_2",
+            "value": "Выиграть <color=#ffbb00>{0} любые игры подряд</color>."
+        },
+        {
+            "key": "Quest_General_Medium_04_Title",
+            "value": "Золотая середина"
+        },
+        {
+            "key": "Quest_General_Medium_04_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} любую партию</color> строго на <color=#eeae32>Средней сложности</color> или выше."
+        },
+        {
+            "key": "Quest_General_Medium_05_Title",
+            "value": "Уверенная рука"
+        },
+        {
+            "key": "Quest_General_Medium_05_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} любую партию</color>, ни разу не нажав кнопку «Отмена хода»."
+        },
+        {
+            "key": "Quest_General_Medium_06_Title",
+            "value": "Мастер времени"
+        },
+        {
+            "key": "Quest_General_Medium_06_Desc_1",
+            "value": "Выиграть любую партию быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_General_Medium_06_Desc_2",
+            "value": "Выиграть любую партию быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_General_Medium_06_Desc_5",
+            "value": "Выиграть любую партию быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+        {
+            "key": "Quest_General_Medium_07_Title",
+            "value": "Марафонец"
+        },
+        {
+            "key": "Quest_General_Medium_07_Desc_1",
+            "value": "Выиграть любую партию, в которой вы сделали более <color=#ffbb00>{0} хода</color>."
+        },
+        {
+            "key": "Quest_General_Medium_07_Desc_2",
+            "value": "Выиграть любую партию, в которой вы сделали более <color=#ffbb00>{0} ходов</color>."
+        },
+        {
+            "key": "Quest_General_Medium_07_Desc_5",
+            "value": "Выиграть любую партию, в которой вы сделали более <color=#ffbb00>{0} ходов</color>."
+        },
+        {
+            "key": "Quest_General_Medium_08_Title",
+            "value": "Трудолюбие"
+        },
+        {
+            "key": "Quest_General_Medium_08_Desc_5",
+            "value": "Полностью завершить <color=#ffbb00>{0} любых партий</color>, из которых как минимум 1 должна стать победной."
+        },
+        {
+            "key": "Quest_General_Hard_01_Title",
+            "value": "Гранд-мастер"
+        },
+        {
+            "key": "Quest_General_Hard_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} любую партию</color> строго на <color=#e14849>Сложной сложности</color>."
+        },
+        {
+            "key": "Quest_General_Hard_02_Title",
+            "value": "Стальные нервы"
+        },
+        {
+            "key": "Quest_General_Hard_02_Desc_2",
+            "value": "Выиграть <color=#ffbb00>{0} любые игры подряд</color>."
+        },
+        {
+            "key": "Quest_General_Hard_03_Title",
+            "value": "Идеальный день"
+        },
+        {
+            "key": "Quest_General_Hard_03_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} любую партию</color> на <color=#e14849>Сложной сложности</color>, ни разу не нажав кнопку «Отмена хода»."
+        },
+        {
+            "key": "Quest_General_Hard_04_Title",
+            "value": "Мульти-мастер"
+        },
+        {
+            "key": "Quest_General_Hard_04_Desc_2",
+            "value": "Выиграть партии в <color=#ffbb00>{0} разных видах</color> пасьянса за один день."
+        },
+        {
+            "key": "Quest_General_Hard_05_Title",
+            "value": "Спидраннер"
+        },
+        {
+            "key": "Quest_General_Hard_05_Desc_2",
+            "value": "Выиграть <color=#ffbb00>{0} любые партии</color>, каждую быстрее чем за 3 минуты."
+        },
+        {
+            "key": "Quest_Klondike_Easy_01_Title",
+            "value": "Дорога домой"
+        },
+        {
+            "key": "Quest_Klondike_Easy_01_Desc_1",
+            "value": "Переместить <color=#ffbb00>{0} карту</color> в <color=#ffbb00>дома</color> в <color=#a8d9e0>Косынке</color> (<color=#a8d9e0>по 1 или 3 карты</color>)."
+        },
+        {
+            "key": "Quest_Klondike_Easy_01_Desc_2",
+            "value": "Переместить <color=#ffbb00>{0} карты</color> в <color=#ffbb00>дома</color> в <color=#a8d9e0>Косынке</color> (<color=#a8d9e0>по 1 или 3 карты</color>)."
+        },
+        {
+            "key": "Quest_Klondike_Easy_01_Desc_5",
+            "value": "Переместить <color=#ffbb00>{0} карт</color> в <color=#ffbb00>дома</color> в <color=#a8d9e0>Косынке</color> (<color=#a8d9e0>по 1 или 3 карты</color>)."
+        },
 
+        {
+            "key": "Quest_Klondike_Easy_02_Title",
+            "value": "Разведчик"
+        },
+        {
+            "key": "Quest_Klondike_Easy_02_Desc_1",
+            "value": "Открыть <color=#ffbb00>{0} закрытую карту</color> на игровом столе в <color=#a8d9e0>Косынке</color> (<color=#a8d9e0>по 1 карте</color>)."
+        },
+        {
+            "key": "Quest_Klondike_Easy_02_Desc_2",
+            "value": "Открыть <color=#ffbb00>{0} закрытые карты</color> на игровом столе в <color=#a8d9e0>Косынке</color> (<color=#a8d9e0>по 1 карте</color>)."
+        },
+        {
+            "key": "Quest_Klondike_Easy_02_Desc_5",
+            "value": "Открыть <color=#ffbb00>{0} закрытых карт</color> на игровом столе в <color=#a8d9e0>Косынке</color> (<color=#a8d9e0>по 1 карте</color>)."
+        },
+
+        {
+            "key": "Quest_Klondike_Easy_03_Title",
+            "value": "Королевский двор"
+        },
+        {
+            "key": "Quest_Klondike_Easy_03_Desc_2",
+            "value": "Собрать <color=#ffbb00>{0} полные стопки</color> в <color=#ffbb00>доме</color> в <color=#a8d9e0>Косынке</color>."
+        },
+
+        {
+            "key": "Quest_Klondike_Easy_04_Title",
+            "value": "Активный резерв"
+        },
+        {
+            "key": "Quest_Klondike_Easy_04_Desc_1",
+            "value": "Переместить <color=#ffbb00>{0} карту</color> из <color=#ffbb00>колоды добора</color> сразу в <color=#ffbb00>дом</color> в <color=#a8d9e0>Косынке</color>."
+        },
+        {
+            "key": "Quest_Klondike_Easy_04_Desc_2",
+            "value": "Переместить <color=#ffbb00>{0} карты</color> из <color=#ffbb00>колоды добора</color> сразу в <color=#ffbb00>дом</color> в <color=#a8d9e0>Косынке</color>."
+        },
+        {
+            "key": "Quest_Klondike_Easy_04_Desc_5",
+            "value": "Переместить <color=#ffbb00>{0} карт</color> из <color=#ffbb00>колоды добора</color> сразу в <color=#ffbb00>дом</color> в <color=#a8d9e0>Косынке</color>."
+        },
+
+        {
+            "key": "Quest_Klondike_Easy_05_Title",
+            "value": "Строгий подход"
+        },
+        {
+            "key": "Quest_Klondike_Easy_05_Desc_1",
+            "value": "Переместить <color=#ffbb00>{0} карту</color> в <color=#ffbb00>дома</color> в <color=#a8d9e0>Косынке</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_Klondike_Easy_05_Desc_2",
+            "value": "Переместить <color=#ffbb00>{0} карты</color> в <color=#ffbb00>дома</color> в <color=#a8d9e0>Косынке</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_Klondike_Easy_05_Desc_5",
+            "value": "Переместить <color=#ffbb00>{0} карт</color> в <color=#ffbb00>дома</color> в <color=#a8d9e0>Косынке</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+
+        {
+            "key": "Quest_Klondike_Medium_01_Title",
+            "value": "Тройной расклад"
+        },
+        {
+            "key": "Quest_Klondike_Medium_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Косынку</color> (<color=#a8d9e0>по 3 карты</color>)."
+        },
+
+        {
+            "key": "Quest_Klondike_Medium_02_Title",
+            "value": "Мастер времени"
+        },
+        {
+            "key": "Quest_Klondike_Medium_02_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Косынку</color> быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_Klondike_Medium_02_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Косынку</color> быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_Klondike_Medium_02_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Косынку</color> быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+
+        {
+            "key": "Quest_Klondike_Medium_03_Title",
+            "value": "Безошибочный план"
+        },
+        {
+            "key": "Quest_Klondike_Medium_03_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Косынку</color>, ни разу не использовав кнопку отмены хода."
+        },
+
+        {
+            "key": "Quest_Klondike_Medium_04_Title",
+            "value": "Средний уровень"
+        },
+        {
+            "key": "Quest_Klondike_Medium_04_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Косынку</color> строго на <color=#eeae32>Средней сложности</color> или выше."
+        },
+
+        {
+            "key": "Quest_Klondike_Hard_01_Title",
+            "value": "Высшая лига"
+        },
+        {
+            "key": "Quest_Klondike_Hard_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Косынку</color> строго на <color=#e14849>Сложной сложности</color>."
+        },
+
+        {
+            "key": "Quest_Klondike_Hard_02_Title",
+            "value": "Молниеносный расклад"
+        },
+        {
+            "key": "Quest_Klondike_Hard_02_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Косынку</color> (<color=#a8d9e0>по 3 карты</color>) быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_Klondike_Hard_02_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Косынку</color> (<color=#a8d9e0>по 3 карты</color>) быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_Klondike_Hard_02_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Косынку</color> (<color=#a8d9e0>по 3 карты</color>) быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+
+        {
+            "key": "Quest_Klondike_Hard_03_Title",
+            "value": "Без компромиссов"
+        },
+        {
+            "key": "Quest_Klondike_Hard_03_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Косынку</color> (<color=#a8d9e0>по 3 карты</color>), ни разу не использовав отмену хода."
+        },
+        {
+            "key": "Quest_Spider_Easy_01_Title",
+            "value": "Плетение сетей"
+        },
+        {
+            "key": "Quest_Spider_Easy_01_Desc_5",
+            "value": "Собрать <color=#ffbb00>{0} полных последовательностей</color> в <color=#a8d9e0>Пауке</color> (<color=#a8d9e0>1 масть</color>)."
+        },
+
+        {
+            "key": "Quest_Spider_Easy_02_Title",
+            "value": "Глубокий анализ"
+        },
+        {
+            "key": "Quest_Spider_Easy_02_Desc_1",
+            "value": "Открыть <color=#ffbb00>{0} закрытую карту</color> на столе в <color=#a8d9e0>Пауке</color> (<color=#a8d9e0>1 или 2 масти</color>)."
+        },
+        {
+            "key": "Quest_Spider_Easy_02_Desc_2",
+            "value": "Открыть <color=#ffbb00>{0} закрытые карты</color> на столе в <color=#a8d9e0>Пауке</color> (<color=#a8d9e0>1 или 2 масти</color>)."
+        },
+        {
+            "key": "Quest_Spider_Easy_02_Desc_5",
+            "value": "Открыть <color=#ffbb00>{0} закрытых карт</color> на столе в <color=#a8d9e0>Пауке</color> (<color=#a8d9e0>1 или 2 масти</color>)."
+        },
+
+        {
+            "key": "Quest_Spider_Easy_03_Title",
+            "value": "Уборка"
+        },
+        {
+            "key": "Quest_Spider_Easy_03_Desc_2",
+            "value": "Освободить от всех карт <color=#ffbb00>{0} столбца</color> на игровом столе в <color=#a8d9e0>Пауке</color>."
+        },
+        {
+            "key": "Quest_Spider_Easy_03_Desc_5",
+            "value": "Освободить от всех карт <color=#ffbb00>{0} столбцов</color> на игровом столе в <color=#a8d9e0>Пауке</color>."
+        },
+
+        {
+            "key": "Quest_Spider_Easy_04_Title",
+            "value": "Сортировка"
+        },
+        {
+            "key": "Quest_Spider_Easy_04_Desc_1",
+            "value": "Совершить <color=#ffbb00>{0} успешное перемещение</color> карт между столбцами в <color=#a8d9e0>Пауке</color> (<color=#a8d9e0>1 масть</color>)."
+        },
+        {
+            "key": "Quest_Spider_Easy_04_Desc_2",
+            "value": "Совершить <color=#ffbb00>{0} успешных перемещения</color> карт между столбцами в <color=#a8d9e0>Пауке</color> (<color=#a8d9e0>1 масть</color>)."
+        },
+        {
+            "key": "Quest_Spider_Easy_04_Desc_5",
+            "value": "Совершить <color=#ffbb00>{0} успешных перемещений</color> карт между столбцами в <color=#a8d9e0>Пауке</color> (<color=#a8d9e0>1 масть</color>)."
+        },
+
+        {
+            "key": "Quest_Spider_Easy_05_Title",
+            "value": "Ловкий ткач"
+        },
+        {
+            "key": "Quest_Spider_Easy_05_Desc_2",
+            "value": "Собрать <color=#ffbb00>{0} полные последовательности</color> в <color=#a8d9e0>Пауке</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_Spider_Easy_05_Desc_5",
+            "value": "Собрать <color=#ffbb00>{0} полных последовательностей</color> в <color=#a8d9e0>Пауке</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+
+        {
+            "key": "Quest_Spider_Medium_01_Title",
+            "value": "Двойная угроза"
+        },
+        {
+            "key": "Quest_Spider_Medium_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Паука</color> (<color=#a8d9e0>2 масти</color>)."
+        },
+
+        {
+            "key": "Quest_Spider_Medium_02_Title",
+            "value": "Скоростное плетение"
+        },
+        {
+            "key": "Quest_Spider_Medium_02_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Паука</color> быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_Spider_Medium_02_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Паука</color> быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_Spider_Medium_02_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Паука</color> быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+
+        {
+            "key": "Quest_Spider_Medium_03_Title",
+            "value": "Чистая победа"
+        },
+        {
+            "key": "Quest_Spider_Medium_03_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Паука</color>, использовав отмену хода максимум <color=#ffbb00>{0} раза</color>."
+        },
+
+        {
+            "key": "Quest_Spider_Medium_04_Title",
+            "value": "Средний уровень"
+        },
+        {
+            "key": "Quest_Spider_Medium_04_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Паука</color> строго на <color=#eeae32>Средней сложности</color> или выше."
+        },
+
+        {
+            "key": "Quest_Spider_Hard_01_Title",
+            "value": "Властелин паутины"
+        },
+        {
+            "key": "Quest_Spider_Hard_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Паука</color> (<color=#a8d9e0>4 масти</color>)."
+        },
+
+        {
+            "key": "Quest_Spider_Hard_02_Title",
+            "value": "Арахнофобия"
+        },
+        {
+            "key": "Quest_Spider_Hard_02_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Паука</color> строго на <color=#e14849>Сложной сложности</color>."
+        },
+
+        {
+            "key": "Quest_Spider_Hard_03_Title",
+            "value": "Идеальная сеть"
+        },
+        {
+            "key": "Quest_Spider_Hard_03_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Паука</color> (<color=#a8d9e0>2 или 4 масти</color>), ни разу не использовав отмену хода."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_01_Title",
+            "value": "Освобождение"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_01_Desc_1",
+            "value": "Переместить <color=#ffbb00>{0} карту</color> в <color=#ffbb00>дома</color> в <color=#a8d9e0>Свободной ячейке</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_01_Desc_2",
+            "value": "Переместить <color=#ffbb00>{0} карты</color> в <color=#ffbb00>дома</color> в <color=#a8d9e0>Свободной ячейке</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_01_Desc_5",
+            "value": "Переместить <color=#ffbb00>{0} карт</color> в <color=#ffbb00>дома</color> в <color=#a8d9e0>Свободной ячейке</color>."
+        },
+
+        {
+            "key": "Quest_FreeCell_Easy_02_Title",
+            "value": "Транзит"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_02_Desc_1",
+            "value": "Использовать <color=#ffbb00>свободные ячейки</color> <color=#ffbb00>{0} раз</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_02_Desc_2",
+            "value": "Использовать <color=#ffbb00>свободные ячейки</color> <color=#ffbb00>{0} раза</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_02_Desc_5",
+            "value": "Использовать <color=#ffbb00>свободные ячейки</color> <color=#ffbb00>{0} раз</color>."
+        },
+
+        {
+            "key": "Quest_FreeCell_Easy_03_Title",
+            "value": "Первые шаги"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_03_Desc_1",
+            "value": "Отправить все <color=#ffbb00>4 Туза</color> и все <color=#ffbb00>4 Двойки</color> в <color=#ffbb00>дома</color> за <color=#ffbb00>{0} игру</color>."
+        },
+
+        {
+            "key": "Quest_FreeCell_Easy_04_Title",
+            "value": "Длинные цепочки"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_04_Desc_1",
+            "value": "Переместить стопки из <color=#ffbb00>3 и более карт</color> за один ход <color=#ffbb00>{0} раз</color> в <color=#a8d9e0>Свободной ячейке</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_04_Desc_2",
+            "value": "Переместить стопки из <color=#ffbb00>3 и более карт</color> за один ход <color=#ffbb00>{0} раза</color> в <color=#a8d9e0>Свободной ячейке</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_04_Desc_5",
+            "value": "Переместить стопки из <color=#ffbb00>3 и более карт</color> за один ход <color=#ffbb00>{0} раз</color> в <color=#a8d9e0>Свободной ячейке</color>."
+        },
+
+        {
+            "key": "Quest_FreeCell_Easy_05_Title",
+            "value": "Планомерность"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_05_Desc_1",
+            "value": "Переместить <color=#ffbb00>{0} карту</color> в <color=#ffbb00>дома</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_05_Desc_2",
+            "value": "Переместить <color=#ffbb00>{0} карты</color> в <color=#ffbb00>дома</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_05_Desc_5",
+            "value": "Переместить <color=#ffbb00>{0} карт</color> в <color=#ffbb00>дома</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+
+        {
+            "key": "Quest_FreeCell_Medium_01_Title",
+            "value": "Строгий расчет"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Свободную ячейку</color>."
+        },
+
+        {
+            "key": "Quest_FreeCell_Medium_02_Title",
+            "value": "Быстрый ум"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_02_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Свободную ячейку</color> быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Medium_02_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Свободную ячейку</color> быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Medium_02_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Свободную ячейку</color> быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+
+        {
+            "key": "Quest_FreeCell_Medium_03_Title",
+            "value": "Пустая клетка"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_03_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color>, ни разу не заняв все <color=#ffbb00>4 свободные ячейки</color> одновременно (максимум 3)."
+        },
+
+        {
+            "key": "Quest_FreeCell_Medium_04_Title",
+            "value": "Средний уровень"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_04_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Свободную ячейку</color> строго на <color=#eeae32>Средней сложности</color> или выше."
+        },
+
+        {
+            "key": "Quest_FreeCell_Hard_01_Title",
+            "value": "Высший пилотаж"
+        },
+        {
+            "key": "Quest_FreeCell_Hard_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Свободную ячейку</color> строго на <color=#e14849>Сложной сложности</color>."
+        },
+
+        {
+            "key": "Quest_FreeCell_Hard_02_Title",
+            "value": "Клаустрофобия"
+        },
+        {
+            "key": "Quest_FreeCell_Hard_02_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color>, ни разу не заняв более <color=#ffbb00>2 свободных ячеек</color> одновременно."
+        },
+
+        {
+            "key": "Quest_FreeCell_Hard_03_Title",
+            "value": "Гений планирования"
+        },
+        {
+            "key": "Quest_FreeCell_Hard_03_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Свободную ячейку</color> (на сложности <color=#eeae32>Medium</color> или <color=#e14849>Hard</color>), ни разу не использовав отмену хода."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_01_Title",
+            "value": "Снос строения"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_01_Desc_1",
+            "value": "Убрать <color=#ffbb00>{0} пару карт</color> в <color=#a8d9e0>Пирамиде</color> (короли не считаются, <color=#a8d9e0>1 или 2 раунда</color>)."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_01_Desc_2",
+            "value": "Убрать <color=#ffbb00>{0} пары карт</color> в <color=#a8d9e0>Пирамиде</color> (короли не считаются, <color=#a8d9e0>1 или 2 раунда</color>)."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_01_Desc_5",
+            "value": "Убрать <color=#ffbb00>{0} пар карт</color> в <color=#a8d9e0>Пирамиде</color> (короли не считаются, <color=#a8d9e0>1 или 2 раунда</color>)."
+        },
+
+        {
+            "key": "Quest_Pyramid_Easy_02_Title",
+            "value": "Раскопки"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_02_Desc_1",
+            "value": "Убрать <color=#ffbb00>{0} карту</color> непосредственно из самой фигуры пирамиды."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_02_Desc_2",
+            "value": "Убрать <color=#ffbb00>{0} карты</color> непосредственно из самой фигуры пирамиды."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_02_Desc_5",
+            "value": "Убрать <color=#ffbb00>{0} карт</color> непосредственно из самой фигуры пирамиды."
+        },
+
+        {
+            "key": "Quest_Pyramid_Easy_03_Title",
+            "value": "Помощь извне"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_03_Desc_5",
+            "value": "Составить <color=#ffbb00>{0} пар</color>, где хотя бы одна карта взята из <color=#ffbb00>колоды добора</color>."
+        },
+
+        {
+            "key": "Quest_Pyramid_Easy_04_Title",
+            "value": "Охота на Королей"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_04_Desc_2",
+            "value": "Убрать <color=#ffbb00>{0} Короля</color> (убираются без пары) в <color=#a8d9e0>Пирамиде</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_04_Desc_5",
+            "value": "Убрать <color=#ffbb00>{0} Королей</color> (убираются без пары) в <color=#a8d9e0>Пирамиде</color>."
+        },
+
+        {
+            "key": "Quest_Pyramid_Easy_05_Title",
+            "value": "Легкая прогулка"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_05_Desc_1",
+            "value": "Убрать <color=#ffbb00>{0} пару карт</color> в <color=#a8d9e0>Пирамиде</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_05_Desc_2",
+            "value": "Убрать <color=#ffbb00>{0} пары карт</color> в <color=#a8d9e0>Пирамиде</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_05_Desc_5",
+            "value": "Убрать <color=#ffbb00>{0} пар карт</color> в <color=#a8d9e0>Пирамиде</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+
+        {
+            "key": "Quest_Pyramid_Medium_01_Title",
+            "value": "Двойная раскопка"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Пирамиду</color> (<color=#a8d9e0>2 раунда</color>)."
+        },
+
+        {
+            "key": "Quest_Pyramid_Medium_02_Title",
+            "value": "Комбинатор"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_02_Desc_2",
+            "value": "Сделать комбо — убрать <color=#ffbb00>{0} пары карт подряд</color>, ни разу не перевернув новую карту из <color=#ffbb00>колоды добора</color>."
+        },
+
+        {
+            "key": "Quest_Pyramid_Medium_03_Title",
+            "value": "Запас сил"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_03_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Пирамиду</color>, оставив в <color=#ffbb00>колоде добора</color> не менее <color=#ffbb00>{0} неиспользованные карты</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Medium_03_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Пирамиду</color>, оставив в <color=#ffbb00>колоде добора</color> не менее <color=#ffbb00>{0} неиспользованных карт</color>."
+        },
+
+        {
+            "key": "Quest_Pyramid_Medium_04_Title",
+            "value": "Средний уровень"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_04_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Пирамиду</color> строго на <color=#eeae32>Средней сложности</color> или выше."
+        },
+
+        {
+            "key": "Quest_Pyramid_Hard_01_Title",
+            "value": "Фараон"
+        },
+        {
+            "key": "Quest_Pyramid_Hard_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Пирамиду</color> (<color=#a8d9e0>3 раунда</color>)."
+        },
+
+        {
+            "key": "Quest_Pyramid_Hard_02_Title",
+            "value": "Проклятие гробницы"
+        },
+        {
+            "key": "Quest_Pyramid_Hard_02_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Пирамиду</color> строго на <color=#e14849>Сложной сложности</color>."
+        },
+
+        {
+            "key": "Quest_Pyramid_Hard_03_Title",
+            "value": "Идеальная зачистка"
+        },
+        {
+            "key": "Quest_Pyramid_Hard_03_Desc_5",
+            "value": "Сделать комбо — убрать <color=#ffbb00>{0} пар карт подряд</color>, ни разу не перевернув новую карту из <color=#ffbb00>колоды добора</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_01_Title",
+            "value": "Альпинизм"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_01_Desc_1",
+            "value": "Убрать <color=#ffbb00>{0} карту</color> с игрового поля в <color=#a8d9e0>Трех вершинах</color> (<color=#a8d9e0>1 раунд</color>)."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_01_Desc_2",
+            "value": "Убрать <color=#ffbb00>{0} карты</color> с игрового поля в <color=#a8d9e0>Трех вершинах</color> (<color=#a8d9e0>1 раунд</color>)."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_01_Desc_5",
+            "value": "Убрать <color=#ffbb00>{0} карт</color> с игрового поля в <color=#a8d9e0>Трех вершинах</color> (<color=#a8d9e0>1 раунд</color>)."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Easy_02_Title",
+            "value": "Лавина"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_02_Desc_5",
+            "value": "Сделать серию (комбо), убрав <color=#ffbb00>{0} карт подряд</color> без использования <color=#ffbb00>колоды добора</color>."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Easy_03_Title",
+            "value": "Чистый горизонт"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_03_Desc_1",
+            "value": "Полностью очистить <color=#ffbb00>{0} вершину</color> из трех на игровом поле."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_03_Desc_2",
+            "value": "Полностью очистить <color=#ffbb00>{0} вершины</color> из трех на игровом поле."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Easy_04_Title",
+            "value": "Экономия"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_04_Desc_5",
+            "value": "Убрать <color=#ffbb00>{0} карт</color> с поля, перевернув не более 10 карт из <color=#ffbb00>колоды добора</color>."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Easy_05_Title",
+            "value": "Туризм"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_05_Desc_1",
+            "value": "Убрать <color=#ffbb00>{0} карту</color> с поля в <color=#a8d9e0>Трех вершинах</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_05_Desc_2",
+            "value": "Убрать <color=#ffbb00>{0} карты</color> с поля в <color=#a8d9e0>Трех вершинах</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_05_Desc_5",
+            "value": "Убрать <color=#ffbb00>{0} карт</color> с поля в <color=#a8d9e0>Трех вершинах</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Medium_01_Title",
+            "value": "Долгий поход"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Три вершины</color> (<color=#a8d9e0>2 раунда</color>)."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Medium_02_Title",
+            "value": "Мастер комбо"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_02_Desc_5",
+            "value": "Сделать непрерывную серию, убрав <color=#ffbb00>{0} карт подряд</color>."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Medium_03_Title",
+            "value": "Экономия резерва"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_03_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Три вершины</color>, оставив в <color=#ffbb00>колоде добора</color> не менее <color=#ffbb00>{0} карт</color>."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Medium_04_Title",
+            "value": "Средний уровень"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_04_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Три вершины</color> строго на <color=#eeae32>Средней сложности</color> или выше."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Hard_01_Title",
+            "value": "Марафон вершин"
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Три вершины</color> (<color=#a8d9e0>3 раунда</color>)."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Hard_02_Title",
+            "value": "Покоритель"
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_02_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Три вершины</color> строго на <color=#e14849>Сложной сложности</color>."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Hard_03_Title",
+            "value": "Супер-лавина"
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_03_Desc_1",
+            "value": "Сделать непрерывную серию (комбо), убрав <color=#ffbb00>{0} карту подряд</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_03_Desc_2",
+            "value": "Сделать непрерывную серию (комбо), убрав <color=#ffbb00>{0} карты подряд</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_03_Desc_5",
+            "value": "Сделать непрерывную серию (комбо), убрав <color=#ffbb00>{0} карт подряд</color>."
+        },
+        {
+            "key": "Quest_Yukon_Easy_01_Title",
+            "value": "Золотая жила"
+        },
+        {
+            "key": "Quest_Yukon_Easy_01_Desc_1",
+            "value": "Переместить <color=#ffbb00>{0} карту</color> в <color=#ffbb00>дома</color> в <color=#a8d9e0>Юконе</color> (<color=#a8d9e0>Классический</color>)."
+        },
+        {
+            "key": "Quest_Yukon_Easy_01_Desc_2",
+            "value": "Переместить <color=#ffbb00>{0} карты</color> в <color=#ffbb00>дома</color> в <color=#a8d9e0>Юконе</color> (<color=#a8d9e0>Классический</color>)."
+        },
+        {
+            "key": "Quest_Yukon_Easy_01_Desc_5",
+            "value": "Переместить <color=#ffbb00>{0} карт</color> в <color=#ffbb00>дома</color> в <color=#a8d9e0>Юконе</color> (<color=#a8d9e0>Классический</color>)."
+        },
+
+        {
+            "key": "Quest_Yukon_Easy_02_Title",
+            "value": "Таяние снегов"
+        },
+        {
+            "key": "Quest_Yukon_Easy_02_Desc_1",
+            "value": "Открыть <color=#ffbb00>{0} закрытую карту</color> на столе."
+        },
+        {
+            "key": "Quest_Yukon_Easy_02_Desc_2",
+            "value": "Открыть <color=#ffbb00>{0} закрытые карты</color> на столе."
+        },
+        {
+            "key": "Quest_Yukon_Easy_02_Desc_5",
+            "value": "Открыть <color=#ffbb00>{0} закрытых карт</color> на столе."
+        },
+
+        {
+            "key": "Quest_Yukon_Easy_03_Title",
+            "value": "Активная сортировка"
+        },
+        {
+            "key": "Quest_Yukon_Easy_03_Desc_1",
+            "value": "Переместить <color=#ffbb00>{0} карту</color> между игровыми столбцами в <color=#a8d9e0>Юконе</color> (<color=#a8d9e0>Русский</color>)."
+        },
+        {
+            "key": "Quest_Yukon_Easy_03_Desc_2",
+            "value": "Переместить <color=#ffbb00>{0} карты</color> между игровыми столбцами в <color=#a8d9e0>Юконе</color> (<color=#a8d9e0>Русский</color>)."
+        },
+        {
+            "key": "Quest_Yukon_Easy_03_Desc_5",
+            "value": "Переместить <color=#ffbb00>{0} карт</color> между игровыми столбцами в <color=#a8d9e0>Юконе</color> (<color=#a8d9e0>Русский</color>)."
+        },
+
+        {
+            "key": "Quest_Yukon_Easy_04_Title",
+            "value": "Сбор мастей"
+        },
+        {
+            "key": "Quest_Yukon_Easy_04_Desc_2",
+            "value": "Собрать <color=#ffbb00>{0} полные стопки</color> в <color=#ffbb00>доме</color>."
+        },
+
+        {
+            "key": "Quest_Yukon_Easy_05_Title",
+            "value": "Метеоролог"
+        },
+        {
+            "key": "Quest_Yukon_Easy_05_Desc_5",
+            "value": "Открыть <color=#ffbb00>{0} закрытых карт</color> в <color=#a8d9e0>Юконе</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+
+        {
+            "key": "Quest_Yukon_Medium_01_Title",
+            "value": "Русская зима"
+        },
+        {
+            "key": "Quest_Yukon_Medium_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Юкон</color> (<color=#a8d9e0>Русский</color>)."
+        },
+
+        {
+            "key": "Quest_Yukon_Medium_02_Title",
+            "value": "Спидран"
+        },
+        {
+            "key": "Quest_Yukon_Medium_02_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Юкон</color> быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_Yukon_Medium_02_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Юкон</color> быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_Yukon_Medium_02_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Юкон</color> быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+
+        {
+            "key": "Quest_Yukon_Medium_03_Title",
+            "value": "Уверенный шаг"
+        },
+        {
+            "key": "Quest_Yukon_Medium_03_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Юкон</color> (любой режим), ни разу не использовав отмену хода."
+        },
+
+        {
+            "key": "Quest_Yukon_Medium_04_Title",
+            "value": "Средний уровень"
+        },
+        {
+            "key": "Quest_Yukon_Medium_04_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Юкон</color> строго на <color=#eeae32>Средней сложности</color> или выше."
+        },
+
+        {
+            "key": "Quest_Yukon_Hard_01_Title",
+            "value": "Сибирский мороз"
+        },
+        {
+            "key": "Quest_Yukon_Hard_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Юкон</color> (<color=#a8d9e0>Русский</color>) строго на <color=#e14849>Сложной сложности</color>."
+        },
+
+        {
+            "key": "Quest_Yukon_Hard_02_Title",
+            "value": "Холодный расчет"
+        },
+        {
+            "key": "Quest_Yukon_Hard_02_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Юкон</color> (<color=#a8d9e0>Классический</color>) строго на <color=#e14849>Сложной сложности</color>."
+        },
+
+        {
+            "key": "Quest_Yukon_Hard_03_Title",
+            "value": "Спидраннер Севера"
+        },
+        {
+            "key": "Quest_Yukon_Hard_03_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Юкон</color> (<color=#a8d9e0>Русский</color>) быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_Yukon_Hard_03_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Юкон</color> (<color=#a8d9e0>Русский</color>) быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_Yukon_Hard_03_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Юкон</color> (<color=#a8d9e0>Русский</color>) быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_01_Title",
+            "value": "Удачное соседство"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_01_Desc_1",
+            "value": "Убрать <color=#ffbb00>{0} пару карт</color> в <color=#a8d9e0>Монте-Карло</color> (<color=#a8d9e0>8 сторон</color>)."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_01_Desc_2",
+            "value": "Убрать <color=#ffbb00>{0} пары карт</color> в <color=#a8d9e0>Монте-Карло</color> (<color=#a8d9e0>8 сторон</color>)."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_01_Desc_5",
+            "value": "Убрать <color=#ffbb00>{0} пар карт</color> в <color=#a8d9e0>Монте-Карло</color> (<color=#a8d9e0>8 сторон</color>)."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Easy_02_Title",
+            "value": "Вертикали и горизонтали"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_02_Desc_1",
+            "value": "Убрать <color=#ffbb00>{0} пару карт</color> в <color=#a8d9e0>Монте-Карло</color> (<color=#a8d9e0>4 стороны</color>)."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_02_Desc_2",
+            "value": "Убрать <color=#ffbb00>{0} пары карт</color> в <color=#a8d9e0>Монте-Карло</color> (<color=#a8d9e0>4 стороны</color>)."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_02_Desc_5",
+            "value": "Убрать <color=#ffbb00>{0} пар карт</color> в <color=#a8d9e0>Монте-Карло</color> (<color=#a8d9e0>4 стороны</color>)."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Easy_03_Title",
+            "value": "Лица казино"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_03_Desc_5",
+            "value": "Найти и убрать <color=#ffbb00>{0} пар «картинок»</color> (Валетов, Дам или Королей) в <color=#a8d9e0>Монте-Карло</color> (любой режим)."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Easy_04_Title",
+            "value": "Магия чисел"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_04_Desc_1",
+            "value": "Убрать <color=#ffbb00>{0} пару числовых карт</color> (от 2 до 10) в <color=#a8d9e0>Монте-Карло</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_04_Desc_2",
+            "value": "Убрать <color=#ffbb00>{0} пары числовых карт</color> (от 2 до 10) в <color=#a8d9e0>Монте-Карло</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_04_Desc_5",
+            "value": "Убрать <color=#ffbb00>{0} пар числовых карт</color> (от 2 до 10) в <color=#a8d9e0>Монте-Карло</color>."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Easy_05_Title",
+            "value": "Казино"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_05_Desc_1",
+            "value": "Убрать <color=#ffbb00>{0} пару карт</color> в <color=#a8d9e0>Монте-Карло</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_05_Desc_2",
+            "value": "Убрать <color=#ffbb00>{0} пары карт</color> в <color=#a8d9e0>Монте-Карло</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_05_Desc_5",
+            "value": "Убрать <color=#ffbb00>{0} пар карт</color> в <color=#a8d9e0>Монте-Карло</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Medium_01_Title",
+            "value": "Строгие правила"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Монте-Карло</color> (<color=#a8d9e0>4 стороны</color>)."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Medium_02_Title",
+            "value": "Быстрые решения"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_02_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Монте-Карло</color> быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_02_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Монте-Карло</color> быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_02_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Монте-Карло</color> быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Medium_03_Title",
+            "value": "Идеальная память"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_03_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Монте-Карло</color> (любой режим), ни разу не использовав отмену хода."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Medium_04_Title",
+            "value": "Средний уровень"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_04_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Монте-Карло</color> строго на <color=#eeae32>Средней сложности</color> или выше."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Hard_01_Title",
+            "value": "Высшая математика"
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Монте-Карло</color> (<color=#a8d9e0>8 сторон</color>) строго на <color=#e14849>Сложной сложности</color>."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Hard_02_Title",
+            "value": "Точная геометрия"
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_02_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Монте-Карло</color> (<color=#a8d9e0>4 стороны</color>) строго на <color=#e14849>Сложной сложности</color>."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Hard_03_Title",
+            "value": "Феноменальная память"
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_03_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Монте-Карло</color> (<color=#a8d9e0>4 стороны</color>) быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_03_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Монте-Карло</color> (<color=#a8d9e0>4 стороны</color>) быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_03_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Монте-Карло</color> (<color=#a8d9e0>4 стороны</color>) быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_01_Title",
+            "value": "Дары Султану"
+        },
+        {
+            "key": "Quest_Sultan_Easy_01_Desc_1",
+            "value": "Разместить <color=#ffbb00>{0} карту</color> на стопках оснований вокруг центра в игре <color=#a8d9e0>Султан</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_01_Desc_2",
+            "value": "Разместить <color=#ffbb00>{0} карты</color> на стопках оснований вокруг центра в игре <color=#a8d9e0>Султан</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_01_Desc_5",
+            "value": "Разместить <color=#ffbb00>{0} карт</color> на стопках оснований вокруг центра в игре <color=#a8d9e0>Султан</color>."
+        },
+
+        {
+            "key": "Quest_Sultan_Easy_02_Title",
+            "value": "Свита"
+        },
+        {
+            "key": "Quest_Sultan_Easy_02_Desc_1",
+            "value": "Использовать все карты из <color=#ffbb00>6 резервных ячеек</color> (по бокам) минимум <color=#ffbb00>{0} раз</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_02_Desc_2",
+            "value": "Использовать все карты из <color=#ffbb00>6 резервных ячеек</color> (по бокам) минимум <color=#ffbb00>{0} раза</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_02_Desc_5",
+            "value": "Использовать все карты из <color=#ffbb00>6 резервных ячеек</color> (по бокам) минимум <color=#ffbb00>{0} раз</color>."
+        },
+
+        {
+            "key": "Quest_Sultan_Easy_03_Title",
+            "value": "Гарем"
+        },
+        {
+            "key": "Quest_Sultan_Easy_03_Desc_2",
+            "value": "Собрать <color=#ffbb00>{0} полные стопки</color> вокруг Султана."
+        },
+        {
+            "key": "Quest_Sultan_Easy_03_Desc_5",
+            "value": "Собрать <color=#ffbb00>{0} полных стопок</color> вокруг Султана."
+        },
+
+        {
+            "key": "Quest_Sultan_Easy_04_Title",
+            "value": "Прямая поставка"
+        },
+        {
+            "key": "Quest_Sultan_Easy_04_Desc_1",
+            "value": "Переместить <color=#ffbb00>{0} карту</color> из <color=#ffbb00>центральной колоды</color> напрямую на базовые стопки вокруг Султана, минуя 6 боковых резервных ячеек."
+        },
+        {
+            "key": "Quest_Sultan_Easy_04_Desc_2",
+            "value": "Переместить <color=#ffbb00>{0} карты</color> из <color=#ffbb00>центральной колоды</color> напрямую на базовые стопки вокруг Султана, минуя 6 боковых резервных ячеек."
+        },
+        {
+            "key": "Quest_Sultan_Easy_04_Desc_5",
+            "value": "Переместить <color=#ffbb00>{0} карт</color> из <color=#ffbb00>центральной колоды</color> напрямую на базовые стопки вокруг Султана, минуя 6 боковых резервных ячеек."
+        },
+
+        {
+            "key": "Quest_Sultan_Easy_05_Title",
+            "value": "Милость Правителя"
+        },
+        {
+            "key": "Quest_Sultan_Easy_05_Desc_1",
+            "value": "Разместить <color=#ffbb00>{0} карту</color> на основаниях в <color=#a8d9e0>Султане</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_05_Desc_2",
+            "value": "Разместить <color=#ffbb00>{0} карты</color> на основаниях в <color=#a8d9e0>Султане</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_05_Desc_5",
+            "value": "Разместить <color=#ffbb00>{0} карт</color> на основаниях в <color=#a8d9e0>Султане</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+
+        {
+            "key": "Quest_Sultan_Medium_01_Title",
+            "value": "Великий визирь"
+        },
+        {
+            "key": "Quest_Sultan_Medium_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Султан</color>."
+        },
+
+        {
+            "key": "Quest_Sultan_Medium_02_Title",
+            "value": "Скорость мысли"
+        },
+        {
+            "key": "Quest_Sultan_Medium_02_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Султан</color> быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_Sultan_Medium_02_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Султан</color> быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_Sultan_Medium_02_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Султан</color> быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+
+        {
+            "key": "Quest_Sultan_Medium_03_Title",
+            "value": "Безупречная служба"
+        },
+        {
+            "key": "Quest_Sultan_Medium_03_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Султан</color>, ни разу не использовав отмену хода."
+        },
+
+        {
+            "key": "Quest_Sultan_Medium_04_Title",
+            "value": "Средний уровень"
+        },
+        {
+            "key": "Quest_Sultan_Medium_04_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Султан</color> строго на <color=#eeae32>Средней сложности</color> или выше."
+        },
+
+        {
+            "key": "Quest_Sultan_Hard_01_Title",
+            "value": "Гранд-Султан"
+        },
+        {
+            "key": "Quest_Sultan_Hard_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Султан</color> строго на <color=#e14849>Сложной сложности</color>."
+        },
+
+        {
+            "key": "Quest_Sultan_Hard_02_Title",
+            "value": "Мудрый правитель"
+        },
+        {
+            "key": "Quest_Sultan_Hard_02_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Султан</color> на <color=#e14849>Сложной сложности</color>, ни разу не использовав отмену хода."
+        },
+
+        {
+            "key": "Quest_Sultan_Hard_03_Title",
+            "value": "Мгновенное решение"
+        },
+        {
+            "key": "Quest_Sultan_Hard_03_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Султан</color> быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_Sultan_Hard_03_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Султан</color> быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_Sultan_Hard_03_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Султан</color> быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+        {
+            "key": "Quest_Montana_Easy_01_Title",
+            "value": "Наведение порядка"
+        },
+        {
+            "key": "Quest_Montana_Easy_01_Desc_1",
+            "value": "Выстроить правильно по масти и возрастанию <color=#ffbb00>{0} карту</color> в <color=#a8d9e0>Коврике</color> (<color=#a8d9e0>Классический</color>)."
+        },
+        {
+            "key": "Quest_Montana_Easy_01_Desc_2",
+            "value": "Выстроить правильно по масти и возрастанию <color=#ffbb00>{0} карты</color> в <color=#a8d9e0>Коврике</color> (<color=#a8d9e0>Классический</color>)."
+        },
+        {
+            "key": "Quest_Montana_Easy_01_Desc_5",
+            "value": "Выстроить правильно по масти и возрастанию <color=#ffbb00>{0} карт</color> в <color=#a8d9e0>Коврике</color> (<color=#a8d9e0>Классический</color>)."
+        },
+
+        {
+            "key": "Quest_Montana_Easy_02_Title",
+            "value": "Точечная работа"
+        },
+        {
+            "key": "Quest_Montana_Easy_02_Desc_1",
+            "value": "Успешно заполнить пустые ячейки (пробелы) <color=#ffbb00>{0} раз</color>."
+        },
+        {
+            "key": "Quest_Montana_Easy_02_Desc_2",
+            "value": "Успешно заполнить пустые ячейки (пробелы) <color=#ffbb00>{0} раза</color>."
+        },
+        {
+            "key": "Quest_Montana_Easy_02_Desc_5",
+            "value": "Успешно заполнить пустые ячейки (пробелы) <color=#ffbb00>{0} раз</color>."
+        },
+
+        {
+            "key": "Quest_Montana_Easy_03_Title",
+            "value": "Идеальные ряды"
+        },
+        {
+            "key": "Quest_Montana_Easy_03_Desc_2",
+            "value": "Полностью завершить (от 2 до Короля) <color=#ffbb00>{0} ряда</color> в <color=#a8d9e0>Коврике</color>."
+        },
+
+        {
+            "key": "Quest_Montana_Easy_04_Title",
+            "value": "Без перетасовок"
+        },
+        {
+            "key": "Quest_Montana_Easy_04_Desc_5",
+            "value": "Заполнить <color=#ffbb00>{0} пробелов подряд</color> до того, как потребуется нажать кнопку перетасовки."
+        },
+
+        {
+            "key": "Quest_Montana_Easy_05_Title",
+            "value": "Легкий старт"
+        },
+        {
+            "key": "Quest_Montana_Easy_05_Desc_1",
+            "value": "Выстроить <color=#ffbb00>{0} карту</color> в правильном порядке в <color=#a8d9e0>Коврике</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_Montana_Easy_05_Desc_2",
+            "value": "Выстроить <color=#ffbb00>{0} карты</color> в правильном порядке в <color=#a8d9e0>Коврике</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_Montana_Easy_05_Desc_5",
+            "value": "Выстроить <color=#ffbb00>{0} карт</color> в правильном порядке в <color=#a8d9e0>Коврике</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+
+        {
+            "key": "Quest_Montana_Medium_01_Title",
+            "value": "Ткач"
+        },
+        {
+            "key": "Quest_Montana_Medium_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Коврик</color> (<color=#a8d9e0>Классический</color>)."
+        },
+
+        {
+            "key": "Quest_Montana_Medium_02_Title",
+            "value": "Скорость сборки"
+        },
+        {
+            "key": "Quest_Montana_Medium_02_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Коврик</color> быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_Montana_Medium_02_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Коврик</color> быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_Montana_Medium_02_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Коврик</color> быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+
+        {
+            "key": "Quest_Montana_Medium_03_Title",
+            "value": "Запасной план"
+        },
+        {
+            "key": "Quest_Montana_Medium_03_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Коврик</color>, оставив неиспользованной хотя бы 1 перетасовку."
+        },
+
+        {
+            "key": "Quest_Montana_Medium_04_Title",
+            "value": "Средний уровень"
+        },
+        {
+            "key": "Quest_Montana_Medium_04_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Коврик</color> строго на <color=#eeae32>Средней сложности</color> или выше."
+        },
+
+        {
+            "key": "Quest_Montana_Hard_01_Title",
+            "value": "Сложный узор"
+        },
+        {
+            "key": "Quest_Montana_Hard_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Коврик</color> (<color=#a8d9e0>Сложный режим</color>)."
+        },
+
+        {
+            "key": "Quest_Montana_Hard_02_Title",
+            "value": "Мастерство ткача"
+        },
+        {
+            "key": "Quest_Montana_Hard_02_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Коврик</color> (<color=#a8d9e0>Классический</color>) строго на <color=#e14849>Сложной сложности</color>."
+        },
+
+        {
+            "key": "Quest_Montana_Hard_03_Title",
+            "value": "Ни шагу назад"
+        },
+        {
+            "key": "Quest_Montana_Hard_03_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Коврик</color> (<color=#a8d9e0>Сложный режим</color>), ни разу не использовав отмену хода."
+        },
+        {
+            "key": "Quest_Octagon_Easy_01_Title",
+            "value": "Заполнение лучей"
+        },
+        {
+            "key": "Quest_Octagon_Easy_01_Desc_1",
+            "value": "Переместить <color=#ffbb00>{0} карту</color> на <color=#ffbb00>базовые стопки</color> в <color=#a8d9e0>Восьмиугольнике</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_01_Desc_2",
+            "value": "Переместить <color=#ffbb00>{0} карты</color> на <color=#ffbb00>базовые стопки</color> в <color=#a8d9e0>Восьмиугольнике</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_01_Desc_5",
+            "value": "Переместить <color=#ffbb00>{0} карт</color> на <color=#ffbb00>базовые стопки</color> в <color=#a8d9e0>Восьмиугольнике</color>."
+        },
+
+        {
+            "key": "Quest_Octagon_Easy_02_Title",
+            "value": "Раскрытие углов"
+        },
+        {
+            "key": "Quest_Octagon_Easy_02_Desc_5",
+            "value": "Успешно переложить на <color=#ffbb00>базовые стопки</color> <color=#ffbb00>{0} карт</color> из угловых вспомогательных стопок."
+        },
+
+        {
+            "key": "Quest_Octagon_Easy_03_Title",
+            "value": "Двойная сила"
+        },
+        {
+            "key": "Quest_Octagon_Easy_03_Desc_2",
+            "value": "Полностью собрать (довести до Короля) <color=#ffbb00>{0} базовые стопки</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_03_Desc_5",
+            "value": "Полностью собрать (довести до Короля) <color=#ffbb00>{0} базовых стопок</color>."
+        },
+
+        {
+            "key": "Quest_Octagon_Easy_04_Title",
+            "value": "Центральное снабжение"
+        },
+        {
+            "key": "Quest_Octagon_Easy_04_Desc_1",
+            "value": "Переместить <color=#ffbb00>{0} карту</color> на <color=#ffbb00>базовые стопки</color> непосредственно из <color=#ffbb00>центральной колоды</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_04_Desc_2",
+            "value": "Переместить <color=#ffbb00>{0} карты</color> на <color=#ffbb00>базовые стопки</color> непосредственно из <color=#ffbb00>центральной колоды</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_04_Desc_5",
+            "value": "Переместить <color=#ffbb00>{0} карт</color> на <color=#ffbb00>базовые стопки</color> непосредственно из <color=#ffbb00>центральной колоды</color>."
+        },
+
+        {
+            "key": "Quest_Octagon_Easy_05_Title",
+            "value": "Простая геометрия"
+        },
+        {
+            "key": "Quest_Octagon_Easy_05_Desc_1",
+            "value": "Переместить <color=#ffbb00>{0} карту</color> на <color=#ffbb00>базовые стопки</color> в <color=#a8d9e0>Восьмиугольнике</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_05_Desc_2",
+            "value": "Переместить <color=#ffbb00>{0} карты</color> на <color=#ffbb00>базовые стопки</color> в <color=#a8d9e0>Восьмиугольнике</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_05_Desc_5",
+            "value": "Переместить <color=#ffbb00>{0} карт</color> на <color=#ffbb00>базовые стопки</color> в <color=#a8d9e0>Восьмиугольнике</color> строго на <color=#9fd25c>Легкой сложности</color>."
+        },
+
+        {
+            "key": "Quest_Octagon_Medium_01_Title",
+            "value": "Правильная форма"
+        },
+        {
+            "key": "Quest_Octagon_Medium_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Восьмиугольник</color>."
+        },
+
+        {
+            "key": "Quest_Octagon_Medium_02_Title",
+            "value": "Рефлексы"
+        },
+        {
+            "key": "Quest_Octagon_Medium_02_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Восьмиугольник</color> быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_Octagon_Medium_02_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Восьмиугольник</color> быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_Octagon_Medium_02_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Восьмиугольник</color> быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+
+        {
+            "key": "Quest_Octagon_Medium_03_Title",
+            "value": "Раскрытый потенциал"
+        },
+        {
+            "key": "Quest_Octagon_Medium_03_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Восьмиугольник</color>, ни разу не использовав отмену хода."
+        },
+
+        {
+            "key": "Quest_Octagon_Medium_04_Title",
+            "value": "Средний уровень"
+        },
+        {
+            "key": "Quest_Octagon_Medium_04_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Восьмиугольник</color> строго на <color=#eeae32>Средней сложности</color> или выше."
+        },
+
+        {
+            "key": "Quest_Octagon_Hard_01_Title",
+            "value": "Безупречная геометрия"
+        },
+        {
+            "key": "Quest_Octagon_Hard_01_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Восьмиугольник</color> строго на <color=#e14849>Сложной сложности</color>."
+        },
+
+        {
+            "key": "Quest_Octagon_Hard_02_Title",
+            "value": "Абсолютный расчет"
+        },
+        {
+            "key": "Quest_Octagon_Hard_02_Desc_1",
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Восьмиугольник</color> на <color=#e14849>Сложной сложности</color>, ни разу не использовав отмену хода."
+        },
+
+        {
+            "key": "Quest_Octagon_Hard_03_Title",
+            "value": "Рефлексы мастера"
+        },
+        {
+            "key": "Quest_Octagon_Hard_03_Desc_1",
+            "value": "Выиграть партию в <color=#a8d9e0>Восьмиугольник</color> быстрее, чем за <color=#ffbb00>{0} секунду</color>."
+        },
+        {
+            "key": "Quest_Octagon_Hard_03_Desc_2",
+            "value": "Выиграть партию в <color=#a8d9e0>Восьмиугольник</color> быстрее, чем за <color=#ffbb00>{0} секунды</color>."
+        },
+        {
+            "key": "Quest_Octagon_Hard_03_Desc_5",
+            "value": "Выиграть партию в <color=#a8d9e0>Восьмиугольник</color> быстрее, чем за <color=#ffbb00>{0} секунд</color>."
+        },
+        {
+            "key": "General",
+            "value": "Общее"
+        },
+        {
+            "key": "Month_1",
+            "value": "Января"
+        },
+        {
+            "key": "Month_2",
+            "value": "Февраля"
+        },
+        {
+            "key": "Month_3",
+            "value": "Марта"
+        },
+        {
+            "key": "Month_4",
+            "value": "Апреля"
+        },
+        {
+            "key": "Month_5",
+            "value": "Мая"
+        },
+        {
+            "key": "Month_6",
+            "value": "Июня"
+        },
+        {
+            "key": "Month_7",
+            "value": "Июля"
+        },
+        {
+            "key": "Month_8",
+            "value": "Августа"
+        },
+        {
+            "key": "Month_9",
+            "value": "Сентября"
+        },
+        {
+            "key": "Month_10",
+            "value": "Октября"
+        },
+        {
+            "key": "Month_11",
+            "value": "Ноября"
+        },
+        {
+            "key": "Month_12",
+            "value": "Декабря"
+        },
+        {
+            "key": "Quests_Reset",
+            "value": "Обновление:"
+        },
+        {
+            "key": "Claim_Reward",
+            "value": "Забрать награду"
+        },
+        {
+            "key": "Quest_Notifications_On",
+            "value": "Уведомления включены"
+        },
+        {
+            "key": "Quest_Notifications_Off",
+            "value": "Уведомления выключены"
+        },
+        {
+            "key": "Reward_Available",
+            "value": "Доступно: {0}"
+        },
+        {
+            "key": "Reward_Desc",
+            "value": "Распределите награду! Каждый вложенный бустер дает <color=#ffbb00>x2 опыта</color> на <color=#ffbb00>следующие {0} игр</color>."
+        },
+        {
+            "key": "Stats_QuestsInARow",
+            "value": "Заданий подряд:"
+        },
+        {
+            "key": "Stats_QuestStreakBest",
+            "value": "Рекорд заданий:"
+        },
+        {
+            "key": "Stats_DayStreakCurrent",
+            "value": "Дней подряд:"
+        },
+        {
+            "key": "Stats_DayStreakBest",
+            "value": "Рекорд дней:"
+        },
+        {
+            "key": "Stats_PerfectDaysTotal",
+            "value": "Идеальных дней:"
+        },
+        {
+            "key": "Stats_PerfectStreakCurrent",
+            "value": "Идеальных дней подряд:"
+        },
+        {
+            "key": "Stats_PerfectStreakBest",
+            "value": "Рекорд идеальных дней:"
+        },
+        {
+            "key": "TitleUI_Unlocked",
+            "value": "Разблокировано"
+        },
+        {
+            "key": "TitleUI_Selected",
+            "value": "Выбрано"
+        },
+        {
+            "key": "TitleUI_Requirement",
+            "value": "Нужен {0} уровень"
+        },
+        {
+            "key": "TitleUI_GlobalLevel",
+            "value": "Общий уровень"
+        },
+
+        {
+            "key": "Title_Klondike_1",
+            "value": "Приезжий"
+        },
+        {
+            "key": "Title_Klondike_5",
+            "value": "Искатель"
+        },
+        {
+            "key": "Title_Klondike_10",
+            "value": "Землекоп"
+        },
+        {
+            "key": "Title_Klondike_15",
+            "value": "Старатель"
+        },
+        {
+            "key": "Title_Klondike_20",
+            "value": "Золотодобытчик"
+        },
+        {
+            "key": "Title_Klondike_25",
+            "value": "Магнат Клондайка"
+        },
+        {
+            "key": "Title_Klondike_30",
+            "value": "Легенда Лихорадки"
+        },
+
+        {
+            "key": "Title_Spider_1",
+            "value": "Запутавшийся"
+        },
+        {
+            "key": "Title_Spider_5",
+            "value": "Ловец"
+        },
+        {
+            "key": "Title_Spider_10",
+            "value": "Прядильщик"
+        },
+        {
+            "key": "Title_Spider_15",
+            "value": "Ткач Паутины"
+        },
+        {
+            "key": "Title_Spider_20",
+            "value": "Ядовитый Охотник"
+        },
+        {
+            "key": "Title_Spider_25",
+            "value": "Хозяин Сети"
+        },
+        {
+            "key": "Title_Spider_30",
+            "value": "Король Арахнидов"
+        },
+
+        {
+            "key": "Title_FreeCell_1",
+            "value": "Дилетант"
+        },
+        {
+            "key": "Title_FreeCell_5",
+            "value": "Ученик"
+        },
+        {
+            "key": "Title_FreeCell_10",
+            "value": "Аналитик"
+        },
+        {
+            "key": "Title_FreeCell_15",
+            "value": "Тактик"
+        },
+        {
+            "key": "Title_FreeCell_20",
+            "value": "Логик"
+        },
+        {
+            "key": "Title_FreeCell_25",
+            "value": "Стратег"
+        },
+        {
+            "key": "Title_FreeCell_30",
+            "value": "Гений Расчета"
+        },
+
+        {
+            "key": "Title_Pyramid_1",
+            "value": "Искатель Оазиса"
+        },
+        {
+            "key": "Title_Pyramid_5",
+            "value": "Каменотес"
+        },
+        {
+            "key": "Title_Pyramid_10",
+            "value": "Строитель"
+        },
+        {
+            "key": "Title_Pyramid_15",
+            "value": "Надсмотрщик"
+        },
+        {
+            "key": "Title_Pyramid_20",
+            "value": "Жрец"
+        },
+        {
+            "key": "Title_Pyramid_25",
+            "value": "Архитектор"
+        },
+        {
+            "key": "Title_Pyramid_30",
+            "value": "Непреклонный Фараон"
+        },
+
+        {
+            "key": "Title_TriPeaks_1",
+            "value": "Пешеход"
+        },
+        {
+            "key": "Title_TriPeaks_5",
+            "value": "Путник"
+        },
+        {
+            "key": "Title_TriPeaks_10",
+            "value": "Турист"
+        },
+        {
+            "key": "Title_TriPeaks_15",
+            "value": "Скалолаз"
+        },
+        {
+            "key": "Title_TriPeaks_20",
+            "value": "Альпинист"
+        },
+        {
+            "key": "Title_TriPeaks_25",
+            "value": "Покоритель"
+        },
+        {
+            "key": "Title_TriPeaks_30",
+            "value": "Властелин Гор"
+        },
+
+        {
+            "key": "Title_Yukon_1",
+            "value": "Незнакомец"
+        },
+        {
+            "key": "Title_Yukon_5",
+            "value": "Охотник"
+        },
+        {
+            "key": "Title_Yukon_10",
+            "value": "Следопыт"
+        },
+        {
+            "key": "Title_Yukon_15",
+            "value": "Зимовщик"
+        },
+        {
+            "key": "Title_Yukon_20",
+            "value": "Хозяин Тайги"
+        },
+        {
+            "key": "Title_Yukon_25",
+            "value": "Покоритель Севера"
+        },
+        {
+            "key": "Title_Yukon_30",
+            "value": "Дух Юкона"
+        },
+
+        {
+            "key": "Title_MonteCarlo_1",
+            "value": "Зритель"
+        },
+        {
+            "key": "Title_MonteCarlo_5",
+            "value": "Игрок"
+        },
+        {
+            "key": "Title_MonteCarlo_10",
+            "value": "Рисковый"
+        },
+        {
+            "key": "Title_MonteCarlo_15",
+            "value": "Везунчик"
+        },
+        {
+            "key": "Title_MonteCarlo_20",
+            "value": "Шулер"
+        },
+        {
+            "key": "Title_MonteCarlo_25",
+            "value": "Завсегдатай Казино"
+        },
+        {
+            "key": "Title_MonteCarlo_30",
+            "value": "Аристократ Удачи"
+        },
+
+        {
+            "key": "Title_Sultan_1",
+            "value": "Чужеземец"
+        },
+        {
+            "key": "Title_Sultan_5",
+            "value": "Стражник"
+        },
+        {
+            "key": "Title_Sultan_10",
+            "value": "Верный Слуга"
+        },
+        {
+            "key": "Title_Sultan_15",
+            "value": "Советник"
+        },
+        {
+            "key": "Title_Sultan_20",
+            "value": "Визирь"
+        },
+        {
+            "key": "Title_Sultan_25",
+            "value": "Правитель"
+        },
+        {
+            "key": "Title_Sultan_30",
+            "value": "Владыка Востока"
+        },
+
+        {
+            "key": "Title_Octagon_1",
+            "value": "Эскиз"
+        },
+        {
+            "key": "Title_Octagon_5",
+            "value": "Ученик Геометра"
+        },
+        {
+            "key": "Title_Octagon_10",
+            "value": "Чертёжник"
+        },
+        {
+            "key": "Title_Octagon_15",
+            "value": "Проектировщик"
+        },
+        {
+            "key": "Title_Octagon_20",
+            "value": "Иллюзионист"
+        },
+        {
+            "key": "Title_Octagon_25",
+            "value": "Магистр Форм"
+        },
+        {
+            "key": "Title_Octagon_30",
+            "value": "Гроссмейстер Октагона"
+        },
+
+        {
+            "key": "Title_Montana_1",
+            "value": "Зевака"
+        },
+        {
+            "key": "Title_Montana_5",
+            "value": "Подмастерье"
+        },
+        {
+            "key": "Title_Montana_10",
+            "value": "Вышивальщик"
+        },
+        {
+            "key": "Title_Montana_15",
+            "value": "Ремесленник"
+        },
+        {
+            "key": "Title_Montana_20",
+            "value": "Мастер Нитей"
+        },
+        {
+            "key": "Title_Montana_25",
+            "value": "Искусный Ткач"
+        },
+        {
+            "key": "Title_Montana_30",
+            "value": "Хранитель Узоров"
+        },
+
+        {
+            "key": "Title_Global_1",
+            "value": "Гость Клуба"
+        },
+        {
+            "key": "Title_Global_10",
+            "value": "Новичок Карточного Стола"
+        },
+        {
+            "key": "Title_Global_20",
+            "value": "Уверенный Игрок"
+        },
+        {
+            "key": "Title_Global_30",
+            "value": "Любитель Пасьянсов"
+        },
+        {
+            "key": "Title_Global_40",
+            "value": "Ловкие Руки"
+        },
+        {
+            "key": "Title_Global_50",
+            "value": "Знаток Раскладов"
+        },
+        {
+            "key": "Title_Global_60",
+            "value": "Тасующий Судьбу"
+        },
+        {
+            "key": "Title_Global_70",
+            "value": "Мастер Карт"
+        },
+        {
+            "key": "Title_Global_80",
+            "value": "Опытный Картежник"
+        },
+        {
+            "key": "Title_Global_90",
+            "value": "Виртуоз Колод"
+        },
+        {
+            "key": "Title_Global_100",
+            "value": "Гроссмейстер Пасьянсов"
+        },
+        {
+            "key": "Title_Global_110",
+            "value": "Хранитель Мастей"
+        },
+        {
+            "key": "Title_Global_120",
+            "value": "Карточный Барон"
+        },
+        {
+            "key": "Title_Global_130",
+            "value": "Повелитель Игр"
+        },
+        {
+            "key": "Title_Global_140",
+            "value": "Легенда Стола"
+        },
+        {
+            "key": "Title_Global_150",
+            "value": "Абсолютный Чемпион"
+        },
+        {
+            "key": "TitleUI_SelectTitle",
+            "value": "Выбрать звание"
+        },
+        {
+            "key": "Shop_Premium_Title",
+            "value": "Премиум"
+        },
+        {
+            "key": "Shop_Premium_Desc",
+            "value": "<b><color=#ffbb00>Откройте полный потенциал игры!</color></b>\n<color=#E14849>- Реклама отключена навсегда</color>\n<color=#9FD25C>- +20% к получаемому опыту</color> (в играх и заданиях)\n- Доступ к подробной статистике\n- Смена дизайна лицевой стороны карт\n- Доступ к заданиям за последние 4 дня"
+        },
+        {
+            "key": "Shop_Premium2_Desc",
+            "value": "<b><color=#ffbb00>Откройте полный потенциал игры!</color></b>\n<color=#9FD25C>- +20% к получаемому опыту</color> (в играх и заданиях)\n- Доступ к подробной статистике\n- Смена дизайна лицевой стороны карт\n- Доступ к заданиям за последние 4 дня"
+        },
+        {
+            "key": "Shop_NoAds_Title",
+            "value": "Отключение рекламы"
+        },
+        {
+            "key": "Shop_NoAds_Desc",
+            "value": "<color=#E14849><b>Навсегда отключает всю рекламу в игре.</b></color>\nНаслаждайтесь любимыми пасьянсами без перерывов!"
+        },
+        {
+            "key": "Shop_Purchased",
+            "value": "Куплено"
+        },
+        {
+            "key": "Shop_Buy",
+            "value": "Купить"
+        },
+        {
+            "key": "Hint_Settings",
+            "value": "Настройте игру под себя! Выберите <color=#FCA311>красивый фон</color> и включите привычную <color=#FCA311>русскую колоду</color> (В, Д, К, Т)."
+        },
+        {
+            "key": "Hint_Shop",
+            "value": "Играйте без перерывов! Здесь можно навсегда <color=#FCA311>отключить рекламу</color> или открыть <color=#FCA311>Премиум-статус</color> с бонусами к опыту."
+        },
+        {
+            "key": "Hint_Stats",
+            "value": "Отслеживайте свой прогресс! Здесь собрана ваша <color=#FCA311>игровая статистика</color> и лучшие <color=#FCA311>личные рекорды</color>."
+        },
+        {
+            "key": "Hint_Leaderboard",
+            "value": "Соревнуйтесь с лучшими! В <color=#FCA311>таблице лидеров</color> вы можете сравнить свои <color=#FCA311>результаты</color> с другими игроками."
+        }
     ]
 }

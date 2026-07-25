@@ -17,6 +17,9 @@ public class SultanIntroController : MonoBehaviour, IIntroController
     private Vector2 topPanelStartPos;
     private List<Vector2> bottomButtonsStartPos = new List<Vector2>();
 
+    // --- НОВОЕ: Флаг пропуска ---
+    private bool isSkipping = false;
+
     private void Awake()
     {
         if (modeManager == null) modeManager = GetComponent<SultanModeManager>();
@@ -24,12 +27,20 @@ public class SultanIntroController : MonoBehaviour, IIntroController
         Canvas.ForceUpdateCanvases();
         SaveInitialPositions();
 
-        // Предварительно прячем UI, но слоты спрячем позже, когда они сгенерируются
         if (topPanel != null) topPanel.anchoredPosition = topPanelStartPos + new Vector2(0, 300f);
         for (int i = 0; i < bottomButtons.Count; i++)
         {
             if (bottomButtons[i] != null)
                 bottomButtons[i].anchoredPosition = bottomButtonsStartPos[i] + new Vector2(0, -300f);
+        }
+    }
+
+    // --- НОВОЕ: Отслеживаем клик для пропуска ---
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+        {
+            isSkipping = true;
         }
     }
 
@@ -44,15 +55,14 @@ public class SultanIntroController : MonoBehaviour, IIntroController
         }
     }
 
-    // Вызывается из DeckManager, когда слоты уже точно существуют
     public void PrepareIntro(bool isRestart)
     {
-        // Прячем слоты ТОЛЬКО если это не рестарт
+        isSkipping = false; // Сбрасываем флаг
+
         if (!isRestart)
         {
             SetSlotsAlpha(0f);
 
-            // Если нужно, чтобы UI тоже не уезжал при рестарте, оберните и его:
             if (topPanel != null) topPanel.anchoredPosition = topPanelStartPos + new Vector2(0, 300f);
             for (int i = 0; i < bottomButtons.Count; i++)
             {
@@ -66,29 +76,36 @@ public class SultanIntroController : MonoBehaviour, IIntroController
     {
         if (!isRestart)
         {
-            // 1. Проявляем слоты на столе
             StartCoroutine(FadeInSlots(slotsFadeDuration));
 
-            // 2. Выдвигаем верхнюю панель
             if (topPanel != null)
                 StartCoroutine(AnimateUIElement(topPanel, topPanel.anchoredPosition, topPanelStartPos, uiSlideDuration));
 
-            // 3. Выдвигаем нижние кнопки
             for (int i = 0; i < bottomButtons.Count; i++)
             {
                 if (bottomButtons[i] != null)
                 {
                     StartCoroutine(AnimateUIElement(bottomButtons[i], bottomButtons[i].anchoredPosition, bottomButtonsStartPos[i], uiSlideDuration));
-                    yield return new WaitForSeconds(0.05f);
+                    yield return StartCoroutine(SkippableWait(0.05f)); // ИСПОЛЬЗУЕМ SKIPPABLE WAIT
                 }
             }
 
-            yield return new WaitForSeconds(Mathf.Max(0f, slotsFadeDuration - (bottomButtons.Count * 0.05f)));
+            yield return StartCoroutine(SkippableWait(Mathf.Max(0f, slotsFadeDuration - (bottomButtons.Count * 0.05f))));
         }
         else
         {
-            // Если это рестарт, анимация интерфейса и слотов не нужна, 
-            // просто ждем 1 кадр для надежности
+            yield return null;
+        }
+    }
+
+    // --- НОВОЕ: Настраиваемое ожидание ---
+    private IEnumerator SkippableWait(float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
             yield return null;
         }
     }
@@ -99,11 +116,16 @@ public class SultanIntroController : MonoBehaviour, IIntroController
         AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
             if (target != null) target.anchoredPosition = Vector2.Lerp(from, to, curve.Evaluate(elapsed / duration));
             yield return null;
         }
         if (target != null) target.anchoredPosition = to;
+
+        // --- НОВОЕ: Звук приземления панели ---
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("UI_Drop");
     }
 
     private void SetSlotsAlpha(float alpha)
@@ -132,7 +154,8 @@ public class SultanIntroController : MonoBehaviour, IIntroController
 
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
             foreach (var cg in groups) if (cg != null) cg.alpha = elapsed / duration;
             yield return null;
         }

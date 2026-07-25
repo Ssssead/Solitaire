@@ -16,7 +16,7 @@ public static class LevelingUtils
     // --- Бонус за мастерство (каждые 10 уровней) ---
     // На сколько процентов растет опыт каждые 10 уровней конкретной игры
     // Например 0.1f = +10%
-    public const float MASTERY_BONUS_PER_TIER = 0.1f;
+    public const float MASTERY_BONUS_PER_TIER = 0.25f;
     public const float MULTIPLIER_PREMIUM = 1.2f;
 
     /// <summary>

@@ -21,6 +21,9 @@ public class FreeCellIntroController : MonoBehaviour, IIntroController
     private List<Vector2> topRightStartPos = new List<Vector2>();
     private List<Vector2> bottomButtonsStartPos = new List<Vector2>();
 
+    // Флаг пропуска анимации
+    private bool isSkipping = false;
+
     private void Awake()
     {
         if (modeManager == null) modeManager = GetComponent<FreeCellModeManager>();
@@ -28,6 +31,16 @@ public class FreeCellIntroController : MonoBehaviour, IIntroController
         SaveInitialPositions();
         PrepareIntro(false);
     }
+
+    // --- ДОБАВЛЕНО: Отслеживаем клик для ускорения ---
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+        {
+            isSkipping = true;
+        }
+    }
+    // -------------------------------------------------
 
     private void SaveInitialPositions()
     {
@@ -52,7 +65,8 @@ public class FreeCellIntroController : MonoBehaviour, IIntroController
 
     public void PrepareIntro(bool isRestart)
     {
-        // ИСПРАВЛЕНИЕ: Прячем слоты и уводим UI ТОЛЬКО если это не рестарт!
+        isSkipping = false; // Сброс флага при подготовке
+
         if (!isRestart)
         {
             SetSlotsAlpha(0f);
@@ -71,7 +85,10 @@ public class FreeCellIntroController : MonoBehaviour, IIntroController
     {
         if (!isRestart)
         {
-            yield return new WaitForSeconds(startDelay);
+            yield return StartCoroutine(SkippableWait(startDelay));
+
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Panel_Slide_In");
 
             if (topPanel != null) StartCoroutine(AnimateUIElement(topPanel, topPanel.anchoredPosition, topPanelStartPos, uiSlideDuration));
             for (int i = 0; i < topRightElements.Count; i++)
@@ -81,24 +98,54 @@ public class FreeCellIntroController : MonoBehaviour, IIntroController
                 if (bottomButtons[i] != null && i < bottomButtonsStartPos.Count)
                 {
                     StartCoroutine(AnimateUIElement(bottomButtons[i], bottomButtons[i].anchoredPosition, bottomButtonsStartPos[i], uiSlideDuration));
-                    yield return new WaitForSeconds(buttonStaggerDelay);
+                    yield return StartCoroutine(SkippableWait(buttonStaggerDelay));
                 }
 
             yield return StartCoroutine(FadeInSlots(slotsFadeDuration));
         }
 
-        if (modeManager.deckManager != null)
+        // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+        // Запускаем раздачу ТОЛЬКО если deal существует.
+        if (modeManager.deckManager != null && deal != null)
+        {
             yield return StartCoroutine(modeManager.deckManager.PlayIntroDeal(deal));
+        }
 
         modeManager.IsInputAllowed = true;
     }
+
+    // --- ДОБАВЛЕНО: Кастомный таймер для пропуска ---
+    private IEnumerator SkippableWait(float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            yield return null;
+        }
+    }
+    // ------------------------------------------------
 
     private IEnumerator AnimateUIElement(RectTransform target, Vector2 from, Vector2 to, float duration)
     {
         float elapsed = 0f;
         AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
-        while (elapsed < duration) { elapsed += Time.deltaTime; if (target) target.anchoredPosition = Vector2.Lerp(from, to, curve.Evaluate(elapsed / duration)); yield return null; }
+        while (elapsed < duration)
+        {
+            // Добавлено ускорение
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            if (target) target.anchoredPosition = Vector2.Lerp(from, to, curve.Evaluate(t));
+            yield return null;
+        }
         if (target) target.anchoredPosition = to;
+
+        // <--- ЗВУК: ЭЛЕМЕНТ ИНТЕРФЕЙСА ПРИЗЕМЛИЛСЯ --->
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("UI_Drop");
     }
 
     private void SetSlotsAlpha(float alpha)
@@ -138,8 +185,12 @@ public class FreeCellIntroController : MonoBehaviour, IIntroController
 
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            foreach (var cg in groups) if (cg != null) cg.alpha = elapsed / duration;
+            // Добавлено ускорение
+            float speed = isSkipping ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.Clamp01(elapsed / duration);
+
+            foreach (var cg in groups) if (cg != null) cg.alpha = t;
             yield return null;
         }
         foreach (var cg in groups) if (cg != null) cg.alpha = 1f;

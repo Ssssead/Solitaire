@@ -43,8 +43,17 @@ public class SpiderEffectsService : MonoBehaviour
         IsShaking = true;
 
         // --- 1. БЛОКИРУЕМ ВВОД ГЛОБАЛЬНО ---
-        // DragManager увидит это и не даст взять карту
         if (modeManager != null) modeManager.IsInputAllowed = false;
+
+        // <--- ПОДГОТОВКА ДИНАМИЧЕСКОГО ЗВУКА --->
+        AudioSource shakeSource = null;
+        float baseVolume = 1f;
+        if (AudioManager.Instance != null)
+        {
+            // Получаем источник звука, чтобы управлять им в реальном времени
+            shakeSource = AudioManager.Instance.PlaySound("Card_Shake");
+            if (shakeSource != null) baseVolume = shakeSource.volume;
+        }
 
         Dictionary<RectTransform, float> originalX = new Dictionary<RectTransform, float>();
         foreach (var c in cards)
@@ -55,7 +64,19 @@ public class SpiderEffectsService : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float percent = elapsed / duration;
+
+            // Математика визуальной тряски
             float offset = Mathf.Sin(elapsed * speed) * magnitude * (1f - percent);
+
+            // <--- ИЗМЕНЕНИЕ ГРОМКОСТИ ОТ СКОРОСТИ --->
+            if (shakeSource != null)
+            {
+                // 1. (1f - percent) плавно затухает звук к концу анимации
+                // 2. Mathf.Abs(Mathf.Cos(elapsed * speed)) делает звук громче в центре рывка 
+                //    и тише в крайних точках амплитуды (эффект трения картона)
+                float movementSpeed = Mathf.Abs(Mathf.Cos(elapsed * speed));
+                shakeSource.volume = baseVolume * (1f - percent) * movementSpeed;
+            }
 
             foreach (var c in cards)
             {
@@ -80,6 +101,13 @@ public class SpiderEffectsService : MonoBehaviour
                 pos.x = originalX[c.rectTransform];
                 c.rectTransform.anchoredPosition = pos;
             }
+        }
+
+        // <--- ОСТАНАВЛИВАЕМ ЗВУК И СБРАСЫВАЕМ НАСТРОЙКИ --->
+        if (shakeSource != null)
+        {
+            shakeSource.Stop();
+            shakeSource.volume = baseVolume; // Возвращаем исходную громкость в пул AudioManager
         }
 
         // --- 2. РАЗБЛОКИРУЕМ ВВОД ---

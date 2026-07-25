@@ -44,7 +44,26 @@ namespace YG
         public TextMP textMP;
 #endif
 
-        private void Start() => UpdateEntries(YG2.PurchaseByID(id));
+        private void OnEnable()
+        {
+            // Подписываемся на событие загрузки покупок
+            YG2.onGetPayments += InitPurchase;
+
+            // Если покупки уже успели загрузиться ранее, сразу отображаем
+            if (YG2.purchases != null && YG2.purchases.Length > 0)
+                InitPurchase();
+        }
+
+        private void OnDisable()
+        {
+            // Отписываемся, чтобы избежать ошибок при закрытии панели
+            YG2.onGetPayments -= InitPurchase;
+        }
+
+        private void InitPurchase()
+        {
+            UpdateEntries(YG2.PurchaseByID(id));
+        }
 
         public void UpdateEntries(Purchase data)
         {

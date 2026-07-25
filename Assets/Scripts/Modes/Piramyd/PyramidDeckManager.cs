@@ -52,7 +52,7 @@ public class PyramidDeckManager : MonoBehaviour
                     var data = cardObj.GetComponent<CardData>();
                     if (data)
                     {
-                        data.SetFaceUp(true, true);
+                        data.SetFaceUp(true, false);
                         if (data.image) data.image.color = Color.white;
                     }
 

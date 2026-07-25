@@ -74,6 +74,7 @@ public static class StatsSerializer
         w.Write(d.totalXP);
         w.Write(d.questsCompleted);
         w.Write(d.questStreak);
+        w.Write(d.questDayStreak);
 
         // Система уровней
         w.Write(d.currentLevel);
@@ -121,6 +122,7 @@ public static class StatsSerializer
         d.totalXP = r.ReadInt32();
         d.questsCompleted = r.ReadInt32();
         d.questStreak = r.ReadInt32();
+        d.questDayStreak = r.ReadInt32();
         d.currentLevel = r.ReadInt32();
         d.currentXP = r.ReadInt32();
         d.xpForNextLevel = r.ReadInt32();

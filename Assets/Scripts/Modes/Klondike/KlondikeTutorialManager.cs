@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public enum TutorialActionType
 {
-    MoveCard, ClickStock, Undo, DoubleClick
+    MoveCard, ClickStock, Undo, DoubleClick, ClickAuto
 }
 
 public enum TutorialPanelAnchorType
@@ -35,9 +35,11 @@ public class TutorialStep
     // --- НОВОЕ: Настройки стрелочки для шага ---
     public TutorialArrowType arrowType;
     public int arrowAnchorIndex = -1; // -1 значит стрелки нет
+    public TutorialArrowType arrowType2 = TutorialArrowType.None;
+    public int arrowAnchorIndex2 = -1;
 }
 
-public class KlondikeTutorialManager : MonoBehaviour
+public class KlondikeTutorialManager : MonoBehaviour, ITutorialManager
 {
     [Header("UI")]
     public RectTransform tutorialUIPanel;

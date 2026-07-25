@@ -352,7 +352,10 @@ public class AutoMoveService : MonoBehaviour
         targetFoundation.ReserveCard(card);
         card.ForceSnapToContainer(targetFoundation);
         animationService?.ReorderContainerZ(targetFoundation.transform);
-
+        // --- ДОБАВИТЬ ЭТО: Трекинг двойного клика из сброса в дом ---
+        if (sourceInfo.sourceType == SourceType.Waste)
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveFromWasteToFoundation);
+        // ------------------------------------------------------------
         return true;
     }
 
@@ -500,6 +503,9 @@ public class AutoMoveService : MonoBehaviour
                 StartCoroutine(AnimateSingleCardToTableau(card, targetTableau, pileManager.StockPile));
                 break;
         }
+        if (sourceInfo.sourceType == SourceType.Tableau)
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveTableauToTableau);
+        // -------------------------------------------------------
         return true;
     }
 
@@ -510,6 +516,8 @@ public class AutoMoveService : MonoBehaviour
 
     private IEnumerator AnimateSingleCardToTableau(CardController card, TableauPile targetTableau, ICardContainer sourceContainer)
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_PickUp");
         // 1. Подготовка
         if (this.dragLayer != null)
         {
@@ -537,6 +545,8 @@ public class AutoMoveService : MonoBehaviour
 
         // 3. Финал
         card.rectTransform.position = targetWorld;
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
         if (card.rectTransform.parent != targetTableau.transform)
         {
             card.rectTransform.SetParent(targetTableau.transform, true);
@@ -639,7 +649,8 @@ public class AutoMoveService : MonoBehaviour
         }
 
         Canvas.ForceUpdateCanvases();
-
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_PickUp");
         // 1. ПОДГОТОВКА: ПЕРЕНОСИМ В DRAG LAYER
         foreach (var card in sequence)
         {
@@ -684,6 +695,8 @@ public class AutoMoveService : MonoBehaviour
         }
 
         // Финализация
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
         for (int i = 0; i < sequence.Count; i++)
         {
             if (sequence[i] != null)
@@ -737,6 +750,21 @@ public class AutoMoveService : MonoBehaviour
     {
         if (sequence == null || sequence.Count == 0) yield break;
 
+        // <--- ПОДГОТОВКА ЗВУКА --->
+        AudioSource scrapeSource = null;
+        float originalVolume = 1f;
+
+        if (AudioManager.Instance != null)
+        {
+            // Здесь впишите название вашего длинного звука трения
+            scrapeSource = AudioManager.Instance.PlaySound("Card_Shake");
+
+            if (scrapeSource != null)
+            {
+                originalVolume = scrapeSource.volume; // Запоминаем дефолтную громкость из настроек
+            }
+        }
+
         List<Vector3> startPositions = new List<Vector3>();
         foreach (var card in sequence)
         {
@@ -756,12 +784,29 @@ public class AutoMoveService : MonoBehaviour
             elapsed += Time.unscaledDeltaTime;
             float phase = Mathf.Sin(elapsed * 40f) * (1f - elapsed / shakeDuration);
 
+            // <--- ДИНАМИЧЕСКАЯ ГРОМКОСТЬ ОТ СКОРОСТИ --->
+            if (scrapeSource != null && scrapeSource.isPlaying)
+            {
+                // Abs(Cos) дает пульсацию от 0 до 1 синхронно с движением карты
+                float speedMultiplier = Mathf.Abs(Mathf.Cos(elapsed * 60f));
+
+                // Не уводим звук в абсолютный ноль (0.1f), чтобы не было "рваного" обрыва
+                float dynamicVolume = Mathf.Lerp(0.1f, 1f, speedMultiplier);
+
+                // Плавно глушим общий звук к самому концу анимации
+                float generalFade = 1f - (elapsed / shakeDuration);
+
+                // Применяем финальную громкость
+                scrapeSource.volume = originalVolume * dynamicVolume * generalFade;
+            }
+
             for (int i = 0; i < sequence.Count; i++)
             {
                 var card = sequence[i];
                 if (card == null) continue;
 
                 Vector3 start = startPositions[i];
+                // Движение карты (Синус)
                 float offsetX = Mathf.Sin(elapsed * 60f + i) * shakeAmplitude * phase;
                 card.rectTransform.anchoredPosition = start + new Vector3(offsetX, 0f, 0f);
             }
@@ -776,6 +821,13 @@ public class AutoMoveService : MonoBehaviour
             {
                 sequence[i].rectTransform.anchoredPosition = startPositions[i];
             }
+        }
+
+        // <--- ОСТАНОВКА И СБРОС ЗВУКА --->
+        if (scrapeSource != null)
+        {
+            scrapeSource.Stop(); // Жестко рубим длинный хвост файла
+            scrapeSource.volume = originalVolume; // ВАЖНО: возвращаем громкость, иначе пул сломается!
         }
     }
 

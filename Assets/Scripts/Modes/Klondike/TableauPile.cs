@@ -349,6 +349,11 @@ public class TableauPile : MonoBehaviour, ICardContainer
         faceUp.RemoveRange(idx, count);
 
         ForceRecalculateLayout();
+
+        // --- ДОБАВИТЬ ЭТО: Если после удаления карт не осталось, столбец очищен ---
+        if (cards.Count == 0) GameQuestTracker.Instance?.SendEvent(QuestActionType.ClearTableauColumn);
+        // --------------------------------------------------------------------------
+
         return seq;
     }
 
@@ -369,6 +374,7 @@ public class TableauPile : MonoBehaviour, ICardContainer
         {
             faceUp[topIdx] = true;
             cards[topIdx].GetComponent<CardData>()?.SetFaceUp(true);
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.FlipHiddenCards);
             if (manager != null) manager.CheckGameState();
             ForceRecalculateLayout();
             return true;
@@ -382,6 +388,11 @@ public class TableauPile : MonoBehaviour, ICardContainer
         faceUp[index] = false;
         var cardData = cards[index].GetComponent<CardData>();
         if (cardData != null) cardData.SetFaceUp(false, animate: !immediate);
+
+        // ---> ДОБАВИТЬ ЭТО: Анти-чит при отмене хода (Undo) <---
+        GameQuestTracker.Instance?.SendEvent(QuestActionType.FlipHiddenCards, -1);
+        // -------------------------------------------------------
+
         ForceRecalculateLayout();
     }
 
@@ -393,6 +404,7 @@ public class TableauPile : MonoBehaviour, ICardContainer
         {
             faceUp[topIdx] = true;
             cards[topIdx].GetComponent<CardData>()?.SetFaceUp(true);
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.FlipHiddenCards);
             if (manager != null) manager.CheckGameState();
         }
         ForceRecalculateLayout();

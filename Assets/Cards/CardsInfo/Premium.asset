@@ -190,7 +190,7 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: d54a8be0843a56f4ebfd85c5a467a31f, type: 3}
   - suit: 2
     rank: 1
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: eedd7cce9ecec624d96c3167376fbd68, type: 3}
   - suit: 2
     rank: 11
     sprite: {fileID: 21300000, guid: e63b31ac358d21741997b07c2fa0d5cb, type: 3}

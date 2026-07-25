@@ -30,19 +30,12 @@ public class OctagonAutoMoveService : MonoBehaviour
 
     private IEnumerator PerformMoveRoutine(CardController card, OctagonFoundationPile targetPile)
     {
-        // 1. Блокируем ввод на время анимации (опционально)
-        // card.canvasGroup.blocksRaycasts = false;
+        // ЗАПОМИНАЕМ ИСТОЧНИК ДО СМЕНЫ РОДИТЕЛЯ ДЛЯ КВЕСТОВ
+        ICardContainer sourceContainer = card.GetComponentInParent<ICardContainer>();
 
-        // 2. Переносим карту в иерархии в новый контейнер (чтобы она отрисовалась поверх)
-        // Но пока оставляем визуальную позицию, чтобы она "полетела"
         Transform oldParent = card.transform.parent;
-
-        // Чтобы карта летела поверх всего, можно временно прицепить к корню Canvas или DragLayer
-        // Но для простоты сразу положим в таргет и анимируем anchoredPosition
         card.transform.SetParent(targetPile.transform);
 
-        // 3. Анимация полета
-        // Вычисляем позицию 0,0 относительно нового родителя (центра стопки)
         Vector2 startPos = card.rectTransform.anchoredPosition;
         Vector2 targetPos = Vector2.zero;
 
@@ -57,8 +50,37 @@ public class OctagonAutoMoveService : MonoBehaviour
             yield return null;
         }
 
-        // 4. Финализация
+        // Финализация
         card.rectTransform.anchoredPosition = targetPos;
+        targetPile.AcceptCard(card); // ОБЯЗАТЕЛЬНО КЛАДЕМ КАРТУ ФОРМАЛЬНО
+
+        // ---> ТРЕКИНГ КВЕСТОВ ПРИ АВТОМАТИЧЕСКОМ СБОРЕ (ДВОЙНОЙ КЛИК) <---
+        if (!GameSettings.IsTutorialMode)
+        {
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, 1);
+            GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, 1, card.cardModel.rank.ToString());
+
+            if (sourceContainer is OctagonWastePile)
+            {
+                GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveFromWasteToFoundation, 1);
+            }
+            else if (sourceContainer is OctagonTableauSlot)
+            {
+                GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveFromCorner, 1); // <--- Раскрытие углов
+
+                // Если авто-сбор забрал последнюю карту из угла, засчитываем очистку и первооткрывателя
+                var slot = sourceContainer as OctagonTableauSlot;
+                if (slot != null && slot.Group != null)
+                {
+                    slot.Group.UpdateTopCardState();
+                    if (slot.Group.IsEmpty())
+                    {
+                        GameQuestTracker.Instance?.SendEvent(QuestActionType.ClearTableauColumn, 1);
+                    }
+                }
+            }
+        }
+        // -----------------------------------------------------------------
 
         // Оповещаем менеджер о ходе для проверки победы
         modeManager.CheckGameState();

@@ -1,856 +1,2616 @@
 {
     "items": [
         {
-            "key": "Levels",
-            "value": "Niveles"
-        },
-        {
-            "key": "Puzzles",
-            "value": "Rompecabezas"
-        },
-        {
-            "key": "Play",
-            "value": "Jugar"
-        },
-        {
-            "key": "level",
+            "key": "Level",
             "value": "Nivel"
         },
         {
-            "key": "clue.l1.oclock_numeric",
-            "value": "La puerta se abrirá cuando el reloj marque {H}:{MM}."
+            "key": "Klondike",
+            "value": "Klondike"
         },
         {
-            "key": "clue.l1.hint_minutes",
-            "value": "La puerta se abrirá cuando la manecilla de los minutos señale {minuteWord} minutos y la manecilla de las horas señale {hourWord}."
+            "key": "Spider",
+            "value": "Spider"
         },
         {
-            "key": "word.hour.1",
-            "value": "la una"
+            "key": "Freecell",
+            "value": "Carta Blanca"
         },
         {
-            "key": "word.hour.2",
-            "value": "las dos"
+            "key": "Pyramid",
+            "value": "Pirámide"
         },
         {
-            "key": "word.hour.3",
-            "value": "las tres"
+            "key": "TriPeaks",
+            "value": "TriPeaks"
         },
         {
-            "key": "word.hour.4",
-            "value": "las cuatro"
+            "key": "Sultan",
+            "value": "Sultán"
         },
         {
-            "key": "word.hour.5",
-            "value": "las cinco"
+            "key": "MonteCarlo",
+            "value": "Montecarlo"
         },
         {
-            "key": "word.hour.6",
-            "value": "las seis"
+            "key": "Montana",
+            "value": "Montana"
         },
         {
-            "key": "word.hour.7",
-            "value": "las siete"
+            "key": "Octagon",
+            "value": "Octágono"
         },
         {
-            "key": "word.hour.8",
-            "value": "las ocho"
+            "key": "Yukon",
+            "value": "Yukón"
         },
         {
-            "key": "word.hour.9",
-            "value": "las nueve"
+            "key": "Start",
+            "value": "Iniciar"
         },
         {
-            "key": "word.hour.10",
-            "value": "las diez"
+            "key": "DiffHard",
+            "value": "Difícil"
         },
         {
-            "key": "word.hour.11",
-            "value": "las once"
+            "key": "DiffMedium",
+            "value": "Medio"
         },
         {
-            "key": "word.hour.12",
-            "value": "las doce"
+            "key": "DiffEasy",
+            "value": "Fácil"
         },
         {
-            "key": "word.minute.0",
-            "value": "cero"
+            "key": "Diff",
+            "value": "Dificultad:"
         },
         {
-            "key": "word.minute.5",
-            "value": "cinco"
+            "key": "DrawMode",
+            "value": "Modo de robo:"
         },
         {
-            "key": "word.minute.10",
-            "value": "diez"
+            "key": "Rounds",
+            "value": "Número de rondas:"
         },
         {
-            "key": "word.minute.15",
-            "value": "quince"
+            "key": "SuitMode",
+            "value": "Número de palos:"
         },
         {
-            "key": "word.minute.20",
-            "value": "veinte"
+            "key": "Classic",
+            "value": "Clásico"
         },
         {
-            "key": "word.minute.25",
-            "value": "veinticinco"
-        },
-        {
-            "key": "word.minute.30",
-            "value": "treinta"
-        },
-        {
-            "key": "word.minute.35",
-            "value": "treinta y cinco"
-        },
-        {
-            "key": "word.minute.40",
-            "value": "cuarenta"
-        },
-        {
-            "key": "word.minute.45",
-            "value": "cuarenta y cinco"
-        },
-        {
-            "key": "word.minute.50",
-            "value": "cincuenta"
-        },
-        {
-            "key": "word.minute.55",
-            "value": "cincuenta y cinco"
-        },
-        {
-            "key": "clue.l2.solar_noon",
-            "value": "La puerta se abrirá cuando el sol alcance su cenit."
-        },
-        {
-            "key": "clue.l2.time.half_past",
-            "value": "La puerta se abrirá a {hourWord} y media."
-        },
-        {
-            "key": "clue.l2.time.quarter_past",
-            "value": "La puerta se abrirá a {hourWord} y cuarto."
-        },
-        {
-            "key": "clue.l2.time.quarter_to",
-            "value": "La puerta se abrirá a {hourPointerWord} menos cuarto."
-        },
-        {
-            "key": "clue.l2.time.minutes_to",
-            "value": "La puerta se abrirá {nextminuteWord} minutos para {hourPointerWord}."
-        },
-        {
-            "key": "clue.l2.time.minutes_past",
-            "value": "La puerta se abrirá {minuteWord} minutos pasadas {hourWord}."
-        },
-        {
-            "key": "word.nextminute.0",
-            "value": "cero"
-        },
-        {
-            "key": "word.nextminute.5",
-            "value": "cinco"
-        },
-        {
-            "key": "word.nextminute.10",
-            "value": "diez"
-        },
-        {
-            "key": "word.nextminute.15",
-            "value": "quince"
-        },
-        {
-            "key": "word.nextminute.20",
-            "value": "veinte"
-        },
-        {
-            "key": "word.nextminute.25",
-            "value": "veinticinco"
-        },
-        {
-            "key": "word.nextminute.30",
-            "value": "treinta"
-        },
-        {
-            "key": "word.nextminute.35",
-            "value": "treinta y cinco"
-        },
-        {
-            "key": "word.nextminute.40",
-            "value": "cuarenta"
-        },
-        {
-            "key": "word.nextminute.45",
-            "value": "cuarenta y cinco"
-        },
-        {
-            "key": "word.nextminute.50",
-            "value": "cincuenta"
-        },
-        {
-            "key": "word.nextminute.55",
-            "value": "cincuenta y cinco"
-        },
-        {
-            "key": "word.nexthour.1",
-            "value": "las doce"
-        },
-        {
-            "key": "word.nexthour.2",
-            "value": "la una"
-        },
-        {
-            "key": "word.nexthour.3",
-            "value": "las dos"
-        },
-        {
-            "key": "word.nexthour.4",
-            "value": "las tres"
-        },
-        {
-            "key": "word.nexthour.5",
-            "value": "las cuatro"
-        },
-        {
-            "key": "word.nexthour.6",
-            "value": "las cinco"
-        },
-        {
-            "key": "word.nexthour.7",
-            "value": "las seis"
-        },
-        {
-            "key": "word.nexthour.8",
-            "value": "las siete"
-        },
-        {
-            "key": "word.nexthour.9",
-            "value": "las ocho"
-        },
-        {
-            "key": "word.nexthour.10",
-            "value": "las nueve"
-        },
-        {
-            "key": "word.nexthour.11",
-            "value": "las diez"
-        },
-        {
-            "key": "word.nexthour.12",
-            "value": "las once"
-        },
-        {
-            "key": "clue.l2.time.start_hour",
-            "value": "La puerta se abrirá cuando comience la {nextHourStartWord} hora."
-        },
-        {
-            "key": "word.hour_start.1",
-            "value": "duodécima"
-        },
-        {
-            "key": "word.hour_start.2",
-            "value": "primera"
-        },
-        {
-            "key": "word.hour_start.3",
-            "value": "segunda"
-        },
-        {
-            "key": "word.hour_start.4",
-            "value": "tercera"
-        },
-        {
-            "key": "word.hour_start.5",
-            "value": "cuarta"
-        },
-        {
-            "key": "word.hour_start.6",
-            "value": "quinta"
-        },
-        {
-            "key": "word.hour_start.7",
-            "value": "sexta"
-        },
-        {
-            "key": "word.hour_start.8",
-            "value": "séptima"
-        },
-        {
-            "key": "word.hour_start.9",
-            "value": "octava"
-        },
-        {
-            "key": "word.hour_start.10",
-            "value": "novena"
-        },
-        {
-            "key": "word.hour_start.11",
-            "value": "décima"
-        },
-        {
-            "key": "word.hour_start.12",
-            "value": "undécima"
-        },
-        {
-            "key": "clue.l3.time.half_past",
-            "value": "La puerta se abrirá a {hourWord} y media y {SS} segundos."
-        },
-        {
-            "key": "clue.l3.time.quarter_past",
-            "value": "La puerta se abrirá a {hourWord} y {SS} segundos."
-        },
-        {
-            "key": "clue.l3.time.quarter_to",
-            "value": "La puerta se abrirá a {hourWord} menos cuarto y {SS} segundos."
-        },
-        {
-            "key": "clue.l3.time.minutes_to",
-            "value": "La puerta se abrirá a {nextminuteWord} minutos para {hourPointerWord} y {SS} segundos."
-        },
-        {
-            "key": "clue.l3.time.minutes_past",
-            "value": "La puerta se abrirá a {minuteWord} minutos pasadas {hourWord} y {SS} segundos."
-        },
-        {
-            "key": "clue.l3.time.start_hour",
-            "value": "La puerta se abrirá cuando comience la {nextHourStartWord} hora y {SS} segundos."
-        },
-        {
-            "key": "word.nexthour_after.1",
-            "value": "la una"
-        },
-        {
-            "key": "word.nexthour_after.2",
-            "value": "las dos"
-        },
-        {
-            "key": "word.nexthour_after.3",
-            "value": "las tres"
-        },
-        {
-            "key": "word.nexthour_after.4",
-            "value": "las cuatro"
-        },
-        {
-            "key": "word.nexthour_after.5",
-            "value": "las cinco"
-        },
-        {
-            "key": "word.nexthour_after.6",
-            "value": "las seis"
-        },
-        {
-            "key": "word.nexthour_after.7",
-            "value": "las siete"
-        },
-        {
-            "key": "word.nexthour_after.8",
-            "value": "las ocho"
-        },
-        {
-            "key": "word.nexthour_after.9",
-            "value": "las nueve"
-        },
-        {
-            "key": "word.nexthour_after.10",
-            "value": "las diez"
-        },
-        {
-            "key": "word.nexthour_after.11",
-            "value": "las once"
-        },
-        {
-            "key": "word.nexthour_after.12",
-            "value": "las doce"
-        },
-        {
-            "key": "word.hour_pointer.1",
-            "value": "las dos"
-        },
-        {
-            "key": "word.hour_pointer.2",
-            "value": "las tres"
-        },
-        {
-            "key": "word.hour_pointer.3",
-            "value": "las cuatro"
-        },
-        {
-            "key": "word.hour_pointer.4",
-            "value": "las cinco"
-        },
-        {
-            "key": "word.hour_pointer.5",
-            "value": "las seis"
-        },
-        {
-            "key": "word.hour_pointer.6",
-            "value": "las siete"
-        },
-        {
-            "key": "word.hour_pointer.7",
-            "value": "las ocho"
-        },
-        {
-            "key": "word.hour_pointer.8",
-            "value": "las nueve"
-        },
-        {
-            "key": "word.hour_pointer.9",
-            "value": "las diez"
-        },
-        {
-            "key": "word.hour_pointer.10",
-            "value": "las once"
-        },
-        {
-            "key": "word.hour_pointer.11",
-            "value": "las doce"
-        },
-        {
-            "key": "word.hour_pointer.12",
-            "value": "la una"
-        },
-        {
-            "key": "ru",
+            "key": "Russian",
             "value": "Ruso"
         },
         {
-            "key": "en",
-            "value": "Inglés"
+            "key": "4Ways",
+            "value": "4 Direcciones"
         },
         {
-            "key": "es",
-            "value": "Español"
+            "key": "8Ways",
+            "value": "8 Direcciones"
         },
         {
-            "key": "pt",
-            "value": "Portugués"
+            "key": "GameMode",
+            "value": "Modo de juego:"
         },
         {
-            "key": "fr",
-            "value": "Francés"
+            "key": "xp_reward_preview",
+            "value": "Recibirás {0} XP"
         },
         {
-            "key": "tr",
-            "value": "Turco"
+            "key": "stats",
+            "value": "Estadísticas"
         },
         {
-            "key": "ja",
-            "value": "Japonés"
+            "key": "settings",
+            "value": "Ajustes"
         },
         {
-            "key": "de",
-            "value": "Alemán"
+            "key": "shop",
+            "value": "Tienda"
         },
         {
-            "key": "lang",
+            "key": "leaderboards",
+            "value": "Tabla de clasificación"
+        },
+        {
+            "key": "dailyquests",
+            "value": "Misiones diarias"
+        },
+        {
+            "key": "dailyquests2",
+            "value": "Misiones diarias:"
+        },
+        {
+            "key": "STATSGlobalStats",
+            "value": "Estadísticas Globales"
+        },
+        {
+            "key": "STATSGamesPlayed",
+            "value": "PARTIDAS JUGADAS: "
+        },
+        {
+            "key": "STATSWins",
+            "value": "VICTORIAS:"
+        },
+        {
+            "key": "STATSRecords",
+            "value": "RÉCORDS:"
+        },
+        {
+            "key": "STATSScore",
+            "value": "Puntuación:"
+        },
+        {
+            "key": "STATSTime",
+            "value": "Tiempo:"
+        },
+        {
+            "key": "STATSMoves",
+            "value": "Movimientos:"
+        },
+        {
+            "key": "STATSPERFORMANCE",
+            "value": "RENDIMIENTO:"
+        },
+        {
+            "key": "STATSWinRate",
+            "value": "Tasa de Victorias:"
+        },
+        {
+            "key": "STATSAvgTime",
+            "value": "Tiempo Medio:"
+        },
+        {
+            "key": "STATSAvgMoves",
+            "value": "Movimientos Medios:"
+        },
+        {
+            "key": "STATSStreaks",
+            "value": "RACHAS:"
+        },
+        {
+            "key": "STATSCurrentStreak",
+            "value": "Actual:"
+        },
+        {
+            "key": "STATSBestStreak",
+            "value": "Mejor:"
+        },
+        {
+            "key": "STATSHistory",
+            "value": "HISTORIAL (Últimas 10):"
+        },
+        {
+            "key": "STATSDifficulties",
+            "value": "Estadísticas por Dificultad:"
+        },
+        {
+            "key": "STATSEasyStats",
+            "value": "Estadísticas en Fácil"
+        },
+        {
+            "key": "STATSMediumStats",
+            "value": "Estadísticas en Medio"
+        },
+        {
+            "key": "STATSHardStats",
+            "value": "Estadísticas en Difícil"
+        },
+        {
+            "key": "STATSGlobal",
+            "value": "Estadísticas Globales"
+        },
+        {
+            "key": "STATSKlondike",
+            "value": "Estadísticas de Klondike"
+        },
+        {
+            "key": "STATSSpider",
+            "value": "Estadísticas de Spider"
+        },
+        {
+            "key": "STATSFreecell",
+            "value": "Estadísticas de Carta Blanca"
+        },
+        {
+            "key": "STATSPyramid",
+            "value": "Estadísticas de Pirámide"
+        },
+        {
+            "key": "STATSTripeaks",
+            "value": "Estadísticas de TriPeaks"
+        },
+        {
+            "key": "STATSOctagon",
+            "value": "Estadísticas de Octágono"
+        },
+        {
+            "key": "STATSMontana",
+            "value": "Estadísticas de Montana"
+        },
+        {
+            "key": "STATSMontecarlo",
+            "value": "Estadísticas de Montecarlo"
+        },
+        {
+            "key": "STATSSultan",
+            "value": "Estadísticas de Sultán"
+        },
+        {
+            "key": "STATSYukon",
+            "value": "Estadísticas de Yukón"
+        },
+        {
+            "key": "ConfirmExit1",
+            "value": "¿Estás seguro de que quieres salir al menú?"
+        },
+        {
+            "key": "ConfirmExit2",
+            "value": "Esta partida contará como derrota."
+        },
+        {
+            "key": "Yes",
+            "value": "SÍ"
+        },
+        {
+            "key": "Yes2",
+            "value": "SÍ, cambiar ajustes"
+        },
+        {
+            "key": "No",
+            "value": "NO"
+        },
+        {
+            "key": "ConfirmNewGame1",
+            "value": "¿Estás seguro de que quieres empezar una nueva partida?"
+        },
+        {
+            "key": "ConfirmNewGame2",
+            "value": "Empezar una nueva partida contará como derrota."
+        },
+        {
+            "key": "WinText",
+            "value": "¡¡¡VICTORIA!!!"
+        },
+        {
+            "key": "ExpText",
+            "value": "XP ganada: "
+        },
+        {
+            "key": "LossText",
+            "value": "Sin movimientos"
+        },
+        {
+            "key": "UndoAll",
+            "value": "Deshacer todos los movimientos"
+        },
+        {
+            "key": "ToMenu",
+            "value": "Menú"
+        },
+        {
+            "key": "Undo",
+            "value": "Deshacer un movimiento"
+        },
+        {
+            "key": "NewGame",
+            "value": "Nueva partida"
+        },
+        {
+            "key": "NewGlobalLevelNotification",
+            "value": "¡Nuevo nivel global: {newLevel}!"
+        },
+        {
+            "key": "STATSGlobalFavGame",
+            "value": "Juego favorito: "
+        },
+        {
+            "key": "STATSGlobalTotalMoves",
+            "value": "Movimientos totales: "
+        },
+        {
+            "key": "STATSGlobalTotalTime",
+            "value": "Tiempo total: "
+        },
+        {
+            "key": "STATSGlobalQuestsCompleted",
+            "value": "Misiones completadas: "
+        },
+        {
+            "key": "STATSGlobalTotalGlobalXPearned",
+            "value": "XP total ganada (Global): "
+        },
+        {
+            "key": "STATSGlobalTotalGamesXPearned",
+            "value": "XP total ganada (Juegos): "
+        },
+        {
+            "key": "STATSGlobalBestScore",
+            "value": "Mejor puntuación: "
+        },
+        {
+            "key": "STATSGlobalBestTime",
+            "value": "Mejor tiempo: "
+        },
+        {
+            "key": "STATSGlobalBestMoves",
+            "value": "Menos movimientos: "
+        },
+        {
+            "key": "STATSBaseBuyPrem",
+            "value": "Compra Premium para ver estadísticas detalladas"
+        },
+        {
+            "key": "PurchasePremium",
+            "value": "Comprar Premium"
+        },
+        {
+            "key": "STATSGlobalQuestsStreaks",
+            "value": "RACHAS DE MISIONES:"
+        },
+        {
+            "key": "SmallStreak",
+            "value": "Racha pequeña:"
+        },
+        {
+            "key": "BigStreak",
+            "value": "Racha grande:"
+        },
+        {
+            "key": "Diff2",
+            "value": "Dificultad:"
+        },
+        {
+            "key": "NewRecord",
+            "value": "¡Nuevo récord!"
+        },
+        {
+            "key": "Game",
+            "value": "Juego:"
+        },
+        {
+            "key": "Draw1",
+            "value": "Robar 1"
+        },
+        {
+            "key": "Draw3",
+            "value": "Robar 3"
+        },
+        {
+            "key": "Suit1",
+            "value": "1 palo"
+        },
+        {
+            "key": "Suit2",
+            "value": "2 palos"
+        },
+        {
+            "key": "Suit4",
+            "value": "4 palos"
+        },
+        {
+            "key": "Round1",
+            "value": "1 ronda"
+        },
+        {
+            "key": "Round2",
+            "value": "2 rondas"
+        },
+        {
+            "key": "Round3",
+            "value": "3 rondas"
+        },
+        {
+            "key": "SoundOn",
+            "value": "Sonido ACTIVADO"
+        },
+        {
+            "key": "SoundOff",
+            "value": "Sonido DESACTIVADO"
+        },
+        {
+            "key": "Confirm",
+            "value": "Confirmar"
+        },
+        {
+            "key": "ChangeBG",
+            "value": "Cambiar fondo"
+        },
+        {
+            "key": "ChangeCards",
+            "value": "Cambiar cartas"
+        },
+        {
+            "key": "SettingsSound",
+            "value": "Sonido"
+        },
+        {
+            "key": "SettingsLanguage",
             "value": "Idioma"
         },
         {
-            "key": "setsound",
-            "value": "Sonidos"
+            "key": "SettingsDesign",
+            "value": "Diseño"
         },
         {
-            "key": "PuzzleDiff",
-            "value": "Dificultad del rompecabezas"
+            "key": "ChangeBack",
+            "value": "Cambiar dorso de carta"
         },
         {
-            "key": "PuzzleSettings",
-            "value": "Configuración del rompecabezas"
+            "key": "ChangeDeck",
+            "value": "Cambiar mazo"
         },
         {
-            "key": "PuzzleMode",
-            "value": "Modo de rompecabezas"
+            "key": "tutorial",
+            "value": "Tutorial"
         },
         {
-            "key": "BookArabic",
-            "value": "Números arábigos"
+            "key": "Foundaton",
+            "value": "Fundaciones"
         },
         {
-            "key": "BookRoman",
-            "value": "Números romanos"
+            "key": "Stock",
+            "value": "Mazo"
         },
         {
-            "key": "BookPicture",
-            "value": "Imagen"
+            "key": "Tableau",
+            "value": "Tablero"
         },
         {
-            "key": "PuzzleSolved",
-            "value": "¡Rompecabezas resuelto!"
+            "key": "AutoButton",
+            "value": "Auto"
         },
         {
-            "key": "BackToMenu",
-            "value": "Volver al menú"
+            "key": "KlondikeTutorial1",
+            "value": "El objetivo del juego es agrupar las cartas en las <color=#FCA311>'Fundaciones'</color> de arriba.\nArrastra el <color=#8294FF>Seis de Picas (6♠)</color> boca arriba a la primera <color=#FCA311>Fundación</color>."
         },
         {
-            "key": "hint_first_card",
-            "value": "{0} es la primera carta."
+            "key": "KlondikeTutorial2",
+            "value": "En el <color=#FCA311>Tablero</color>, las cartas se apilan en orden descendente alternando colores.\nArrastra el <color=#8294FF>Diez de Tréboles negro (10♣)</color> sobre la <color=#FF6B6B>Jota de Diamantes roja (J♦)</color>."
         },
         {
-            "key": "hint_last_card",
-            "value": "{0} es la última carta."
+            "key": "KlondikeTutorial3",
+            "value": "¡Genial, se ha revelado una carta oculta! Se pueden enviar rápidamente a la <color=#FCA311>Fundación</color> con un doble clic.\nHaz doble clic en el <color=#FF6B6B>Seis de Corazones (6♥)</color>."
         },
         {
-            "key": "hint_immediately_after",
-            "value": "{0} está inmediatamente después de {1}."
+            "key": "KlondikeTutorial4",
+            "value": "<color=#FCA311>SOLO</color> se pueden colocar Reyes en los espacios vacíos del tablero.\nArrastra el <color=#FF6B6B>Rey de Corazones (K♥)</color> a la primera columna vacía."
         },
         {
-            "key": "hint_immediately_before",
-            "value": "{0} está inmediatamente antes de {1}."
+            "key": "KlondikeTutorial5",
+            "value": "Puedes mover varias cartas descubiertas a la vez.\nMueve la pila con el <color=#FF6B6B>Diez de Diamantes rojo (10♦)</color> sobre la <color=#8294FF>Jota de Tréboles negra (J♣)</color>."
         },
         {
-            "key": "hint_between",
-            "value": "{0} está entre {1} y {2}."
+            "key": "KlondikeTutorial6",
+            "value": "¿No hay movimientos disponibles? Usa el <color=#FCA311>Mazo</color> (arriba a la izquierda). Haz clic en él para robar una carta."
         },
         {
-            "key": "hint_left_of",
-            "value": "{0} está a la izquierda de {1}."
+            "key": "KlondikeTutorial7",
+            "value": "Robamos un <color=#8294FF>Diez de Picas (10♠)</color>. Colócalo sobre la <color=#FF6B6B>Jota de Corazones (J♥)</color> revelada."
         },
         {
-            "key": "hint_right_of",
-            "value": "{0} está a la derecha de {1}."
+            "key": "KlondikeTutorial8",
+            "value": "¡Buen movimiento! Pero a veces es necesario deshacer una acción. Vamos a comprobar cómo funciona el botón <color=#FCA311>'Deshacer'</color> en la parte inferior de la pantalla."
         },
         {
-            "key": "hint_one_false",
-            "value": "Una pista es falsa."
+            "key": "KlondikeTutorial9",
+            "value": "Devuelve el <color=#8294FF>Diez de Picas (10♠)</color> a la <color=#FF6B6B>Jota de Corazones (J♥)</color>."
         },
         {
-            "key": "hint_no_suit",
-            "value": "No hay cartas de {0} en la mesa."
+            "key": "KlondikeTutorial10",
+            "value": "A veces es beneficioso devolver una carta de la <color=#FCA311>Fundación</color> al tablero.\nArrastra el <color=#FF6B6B>Nueve de Diamantes (9♦)</color> desde la <color=#FCA311>Fundación</color> sobre el <color=#8294FF>Diez de Picas negro (10♠)</color>."
         },
         {
-            "key": "hint_no_rank",
-            "value": "No hay cartas de valor {0} en la mesa."
+            "key": "KlondikeTutorial11",
+            "value": "Queda una última carta en nuestro <color=#FCA311>mazo</color> del tutorial. ¡Vamos a robarla!\nHaz clic en el mazo."
         },
         {
-            "key": "hint_no_even",
-            "value": "No hay cartas pares en la mesa."
+            "key": "KlondikeTutorial12",
+            "value": "Coloca el <color=#FF6B6B>Nueve de Corazones (9♥)</color> sobre el <color=#8294FF>Diez de Tréboles (10♣)</color>."
         },
         {
-            "key": "hint_no_odd",
-            "value": "No hay cartas impares en la mesa."
+            "key": "KlondikeTutorial13",
+            "value": "¡El mazo está vacío! Ahora enviemos las cartas reveladas a la <color=#FCA311>Fundación</color>.\nHaz doble clic en el <color=#8294FF>Siete de Picas (7♠)</color>."
         },
         {
-            "key": "hint_no_above_10",
-            "value": "No hay cartas mayores que 10 en la mesa."
+            "key": "KlondikeTutorial14",
+            "value": "Haz doble clic en el <color=#FF6B6B>Siete de Corazones (7♥)</color>."
         },
         {
-            "key": "hint_no_below_6",
-            "value": "No hay cartas menores que 6 en la mesa."
+            "key": "KlondikeTutorial15",
+            "value": "Todas las cartas están reveladas. ¡Pulsa el botón <color=#FCA311>'AUTO'</color>!"
         },
         {
-            "key": "hint_has_suit",
-            "value": "Hay cartas de {0} en la mesa."
+            "key": "KlondikeTutorialEnd",
+            "value": "<color=#FCA311>¡Felicidades!</color> Has dominado todas las mecánicas. ¡Buena suerte en el juego!"
         },
         {
-            "key": "hint_has_rank",
-            "value": "Hay cartas con valor {0} en la mesa."
+            "key": "SpiderTutorial1",
+            "value": "En Spider, las cartas se apilan en orden descendente.\nArrastra el <color=#8294FF>Ocho de Picas (8♠)</color> sobre el <color=#8294FF>Nueve de Picas (9♠)</color>."
         },
         {
-            "key": "hint_position_of_card",
-            "value": "{0} está en la posición {1}."
+            "key": "SpiderTutorial2",
+            "value": "¡Genial, se ha revelado una carta oculta!\nLas pilas del <color=#FCA311>mismo palo</color> se pueden mover juntas. Mueve la pila <color=#8294FF>7♠-6♠-5♠</color> sobre tu Ocho."
         },
         {
-            "key": "hint_not_first",
-            "value": "{0} no está en la primera posición."
+            "key": "SpiderTutorial3",
+            "value": "Puedes colocar cartas unas sobre otras sin importar el palo.\nColoca el <color=#FF6B6B>Cuatro de Corazones (4♥)</color> sobre el <color=#8294FF>Cinco de Picas negro (5♠)</color>."
         },
         {
-            "key": "hint_not_last",
-            "value": "{0} no está en la última posición."
+            "key": "SpiderTutorial4",
+            "value": "Atención: ¡las pilas de distintos palos se <color=#FF6B6B>bloquean</color>! No se pueden mover juntas.\nPulsa <color=#FCA311>'Deshacer'</color> para devolver la carta."
         },
         {
-            "key": "hint_not_neighbor",
-            "value": "{0} no está al lado de {1}."
+            "key": "SpiderTutorial5",
+            "value": "¡Para repartir nuevas cartas del mazo, no debe haber espacios vacíos en el tablero!\nMueve el <color=#8294FF>Rey de Picas (K♠)</color> a la columna vacía de la derecha."
         },
         {
-            "key": "hint_exact_count_suit",
-            "value": "Hay exactamente {0} cartas de {1} en la mesa."
+            "key": "SpiderTutorial6",
+            "value": "Ahora todos los espacios están ocupados. Haz clic en el <color=#FCA311>mazo</color> en la esquina inferior derecha para repartir una nueva fila de cartas."
         },
         {
-            "key": "hint_exact_count_rank",
-            "value": "Hay exactamente {0} cartas de valor {1} en la mesa."
+            "key": "SpiderTutorial7",
+            "value": "¡Obtuvimos los Ases que necesitábamos! Pero los Doses están cubiertos por nuevas cartas.\nMueve el <color=#8294FF>Tres de Picas (3♠)</color> sobre el <color=#8294FF>Cuatro de Picas (4♠)</color>."
         },
         {
-            "key": "hint_even_position",
-            "value": "{0} está en una posición par."
+            "key": "SpiderTutorial8",
+            "value": "¡El camino está libre! Mueve el <color=#FF6B6B>As de Corazones (A♥)</color> sobre el <color=#FF6B6B>Dos de Corazones (2♥)</color> para completar la secuencia."
         },
         {
-            "key": "hint_odd_position",
-            "value": "{0} está en una posición impar."
+            "key": "SpiderTutorial9",
+            "value": "¡Genial! Ahora liberemos el segundo Dos.\nMueve el <color=#FF6B6B>Cuatro de Corazones (4♥)</color> sobre el <color=#8294FF>Cinco de Picas (5♠)</color>."
         },
         {
-            "key": "hint_between_count",
-            "value": "Hay exactamente {2} carta(s) entre {0} y {1}."
+            "key": "SpiderTutorial10",
+            "value": "Y ahora mueve el <color=#8294FF>As de Picas (A♠)</color> sobre el <color=#8294FF>Dos de Picas (2♠)</color> en la última pila restante."
         },
         {
-            "key": "false_there_is",
-            "value": "Definitivamente hay {0} en la mesa."
+            "key": "SpiderTutorialEnd",
+            "value": "¡Felicidades! ¡Has dominado todas las mecánicas de Spider!"
         },
         {
-            "key": "false_no",
-            "value": "No hay {0} en la mesa."
+            "key": "FreeCellTutorial1",
+            "value": "La principal característica de este solitario son las 4 <color=#FCA311>Celdas Libres</color>.\nEl <color=#8294FF>As de Picas (A♠)</color> está bloqueado. Mueve el <color=#FF6B6B>Ocho de Corazones (8♥)</color> a una <color=#FCA311>Celda Libre</color> (arriba a la izquierda)."
         },
         {
-            "key": "false_first",
-            "value": "{0} es la primera carta."
+            "key": "FreeCellTutorial2",
+            "value": "¡El As está libre! Pulsa <color=#FCA311>'AUTO'</color> para enviar todas las cartas disponibles a las <color=#FCA311>Fundaciones</color>."
         },
         {
-            "key": "false_last",
-            "value": "{0} es la última carta."
+            "key": "FreeCellTutorial3",
+            "value": "Al igual que en Klondike, las cartas en el tablero alternan en color.\nMueve el <color=#FF6B6B>Siete de Diamantes (7♦)</color> sobre el <color=#8294FF>Ocho de Tréboles (8♣)</color>."
         },
         {
-            "key": "false_immediately_after",
-            "value": "{0} está inmediatamente después de {1}."
+            "key": "FreeCellTutorial4",
+            "value": "El <color=#FCA311>indicador</color> junto al botón Auto muestra la longitud máxima de la pila que puedes mover (ahora 4).\nMueve el <color=#FF6B6B>Diez de Diamantes (10♦)</color> a una <color=#FCA311>Celda Libre</color> para liberar la columna."
         },
         {
-            "key": "false_exact_count_suit",
-            "value": "Hay exactamente {0} cartas de {1} en la mesa."
+            "key": "FreeCellTutorial5",
+            "value": "El indicador ha cambiado (6/3). El segundo número es el límite para una <color=#FCA311>columna vacía</color>.\nMueve la pila (<color=#8294FF>6♠</color> y <color=#FF6B6B>5♥</color>) a la columna vacía."
         },
         {
-            "key": "false_exact_count_rank",
-            "value": "Hay exactamente {0} cartas de valor {1} en la mesa."
+            "key": "FreeCellTutorial6",
+            "value": "Cualquier movimiento se puede deshacer. Vamos a comprobar cómo funciona el botón <color=#FCA311>'Deshacer'</color> en la parte inferior de la pantalla."
         },
         {
-            "key": "false_position_of_card",
-            "value": "{0} está en la posición {1}."
+            "key": "FreeCellTutorial7",
+            "value": "Ahora mueve esta pila (<color=#8294FF>6♠</color> y <color=#FF6B6B>5♥</color>) sobre el <color=#FF6B6B>Siete de Diamantes (7♦)</color>."
         },
         {
-            "key": "false_neighbor",
-            "value": "{0} está al lado de {1}."
+            "key": "FreeCellTutorial8",
+            "value": "¡Tutorial completado! ¡Pulsa <color=#FCA311>'AUTO'</color> para recoger las cartas restantes y ganar!"
         },
         {
-            "key": "ArmorPuzzleInfo1",
-            "value": "Debes colocar las piezas de la armadura en el orden correcto."
+            "key": "FreeCellTutorialEnd",
+            "value": "<color=#FCA311>¡Felicidades!</color> Has dominado todas las reglas de Carta Blanca. ¡Buena suerte en el juego!"
         },
         {
-            "key": "ArmorPuzzleInfo2",
-            "value": "En la casilla superior — casco, en la media — coraza, en la inferior — botas."
+            "key": "FreeCellTutorInfo1",
+            "value": "Celdas Libres"
         },
         {
-            "key": "BalancePuzzleInfo",
-            "value": "Debes equilibrar la balanza colocando todos los pesos."
+            "key": "PyramidTutorial1",
+            "value": "En Pirámide, debes eliminar las cartas en pares que sumen <color=#FCA311>13</color>. Un Rey equivale a 13 y se puede eliminar con un solo clic.\nHaz clic en el <color=#8294FF>Rey de Picas (K♠)</color>."
         },
         {
-            "key": "BookPuzzleInfo",
-            "value": "Debes colocar los libros en el orden correcto."
+            "key": "PyramidTutorial2",
+            "value": "Reina (12) + As (1) = <color=#FCA311>13</color>.\nHaz clic primero en la <color=#FF6B6B>Reina de Diamantes (Q♦)</color> y luego en el <color=#8294FF>As de Tréboles (A♣)</color> para eliminarlos."
         },
         {
-            "key": "SlidersPuzzleInfo",
-            "value": "Debes colocar las losas en orden."
+            "key": "PyramidTutorial3",
+            "value": "¿Olvidaste el valor de una carta? Pulsa el botón <color=#FCA311>'Pista'</color> en la parte superior."
         },
         {
-            "key": "MazePuzzleInfo1",
-            "value": "Debes sacar la bola roja del laberinto."
+            "key": "PyramidTutorial4",
+            "value": "No hay pares coincidentes en la mesa. Haz clic en el <color=#FCA311>botón</color> debajo del mazo para revelar nuevas cartas. Nota: ¡solo hay <color=#FCA311>2 repartos</color> disponibles!"
         },
         {
-            "key": "MazePuzzleInfo2",
-            "value": "Controles: WASD."
+            "key": "PyramidTutorial5",
+            "value": "¡Genial! Cinco (5) + Ocho (8) = <color=#FCA311>13</color>.\nEmpareja el <color=#8294FF>Cinco de Picas (5♠)</color> del mazo con el <color=#8294FF>Ocho de Picas (8♠)</color> en la mesa."
         },
         {
-            "key": "ClockPuzzleInfo1",
-            "value": "Debes ajustar la hora en el reloj según la pista."
+            "key": "PyramidTutorial6",
+            "value": "¡Buen movimiento! Pero a veces es necesario deshacer una acción. Pulsa el botón <color=#FCA311>'Deshacer'</color> en la parte inferior de la pantalla."
         },
         {
-            "key": "ClockPuzzleInfo2",
-            "value": "Debes ajustar la hora en el reloj según las pistas. Hay pistas falsas."
+            "key": "PyramidTutorial7",
+            "value": "Ahora volvamos a emparejar el <color=#8294FF>Cinco de Picas (5♠)</color> y el <color=#8294FF>Ocho de Picas (8♠)</color>."
         },
         {
-            "key": "ClockPuzzleInfo3",
-            "value": "A — girar en sentido antihorario."
+            "key": "PyramidTutorial8",
+            "value": "Nueve (9) + Cuatro (4) = <color=#FCA311>13</color>.\nEmpareja el <color=#FF6B6B>Nueve de Corazones (9♥)</color> del mazo con el <color=#8294FF>Cuatro de Tréboles (4♣)</color>."
         },
         {
-            "key": "ClockPuzzleInfo4",
-            "value": "D — girar en sentido horario."
+            "key": "PyramidTutorial9",
+            "value": "¡El camino está libre! Hay un Siete en la cima y nuestro Seis en el descarte.\n¡Haz clic en el <color=#FF6B6B>Seis de Diamantes (6♦)</color> y el <color=#FF6B6B>Siete de Corazones (7♥)</color>!"
         },
         {
-            "key": "ClockPuzzleInfo5",
-            "value": "E — cambiar la aguja."
+            "key": "PyramidTutorialEnd",
+            "value": "<color=#FCA311>¡Felicidades!</color> ¡Has dominado Pirámide!"
         },
         {
-            "key": "ClockPuzzleInfo7",
-            "value": "Debes ajustar la hora del reloj según las pistas. Algunas pistas son falsas. Las manecillas afectan el movimiento entre sí."
+            "key": "TriPeaksTutorial1",
+            "value": "El objetivo es <color=#FCA311>eliminar todas las cartas</color>. Elige cartas descubiertas que sean <color=#FCA311>1 rango mayor o menor</color> que la carta en la pila de descarte (actualmente es <color=#8294FF>5♠</color>). ¡Crea largos <color=#FCA311>combos</color> para ganar puntos!\nElimina: <color=#FF6B6B>6♥</color> -> <color=#8294FF>7♣</color> -> <color=#FF6B6B>8♦</color>."
         },
         {
-            "key": "ClockPuzzleInfo6",
-            "value": "Controles:"
+            "key": "TriPeaksTutorial3",
+            "value": "No hay más movimientos disponibles. Roba una nueva carta del <color=#FCA311>mazo</color>."
         },
         {
-            "key": "CardsPuzzleInfo1",
-            "value": "Debes formar una fila de cartas según las condiciones."
+            "key": "TriPeaksTutorial4",
+            "value": "Robamos una <color=#FF6B6B>Reina (Q♦)</color>. Los rangos de las cartas van <color=#FCA311>en bucle</color>: un <color=#FF6B6B>As (A)</color> se puede jugar sobre un <color=#8294FF>Rey (K)</color>, y un <color=#8294FF>Dos (2)</color> sobre un As. ¡Completa esta cadena!"
         },
         {
-            "key": "CardsPuzzleInfo2",
-            "value": "En el área con el círculo amarillo puedes colocar cartas que puedan cumplir las condiciones."
+            "key": "TriPeaksTutorial7",
+            "value": "Vamos a comprobar cómo funciona el botón <color=#FCA311>'Deshacer'</color>. Haz clic en él."
         },
         {
-            "key": "CardsPuzzleInfo3",
-            "value": "En el área con la cruz roja puedes colocar cartas que definitivamente no cumplen las condiciones."
+            "key": "TriPeaksTutorial8",
+            "value": "¡Genial! Devuelve el <color=#8294FF>Dos de Tréboles (2♣)</color> y limpia el tablero: <color=#8294FF>2</color> -> <color=#FF6B6B>3</color> -> <color=#8294FF>4</color> -> <color=#FF6B6B>5</color>!"
         },
         {
-            "key": "DicesPuzzleInfo1",
-            "value": "Debes colocar los dados en la parte superior para que la ecuación sea correcta."
+            "key": "TriPeaksTutorialEnd",
+            "value": "<color=#FCA311>¡Felicidades!</color> ¡Has dominado TriPeaks!"
         },
         {
-            "key": "DicesPuzzleInfo2",
-            "value": "Botón derecho del ratón — cambiar el número del dado."
+            "key": "YukonTutorial1",
+            "value": "Nuestro juego tiene dos variantes: <color=#FCA311>'Clásica'</color> y <color=#FCA311>'Rusa'</color>. En la Clásica, las cartas alternan de color.\nMueve el <color=#8294FF>Diez de Picas negro (10♠)</color> sobre la <color=#FF6B6B>Jota de Corazones roja (J♥)</color>."
         },
         {
-            "key": "DicesPuzzleInfo3",
-            "value": "Condiciones:"
+            "key": "YukonTutorial2",
+            "value": "Las reglas de la variante <color=#FCA311>'Rusa'</color> son diferentes: las cartas se apilan estrictamente por palo.\nVamos a mover ese mismo <color=#8294FF>Diez de Picas (10♠)</color> sobre la <color=#8294FF>Jota de Picas (J♠)</color> para ver cómo funciona."
         },
         {
-            "key": "DicesPuzzleInfo4",
-            "value": "Esta condición significa que en la primera casilla debe haber un dado con valor 1."
+            "key": "YukonTutorial3",
+            "value": "¡Genial! Ahora conocemos ambas variantes. Vamos a deshacer este movimiento y continuar el tutorial con las reglas clásicas.\nPulsa el botón <color=#FCA311>'Deshacer'</color>."
         },
         {
-            "key": "DicesPuzzleInfo5",
-            "value": "Esta condición significa que no se pueden usar dados con valor 1."
+            "key": "YukonTutorial4",
+            "value": "La característica principal de Yukón es mover pilas. ¡Puedes tomar <color=#FCA311>CUALQUIER</color> carta descubierta y arrastrar toda la pila sobre ella!\nToma la <color=#8294FF>Reina de Tréboles negra (Q♣)</color> de la última columna y muévela sobre el <color=#FF6B6B>Rey de Corazones rojo (K♥)</color>."
         },
         {
-            "key": "DicesPuzzleInfo6",
-            "value": "Esta condición significa que debe haber menos de dos dados con valor 1."
+            "key": "YukonTutorial5",
+            "value": "Las cartas se pueden enviar rápidamente a las <color=#FCA311>Fundaciones</color> con un doble clic.\n¡Enviemos el <color=#8294FF>Diez de Tréboles (10♣)</color> allí!"
         },
         {
-            "key": "DicesPuzzleInfo7",
-            "value": "Esta condición significa que debe haber más de dos dados con valor 1."
+            "key": "YukonTutorial6",
+            "value": "<color=#FCA311>SOLO</color> se pueden colocar Reyes en los espacios vacíos del tablero.\nMueve el <color=#8294FF>Rey de Picas (K♠)</color> a la columna vacía para revelar la carta de abajo."
         },
         {
-            "key": "DicesPuzzleInfo8",
-            "value": "Botón izquierdo del ratón — cambiar el color del dado."
+            "key": "YukonTutorial7",
+            "value": "¡Has dominado todas las mecánicas! Ya no quedan cartas boca abajo en el tablero.\n¡Pulsa el botón <color=#FCA311>'AUTO'</color> para terminar rápidamente el juego!"
         },
         {
-            "key": "DicesPuzzleInfo9",
-            "value": "Esta condición significa que no debe haber más de dos dados negros seguidos."
+            "key": "YukonTutorialEnd",
+            "value": "<color=#FCA311>¡Felicidades!</color> Has dominado todas las mecánicas de Yukón. ¡Buena suerte en el juego!"
         },
         {
-            "key": "DicesPuzzleInfo10",
-            "value": "Esta condición significa que en la primera casilla debe haber un dado blanco."
+            "key": "MonteCarloTutorial1",
+            "value": "En Montecarlo, debes eliminar pares de cartas idénticas.\nPrimero la regla de <color=#FCA311>'8 Direcciones'</color>. Haz clic en dos Cincos adyacentes: <color=#FF6B6B>(5♥)</color> y <color=#8294FF>(5♠)</color>."
         },
         {
-            "key": "DicesPuzzleInfo11",
-            "value": "Esta condición significa que los dados negros y blancos deben alternarse."
+            "key": "MonteCarloTutorial2",
+            "value": "¡Las cartas se han desplazado! Ahora el modo <color=#FCA311>'4 Direcciones'</color> (en forma de cruz) está activo.\nLos Sietes terminaron uno sobre otro. ¡Elimina <color=#FF6B6B>(7♦)</color> y <color=#8294FF>(7♣)</color>!"
         },
         {
-            "key": "SkipPuzzle",
-            "value": "Pular"
+            "key": "MonteCarloTutorial3",
+            "value": "¡De vuelta al modo <color=#FCA311>'8 Direcciones'</color>! Ahora también puedes emparejar en diagonal.\nElimina los dos Reyes: <color=#FF6B6B>(K♥)</color> y <color=#8294FF>(K♠)</color>."
         },
         {
-            "key": "ContinuePuzzle",
-            "value": "Continuar"
+            "key": "MonteCarloTutorial4",
+            "value": "¡Buen movimiento! Pero vamos a comprobar cómo funciona <color=#FCA311>'Deshacer'</color>.\nPulsa el botón Deshacer en la parte inferior de la pantalla."
         },
         {
-            "key": "NewItem",
-            "value": "Novo item!"
+            "key": "MonteCarloTutorial5",
+            "value": "Los Reyes vuelven a su lugar. ¡Ya conoces todas las reglas!\nTermina el juego eliminando todos los pares restantes."
         },
         {
-            "key": "ItemSuitable",
-            "value": "O item serve."
+            "key": "MonteCarloTutorial6",
+            "value": "¡Sigue eliminando pares hasta la victoria total!"
         },
         {
-            "key": "ItemNotSuitable",
-            "value": "Item não serve."
+            "key": "MonteCarloTutorialEnd",
+            "value": "<color=#FCA311>¡Felicidades!</color> ¡Has dominado las reglas de Montecarlo!"
         },
         {
-            "key": "InventoryFull",
-            "value": "Inventário cheio."
+            "key": "SultanTutorial1",
+            "value": "El objetivo del juego es agrupar todas las cartas en las <color=#FCA311>Fundaciones</color> alrededor del Sultán (Rey de Corazones).\nMueve la <color=#FF6B6B>Jota de Corazones (J♥)</color> de la <color=#FCA311>Reserva</color> a la Fundación adecuada."
         },
         {
-            "key": "ItemBall",
-            "value": "Bola vermelha"
+            "key": "SultanTutorial2",
+            "value": "¡En 'Sultán', el mazo solo se puede hojear <color=#FCA311>2 veces</color> durante todo el juego!\nHaz clic en el <color=#FCA311>mazo</color> para revelar una nueva carta."
         },
         {
-            "key": "ItemBook",
-            "value": "Livro"
+            "key": "SultanTutorial3",
+            "value": "Robamos una <color=#8294FF>Jota de Tréboles (J♣)</color>. No se necesita ahora, ya que las Fundaciones de Tréboles necesitan Dieces primero.\nMuévela a un <color=#FCA311>espacio vacío de la Reserva</color>."
         },
         {
-            "key": "ItemCards",
-            "value": "Cartas (baralho)"
+            "key": "SultanTutorial4",
+            "value": "¡Buen movimiento! Pero los espacios vacíos en la reserva son muy valiosos, es mejor guardarlos.\nPulsa el botón <color=#FCA311>'Deshacer'</color> en la parte inferior de la pantalla."
         },
         {
-            "key": "ItemClockHand",
-            "value": "Ponteiro do relógio"
+            "key": "SultanTutorial5",
+            "value": "Veamos cuál es la siguiente carta.\nHaz clic en el <color=#FCA311>mazo</color> una vez más."
         },
         {
-            "key": "ItemDices",
-            "value": "Dados"
+            "key": "SultanTutorial6",
+            "value": "¡Es una <color=#FF6B6B>Jota de Diamantes (J♦)</color>! Encaja perfectamente.\nEnvíala desde el descarte directamente a la <color=#FCA311>Fundación</color> correcta."
         },
         {
-            "key": "ItemExitKey",
-            "value": "Chave redonda"
+            "key": "SultanTutorial7",
+            "value": "Las cartas se pueden mover rápidamente con un <color=#FCA311>doble clic</color>. El juego elegirá el lugar por sí mismo: comprobando primero las Fundaciones, luego la Reserva.\nHaz doble clic en la <color=#8294FF>Jota de Tréboles (J♣)</color>."
         },
         {
-            "key": "ItemGoldenKey",
-            "value": "Chave dourada"
+            "key": "SultanTutorial8",
+            "value": "¡Genial! La Jota voló a la Reserva vacía. Ahora robemos otra carta del <color=#FCA311>mazo</color>."
         },
         {
-            "key": "ItemHelmet",
-            "value": "Capacete"
+            "key": "SultanTutorial9",
+            "value": "¡Es un <color=#8294FF>Diez de Tréboles (10♣)</color>, y las Fundaciones lo necesitan! Haz clic en él <color=#FCA311>dos veces</color>, y volará directo a la base."
         },
         {
-            "key": "ItemIronKey",
-            "value": "Chave de ferro"
+            "key": "SultanTutorial10",
+            "value": "¡Has dominado todas las reglas del solitario Sultán!\nTermina el juego por tu cuenta distribuyendo las <color=#FCA311>cartas restantes</color>."
         },
         {
-            "key": "ItemWeight",
-            "value": "Peso para a balança"
+            "key": "SultanTutorialEnd",
+            "value": "<color=#FCA311>¡Felicidades!</color> ¡Has dominado con éxito el solitario Sultán!"
         },
         {
-            "key": "ItemLight",
-            "value": "Tocha"
+            "key": "OctagonTutorial1",
+            "value": "¡Bienvenido a Octágono! La victoria está a la vuelta de la esquina. Vamos a revelar nuevas cartas: haz clic en el <color=#FCA311>mazo</color>. Nota: ¡solo puedes hojear el mazo <color=#FCA311>2 veces</color> por juego!"
         },
         {
-            "key": "ItemPreciousKey",
-            "value": "Chave preciosa"
+            "key": "OctagonTutorial2",
+            "value": "En la mesa, las cartas se apilan en orden descendente, y el palo puede ser <color=#FCA311>CUALQUIERA</color>.\nMueve la <color=#FF6B6B>Reina de Corazones (Q♥)</color> del descarte sobre el <color=#8294FF>Rey de Tréboles (K♣)</color> en la mesa."
         },
         {
-            "key": "ItemStonePlate",
-            "value": "Placa de pedra"
+            "key": "OctagonTutorial3",
+            "value": "Solo queda una carta en el grupo izquierdo de casillas. Mueve la <color=#8294FF>Jota de Tréboles (J♣)</color> sobre nuestra <color=#FF6B6B>Reina de Corazones (Q♥)</color>. ¡El grupo se vaciará y se <color=#FCA311>llenará automáticamente</color> con nuevas cartas!"
         },
         {
-            "key": "GameOver",
-            "value": "¡Has muerto!"
+            "key": "OctagonTutorial4",
+            "value": "Las nuevas cartas no nos ayudaron ahora, y la Jota bloqueó la carta que necesitábamos. ¡Vamos a devolver todo! Pulsa el botón <color=#FCA311>'Deshacer'</color>."
         },
         {
-            "key": "LevelComplete",
-            "value": "¡Nivel completado!"
+            "key": "OctagonTutorial5",
+            "value": "A veces, para salvar la situación, ¡puedes tomar una carta necesaria directamente de una Fundación! (Solo que no puedes tomar Ases ni Reyes). Saca la <color=#FF6B6B>Reina de Diamantes (Q♦)</color> de la Fundación y colócala sobre el <color=#8294FF>Rey de Picas (K♠)</color>."
         },
         {
-            "key": "RestartLevel",
-            "value": "Reiniciar nivel"
+            "key": "OctagonTutorial6",
+            "value": "¡Brillante! Un doble clic envía una carta a una Fundación, O a la mesa, pero en la mesa <color=#FCA311>el palo debe coincidir exactamente</color>. Haz doble clic en la <color=#FF6B6B>Jota de Diamantes (J♦)</color>."
         },
         {
-            "key": "NextLevel",
-            "value": "Siguiente nivel"
+            "key": "OctagonTutorial7",
+            "value": "¡Al quitar la Jota, desbloqueamos las cartas finales! Ahora haz doble clic en el <color=#FF6B6B>Rey de Corazones (K♥)</color> revelado, y se irá directo a la Fundación."
         },
         {
-            "key": "EndPuzzleInfo1",
-            "value": "Necesitas girar los fragmentos del bajorrelieve para restaurarlo."
+            "key": "OctagonTutorial8",
+            "value": "¡Has dominado todas las mecánicas de Octágono!\nQuedan solo unas pocas cartas descubiertas en la mesa. ¡Distribúyelas entre las <color=#FCA311>Fundaciones</color> y termina el juego!"
         },
         {
-            "key": "EndPuzzleInfo2",
-            "value": "E - cambiar la llave redonda"
+            "key": "OctagonTutorialEnd",
+            "value": "<color=#FCA311>¡Felicidades!</color> ¡Has completado con éxito el tutorial y resuelto el solitario Octágono!"
         },
         {
-            "key": "DoorWrongSide",
-            "value": "La puerta se abre desde el otro lado."
+            "key": "CarpetTutorial1",
+            "value": "El objetivo de 'Montana' (Alfombra) es ordenar las cartas por palo desde el As hasta el Rey en 4 filas. Solo los Ases pueden colocarse en los espacios vacíos de la IZQUIERDA. Arrastra el <color=#8294FF>As de Picas (A♠)</color> al primer espacio vacío."
         },
         {
-            "key": "NoFuel",
-            "value": "¡Necesitas fuego para encender la antorcha!"
+            "key": "CarpetTutorialUndo",
+            "value": "¡Buen movimiento! Pero a veces es necesario deshacer una acción. Vamos a comprobar cómo funciona el botón <color=#FCA311>'Deshacer'</color> en la parte inferior de la pantalla. Haz clic en él."
         },
         {
-            "key": "Settings",
-            "value": "Configuración"
+            "key": "CarpetTutorial2",
+            "value": "¡El As ha vuelto! Las cartas se pueden enviar rápidamente a su lugar con un doble clic. Haz doble clic en el <color=#8294FF>As de Picas (A♠)</color>."
         },
         {
-            "key": "Restart",
-            "value": "Reiniciar"
+            "key": "CarpetTutorial3",
+            "value": "Un Dos del mismo palo debe seguir a un As. Haz doble clic en el <color=#8294FF>Dos de Picas (2♠)</color>."
         },
         {
-            "key": "SkipPanelText",
-            "value": "Resuelve el rompecabezas para desbloquear."
+            "key": "CarpetTutorial4",
+            "value": "¡Continúa la fila! Envía el <color=#8294FF>Tres de Picas (3♠)</color> al Dos con un doble clic."
+        },
+        {
+            "key": "CarpetTutorial5",
+            "value": "¡Genial! ¡Sigue moviendo Picas mientras haya movimientos disponibles!"
+        },
+        {
+            "key": "CarpetTutorialAces",
+            "value": "¡Ahora envía los Ases restantes a los espacios vacíos de la izquierda con un doble clic! Empieza con el <color=#8294FF>As de Tréboles (A♣)</color>."
+        },
+        {
+            "key": "CarpetTutorialAces2",
+            "value": "Y ahora el <color=#FF6B6B>As de Diamantes (A♦)</color>."
+        },
+        {
+            "key": "CarpetTutorial6",
+            "value": "¡Has llegado a un callejón sin salida! Todos los espacios vacíos terminaron estrictamente detrás de Reyes, y no puedes colocar cartas después de los Reyes. ¡Pulsa <color=#FCA311>'Repartir'</color>!"
+        },
+        {
+            "key": "CarpetTutorial7",
+            "value": "El modo <color=#FCA311>'Difícil'</color> está activo: los espacios vacíos después de repartir SOLO aparecen al final de una fila. Mueve la <color=#FF6B6B>Jota de Corazones (J♥)</color> al espacio vacío detrás del Diez."
+        },
+        {
+            "key": "CarpetTutorial8",
+            "value": "¡Se ha abierto un espacio detrás del Siete de Picas! Ahora envía con confianza el <color=#8294FF>Ocho de Picas (8♠)</color> allí con un doble clic."
+        },
+        {
+            "key": "CarpetTutorial9",
+            "value": "¡Otro callejón sin salida! Pulsa <color=#FCA311>'Repartir'</color> una vez más. Volvemos al modo <color=#FCA311>'Clásico'</color>: ¡los espacios vacíos aparecerán convenientemente justo detrás de las cartas reunidas!"
+        },
+        {
+            "key": "CarpetTutorial10",
+            "value": "¡Casi listo! Las cartas se unieron milagrosamente, solo queda el empujón final. Envía la <color=#FF6B6B>Jota de Corazones (J♥)</color> a su lugar."
+        },
+        {
+            "key": "CarpetTutorial11",
+            "value": "¡Genial! Ahora la <color=#FF6B6B>Reina de Corazones (Q♥)</color>."
+        },
+        {
+            "key": "CarpetTutorial12",
+            "value": "¡Y finalmente, el <color=#FF6B6B>Rey de Corazones (K♥)</color> para una victoria absoluta!"
+        },
+        {
+            "key": "CarpetTutorialEnd",
+            "value": "<color=#FCA311>¡Felicidades!</color> ¡Has dominado magistralmente las reglas de Montana!"
+        },
+        {
+            "key": "Leaderboard_Global",
+            "value": "Tabla de Clasificación Global"
+        },
+        {
+            "key": "Leaderboard_Klondike",
+            "value": "Clasificación de Klondike"
+        },
+        {
+            "key": "Leaderboard_Spider",
+            "value": "Clasificación de Spider"
+        },
+        {
+            "key": "Leaderboard_FreeCell",
+            "value": "Clasificación de Carta Blanca"
+        },
+        {
+            "key": "Leaderboard_Pyramid",
+            "value": "Clasificación de Pirámide"
+        },
+        {
+            "key": "Leaderboard_TriPeaks",
+            "value": "Clasificación de TriPeaks"
+        },
+        {
+            "key": "Leaderboard_Sultan",
+            "value": "Clasificación de Sultán"
+        },
+        {
+            "key": "Leaderboard_MonteCarlo",
+            "value": "Clasificación de Montecarlo"
+        },
+        {
+            "key": "Leaderboard_Montana",
+            "value": "Clasificación de Montana"
+        },
+        {
+            "key": "Leaderboard_Octagon",
+            "value": "Clasificación de Octágono"
+        },
+        {
+            "key": "Leaderboard_Yukon",
+            "value": "Clasificación de Yukón"
+        },
+        {
+            "key": "Quest_General_Easy_01_Title",
+            "value": "Maratón de cartas"
+        },
+        {
+            "key": "Quest_General_Easy_01_Desc",
+            "value": "Haz un total de <color=#ffbb00>{0} movimientos</color> en todos los juegos de hoy."
+        },
+        {
+            "key": "Quest_General_Easy_02_Title",
+            "value": "Explorador"
+        },
+        {
+            "key": "Quest_General_Easy_02_Desc",
+            "value": "Revela <color=#ffbb00>{0} cartas boca abajo</color> en la mesa en los juegos con esta mecánica (<color=#a8d9e0>Klondike</color>, <color=#a8d9e0>Spider</color>, <color=#a8d9e0>Yukon</color>)."
+        },
+        {
+            "key": "Quest_General_Easy_03_Title",
+            "value": "Jugador ávido"
+        },
+        {
+            "key": "Quest_General_Easy_03_Desc",
+            "value": "Completa totalmente <color=#ffbb00>{0} partidas</color>."
+        },
+        {
+            "key": "Quest_General_Easy_04_Title",
+            "value": "Camino a casa"
+        },
+        {
+            "key": "Quest_General_Easy_04_Desc",
+            "value": "Mueve un total de <color=#ffbb00>{0} cartas</color> a las <color=#ffbb00>Fundaciones</color> en todos los juegos."
+        },
+        {
+            "key": "Quest_General_Easy_05_Title",
+            "value": "Degustador"
+        },
+        {
+            "key": "Quest_General_Easy_05_Desc",
+            "value": "Juega al menos una partida en <color=#ffbb00>{0} modos de solitario diferentes</color> (ej. <color=#a8d9e0>Klondike</color>, <color=#a8d9e0>Sultan</color>, <color=#a8d9e0>Yukon</color>)."
+        },
+        {
+            "key": "Quest_General_Easy_06_Title",
+            "value": "Tiempo en la mesa"
+        },
+        {
+            "key": "Quest_General_Easy_06_Desc",
+            "value": "Pasa un total de <color=#ffbb00>{0} minutos</color> jugando."
+        },
+        {
+            "key": "Quest_General_Easy_07_Title",
+            "value": "Corte Real"
+        },
+        {
+            "key": "Quest_General_Easy_07_Desc",
+            "value": "Quita del tablero o mueve a las <color=#ffbb00>Fundaciones</color> un total de <color=#ffbb00>{0} Reyes y Reinas</color>."
+        },
+        {
+            "key": "Quest_General_Easy_08_Title",
+            "value": "Jugador Activo"
+        },
+        {
+            "key": "Quest_General_Easy_08_Desc",
+            "value": "Voltea un total de <color=#ffbb00>{0} cartas</color> del <color=#ffbb00>mazo</color> en todos los juegos de hoy."
+        },
+        {
+            "key": "Quest_General_Easy_09_Title",
+            "value": "Novato determinado"
+        },
+        {
+            "key": "Quest_General_Easy_09_Desc",
+            "value": "Gana <color=#ffbb00>{0} partidas</color> estrictamente en <color=#9fd25c>dificultad Fácil</color>."
+        },
+        {
+            "key": "Quest_General_Easy_10_Title",
+            "value": "Rangos menores"
+        },
+        {
+            "key": "Quest_General_Easy_10_Desc",
+            "value": "Quita del tablero o mueve a las <color=#ffbb00>Fundaciones</color> un total de <color=#ffbb00>{0} Ases y Doses</color>."
+        },
+        {
+            "key": "Quest_General_Medium_01_Title",
+            "value": "Doble éxito"
+        },
+        {
+            "key": "Quest_General_Medium_01_Desc",
+            "value": "Gana un total de <color=#ffbb00>{0} partidas</color> hoy."
+        },
+        {
+            "key": "Quest_General_Medium_02_Title",
+            "value": "Todoterreno"
+        },
+        {
+            "key": "Quest_General_Medium_02_Desc",
+            "value": "Gana partidas en <color=#ffbb00>{0} modos de solitario diferentes</color>."
+        },
+        {
+            "key": "Quest_General_Medium_03_Title",
+            "value": "Racha de victorias"
+        },
+        {
+            "key": "Quest_General_Medium_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partidas seguidas</color>."
+        },
+        {
+            "key": "Quest_General_Medium_04_Title",
+            "value": "Término medio"
+        },
+        {
+            "key": "Quest_General_Medium_04_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> estrictamente en <color=#eeae32>dificultad Media</color> o superior."
+        },
+        {
+            "key": "Quest_General_Medium_05_Title",
+            "value": "Pulso firme"
+        },
+        {
+            "key": "Quest_General_Medium_05_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> sin usar Deshacer."
+        },
+        {
+            "key": "Quest_General_Medium_06_Title",
+            "value": "Maestro del tiempo"
+        },
+        {
+            "key": "Quest_General_Medium_06_Desc",
+            "value": "Gana cualquier partida en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_General_Medium_07_Title",
+            "value": "Maratoniano"
+        },
+        {
+            "key": "Quest_General_Medium_07_Desc",
+            "value": "Gana cualquier partida haciendo más de <color=#ffbb00>{0} movimientos</color>."
+        },
+        {
+            "key": "Quest_General_Medium_08_Title",
+            "value": "Diligencia"
+        },
+        {
+            "key": "Quest_General_Medium_08_Desc",
+            "value": "Completa totalmente <color=#ffbb00>{0} partidas</color>, incluyendo al menos 1 victoria."
+        },
+
+        {
+            "key": "Quest_General_Hard_01_Title",
+            "value": "Gran maestro"
+        },
+        {
+            "key": "Quest_General_Hard_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_General_Hard_02_Title",
+            "value": "Nervios de acero"
+        },
+        {
+            "key": "Quest_General_Hard_02_Desc",
+            "value": "Gana <color=#ffbb00>{0} partidas seguidas</color>."
+        },
+        {
+            "key": "Quest_General_Hard_03_Title",
+            "value": "Día perfecto"
+        },
+        {
+            "key": "Quest_General_Hard_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> en <color=#e14849>dificultad Difícil</color> sin usar Deshacer."
+        },
+        {
+            "key": "Quest_General_Hard_04_Title",
+            "value": "Multimaestro"
+        },
+        {
+            "key": "Quest_General_Hard_04_Desc",
+            "value": "Gana partidas en <color=#ffbb00>{0} modos de solitario diferentes</color> en un solo día."
+        },
+        {
+            "key": "Quest_General_Hard_05_Title",
+            "value": "Speedrunner"
+        },
+        {
+            "key": "Quest_General_Hard_05_Desc",
+            "value": "Gana <color=#ffbb00>{0} partidas</color>, cada una en menos de 3 minutos."
+        },
+        {
+            "key": "Quest_Klondike_Easy_01_Title",
+            "value": "Camino a casa"
+        },
+        {
+            "key": "Quest_Klondike_Easy_01_Desc",
+            "value": "Mueve <color=#ffbb00>{0} cartas</color> a las <color=#ffbb00>Fundaciones</color> en <color=#a8d9e0>Klondike</color> (<color=#a8d9e0>Robar 1</color> o <color=#a8d9e0>Robar 3</color>)."
+        },
+        {
+            "key": "Quest_Klondike_Easy_02_Title",
+            "value": "Explorador"
+        },
+        {
+            "key": "Quest_Klondike_Easy_02_Desc",
+            "value": "Revela <color=#ffbb00>{0} cartas boca abajo</color> en la mesa en <color=#a8d9e0>Klondike</color> (<color=#a8d9e0>Robar 1</color>)."
+        },
+        {
+            "key": "Quest_Klondike_Easy_03_Title",
+            "value": "Corte Real"
+        },
+        {
+            "key": "Quest_Klondike_Easy_03_Desc",
+            "value": "Completa <color=#ffbb00>{0} Fundaciones enteras</color> en <color=#a8d9e0>Klondike</color>."
+        },
+        {
+            "key": "Quest_Klondike_Easy_04_Title",
+            "value": "Reserva Activa"
+        },
+        {
+            "key": "Quest_Klondike_Easy_04_Desc",
+            "value": "Mueve <color=#ffbb00>{0} cartas</color> directamente del <color=#ffbb00>mazo</color> a las <color=#ffbb00>Fundaciones</color> en <color=#a8d9e0>Klondike</color>."
+        },
+        {
+            "key": "Quest_Klondike_Easy_05_Title",
+            "value": "Enfoque estricto"
+        },
+        {
+            "key": "Quest_Klondike_Easy_05_Desc",
+            "value": "Mueve <color=#ffbb00>{0} cartas</color> a las <color=#ffbb00>Fundaciones</color> en <color=#a8d9e0>Klondike</color> estrictamente en <color=#9fd25c>dificultad Fácil</color>."
+        },
+
+        {
+            "key": "Quest_Klondike_Medium_01_Title",
+            "value": "Robo triple"
+        },
+        {
+            "key": "Quest_Klondike_Medium_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Klondike</color> (<color=#a8d9e0>Robar 3</color>)."
+        },
+        {
+            "key": "Quest_Klondike_Medium_02_Title",
+            "value": "Maestro del tiempo"
+        },
+        {
+            "key": "Quest_Klondike_Medium_02_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Klondike</color> en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_Klondike_Medium_03_Title",
+            "value": "Plan infalible"
+        },
+        {
+            "key": "Quest_Klondike_Medium_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Klondike</color> sin usar Deshacer."
+        },
+        {
+            "key": "Quest_Klondike_Medium_04_Title",
+            "value": "Nivel intermedio"
+        },
+        {
+            "key": "Quest_Klondike_Medium_04_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Klondike</color> estrictamente en <color=#eeae32>dificultad Media</color> o superior."
+        },
+
+        {
+            "key": "Quest_Klondike_Hard_01_Title",
+            "value": "Liga Mayor"
+        },
+        {
+            "key": "Quest_Klondike_Hard_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Klondike</color> estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_Klondike_Hard_02_Title",
+            "value": "Trato relámpago"
+        },
+        {
+            "key": "Quest_Klondike_Hard_02_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Klondike</color> (<color=#a8d9e0>Robar 3</color>) en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_Klondike_Hard_03_Title",
+            "value": "Sin compromisos"
+        },
+        {
+            "key": "Quest_Klondike_Hard_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Klondike</color> (<color=#a8d9e0>Robar 3</color>) sin usar Deshacer."
+        },
+        {
+            "key": "Quest_Spider_Easy_01_Title",
+            "value": "Tejiendo redes"
+        },
+        {
+            "key": "Quest_Spider_Easy_01_Desc",
+            "value": "Completa <color=#ffbb00>{0} secuencias completas</color> en <color=#a8d9e0>Spider</color> (<color=#a8d9e0>1 Palo</color>)."
+        },
+        {
+            "key": "Quest_Spider_Easy_02_Title",
+            "value": "Análisis profundo"
+        },
+        {
+            "key": "Quest_Spider_Easy_02_Desc",
+            "value": "Revela <color=#ffbb00>{0} cartas boca abajo</color> en el tablero en <color=#a8d9e0>Spider</color> (<color=#a8d9e0>1 o 2 Palos</color>)."
+        },
+        {
+            "key": "Quest_Spider_Easy_03_Title",
+            "value": "Limpieza"
+        },
+        {
+            "key": "Quest_Spider_Easy_03_Desc",
+            "value": "Vacía completamente <color=#ffbb00>{0} columnas del tablero</color> en <color=#a8d9e0>Spider</color>."
+        },
+        {
+            "key": "Quest_Spider_Easy_04_Title",
+            "value": "Clasificación"
+        },
+        {
+            "key": "Quest_Spider_Easy_04_Desc",
+            "value": "Haz <color=#ffbb00>{0} movimientos de cartas exitosos</color> entre columnas del tablero en <color=#a8d9e0>Spider</color> (<color=#a8d9e0>1 Palo</color>)."
+        },
+        {
+            "key": "Quest_Spider_Easy_05_Title",
+            "value": "Tejedor ágil"
+        },
+        {
+            "key": "Quest_Spider_Easy_05_Desc",
+            "value": "Completa <color=#ffbb00>{0} secuencias completas</color> en <color=#a8d9e0>Spider</color> estrictamente en <color=#9fd25c>dificultad Fácil</color>."
+        },
+
+        {
+            "key": "Quest_Spider_Medium_01_Title",
+            "value": "Doble amenaza"
+        },
+        {
+            "key": "Quest_Spider_Medium_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Spider</color> (<color=#a8d9e0>2 Palos</color>)."
+        },
+        {
+            "key": "Quest_Spider_Medium_02_Title",
+            "value": "Tejido rápido"
+        },
+        {
+            "key": "Quest_Spider_Medium_02_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Spider</color> en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_Spider_Medium_03_Title",
+            "value": "Victoria limpia"
+        },
+        {
+            "key": "Quest_Spider_Medium_03_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Spider</color> usando Deshacer no más de <color=#ffbb00>{0} veces</color>."
+        },
+        {
+            "key": "Quest_Spider_Medium_04_Title",
+            "value": "Nivel intermedio"
+        },
+        {
+            "key": "Quest_Spider_Medium_04_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Spider</color> estrictamente en <color=#eeae32>dificultad Media</color> o superior."
+        },
+
+        {
+            "key": "Quest_Spider_Hard_01_Title",
+            "value": "Señor de la Red"
+        },
+        {
+            "key": "Quest_Spider_Hard_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Spider</color> (<color=#a8d9e0>4 Palos</color>)."
+        },
+        {
+            "key": "Quest_Spider_Hard_02_Title",
+            "value": "Aracnofobia"
+        },
+        {
+            "key": "Quest_Spider_Hard_02_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Spider</color> estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_Spider_Hard_03_Title",
+            "value": "Red perfecta"
+        },
+        {
+            "key": "Quest_Spider_Hard_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Spider</color> (<color=#a8d9e0>2 o 4 Palos</color>) sin usar Deshacer."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_01_Title",
+            "value": "Liberación"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_01_Desc",
+            "value": "Mueve <color=#ffbb00>{0} cartas</color> a las <color=#ffbb00>Fundaciones</color> en <color=#a8d9e0>FreeCell</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_02_Title",
+            "value": "Tránsito"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_02_Desc",
+            "value": "Usa las <color=#ffbb00>Celdas Libres</color> <color=#ffbb00>{0} veces</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_03_Title",
+            "value": "Primeros pasos"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_03_Desc",
+            "value": "Mueve los <color=#ffbb00>4 Ases</color> y los <color=#ffbb00>4 Doses</color> a las <color=#ffbb00>Fundaciones</color> en <color=#ffbb00>{0} partida</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_04_Title",
+            "value": "Cadenas largas"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_04_Desc",
+            "value": "Mueve pilas de <color=#ffbb00>3 o más cartas</color> en un solo movimiento <color=#ffbb00>{0} veces</color> en <color=#a8d9e0>FreeCell</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Easy_05_Title",
+            "value": "Enfoque sistemático"
+        },
+        {
+            "key": "Quest_FreeCell_Easy_05_Desc",
+            "value": "Mueve <color=#ffbb00>{0} cartas</color> a las <color=#ffbb00>Fundaciones</color> estrictamente en <color=#9fd25c>dificultad Fácil</color>."
+        },
+
+        {
+            "key": "Quest_FreeCell_Medium_01_Title",
+            "value": "Planificación cuidadosa"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>FreeCell</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Medium_02_Title",
+            "value": "Pensador rápido"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_02_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>FreeCell</color> en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Medium_03_Title",
+            "value": "Celda vacía"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> sin ocupar las <color=#ffbb00>4 Celdas Libres</color> a la vez (máximo de 3)."
+        },
+        {
+            "key": "Quest_FreeCell_Medium_04_Title",
+            "value": "Nivel intermedio"
+        },
+        {
+            "key": "Quest_FreeCell_Medium_04_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>FreeCell</color> estrictamente en <color=#eeae32>dificultad Media</color> o superior."
+        },
+
+        {
+            "key": "Quest_FreeCell_Hard_01_Title",
+            "value": "Clase magistral"
+        },
+        {
+            "key": "Quest_FreeCell_Hard_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>FreeCell</color> estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_FreeCell_Hard_02_Title",
+            "value": "Claustrofobia"
+        },
+        {
+            "key": "Quest_FreeCell_Hard_02_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> sin ocupar más de <color=#ffbb00>2 Celdas Libres</color> a la vez."
+        },
+        {
+            "key": "Quest_FreeCell_Hard_03_Title",
+            "value": "Genio de la planificación"
+        },
+        {
+            "key": "Quest_FreeCell_Hard_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>FreeCell</color> (en dificultad <color=#eeae32>Media</color> o <color=#e14849>Difícil</color>) sin usar Deshacer."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_01_Title",
+            "value": "Demolición"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_01_Desc",
+            "value": "Quita <color=#ffbb00>{0} pares de cartas</color> en <color=#a8d9e0>Pirámide</color> (los reyes no cuentan, <color=#a8d9e0>1 o 2 rondas</color>)."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_02_Title",
+            "value": "Excavación"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_02_Desc",
+            "value": "Quita <color=#ffbb00>{0} cartas</color> directamente de la estructura de la pirámide."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_03_Title",
+            "value": "Ayuda externa"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_03_Desc",
+            "value": "Forma <color=#ffbb00>{0} pares</color> donde al menos una carta sea robada del <color=#ffbb00>mazo</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_04_Title",
+            "value": "Caza de Reyes"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_04_Desc",
+            "value": "Quita <color=#ffbb00>{0} Reyes</color> en <color=#a8d9e0>Pirámide</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Easy_05_Title",
+            "value": "Un paseo por el parque"
+        },
+        {
+            "key": "Quest_Pyramid_Easy_05_Desc",
+            "value": "Quita <color=#ffbb00>{0} pares de cartas</color> en <color=#a8d9e0>Pirámide</color> estrictamente en <color=#9fd25c>dificultad Fácil</color>."
+        },
+
+        {
+            "key": "Quest_Pyramid_Medium_01_Title",
+            "value": "Doble excavación"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Pirámide</color> (<color=#a8d9e0>2 Rondas</color>)."
+        },
+        {
+            "key": "Quest_Pyramid_Medium_02_Title",
+            "value": "Maestro del combo"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_02_Desc",
+            "value": "Haz un combo quitando <color=#ffbb00>{0} pares de cartas seguidos</color> sin robar del <color=#ffbb00>mazo</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Medium_03_Title",
+            "value": "Reserva de fuerza"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_03_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Pirámide</color> dejando al menos <color=#ffbb00>{0} cartas sin usar</color> en el <color=#ffbb00>mazo</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Medium_04_Title",
+            "value": "Nivel intermedio"
+        },
+        {
+            "key": "Quest_Pyramid_Medium_04_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Pirámide</color> estrictamente en <color=#eeae32>dificultad Media</color> o superior."
+        },
+
+        {
+            "key": "Quest_Pyramid_Hard_01_Title",
+            "value": "Faraón"
+        },
+        {
+            "key": "Quest_Pyramid_Hard_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Pirámide</color> (<color=#a8d9e0>3 Rondas</color>)."
+        },
+        {
+            "key": "Quest_Pyramid_Hard_02_Title",
+            "value": "Maldición de la Tumba"
+        },
+        {
+            "key": "Quest_Pyramid_Hard_02_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Pirámide</color> estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_Pyramid_Hard_03_Title",
+            "value": "Barrido perfecto"
+        },
+        {
+            "key": "Quest_Pyramid_Hard_03_Desc",
+            "value": "Haz un combo quitando <color=#ffbb00>{0} pares de cartas seguidos</color> sin robar del <color=#ffbb00>mazo</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_01_Title",
+            "value": "Alpinismo"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_01_Desc",
+            "value": "Quita <color=#ffbb00>{0} cartas</color> del tablero en <color=#a8d9e0>TriPeaks</color> (<color=#a8d9e0>1 Ronda</color>)."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_02_Title",
+            "value": "Avalancha"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_02_Desc",
+            "value": "Haz una racha (combo) quitando <color=#ffbb00>{0} cartas seguidas</color> sin robar del <color=#ffbb00>mazo</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_03_Title",
+            "value": "Horizonte despejado"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_03_Desc",
+            "value": "Despeja completamente <color=#ffbb00>{0} pico(s)</color> de los tres en el tablero."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_04_Title",
+            "value": "Economía"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_04_Desc",
+            "value": "Quita <color=#ffbb00>{0} cartas</color> del tablero robando no más de 10 cartas del <color=#ffbb00>mazo</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_05_Title",
+            "value": "Turista"
+        },
+        {
+            "key": "Quest_TriPeaks_Easy_05_Desc",
+            "value": "Quita <color=#ffbb00>{0} cartas</color> del tablero en <color=#a8d9e0>TriPeaks</color> estrictamente en <color=#9fd25c>dificultad Fácil</color>."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Medium_01_Title",
+            "value": "Larga caminata"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>TriPeaks</color> (<color=#a8d9e0>2 Rondas</color>)."
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_02_Title",
+            "value": "Maestro de rachas"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_02_Desc",
+            "value": "Haz una racha ininterrumpida de <color=#ffbb00>{0} cartas quitadas seguidas</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_03_Title",
+            "value": "Conservando reservas"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_03_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>TriPeaks</color> dejando al menos <color=#ffbb00>{0} cartas</color> en el <color=#ffbb00>mazo</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_04_Title",
+            "value": "Nivel intermedio"
+        },
+        {
+            "key": "Quest_TriPeaks_Medium_04_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>TriPeaks</color> estrictamente en <color=#eeae32>dificultad Media</color> o superior."
+        },
+
+        {
+            "key": "Quest_TriPeaks_Hard_01_Title",
+            "value": "Maratón de picos"
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>TriPeaks</color> (<color=#a8d9e0>3 Rondas</color>)."
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_02_Title",
+            "value": "Conquistador"
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_02_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>TriPeaks</color> estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_03_Title",
+            "value": "Súper avalancha"
+        },
+        {
+            "key": "Quest_TriPeaks_Hard_03_Desc",
+            "value": "Haz una racha ininterrumpida (combo) de <color=#ffbb00>{0} cartas quitadas seguidas</color>."
+        },
+        {
+            "key": "Quest_Yukon_Easy_01_Title",
+            "value": "Mina de oro"
+        },
+        {
+            "key": "Quest_Yukon_Easy_01_Desc",
+            "value": "Mueve <color=#ffbb00>{0} cartas</color> a las <color=#ffbb00>Fundaciones</color> en <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Clásico</color>)."
+        },
+        {
+            "key": "Quest_Yukon_Easy_02_Title",
+            "value": "Deshielo"
+        },
+        {
+            "key": "Quest_Yukon_Easy_02_Desc",
+            "value": "Revela <color=#ffbb00>{0} cartas boca abajo</color> en la mesa."
+        },
+        {
+            "key": "Quest_Yukon_Easy_03_Title",
+            "value": "Clasificación activa"
+        },
+        {
+            "key": "Quest_Yukon_Easy_03_Desc",
+            "value": "Mueve <color=#ffbb00>{0} cartas</color> entre columnas del tablero en <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Ruso</color>)."
+        },
+        {
+            "key": "Quest_Yukon_Easy_04_Title",
+            "value": "Recolectando palos"
+        },
+        {
+            "key": "Quest_Yukon_Easy_04_Desc",
+            "value": "Completa <color=#ffbb00>{0} Fundaciones enteras</color>."
+        },
+        {
+            "key": "Quest_Yukon_Easy_05_Title",
+            "value": "Meteorólogo"
+        },
+        {
+            "key": "Quest_Yukon_Easy_05_Desc",
+            "value": "Revela <color=#ffbb00>{0} cartas boca abajo</color> en <color=#a8d9e0>Yukon</color> estrictamente en <color=#9fd25c>dificultad Fácil</color>."
+        },
+
+        {
+            "key": "Quest_Yukon_Medium_01_Title",
+            "value": "Invierno Ruso"
+        },
+        {
+            "key": "Quest_Yukon_Medium_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Ruso</color>)."
+        },
+        {
+            "key": "Quest_Yukon_Medium_02_Title",
+            "value": "Speedrun"
+        },
+        {
+            "key": "Quest_Yukon_Medium_02_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Yukon</color> en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_Yukon_Medium_03_Title",
+            "value": "Paso firme"
+        },
+        {
+            "key": "Quest_Yukon_Medium_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Yukon</color> (cualquier modo) sin usar Deshacer."
+        },
+        {
+            "key": "Quest_Yukon_Medium_04_Title",
+            "value": "Nivel intermedio"
+        },
+        {
+            "key": "Quest_Yukon_Medium_04_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Yukon</color> estrictamente en <color=#eeae32>dificultad Media</color> o superior."
+        },
+
+        {
+            "key": "Quest_Yukon_Hard_01_Title",
+            "value": "Helada siberiana"
+        },
+        {
+            "key": "Quest_Yukon_Hard_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Ruso</color>) estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_Yukon_Hard_02_Title",
+            "value": "Cálculo frío"
+        },
+        {
+            "key": "Quest_Yukon_Hard_02_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Clásico</color>) estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_Yukon_Hard_03_Title",
+            "value": "Speedrunner del Norte"
+        },
+        {
+            "key": "Quest_Yukon_Hard_03_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Yukon</color> (<color=#a8d9e0>Ruso</color>) en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_01_Title",
+            "value": "Vecinos afortunados"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_01_Desc",
+            "value": "Quita <color=#ffbb00>{0} pares de cartas</color> en <color=#a8d9e0>Monte Carlo</color> (<color=#a8d9e0>8 direcciones</color>)."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_02_Title",
+            "value": "Verticales y horizontales"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_02_Desc",
+            "value": "Quita <color=#ffbb00>{0} pares de cartas</color> en <color=#a8d9e0>Monte Carlo</color> (<color=#a8d9e0>4 direcciones</color>)."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_03_Title",
+            "value": "Caras de casino"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_03_Desc",
+            "value": "Encuentra y quita <color=#ffbb00>{0} pares de figuras</color> (Jotas, Reinas o Reyes) en <color=#a8d9e0>Monte Carlo</color> (cualquier modo)."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_04_Title",
+            "value": "Números mágicos"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_04_Desc",
+            "value": "Quita <color=#ffbb00>{0} pares de cartas numéricas</color> (del 2 al 10) en <color=#a8d9e0>Monte Carlo</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_05_Title",
+            "value": "Casino"
+        },
+        {
+            "key": "Quest_MonteCarlo_Easy_05_Desc",
+            "value": "Quita <color=#ffbb00>{0} pares de cartas</color> en <color=#a8d9e0>Monte Carlo</color> estrictamente en <color=#9fd25c>dificultad Fácil</color>."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Medium_01_Title",
+            "value": "Reglas estrictas"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Monte Carlo</color> (<color=#a8d9e0>4 direcciones</color>)."
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_02_Title",
+            "value": "Decisiones rápidas"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_02_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Monte Carlo</color> en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_03_Title",
+            "value": "Memoria perfecta"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Monte Carlo</color> (cualquier modo) sin usar Deshacer."
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_04_Title",
+            "value": "Nivel intermedio"
+        },
+        {
+            "key": "Quest_MonteCarlo_Medium_04_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Monte Carlo</color> estrictamente en <color=#eeae32>dificultad Media</color> o superior."
+        },
+
+        {
+            "key": "Quest_MonteCarlo_Hard_01_Title",
+            "value": "Matemáticas avanzadas"
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Monte Carlo</color> (<color=#a8d9e0>8 direcciones</color>) estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_02_Title",
+            "value": "Geometría precisa"
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_02_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Monte Carlo</color> (<color=#a8d9e0>4 direcciones</color>) estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_03_Title",
+            "value": "Memoria fenomenal"
+        },
+        {
+            "key": "Quest_MonteCarlo_Hard_03_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Monte Carlo</color> (<color=#a8d9e0>4 direcciones</color>) en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_01_Title",
+            "value": "Regalos al Sultán"
+        },
+        {
+            "key": "Quest_Sultan_Easy_01_Desc",
+            "value": "Coloca <color=#ffbb00>{0} cartas</color> en las <color=#ffbb00>Fundaciones</color> alrededor del centro en <color=#a8d9e0>Sultán</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_02_Title",
+            "value": "Séquito"
+        },
+        {
+            "key": "Quest_Sultan_Easy_02_Desc",
+            "value": "Juega cartas de los <color=#ffbb00>6 espacios de reserva</color> al menos <color=#ffbb00>{0} veces</color>."
+        },
+        {
+            "key": "Quest_Sultan_Easy_03_Title",
+            "value": "Harén"
+        },
+        {
+            "key": "Quest_Sultan_Easy_03_Desc",
+            "value": "Completa <color=#ffbb00>{0} Fundaciones enteras</color> alrededor del Sultán."
+        },
+        {
+            "key": "Quest_Sultan_Easy_04_Title",
+            "value": "Entrega directa"
+        },
+        {
+            "key": "Quest_Sultan_Easy_04_Desc",
+            "value": "Mueve <color=#ffbb00>{0} cartas</color> directamente del <color=#ffbb00>mazo</color> a las <color=#ffbb00>Fundaciones</color> alrededor del Sultán, ignorando los 6 espacios de reserva."
+        },
+        {
+            "key": "Quest_Sultan_Easy_05_Title",
+            "value": "Favor del Gobernante"
+        },
+        {
+            "key": "Quest_Sultan_Easy_05_Desc",
+            "value": "Coloca <color=#ffbb00>{0} cartas</color> en las <color=#ffbb00>Fundaciones</color> en <color=#a8d9e0>Sultán</color> estrictamente en <color=#9fd25c>dificultad Fácil</color>."
+        },
+
+        {
+            "key": "Quest_Sultan_Medium_01_Title",
+            "value": "Gran Visir"
+        },
+        {
+            "key": "Quest_Sultan_Medium_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Sultán</color>."
+        },
+        {
+            "key": "Quest_Sultan_Medium_02_Title",
+            "value": "Velocidad de pensamiento"
+        },
+        {
+            "key": "Quest_Sultan_Medium_02_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Sultán</color> en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_Sultan_Medium_03_Title",
+            "value": "Servicio impecable"
+        },
+        {
+            "key": "Quest_Sultan_Medium_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Sultán</color> sin usar Deshacer."
+        },
+        {
+            "key": "Quest_Sultan_Medium_04_Title",
+            "value": "Nivel intermedio"
+        },
+        {
+            "key": "Quest_Sultan_Medium_04_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Sultán</color> estrictamente en <color=#eeae32>dificultad Media</color> o superior."
+        },
+
+        {
+            "key": "Quest_Sultan_Hard_01_Title",
+            "value": "Gran Sultán"
+        },
+        {
+            "key": "Quest_Sultan_Hard_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Sultán</color> estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_Sultan_Hard_02_Title",
+            "value": "Gobernante sabio"
+        },
+        {
+            "key": "Quest_Sultan_Hard_02_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Sultán</color> en <color=#e14849>dificultad Difícil</color> sin usar Deshacer."
+        },
+        {
+            "key": "Quest_Sultan_Hard_03_Title",
+            "value": "Decisión en fracciones de segundo"
+        },
+        {
+            "key": "Quest_Sultan_Hard_03_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Sultán</color> en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_Montana_Easy_01_Title",
+            "value": "Restaurando el orden"
+        },
+        {
+            "key": "Quest_Montana_Easy_01_Desc",
+            "value": "Ordena <color=#ffbb00>{0} cartas</color> en secuencia por palo en <color=#a8d9e0>Montana</color> (<color=#a8d9e0>Clásico</color>)."
+        },
+        {
+            "key": "Quest_Montana_Easy_02_Title",
+            "value": "Trabajo de precisión"
+        },
+        {
+            "key": "Quest_Montana_Easy_02_Desc",
+            "value": "Llena los huecos con éxito <color=#ffbb00>{0} veces</color>."
+        },
+        {
+            "key": "Quest_Montana_Easy_03_Title",
+            "value": "Filas perfectas"
+        },
+        {
+            "key": "Quest_Montana_Easy_03_Desc",
+            "value": "Completa <color=#ffbb00>{0} filas completas</color> en <color=#a8d9e0>Montana</color>."
+        },
+        {
+            "key": "Quest_Montana_Easy_04_Title",
+            "value": "Sin repartir de nuevo"
+        },
+        {
+            "key": "Quest_Montana_Easy_04_Desc",
+            "value": "Llena <color=#ffbb00>{0} huecos seguidos</color> antes de usar el botón de Repartir."
+        },
+        {
+            "key": "Quest_Montana_Easy_05_Title",
+            "value": "Comienzo fácil"
+        },
+        {
+            "key": "Quest_Montana_Easy_05_Desc",
+            "value": "Ordena <color=#ffbb00>{0} cartas</color> en el orden correcto en <color=#a8d9e0>Montana</color> estrictamente en <color=#9fd25c>dificultad Fácil</color>."
+        },
+
+        {
+            "key": "Quest_Montana_Medium_01_Title",
+            "value": "Maestro organizador"
+        },
+        {
+            "key": "Quest_Montana_Medium_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Montana</color> (<color=#a8d9e0>Clásico</color>)."
+        },
+        {
+            "key": "Quest_Montana_Medium_02_Title",
+            "value": "Montaje rápido"
+        },
+        {
+            "key": "Quest_Montana_Medium_02_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Montana</color> en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_Montana_Medium_03_Title",
+            "value": "Plan de respaldo"
+        },
+        {
+            "key": "Quest_Montana_Medium_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Montana</color> dejando al menos 1 reparto (mezcla) sin usar."
+        },
+        {
+            "key": "Quest_Montana_Medium_04_Title",
+            "value": "Nivel intermedio"
+        },
+        {
+            "key": "Quest_Montana_Medium_04_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Montana</color> estrictamente en <color=#eeae32>dificultad Media</color> o superior."
+        },
+
+        {
+            "key": "Quest_Montana_Hard_01_Title",
+            "value": "Diseño intrincado"
+        },
+        {
+            "key": "Quest_Montana_Hard_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Montana</color> (<color=#a8d9e0>Modo Difícil</color>)."
+        },
+        {
+            "key": "Quest_Montana_Hard_02_Title",
+            "value": "Maestro de secuencias"
+        },
+        {
+            "key": "Quest_Montana_Hard_02_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Montana</color> (<color=#a8d9e0>Clásico</color>) estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_Montana_Hard_03_Title",
+            "value": "Sin vuelta atrás"
+        },
+        {
+            "key": "Quest_Montana_Hard_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Montana</color> (<color=#a8d9e0>Modo Difícil</color>) sin usar Deshacer."
+        },
+        {
+            "key": "Quest_Octagon_Easy_01_Title",
+            "value": "Llenando los rayos"
+        },
+        {
+            "key": "Quest_Octagon_Easy_01_Desc",
+            "value": "Mueve <color=#ffbb00>{0} cartas</color> a las <color=#ffbb00>Fundaciones</color> en <color=#a8d9e0>Octágono</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_02_Title",
+            "value": "Desbloqueando las esquinas"
+        },
+        {
+            "key": "Quest_Octagon_Easy_02_Desc",
+            "value": "Mueve con éxito <color=#ffbb00>{0} cartas</color> de las pilas de reserva de las esquinas a las <color=#ffbb00>Fundaciones</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_03_Title",
+            "value": "Doble poder"
+        },
+        {
+            "key": "Quest_Octagon_Easy_03_Desc",
+            "value": "Completa <color=#ffbb00>{0} Fundaciones enteras</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_04_Title",
+            "value": "Suministro central"
+        },
+        {
+            "key": "Quest_Octagon_Easy_04_Desc",
+            "value": "Mueve <color=#ffbb00>{0} cartas</color> directamente del <color=#ffbb00>mazo</color> a las <color=#ffbb00>Fundaciones</color>."
+        },
+        {
+            "key": "Quest_Octagon_Easy_05_Title",
+            "value": "Geometría simple"
+        },
+        {
+            "key": "Quest_Octagon_Easy_05_Desc",
+            "value": "Mueve <color=#ffbb00>{0} cartas</color> a las <color=#ffbb00>Fundaciones</color> en <color=#a8d9e0>Octágono</color> estrictamente en <color=#9fd25c>dificultad Fácil</color>."
+        },
+
+        {
+            "key": "Quest_Octagon_Medium_01_Title",
+            "value": "Forma perfecta"
+        },
+        {
+            "key": "Quest_Octagon_Medium_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Octágono</color>."
+        },
+        {
+            "key": "Quest_Octagon_Medium_02_Title",
+            "value": "Reflejos agudos"
+        },
+        {
+            "key": "Quest_Octagon_Medium_02_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Octágono</color> en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "Quest_Octagon_Medium_03_Title",
+            "value": "Potencial desbloqueado"
+        },
+        {
+            "key": "Quest_Octagon_Medium_03_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Octágono</color> sin usar Deshacer."
+        },
+        {
+            "key": "Quest_Octagon_Medium_04_Title",
+            "value": "Nivel intermedio"
+        },
+        {
+            "key": "Quest_Octagon_Medium_04_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Octágono</color> estrictamente en <color=#eeae32>dificultad Media</color> o superior."
+        },
+
+        {
+            "key": "Quest_Octagon_Hard_01_Title",
+            "value": "Geometría impecable"
+        },
+        {
+            "key": "Quest_Octagon_Hard_01_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Octágono</color> estrictamente en <color=#e14849>dificultad Difícil</color>."
+        },
+        {
+            "key": "Quest_Octagon_Hard_02_Title",
+            "value": "Cálculo absoluto"
+        },
+        {
+            "key": "Quest_Octagon_Hard_02_Desc",
+            "value": "Gana <color=#ffbb00>{0} partida</color> de <color=#a8d9e0>Octágono</color> en <color=#e14849>dificultad Difícil</color> sin usar Deshacer."
+        },
+        {
+            "key": "Quest_Octagon_Hard_03_Title",
+            "value": "Reflejos magistrales"
+        },
+        {
+            "key": "Quest_Octagon_Hard_03_Desc",
+            "value": "Gana una partida de <color=#a8d9e0>Octágono</color> en menos de <color=#ffbb00>{0} segundos</color>."
+        },
+        {
+            "key": "General",
+            "value": "Global"
+        },
+        {
+            "key": "Month_1",
+            "value": "de enero"
+        },
+        {
+            "key": "Month_2",
+            "value": "de febrero"
+        },
+        {
+            "key": "Month_3",
+            "value": "de marzo"
+        },
+        {
+            "key": "Month_4",
+            "value": "de abril"
+        },
+        {
+            "key": "Month_5",
+            "value": "de mayo"
+        },
+        {
+            "key": "Month_6",
+            "value": "de junio"
+        },
+        {
+            "key": "Month_7",
+            "value": "de julio"
+        },
+        {
+            "key": "Month_8",
+            "value": "de agosto"
+        },
+        {
+            "key": "Month_9",
+            "value": "de septiembre"
+        },
+        {
+            "key": "Month_10",
+            "value": "de octubre"
+        },
+        {
+            "key": "Month_11",
+            "value": "de noviembre"
+        },
+        {
+            "key": "Month_12",
+            "value": "de diciembre"
+        },
+        {
+            "key": "Quests_Reset",
+            "value": "Reinicio:"
+        },
+        {
+            "key": "Claim_Reward",
+            "value": "Reclamar premio"
+        },
+        {
+            "key": "Quest_Notifications_On",
+            "value": "Notificaciones activadas"
+        },
+        {
+            "key": "Quest_Notifications_Off",
+            "value": "Notificaciones desactivadas"
+        },
+        {
+            "key": "Reward_Available",
+            "value": "Disponible: {0}"
+        },
+        {
+            "key": "Reward_Desc",
+            "value": "¡Distribuye la recompensa! Cada potenciador otorga <color=#ffbb00>x2 de EXP</color> durante los <color=#ffbb00>próximos {0} juegos</color>."
+        },
+        {
+            "key": "Stats_QuestsInARow",
+            "value": "Misiones consecutivas:"
+        },
+        {
+            "key": "Stats_QuestStreakBest",
+            "value": "Racha máx. misiones:"
+        },
+        {
+            "key": "Stats_DayStreakCurrent",
+            "value": "Racha de días:"
+        },
+        {
+            "key": "Stats_DayStreakBest",
+            "value": "Racha máx. días:"
+        },
+        {
+            "key": "Stats_PerfectDaysTotal",
+            "value": "Días perfectos:"
+        },
+        {
+            "key": "Stats_PerfectStreakCurrent",
+            "value": "Racha días perfectos:"
+        },
+        {
+            "key": "Stats_PerfectStreakBest",
+            "value": "Racha máx. perfectos:"
+        },
+        {
+            "key": "TitleUI_Unlocked",
+            "value": "Desbloqueado"
+        },
+        {
+            "key": "TitleUI_Selected",
+            "value": "Seleccionado"
+        },
+        {
+            "key": "TitleUI_Requirement",
+            "value": "Requiere nivel {0}"
+        },
+        {
+            "key": "TitleUI_GlobalLevel",
+            "value": "Nivel Global"
+        },
+
+        {
+            "key": "Title_Klondike_1",
+            "value": "Recién Llegado"
+        },
+        {
+            "key": "Title_Klondike_5",
+            "value": "Buscador"
+        },
+        {
+            "key": "Title_Klondike_10",
+            "value": "Excavador"
+        },
+        {
+            "key": "Title_Klondike_15",
+            "value": "Prospector"
+        },
+        {
+            "key": "Title_Klondike_20",
+            "value": "Minero de Oro"
+        },
+        {
+            "key": "Title_Klondike_25",
+            "value": "Magnate del Klondike"
+        },
+        {
+            "key": "Title_Klondike_30",
+            "value": "Leyenda de la Fiebre"
+        },
+
+        {
+            "key": "Title_Spider_1",
+            "value": "Enredado"
+        },
+        {
+            "key": "Title_Spider_5",
+            "value": "Atrapador"
+        },
+        {
+            "key": "Title_Spider_10",
+            "value": "Hilandero"
+        },
+        {
+            "key": "Title_Spider_15",
+            "value": "Tejedor de Telarañas"
+        },
+        {
+            "key": "Title_Spider_20",
+            "value": "Cazador Venenoso"
+        },
+        {
+            "key": "Title_Spider_25",
+            "value": "Amo de la Red"
+        },
+        {
+            "key": "Title_Spider_30",
+            "value": "Rey Arácnido"
+        },
+
+        {
+            "key": "Title_FreeCell_1",
+            "value": "Aficionado"
+        },
+        {
+            "key": "Title_FreeCell_5",
+            "value": "Aprendiz"
+        },
+        {
+            "key": "Title_FreeCell_10",
+            "value": "Analista"
+        },
+        {
+            "key": "Title_FreeCell_15",
+            "value": "Táctico"
+        },
+        {
+            "key": "Title_FreeCell_20",
+            "value": "Lógico"
+        },
+        {
+            "key": "Title_FreeCell_25",
+            "value": "Estratega"
+        },
+        {
+            "key": "Title_FreeCell_30",
+            "value": "Genio del Cálculo"
+        },
+
+        {
+            "key": "Title_Pyramid_1",
+            "value": "Buscador de Oasis"
+        },
+        {
+            "key": "Title_Pyramid_5",
+            "value": "Cantero"
+        },
+        {
+            "key": "Title_Pyramid_10",
+            "value": "Constructor"
+        },
+        {
+            "key": "Title_Pyramid_15",
+            "value": "Capataz"
+        },
+        {
+            "key": "Title_Pyramid_20",
+            "value": "Sacerdote"
+        },
+        {
+            "key": "Title_Pyramid_25",
+            "value": "Arquitecto"
+        },
+        {
+            "key": "Title_Pyramid_30",
+            "value": "Faraón Implacable"
+        },
+
+        {
+            "key": "Title_TriPeaks_1",
+            "value": "Caminante"
+        },
+        {
+            "key": "Title_TriPeaks_5",
+            "value": "Viajero"
+        },
+        {
+            "key": "Title_TriPeaks_10",
+            "value": "Turista"
+        },
+        {
+            "key": "Title_TriPeaks_15",
+            "value": "Escalador"
+        },
+        {
+            "key": "Title_TriPeaks_20",
+            "value": "Alpinista"
+        },
+        {
+            "key": "Title_TriPeaks_25",
+            "value": "Conquistador"
+        },
+        {
+            "key": "Title_TriPeaks_30",
+            "value": "Señor de las Montañas"
+        },
+
+        {
+            "key": "Title_Yukon_1",
+            "value": "Forastero"
+        },
+        {
+            "key": "Title_Yukon_5",
+            "value": "Cazador"
+        },
+        {
+            "key": "Title_Yukon_10",
+            "value": "Rastreador"
+        },
+        {
+            "key": "Title_Yukon_15",
+            "value": "Invernante"
+        },
+        {
+            "key": "Title_Yukon_20",
+            "value": "Amo de la Taiga"
+        },
+        {
+            "key": "Title_Yukon_25",
+            "value": "Conquistador del Norte"
+        },
+        {
+            "key": "Title_Yukon_30",
+            "value": "Espíritu del Yukon"
+        },
+
+        {
+            "key": "Title_MonteCarlo_1",
+            "value": "Espectador"
+        },
+        {
+            "key": "Title_MonteCarlo_5",
+            "value": "Jugador"
+        },
+        {
+            "key": "Title_MonteCarlo_10",
+            "value": "Arriesgado"
+        },
+        {
+            "key": "Title_MonteCarlo_15",
+            "value": "Afortunado"
+        },
+        {
+            "key": "Title_MonteCarlo_20",
+            "value": "Tahúr"
+        },
+        {
+            "key": "Title_MonteCarlo_25",
+            "value": "Habitual del Casino"
+        },
+        {
+            "key": "Title_MonteCarlo_30",
+            "value": "Aristócrata de la Fortuna"
+        },
+
+        {
+            "key": "Title_Sultan_1",
+            "value": "Extranjero"
+        },
+        {
+            "key": "Title_Sultan_5",
+            "value": "Guardia"
+        },
+        {
+            "key": "Title_Sultan_10",
+            "value": "Sirviente Leal"
+        },
+        {
+            "key": "Title_Sultan_15",
+            "value": "Consejero"
+        },
+        {
+            "key": "Title_Sultan_20",
+            "value": "Visir"
+        },
+        {
+            "key": "Title_Sultan_25",
+            "value": "Gobernante"
+        },
+        {
+            "key": "Title_Sultan_30",
+            "value": "Señor del Oriente"
+        },
+
+        {
+            "key": "Title_Octagon_1",
+            "value": "Boceto"
+        },
+        {
+            "key": "Title_Octagon_5",
+            "value": "Estudiante de Geometría"
+        },
+        {
+            "key": "Title_Octagon_10",
+            "value": "Dibujante"
+        },
+        {
+            "key": "Title_Octagon_15",
+            "value": "Diseñador"
+        },
+        {
+            "key": "Title_Octagon_20",
+            "value": "Ilusionista"
+        },
+        {
+            "key": "Title_Octagon_25",
+            "value": "Maestro de Formas"
+        },
+        {
+            "key": "Title_Octagon_30",
+            "value": "Gran Maestro del Octágono"
+        },
+
+        {
+            "key": "Title_Montana_1",
+            "value": "Espectador"
+        },
+        {
+            "key": "Title_Montana_5",
+            "value": "Aprendiz"
+        },
+        {
+            "key": "Title_Montana_10",
+            "value": "Bordador"
+        },
+        {
+            "key": "Title_Montana_15",
+            "value": "Artesano"
+        },
+        {
+            "key": "Title_Montana_20",
+            "value": "Maestro de Hilos"
+        },
+        {
+            "key": "Title_Montana_25",
+            "value": "Tejedor Hábil"
+        },
+        {
+            "key": "Title_Montana_30",
+            "value": "Guardián de Patrones"
+        },
+
+        {
+            "key": "Title_Global_1",
+            "value": "Invitado del Club"
+        },
+        {
+            "key": "Title_Global_10",
+            "value": "Novato de la Mesa"
+        },
+        {
+            "key": "Title_Global_20",
+            "value": "Jugador Seguro"
+        },
+        {
+            "key": "Title_Global_30",
+            "value": "Amante del Solitario"
+        },
+        {
+            "key": "Title_Global_40",
+            "value": "Manos Ágiles"
+        },
+        {
+            "key": "Title_Global_50",
+            "value": "Experto en Disposiciones"
+        },
+        {
+            "key": "Title_Global_60",
+            "value": "Barajador del Destino"
+        },
+        {
+            "key": "Title_Global_70",
+            "value": "Maestro de Cartas"
+        },
+        {
+            "key": "Title_Global_80",
+            "value": "Jugador Experimentado"
+        },
+        {
+            "key": "Title_Global_90",
+            "value": "Virtuoso de la Baraja"
+        },
+        {
+            "key": "Title_Global_100",
+            "value": "Gran Maestro del Solitario"
+        },
+        {
+            "key": "Title_Global_110",
+            "value": "Guardián de los Palos"
+        },
+        {
+            "key": "Title_Global_120",
+            "value": "Barón de las Cartas"
+        },
+        {
+            "key": "Title_Global_130",
+            "value": "Señor de los Juegos"
+        },
+        {
+            "key": "Title_Global_140",
+            "value": "Leyenda de la Mesa"
+        },
+        {
+            "key": "Title_Global_150",
+            "value": "Campeón Absoluto"
+        },
+        {
+            "key": "TitleUI_SelectTitle",
+            "value": "Seleccionar título"
+        },
+        {
+            "key": "Shop_Premium_Title",
+            "value": "Premium"
+        },
+        {
+            "key": "Shop_Premium_Desc",
+            "value": "<b><color=#ffbb00>¡Desbloquea todo el potencial del juego!</color></b>\n<color=#E14849>- Anuncios eliminados para siempre</color>\n<color=#9FD25C>- +20% de experiencia</color> (en juegos y misiones)\n- Acceso a estadísticas detalladas\n- Cambiar el diseño frontal de las cartas\n- Acceso a misiones de los últimos 4 días"
+        },
+        {
+            "key": "Shop_Premium2_Desc",
+            "value": "<b><color=#ffbb00>¡Desbloquea todo el potencial del juego!</color></b>\n<color=#9FD25C>- +20% de experiencia</color> (en juegos y misiones)\n- Acceso a estadísticas detalladas\n- Cambiar el diseño frontal de las cartas\n- Acceso a misiones de los últimos 4 días"
+        },
+        {
+            "key": "Shop_NoAds_Title",
+            "value": "Quitar Anuncios"
+        },
+        {
+            "key": "Shop_NoAds_Desc",
+            "value": "<color=#E14849><b>Elimina permanentemente todos los anuncios.</b></color>\n¡Disfruta de tus solitarios favoritos sin interrupciones!"
+        },
+        {
+            "key": "Shop_Purchased",
+            "value": "Comprado"
+        },
+        {
+            "key": "Shop_Buy",
+            "value": "Comprar"
+        },
+        {
+            "key": "Hint_Settings",
+            "value": "¡Personaliza tu juego! Elige un hermoso <color=#FCA311>fondo</color> y tu <color=#FCA311>diseño de cartas</color> favorito."
+        },
+        {
+            "key": "Hint_Shop",
+            "value": "¡Juega sin interrupciones! Aquí puedes <color=#FCA311>desactivar los anuncios</color> para siempre o desbloquear el <color=#FCA311>estado Premium</color> con bonificaciones de XP."
+        },
+        {
+            "key": "Hint_Stats",
+            "value": "¡Haz un seguimiento de tu progreso! Aquí encontrarás tus <color=#FCA311>estadísticas de juego</color> y tus mejores <color=#FCA311>récords personales</color>."
+        },
+        {
+            "key": "Hint_Leaderboard",
+            "value": "¡Compite con los mejores! En la <color=#FCA311>tabla de clasificación</color> puedes comparar tus <color=#FCA311>resultados</color> con los de otros jugadores."
         }
     ]
 }

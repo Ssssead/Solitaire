@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 589b78fa6b0f2d743bdd1c5585d219c4, type: 3}
+  m_Name: 4GatheringSuits
+  m_EditorClassIdentifier: 
+  questId: Quest_Yukon_Easy_04
+  questName: Gathering Suits
+  descriptionTemplate: 
+  isAvailableInPool: 1
+  category: 6
+  difficulty: 0
+  triggerType: 0
+  actionType: 16
+  requiredMatchDifficulty: 0
+  requiredVariant: 
+  targetRanks: 
+  minTargetValue: 2
+  maxTargetValue: 3
+  requiredConditionValue: 0
+  xpReward: 200

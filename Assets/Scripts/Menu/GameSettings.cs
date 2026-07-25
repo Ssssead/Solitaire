@@ -23,6 +23,24 @@ public static class GameSettings
     // --- Montana ---
     public static bool MontanaHard = false; // false = Classic, true = Hard
     public static bool IsTutorialMode = false;
+
+    // --- НОВЫЙ МЕТОД: Единый генератор названия режима ---
+    public static string GetCurrentVariantString(GameType type)
+    {
+        switch (type)
+        {
+            case GameType.Klondike: return KlondikeDrawCount == 3 ? "Draw3" : "Draw1";
+            case GameType.Spider: return SpiderSuitCount == 4 ? "4Suits" : (SpiderSuitCount == 2 ? "2Suits" : "1Suit");
+            case GameType.Pyramid:
+            case GameType.TriPeaks: return RoundsCount.ToString() + "Rounds";
+            case GameType.Yukon: return YukonRussian ? "Russian" : "Classic";
+            case GameType.MonteCarlo: return MonteCarlo4Ways ? "4Ways" : "8Ways";
+            case GameType.Montana: return MontanaHard ? "Hard" : "Standard"; // Montana теперь использует Standard
+
+            // FreeCell, Sultan, Octagon не имеют режимов, поэтому всегда "Standard"
+            default: return "Standard";
+        }
+    }
 }
 
 public enum GameType

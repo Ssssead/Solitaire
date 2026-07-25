@@ -1,4 +1,4 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections;
 
@@ -9,6 +9,7 @@ public class FreeCellCardController : CardController
     private void Start()
     {
         freeCellMode = FindObjectOfType<FreeCellModeManager>();
+        CardmodeManager = freeCellMode; // в†ђ Р”РћР‘РђР’РРўР¬: Р±Р°Р·Р° РїРѕР»СѓС‡Р°РµС‚ РїСЂР°РІРёР»СЊРЅС‹Р№ РјРµРЅРµРґР¶РµСЂ
     }
 
     public override void OnBeginDrag(PointerEventData eventData)
@@ -22,7 +23,7 @@ public class FreeCellCardController : CardController
 
         if (!IsSubStackValid()) { eventData.pointerDrag = null; return; }
 
-        // --- ИСПРАВЛЕНИЕ: Разрешаем поднять ЛЮБУЮ валидную стопку (даже больше лимита) ---
+        // --- РРЎРџР РђР’Р›Р•РќРР•: Р Р°Р·СЂРµС€Р°РµРј РїРѕРґРЅСЏС‚СЊ Р›Р®Р‘РЈР® РІР°Р»РёРґРЅСѓСЋ СЃС‚РѕРїРєСѓ (РґР°Р¶Рµ Р±РѕР»СЊС€Рµ Р»РёРјРёС‚Р°) ---
         if (freeCellMode != null)
         {
             freeCellMode.CurrentDragCount = CountCardsBelow();
@@ -36,61 +37,25 @@ public class FreeCellCardController : CardController
 
     public override void OnEndDrag(PointerEventData eventData)
     {
-        // Сбрасываем флаг перед обработкой отпускания
+        // РЎР±СЂР°СЃС‹РІР°РµРј С„Р»Р°Рі РїРµСЂРµРґ РѕР±СЂР°Р±РѕС‚РєРѕР№ РѕС‚РїСѓСЃРєР°РЅРёСЏ
         if (freeCellMode != null) freeCellMode.JustFailedDueToLimit = false;
 
+        // Р’С‹Р·С‹РІР°РµРј Р±Р°Р·РѕРІСѓСЋ Р»РѕРіРёРєСѓ (РѕРЅР° С‚РµРїРµСЂСЊ СЃР°РјР° СЂР°Р·Р±РµСЂРµС‚СЃСЏ СЃРѕ Р·РІСѓРєР°РјРё)
         base.OnEndDrag(eventData);
 
-        // Если дроп сорвался ИМЕННО из-за лимита (флаг поднялся в CanAccept)
+        // Р•СЃР»Рё РґСЂРѕРї СЃРѕСЂРІР°Р»СЃСЏ РёР·-Р·Р° Р»РёРјРёС‚Р°
         if (freeCellMode != null && freeCellMode.JustFailedDueToLimit)
         {
             freeCellMode.ShakeMoveLimitUI();
-            freeCellMode.JustFailedDueToLimit = false; // Очищаем
+            freeCellMode.JustFailedDueToLimit = false; // РћС‡РёС‰Р°РµРј
         }
 
-        // --- ИСПРАВЛЕНИЕ: Чиним Z-Order в FreeCell ячейке (чтобы не пряталась под картами) ---
-        if (transform.parent != null && transform.parent.GetComponent<FreeCellPile>() != null)
-        {
-            StartCoroutine(FlightZOrderFixRoutine());
-        }
-        else
-        {
-            Invoke(nameof(ForceEnableRaycast), 0.1f);
-        }
+        // РЎР±СЂР°СЃС‹РІР°РµРј СЃС‡РµС‚С‡РёРє
+        if (freeCellMode != null) freeCellMode.CurrentDragCount = 1;
+
+        // РџСЂРѕСЃС‚Рѕ РІРѕР·РІСЂР°С‰Р°РµРј РєР»РёРєР°Р±РµР»СЊРЅРѕСЃС‚СЊ
+        Invoke(nameof(ForceEnableRaycast), 0.1f);
     }
-    private IEnumerator FlightZOrderFixRoutine()
-    {
-        var cg = GetComponent<CanvasGroup>();
-        if (cg != null) cg.blocksRaycasts = false;
-
-        Canvas tempCanvas = gameObject.GetComponent<Canvas>();
-        bool addedCanvas = false;
-        if (tempCanvas == null)
-        {
-            tempCanvas = gameObject.AddComponent<Canvas>();
-            addedCanvas = true;
-        }
-
-        tempCanvas.overrideSorting = true;
-        tempCanvas.sortingOrder = 100;
-
-        // Ждем пока базовая система доставит карту в ячейку (0,0)
-        float safeTimer = 0.25f;
-        while (safeTimer > 0f && rectTransform.localPosition.sqrMagnitude > 1f)
-        {
-            safeTimer -= Time.deltaTime;
-            yield return null;
-        }
-
-        // Финальное выравнивание и уборка
-        rectTransform.anchoredPosition = Vector2.zero;
-
-        if (addedCanvas) Destroy(tempCanvas);
-        else tempCanvas.overrideSorting = false;
-
-        if (cg != null) cg.blocksRaycasts = true;
-    }
-
     private void ForceEnableRaycast()
     {
         if (canvasGroup != null) canvasGroup.blocksRaycasts = true;

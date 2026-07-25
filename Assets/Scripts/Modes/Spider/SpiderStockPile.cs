@@ -101,6 +101,14 @@ public class SpiderStockPile : TableauPile, IPointerClickHandler
         if (spiderMode != null && !spiderMode.IsInputAllowed) return;
         if (cards.Count < 10) return;
 
+        // --- ÏÅÐÅÕÂÀÒ ÒÓÒÎÐÈÀËÀ: Áëîêèðóåì êëèê, åñëè ñåé÷àñ íå øàã ðàçäà÷è ---
+        if (spiderMode != null && spiderMode.tutorialManager != null && spiderMode.tutorialManager.IsTutorialActive)
+        {
+            if (!spiderMode.tutorialManager.IsActionAllowed(TutorialActionType.ClickStock)) return;
+            spiderMode.tutorialManager.AdvanceStep();
+        }
+        // -----------------------------------------------------------------------
+
         if (deckManager != null)
         {
             deckManager.TryDealRow();

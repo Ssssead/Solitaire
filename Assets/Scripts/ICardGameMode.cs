@@ -27,4 +27,5 @@ public interface ICardGameMode
     GameType GameType { get; }
     void RestartGame();      // ”ниверсальный метод перезапуска
     bool IsMatchInProgress();
+    ITutorialManager Tutorial { get; }
 }

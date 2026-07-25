@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using System.Collections;
 
 public class StatisticsUI : MonoBehaviour
 {
@@ -17,39 +18,52 @@ public class StatisticsUI : MonoBehaviour
 
     [Header("Visual Colors")]
     public Color activeTabColor = new Color32(255, 196, 0, 255);
-    public Color inactiveTabColor = new Color32(101, 68, 45, 255);
+    public Color inactiveTabColor = new Color32(154, 95, 64, 255);
+    public Color disabledButtonColor = new Color32(101, 68, 45, 255);
     public Color activeTextColor = Color.black;
     public Color inactiveTextColor = Color.white;
 
-    [Header("--- Containers References ---")]
-    [Tooltip("Ссылка на общую панель, в которой лежат DiffContainer, DrawModeContainer и т.д.")]
-    public GameObject filtersParentPanel; // <--- НОВОЕ ПОЛЕ: Общая панель фильтров
+    [Header("--- Filters Panels ---")]
+    public GameObject complexFiltersPanel;
+    public GameObject simpleFiltersPanel;
 
-    [Header("Common: Difficulty")]
-    public GameObject difficultyContainer;
-    public Button[] difficultyButtons;     // 0: Easy, 1: Medium, 2: Hard
+    [Header("Animations")]
+    public float panelAnimDuration = 0.3f;
+    public float panelFlyOffsetY = 300f;
 
-    [Header("Klondike: Draw Mode")]
+    [Header("Complex Panel: Difficulty")]
+    public GameObject complexDifficultyContainer;
+    public Button[] complexDifficultyButtons; // 0: Easy, 1: Medium, 2: Hard
+
+    [Header("Simple Panel: Difficulty")]
+    public GameObject simpleDifficultyContainer;
+    public Button[] simpleDifficultyButtons;  // 0: Easy, 1: Medium, 2: Hard
+
+    [Header("Game Specific Modes (Complex)")]
     public GameObject drawModeContainer;
-    public Button[] drawModeButtons;       // 0: Draw 1, 1: Draw 3
+    public Button[] drawModeButtons;
 
-    [Header("Spider: Suit Mode")]
     public GameObject suitModeContainer;
-    public Button[] suitModeButtons;       // 0: 1 Suit, 1: 2 Suits, 2: 4 Suits
+    public Button[] suitModeButtons;
 
-    [Header("Pyramid/TriPeaks: Rounds")]
     public GameObject roundsContainer;
-    public Button[] roundsButtons;         // 0: 1 Round, 1: 2 Rounds, 2: 3 Rounds
+    public Button[] roundsButtons;
 
-    [Header("Yukon/Montana/MonteCarlo: Game Mode")]
-    public GameObject otherModesContainer;
-    public Button[] otherModesButtons;
+    public GameObject yukonModeContainer;
+    public Button[] yukonModeButtons;
+
+    public GameObject monteCarloModeContainer;
+    public Button[] monteCarloModeButtons;
+
+    public GameObject montanaModeContainer;
+    public Button[] montanaModeButtons;
 
     [Header("Main Stats Display")]
     public TMP_Text gamesPlayedText;
     public TMP_Text winsText;
 
     [Header("Donut Chart")]
+    public GameObject coloredChartParts;
     public Image winRateCircle;
     public TMP_Text winRatePercentText;
     public TMP_Text winRateValueText;
@@ -82,18 +96,42 @@ public class StatisticsUI : MonoBehaviour
     private Button[] currentActiveVariantButtons;
     private List<string> currentActiveVariantKeys = new List<string>();
 
+    // --- Animation State ---
+    private Coroutine complexAnimCoroutine;
+    private Coroutine simpleAnimCoroutine;
+    private Vector2 complexStartPos;
+    private Vector2 simpleStartPos;
+    private bool isComplexVisible = false;
+    private bool isSimpleVisible = false;
+    private bool positionsInitialized = false;
+
     private void Start()
     {
         if (globalTabButton) globalTabButton.onClick.AddListener(() => SetTab(true));
         if (difficultiesTabButton) difficultiesTabButton.onClick.AddListener(() => SetTab(false));
-        if (closeButton) closeButton.onClick.AddListener(() => gameObject.SetActive(false));
+        if (closeButton) closeButton.onClick.AddListener(OnCloseClicked);
 
-        for (int i = 0; i < difficultyButtons.Length; i++)
+        for (int i = 0; i < complexDifficultyButtons.Length; i++)
         {
             int index = i;
-            if (difficultyButtons[i])
-                difficultyButtons[i].onClick.AddListener(() => OnDifficultyClicked((Difficulty)index));
+            if (complexDifficultyButtons[i])
+                complexDifficultyButtons[i].onClick.AddListener(() => OnDifficultyClicked((Difficulty)index));
         }
+
+        for (int i = 0; i < simpleDifficultyButtons.Length; i++)
+        {
+            int index = i;
+            if (simpleDifficultyButtons[i])
+                simpleDifficultyButtons[i].onClick.AddListener(() => OnDifficultyClicked((Difficulty)index));
+        }
+    }
+
+    private void InitPanelPositions()
+    {
+        if (positionsInitialized) return;
+        if (complexFiltersPanel != null) complexStartPos = complexFiltersPanel.GetComponent<RectTransform>().anchoredPosition;
+        if (simpleFiltersPanel != null) simpleStartPos = simpleFiltersPanel.GetComponent<RectTransform>().anchoredPosition;
+        positionsInitialized = true;
     }
 
     public void ShowStatsForGame(GameType gameType)
@@ -104,25 +142,45 @@ public class StatisticsUI : MonoBehaviour
         isGlobalTab = true;
         currentDifficulty = Difficulty.Easy;
 
+        InitPanelPositions();
+        isComplexVisible = false;
+        isSimpleVisible = false;
+
+        if (complexFiltersPanel)
+        {
+            complexFiltersPanel.SetActive(false);
+            complexFiltersPanel.GetComponent<RectTransform>().anchoredPosition = complexStartPos + new Vector2(0, panelFlyOffsetY);
+        }
+        if (simpleFiltersPanel)
+        {
+            simpleFiltersPanel.SetActive(false);
+            simpleFiltersPanel.GetComponent<RectTransform>().anchoredPosition = simpleStartPos + new Vector2(0, panelFlyOffsetY);
+        }
+
         ConfigureGameVariants();
         RefreshWholeUI();
+
+        gameObject.SetActive(true);
     }
 
     private void SetTab(bool isGlobal)
     {
         if (isGlobalTab == isGlobal) return;
+        PlayClickSound();
         this.isGlobalTab = isGlobal;
         RefreshWholeUI();
     }
 
     private void OnDifficultyClicked(Difficulty diff)
     {
+        PlayClickSound();
         currentDifficulty = diff;
         RefreshWholeUI();
     }
 
     private void OnVariantButtonClicked(int index)
     {
+        PlayClickSound();
         if (index >= 0 && index < currentActiveVariantKeys.Count)
         {
             currentVariantKey = currentActiveVariantKeys[index];
@@ -144,7 +202,6 @@ public class StatisticsUI : MonoBehaviour
                 currentActiveVariantButtons = drawModeButtons;
                 currentVariantKey = "Draw1";
                 break;
-
             case GameType.Spider:
                 currentActiveVariantKeys.Add("1Suit");
                 currentActiveVariantKeys.Add("2Suits");
@@ -152,7 +209,6 @@ public class StatisticsUI : MonoBehaviour
                 currentActiveVariantButtons = suitModeButtons;
                 currentVariantKey = "1Suit";
                 break;
-
             case GameType.Pyramid:
             case GameType.TriPeaks:
                 currentActiveVariantKeys.Add("1Rounds");
@@ -161,28 +217,24 @@ public class StatisticsUI : MonoBehaviour
                 currentActiveVariantButtons = roundsButtons;
                 currentVariantKey = "1Rounds";
                 break;
-
             case GameType.Yukon:
                 currentActiveVariantKeys.Add("Classic");
                 currentActiveVariantKeys.Add("Russian");
-                currentActiveVariantButtons = otherModesButtons;
+                currentActiveVariantButtons = yukonModeButtons;
                 currentVariantKey = "Classic";
                 break;
-
             case GameType.MonteCarlo:
                 currentActiveVariantKeys.Add("8Ways");
                 currentActiveVariantKeys.Add("4Ways");
-                currentActiveVariantButtons = otherModesButtons;
+                currentActiveVariantButtons = monteCarloModeButtons;
                 currentVariantKey = "8Ways";
                 break;
-
             case GameType.Montana:
                 currentActiveVariantKeys.Add("Standard");
                 currentActiveVariantKeys.Add("Hard");
-                currentActiveVariantButtons = otherModesButtons;
+                currentActiveVariantButtons = montanaModeButtons;
                 currentVariantKey = "Standard";
                 break;
-
             default:
                 currentActiveVariantButtons = null;
                 break;
@@ -204,7 +256,10 @@ public class StatisticsUI : MonoBehaviour
 
     private void UpdateVariantLabels()
     {
-        if (currentActiveVariantButtons != otherModesButtons) return;
+        if (currentActiveVariantButtons != yukonModeButtons &&
+            currentActiveVariantButtons != monteCarloModeButtons &&
+            currentActiveVariantButtons != montanaModeButtons) return;
+
         if (LocalizationManager.instance == null) return;
 
         for (int i = 0; i < currentActiveVariantButtons.Length; i++)
@@ -234,7 +289,9 @@ public class StatisticsUI : MonoBehaviour
     {
         if (StatisticsManager.Instance == null) return;
 
-        UpdateLayoutVisibility(); // Здесь логика появления новой панели
+        ValidateConstraints();
+
+        UpdateLayoutVisibility();
         UpdateTabVisuals();
 
         StatData dataToShow;
@@ -251,51 +308,150 @@ public class StatisticsUI : MonoBehaviour
         FillData(dataToShow);
     }
 
-    // --- ОБНОВЛЕННАЯ ЛОГИКА ВИДИМОСТИ ---
+    private void ValidateConstraints()
+    {
+        SetDifficultyInteractable(0, true);
+        SetDifficultyInteractable(1, true);
+        SetDifficultyInteractable(2, true);
+
+        if (currentGame == GameType.Spider && !isGlobalTab)
+        {
+            if (currentVariantKey == "1Suit")
+            {
+                SetDifficultyInteractable(2, false);
+                if (currentDifficulty == Difficulty.Hard) currentDifficulty = Difficulty.Medium;
+            }
+            else if (currentVariantKey == "4Suits")
+            {
+                SetDifficultyInteractable(0, false);
+                if (currentDifficulty == Difficulty.Easy) currentDifficulty = Difficulty.Medium;
+            }
+        }
+    }
+
+    private void SetDifficultyInteractable(int index, bool interactable)
+    {
+        if (complexDifficultyButtons != null && index < complexDifficultyButtons.Length && complexDifficultyButtons[index] != null)
+        {
+            complexDifficultyButtons[index].interactable = interactable;
+            ColorBlock cb = complexDifficultyButtons[index].colors;
+            cb.disabledColor = Color.white;
+            complexDifficultyButtons[index].colors = cb;
+        }
+
+        if (simpleDifficultyButtons != null && index < simpleDifficultyButtons.Length && simpleDifficultyButtons[index] != null)
+        {
+            simpleDifficultyButtons[index].interactable = interactable;
+            ColorBlock cb = simpleDifficultyButtons[index].colors;
+            cb.disabledColor = Color.white;
+            simpleDifficultyButtons[index].colors = cb;
+        }
+    }
+
     private void UpdateLayoutVisibility()
     {
-        if (isGlobalTab)
+        bool useComplex = false;
+        bool useSimple = false;
+
+        if (!isGlobalTab)
         {
-            // 1. Если Global Stats — просто выключаем родительскую панель
-            if (filtersParentPanel) filtersParentPanel.SetActive(false);
-
-            // Внутренности можно не трогать, их все равно не видно
-        }
-        else
-        {
-            // 2. Если Difficulties Stats — включаем родительскую панель
-            if (filtersParentPanel) filtersParentPanel.SetActive(true);
-
-            // 3. Теперь настраиваем внутренности (какой именно контейнер показать)
-
-            // Сначала всё выключаем внутри
-            if (drawModeContainer) drawModeContainer.SetActive(false);
-            if (suitModeContainer) suitModeContainer.SetActive(false);
-            if (roundsContainer) roundsContainer.SetActive(false);
-            if (otherModesContainer) otherModesContainer.SetActive(false);
-
-            // Контейнер сложности нужен всегда в режиме Difficulties
-            if (difficultyContainer) difficultyContainer.SetActive(true);
-
-            // Включаем специфичный контейнер
             switch (currentGame)
             {
                 case GameType.Klondike:
-                    if (drawModeContainer) drawModeContainer.SetActive(true);
-                    break;
                 case GameType.Spider:
-                    if (suitModeContainer) suitModeContainer.SetActive(true);
-                    break;
                 case GameType.Pyramid:
                 case GameType.TriPeaks:
-                    if (roundsContainer) roundsContainer.SetActive(true);
-                    break;
                 case GameType.Yukon:
                 case GameType.Montana:
                 case GameType.MonteCarlo:
-                    if (otherModesContainer) otherModesContainer.SetActive(true);
+                    useComplex = true;
+                    break;
+                case GameType.FreeCell:
+                case GameType.Sultan:
+                case GameType.Octagon:
+                default:
+                    useSimple = true;
                     break;
             }
+        }
+
+        if (isComplexVisible != useComplex)
+        {
+            isComplexVisible = useComplex;
+            ToggleFilterPanel(complexFiltersPanel, useComplex, ref complexAnimCoroutine, complexStartPos);
+        }
+
+        if (isSimpleVisible != useSimple)
+        {
+            isSimpleVisible = useSimple;
+            ToggleFilterPanel(simpleFiltersPanel, useSimple, ref simpleAnimCoroutine, simpleStartPos);
+        }
+
+        if (useComplex)
+        {
+            if (complexDifficultyContainer) complexDifficultyContainer.SetActive(true);
+            if (drawModeContainer) drawModeContainer.SetActive(currentGame == GameType.Klondike);
+            if (suitModeContainer) suitModeContainer.SetActive(currentGame == GameType.Spider);
+            if (roundsContainer) roundsContainer.SetActive(currentGame == GameType.Pyramid || currentGame == GameType.TriPeaks);
+            if (yukonModeContainer) yukonModeContainer.SetActive(currentGame == GameType.Yukon);
+            if (monteCarloModeContainer) monteCarloModeContainer.SetActive(currentGame == GameType.MonteCarlo);
+            if (montanaModeContainer) montanaModeContainer.SetActive(currentGame == GameType.Montana);
+        }
+
+        if (useSimple)
+        {
+            if (simpleDifficultyContainer) simpleDifficultyContainer.SetActive(true);
+        }
+    }
+
+    private void ToggleFilterPanel(GameObject panel, bool show, ref Coroutine currentCoroutine, Vector2 defaultPos)
+    {
+        if (panel == null) return;
+        if (currentCoroutine != null) StopCoroutine(currentCoroutine);
+        currentCoroutine = StartCoroutine(AnimateFilterPanelRoutine(panel, show, defaultPos));
+    }
+
+    private IEnumerator AnimateFilterPanelRoutine(GameObject panel, bool show, Vector2 defaultPos)
+    {
+        RectTransform rt = panel.GetComponent<RectTransform>();
+        if (rt == null) yield break;
+
+        Vector2 hiddenPos = defaultPos + new Vector2(0, panelFlyOffsetY);
+
+        if (show && !panel.activeSelf)
+        {
+            rt.anchoredPosition = hiddenPos;
+            panel.SetActive(true);
+        }
+
+        Vector2 startPos = rt.anchoredPosition;
+        Vector2 endPos = show ? defaultPos : hiddenPos;
+
+        float elapsed = 0f;
+        while (elapsed < panelAnimDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / panelAnimDuration;
+            float curveT = show ? (1f - Mathf.Pow(1f - t, 3)) : (t * t * t);
+            rt.anchoredPosition = Vector2.LerpUnclamped(startPos, endPos, curveT);
+            yield return null;
+        }
+
+        rt.anchoredPosition = endPos;
+        if (!show) panel.SetActive(false);
+    }
+
+    private void HideFilters()
+    {
+        if (isComplexVisible)
+        {
+            isComplexVisible = false;
+            ToggleFilterPanel(complexFiltersPanel, false, ref complexAnimCoroutine, complexStartPos);
+        }
+        if (isSimpleVisible)
+        {
+            isSimpleVisible = false;
+            ToggleFilterPanel(simpleFiltersPanel, false, ref simpleAnimCoroutine, simpleStartPos);
         }
     }
 
@@ -316,13 +472,24 @@ public class StatisticsUI : MonoBehaviour
             }
         }
 
-        for (int i = 0; i < difficultyButtons.Length; i++)
+        for (int i = 0; i < complexDifficultyButtons.Length; i++)
         {
-            if (difficultyButtons[i] == null) continue;
+            if (complexDifficultyButtons[i] == null) continue;
             bool isSelected = ((int)currentDifficulty == i);
             SetButtonVisualState(
-                difficultyButtons[i],
-                difficultyButtons[i].GetComponentInChildren<TMP_Text>(),
+                complexDifficultyButtons[i],
+                complexDifficultyButtons[i].GetComponentInChildren<TMP_Text>(),
+                isSelected
+            );
+        }
+
+        for (int i = 0; i < simpleDifficultyButtons.Length; i++)
+        {
+            if (simpleDifficultyButtons[i] == null) continue;
+            bool isSelected = ((int)currentDifficulty == i);
+            SetButtonVisualState(
+                simpleDifficultyButtons[i],
+                simpleDifficultyButtons[i].GetComponentInChildren<TMP_Text>(),
                 isSelected
             );
         }
@@ -332,8 +499,18 @@ public class StatisticsUI : MonoBehaviour
     {
         if (btn == null) return;
         Image bg = btn.GetComponent<Image>();
-        if (bg) bg.color = isActive ? activeTabColor : inactiveTabColor;
-        if (label) label.color = isActive ? activeTextColor : inactiveTextColor;
+
+        if (bg)
+        {
+            if (!btn.interactable) bg.color = disabledButtonColor;
+            else bg.color = isActive ? activeTabColor : inactiveTabColor;
+        }
+
+        if (label)
+        {
+            if (!btn.interactable) label.color = new Color(inactiveTextColor.r, inactiveTextColor.g, inactiveTextColor.b, 0.5f);
+            else label.color = isActive ? activeTextColor : inactiveTextColor;
+        }
     }
 
     private void UpdateHeaderLocalisation()
@@ -375,9 +552,20 @@ public class StatisticsUI : MonoBehaviour
         winsText.text = data.gamesWon.ToString();
 
         float winRate01 = (data.gamesStarted > 0) ? (float)data.gamesWon / data.gamesStarted : 0f;
-        if (winRateCircle) winRateCircle.fillAmount = winRate01;
-        if (winRatePercentText) winRatePercentText.text = $"{data.WinRate:F0}%";
-        if (winRateValueText) winRateValueText.text = $"{data.WinRate:F0}%";
+
+        if (data.gamesStarted == 0)
+        {
+            if (coloredChartParts != null) coloredChartParts.SetActive(false);
+            if (winRatePercentText) winRatePercentText.text = "0%";
+            if (winRateValueText) winRateValueText.text = "0%";
+        }
+        else
+        {
+            if (coloredChartParts != null) coloredChartParts.SetActive(true);
+            if (winRateCircle) winRateCircle.fillAmount = winRate01;
+            if (winRatePercentText) winRatePercentText.text = $"{data.WinRate:F0}%";
+            if (winRateValueText) winRateValueText.text = $"{data.WinRate:F0}%";
+        }
 
         avgTimeText.text = FormatTime(data.AvgTime);
         avgMovesText.text = $"{data.AvgMoves:F0}";
@@ -400,7 +588,6 @@ public class StatisticsUI : MonoBehaviour
         {
             int dataIndex = count - 1 - i;
 
-            // 1. Получаем компонент для наведения (или добавляем, если его вдруг нет)
             HistorySlotHover hover = historySlots[i].GetComponent<HistorySlotHover>();
             if (hover == null) hover = historySlots[i].gameObject.AddComponent<HistorySlotHover>();
 
@@ -410,10 +597,6 @@ public class StatisticsUI : MonoBehaviour
                 historySlots[i].sprite = entry.won ? winIcon : lossIcon;
                 historySlots[i].color = Color.white;
 
-                // 2. ПЕРЕДАЕМ ДАННЫЕ
-                // Используем SlotType.GameGlobal, потому что в HistorySlotHover.cs написано:
-                // case SlotType.GameGlobal: GameInfoTooltip.Instance.ShowTooltip(myData);
-                // (Если передать SlotType.Difficulty, тултип не появится из-за 'break' в том скрипте)
                 hover.Setup(entry, HistorySlotHover.SlotType.GameGlobal);
             }
             else
@@ -421,7 +604,6 @@ public class StatisticsUI : MonoBehaviour
                 historySlots[i].sprite = emptyIcon;
                 historySlots[i].color = (emptyIcon == null) ? Color.clear : new Color(1, 1, 1, 0.5f);
 
-                // 3. Очищаем данные для пустых слотов
                 hover.Setup(null, HistorySlotHover.SlotType.Difficulty);
             }
         }
@@ -439,5 +621,23 @@ public class StatisticsUI : MonoBehaviour
             return $"{hours}h {minutes}m";
         }
         return $"{minutes}:{seconds:00}";
+    }
+
+    private void OnCloseClicked()
+    {
+        HideFilters();
+        if (MenuController.Instance != null)
+        {
+            MenuController.Instance.OnCloseOverlayClicked();
+        }
+        else
+        {
+            gameObject.SetActive(false);
+        }
+    }
+    private void PlayClickSound()
+    {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("UI_Click");
     }
 }

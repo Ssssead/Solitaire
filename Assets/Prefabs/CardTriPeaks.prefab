@@ -14,7 +14,8 @@ GameObject:
   - component: {fileID: 7977126400838211680}
   - component: {fileID: 114549179672781973}
   - component: {fileID: -5922173010952450397}
-  - component: {fileID: 7127949206547005583}
+  - component: {fileID: 5097687867970541651}
+  - component: {fileID: 292378105351777959}
   m_Layer: 5
   m_Name: CardTriPeaks
   m_TagString: Untagged
@@ -155,7 +156,7 @@ MonoBehaviour:
   doubleClickTime: 0.3
   rectTransform: {fileID: 0}
   canvasGroup: {fileID: 0}
---- !u!114 &7127949206547005583
+--- !u!114 &5097687867970541651
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -164,14 +165,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 643552427574577458}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 069cf9f2d04280f42a9de7c074607c4d, type: 3}
+  m_Script: {fileID: 11500000, guid: cfabb0440166ab443bba8876756fdfa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shadowSprite: {fileID: 21300000, guid: ad8e839a2c080cf4da9a103e73bb246e, type: 3}
-  shadowAlpha: 0.6
-  restingOffset: {x: 0.05, y: -0.05}
-  dragOffset: {x: 0.5, y: -0.5}
-  wasteSlotGap: 35
-  arrivalThreshold: 50
-  animationSpeed: 10
-  fadeSpeed: 5
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 0.6509804}
+  m_EffectDistance: {x: 1, y: -1}
+  m_UseGraphicAlpha: 1
+--- !u!114 &292378105351777959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 643552427574577458}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75261b4e34c36ab41a48e5d283e61585, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  restingDistance: {x: 2, y: -2}
+  flyingDistance: {x: 10, y: -10}
+  restingAlpha: 0.65
+  flyingAlpha: 0.65
+  stockShadowSprite: {fileID: 21300000, guid: ad8e839a2c080cf4da9a103e73bb246e, type: 3}
+  stockOffset: {x: 8, y: -4}
+  stockScale: {x: 1.15, y: 1}
+  stockAlpha: 0.65
+  transitionSpeed: 15
