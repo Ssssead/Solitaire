@@ -282,7 +282,7 @@
         },
         {
             "key": "UndoAll",
-            "value": "Undo All Moves"
+            "value": "Undo all moves (Hold)"
         },
         {
             "key": "ToMenu",
@@ -2598,7 +2598,7 @@
         },
         {
             "key": "Hint_Settings",
-            "value": "Customize your game! Choose a <color=#FCA311>beautiful background</color> and pick your favorite <color=#FCA311>card design</color>."
+            "value": "Customize your game! Choose a <color=#FCA311>beautiful background</color>, pick your favorite <color=#FCA311>card design</color>, and set your preferred <color=#FCA311>auto-move</color> control."
         },
         {
             "key": "Hint_Shop",
@@ -2611,6 +2611,18 @@
         {
             "key": "Hint_Leaderboard",
             "value": "Compete with the best! In the <color=#FCA311>leaderboard</color>, you can compare your <color=#FCA311>results</color> with other players."
+        },
+        {
+            "key": "Settings_AutoMove",
+            "value": "Auto-move"
+        },
+        {
+            "key": "Settings_SingleClick",
+            "value": "Single click"
+        },
+        {
+            "key": "Settings_DoubleClick",
+            "value": "Double click"
         }
     ]
 }     

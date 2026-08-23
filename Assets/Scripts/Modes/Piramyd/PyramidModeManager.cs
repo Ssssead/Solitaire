@@ -171,7 +171,7 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         var globalUndo = FindObjectOfType<UndoManager>();
         if (globalUndo != null) { if (undoButton == null) undoButton = globalUndo.undoButton; if (undoAllButton == null) undoAllButton = globalUndo.undoAllButton; }
         if (undoButton != null) { undoButton.onClick.RemoveAllListeners(); undoButton.onClick.AddListener(OnUndoAction); }
-        if (undoAllButton != null) { undoAllButton.onClick.RemoveAllListeners(); undoAllButton.onClick.AddListener(OnUndoAllAction); }
+        if (undoAllButton != null) { LongPressHoldTrigger.SubscribeToButton(undoAllButton, OnUndoAllAction); }
     }
 
     private void StartRound(bool isFirstRound)

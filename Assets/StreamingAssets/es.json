@@ -286,7 +286,7 @@
         },
         {
             "key": "UndoAll",
-            "value": "Deshacer todos los movimientos"
+            "value": "Deshacer todo (Mantener)"
         },
         {
             "key": "ToMenu",
@@ -2598,7 +2598,7 @@
         },
         {
             "key": "Hint_Settings",
-            "value": "¡Personaliza tu juego! Elige un hermoso <color=#FCA311>fondo</color> y tu <color=#FCA311>diseño de cartas</color> favorito."
+            "value": "¡Personaliza tu juego! Elige un hermoso <color=#FCA311>fondo</color>, tu <color=#FCA311>diseño de cartas</color> favorito y configura el control de <color=#FCA311>movimiento automático</color>."
         },
         {
             "key": "Hint_Shop",
@@ -2611,6 +2611,18 @@
         {
             "key": "Hint_Leaderboard",
             "value": "¡Compite con los mejores! En la <color=#FCA311>tabla de clasificación</color> puedes comparar tus <color=#FCA311>resultados</color> con los de otros jugadores."
+        },
+        {
+            "key": "Settings_AutoMove",
+            "value": "Movimiento auto."
+        },
+        {
+            "key": "Settings_SingleClick",
+            "value": "Un clic"
+        },
+        {
+            "key": "Settings_DoubleClick",
+            "value": "Doble clic"
         }
     ]
 }

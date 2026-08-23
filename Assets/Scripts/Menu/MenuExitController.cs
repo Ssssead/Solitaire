@@ -8,8 +8,17 @@ public class MenuExitController : MonoBehaviour
 {
     [Header("Dependencies")]
     public CardAnimationController cardAnimator;
-    public RectTransform settingsPanelRect; // Панель настроек
-    public List<RectTransform> topUiElements; // Верхние кнопки и панель игрока
+
+    [Header("Settings Panels (Dual Orientation)")]
+    public RectTransform landscapeSettingsPanel;
+    public RectTransform portraitSettingsPanel;
+
+    [Header("Top UI Elements (Fly Up)")]
+    public List<RectTransform> topUiElements;
+
+    [Header("Conditional Elements (Fly Up or Left)")]
+    public RectTransform leaderboardBtn;
+    public RectTransform statsBtn;
 
     [Header("Phase 1: Falling Cards (Smooth)")]
     public float fallDuration = 0.7f;
@@ -20,12 +29,14 @@ public class MenuExitController : MonoBehaviour
 
     [Header("Phase 1: Top UI Fly Up")]
     public float topUiFlyDuration = 0.6f;
-    public float topUiDistance = 500f;
+    public float topUiDistance = 1500f; // Увеличили с 500 до 1500, чтобы точно улетали за экран
     public AnimationCurve topUiCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     [Header("Phase 2: Settings Panel Exit")]
-    public float panelExitMoveDuration = 0.8f;
-    public float exitDistanceX = 1500f;
+    public float landscapeExitDuration = 0.8f;
+    public float portraitExitDuration = 0.5f; // Сделали быстрее
+    public float landscapeExitDistanceX = 1500f;
+    public float portraitExitDistanceX = 2500f; // Сделали дальше
     public AnimationCurve exitCurveSettingsPanel = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     [Header("Phase 3: Selected Card Complex Sequence")]
@@ -70,19 +81,45 @@ public class MenuExitController : MonoBehaviour
         }
 
         DisableAllInteractions(selectedCardRect);
-        // <--- ДОБАВИТЬ ЭТО: Звук смахивания всего лишнего со стола --->
+
         if (AudioManager.Instance != null)
             AudioManager.Instance.PlaySoundWithAutoFade("Table_Sweep", fallDuration, 0.2f);
 
-        // --- ЗАПУСКАЕМ РАЗЛЕТ ВСЕГО UI И ЛИШНИХ КАРТ ---
+        // --- ЛОГИКА АНИМАЦИИ ИНТЕРФЕЙСА В ЗАВИСИМОСТИ ОТ ОРИЕНТАЦИИ ---
+        bool isPortrait = Screen.width < Screen.height;
+        RectTransform activeSettingsPanel = isPortrait ? portraitSettingsPanel : landscapeSettingsPanel;
+
+        // Вычисляем дистанцию и время "на лету"
+        float currentExitDistance = isPortrait ? portraitExitDistanceX : landscapeExitDistanceX;
+        float currentExitDuration = isPortrait ? portraitExitDuration : landscapeExitDuration;
+
+        // 1. Двигаем обычный верхний UI ВВЕРХ
         if (topUiElements != null)
         {
             foreach (var ui in topUiElements)
             {
-                if (ui != null) StartCoroutine(MoveUiRoutine(ui, new Vector2(0, topUiDistance), topUiFlyDuration, topUiCurve));
+                if (ui != null && ui != leaderboardBtn && ui != statsBtn)
+                {
+                    StartCoroutine(MoveUiRoutine(ui, new Vector2(0, topUiDistance), topUiFlyDuration, topUiCurve));
+                }
             }
         }
 
+        // 2. Двигаем активную панель настроек ВЛЕВО
+        if (activeSettingsPanel != null && activeSettingsPanel.gameObject.activeInHierarchy)
+        {
+            StartCoroutine(MoveUiRoutine(activeSettingsPanel, new Vector2(-currentExitDistance, 0), currentExitDuration, exitCurveSettingsPanel));
+        }
+
+        // 3. Двигаем Статистику и Лидерборд (Влево если Портрет, Вверх если Ландшафт)
+        Vector2 dynamicExitOffset = isPortrait ? new Vector2(-currentExitDistance, 0) : new Vector2(0, topUiDistance);
+        float dynamicExitDuration = isPortrait ? currentExitDuration : topUiFlyDuration;
+        AnimationCurve dynamicExitCurve = isPortrait ? exitCurveSettingsPanel : topUiCurve;
+
+        if (leaderboardBtn != null) StartCoroutine(MoveUiRoutine(leaderboardBtn, dynamicExitOffset, dynamicExitDuration, dynamicExitCurve));
+        if (statsBtn != null) StartCoroutine(MoveUiRoutine(statsBtn, dynamicExitOffset, dynamicExitDuration, dynamicExitCurve));
+
+        // --- ПАДЕНИЕ ЛИШНИХ КАРТ ---
         float maxFallDelay = 0f;
         foreach (var card in cardsToFall)
         {
@@ -90,28 +127,21 @@ public class MenuExitController : MonoBehaviour
             maxFallDelay += delayBetweenFalls;
         }
 
-        if (settingsPanelRect != null)
-        {
-            StartCoroutine(MoveUiRoutine(settingsPanelRect, new Vector2(-exitDistanceX, 0), panelExitMoveDuration, exitCurveSettingsPanel));
-        }
-
-        // --- ЗАПУСКАЕМ ОСОБУЮ ПОСЛЕДОВАТЕЛЬНОСТЬ ДЛЯ ВЫБРАННОЙ КАРТЫ ---
+        // --- АНИМАЦИЯ ВЫБРАННОЙ КАРТЫ (передаем правильную дистанцию) ---
         if (selectedCardRect != null)
         {
-            StartCoroutine(AnimateSelectedCardComplexSequence(selectedCardRect));
+            StartCoroutine(AnimateSelectedCardComplexSequence(selectedCardRect, currentExitDistance));
         }
 
-        // Ждем окончания всех анимаций
         float fallFinishTime = maxFallDelay + fallDuration;
         float selectedAnimTotalTime = moveToCenterDuration + pauseInCenterDuration + flyOutOfCenterDuration;
-
-        float maxWaitTime = Mathf.Max(topUiFlyDuration, panelExitMoveDuration, fallFinishTime, selectedAnimTotalTime);
+        float maxWaitTime = Mathf.Max(topUiFlyDuration, currentExitDuration, fallFinishTime, selectedAnimTotalTime);
 
         yield return new WaitForSeconds(maxWaitTime);
         onComplete?.Invoke();
     }
 
-    private IEnumerator AnimateSelectedCardComplexSequence(RectTransform card)
+    private IEnumerator AnimateSelectedCardComplexSequence(RectTransform card, float targetExitDistanceX)
     {
         var hover = card.GetComponent<CardHoverEffect>();
         if (hover != null) hover.SetSelectedMode(false);
@@ -130,7 +160,7 @@ public class MenuExitController : MonoBehaviour
         if (AudioManager.Instance != null)
             AudioManager.Instance.PlaySoundWithAutoFade("Card_Whoosh_In", moveToCenterDuration, 0.1f);
 
-        // === ЭТАП 1: ПОЛЕТ В ЦЕНТР (Движение + 360 + Увеличение Scale) ===
+        // === ЭТАП 1: ПОЛЕТ В ЦЕНТР ===
         while (elapsed < moveToCenterDuration)
         {
             elapsed += Time.deltaTime;
@@ -156,29 +186,22 @@ public class MenuExitController : MonoBehaviour
         while (elapsed < pauseInCenterDuration)
         {
             elapsed += Time.deltaTime;
-
-            // Плавное покачивание туда-сюда с помощью синусоиды
             float zWobble = Mathf.Sin(elapsed * wobbleSpeed) * wobbleAngle;
             card.localRotation = Quaternion.Euler(0, 0, zWobble);
-
             yield return null;
         }
 
-        // Запоминаем текущий угол поворота (в котором застало окончание паузы),
-        // чтобы вылет начался плавно именно из этой точки, без дерганий.
         Quaternion startOutRot = card.localRotation;
         if (AudioManager.Instance != null)
         {
-            // Затухание будет длиться 0.3 секунды
             float fadeTime = 0.3f;
-            // Начинаем глушить звук ДО конца полета карты
             float delay = flyOutOfCenterDuration - fadeTime;
             if (delay < 0) delay = 0;
-
             AudioManager.Instance.PlaySoundWithAutoFade("Card_Whoosh_Out", delay, fadeTime);
         }
-        // === ЭТАП 3: ВЫЛЕТ ВЛЕВО (Движение + Равномерный поворот + Уменьшение Scale) ===
-        float worldExitDistanceX = exitDistanceX * card.lossyScale.x;
+
+        // === ЭТАП 3: ВЫЛЕТ ВЛЕВО (Используем динамическую дистанцию) ===
+        float worldExitDistanceX = targetExitDistanceX * card.lossyScale.x;
         Vector3 exitTargetPos = targetCenterPos + new Vector3(-worldExitDistanceX, 0f, 0f);
         Quaternion exitRot = Quaternion.Euler(0, 0, finalExitRotation);
 
@@ -189,18 +212,14 @@ public class MenuExitController : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = elapsed / flyOutOfCenterDuration;
 
-            // Квадратичное ускорение для вылета и изменения размера
             float acceleratedT = t * t;
             card.position = Vector3.LerpUnclamped(targetCenterPos, exitTargetPos, acceleratedT);
             card.localScale = Vector3.Lerp(maxScale, startScale, acceleratedT);
-
-            // ИЗМЕНЕНО: Поворот теперь линейный (t). Он равномерно распределен по всему времени полета.
             card.localRotation = Quaternion.Lerp(startOutRot, exitRot, t);
 
             yield return null;
         }
 
-        // Фиксируем и отключаем
         card.position = exitTargetPos;
         card.localRotation = exitRot;
         card.localScale = startScale;

@@ -71,10 +71,10 @@ public class BasicStatisticsUI : MonoBehaviour
     public Button purchasePremiumButton;
 
     // --- State ---
-    private GameType currentGame;
-    private bool isGlobalTab = true;
-    private Difficulty currentDifficulty = Difficulty.Easy;
-    private string currentVariantKey = "";
+    private static GameType currentGame;
+    private static bool isGlobalTab = true;
+    private static Difficulty currentDifficulty = Difficulty.Easy;
+    private static string currentVariantKey = "";
 
     private Button[] currentActiveVariantButtons;
     private List<string> currentActiveVariantKeys = new List<string>();
@@ -112,24 +112,11 @@ public class BasicStatisticsUI : MonoBehaviour
                 simpleDifficultyButtons[i].onClick.AddListener(() => OnDifficultyClicked((Difficulty)diffLevel));
         }
     }
-
-    private void InitPanelPositions()
+    private void OnEnable()
     {
-        if (positionsInitialized) return;
-        if (complexFiltersPanel != null) complexStartPos = complexFiltersPanel.GetComponent<RectTransform>().anchoredPosition;
-        if (simpleFiltersPanel != null) simpleStartPos = simpleFiltersPanel.GetComponent<RectTransform>().anchoredPosition;
-        positionsInitialized = true;
-    }
-
-    public void ShowStatsForGame(GameType gameType)
-    {
-        currentGame = gameType;
+        InitPanelPositions();
         UpdateHeaderLocalisation();
 
-        isGlobalTab = true;
-        currentDifficulty = Difficulty.Easy;
-
-        InitPanelPositions();
         isComplexVisible = false;
         isSimpleVisible = false;
 
@@ -145,16 +132,64 @@ public class BasicStatisticsUI : MonoBehaviour
         }
 
         ConfigureGameVariants();
-        RefreshUI();
 
-        gameObject.SetActive(true);
+        
+        RefreshUI();
+    }
+    private void OnDisable()
+    {
+        if (complexAnimCoroutine != null) StopCoroutine(complexAnimCoroutine);
+        if (simpleAnimCoroutine != null) StopCoroutine(simpleAnimCoroutine);
+
+        isComplexVisible = false;
+        isSimpleVisible = false;
+
+        if (complexFiltersPanel != null)
+        {
+            complexFiltersPanel.SetActive(false);
+            if (positionsInitialized)
+            {
+                complexFiltersPanel.GetComponent<RectTransform>().anchoredPosition = complexStartPos + new Vector2(0, panelFlyOffsetY);
+            }
+        }
+
+        if (simpleFiltersPanel != null)
+        {
+            simpleFiltersPanel.SetActive(false);
+            if (positionsInitialized)
+            {
+                simpleFiltersPanel.GetComponent<RectTransform>().anchoredPosition = simpleStartPos + new Vector2(0, panelFlyOffsetY);
+            }
+        }
+    }
+    private void InitPanelPositions()
+    {
+        if (positionsInitialized) return;
+        if (complexFiltersPanel != null) complexStartPos = complexFiltersPanel.GetComponent<RectTransform>().anchoredPosition;
+        if (simpleFiltersPanel != null) simpleStartPos = simpleFiltersPanel.GetComponent<RectTransform>().anchoredPosition;
+        positionsInitialized = true;
+    }
+
+    public void ShowStatsForGame(GameType gameType)
+    {
+        // Только сбрасываем параметры перед новым открытием статистики
+        currentGame = gameType;
+        isGlobalTab = true;
+        currentDifficulty = Difficulty.Easy;
+        currentVariantKey = "";
+
+        // Включение объекта теперь контролирует GameUIController,
+        // поэтому gameObject.SetActive(true) отсюда убрали!
     }
 
     private void SetTab(bool isGlobal)
     {
         if (isGlobalTab == isGlobal) return;
         PlayClickSound();
+
+        // Убрали "this."
         isGlobalTab = isGlobal;
+
         RefreshUI();
     }
 
@@ -179,7 +214,7 @@ public class BasicStatisticsUI : MonoBehaviour
     {
         currentActiveVariantKeys.Clear();
         currentActiveVariantButtons = null;
-        currentVariantKey = "Standard";
+        string fallbackVariant = "Standard";
 
         switch (currentGame)
         {
@@ -187,14 +222,14 @@ public class BasicStatisticsUI : MonoBehaviour
                 currentActiveVariantKeys.Add("Draw1");
                 currentActiveVariantKeys.Add("Draw3");
                 currentActiveVariantButtons = drawModeButtons;
-                currentVariantKey = "Draw1";
+                fallbackVariant = "Draw1";
                 break;
             case GameType.Spider:
                 currentActiveVariantKeys.Add("1Suit");
                 currentActiveVariantKeys.Add("2Suits");
                 currentActiveVariantKeys.Add("4Suits");
                 currentActiveVariantButtons = suitModeButtons;
-                currentVariantKey = "1Suit";
+                fallbackVariant = "1Suit";
                 break;
             case GameType.Pyramid:
             case GameType.TriPeaks:
@@ -202,29 +237,35 @@ public class BasicStatisticsUI : MonoBehaviour
                 currentActiveVariantKeys.Add("2Rounds");
                 currentActiveVariantKeys.Add("3Rounds");
                 currentActiveVariantButtons = roundsButtons;
-                currentVariantKey = "1Rounds";
+                fallbackVariant = "1Rounds";
                 break;
             case GameType.Yukon:
                 currentActiveVariantKeys.Add("Classic");
                 currentActiveVariantKeys.Add("Russian");
                 currentActiveVariantButtons = yukonModeButtons;
-                currentVariantKey = "Classic";
+                fallbackVariant = "Classic";
                 break;
             case GameType.MonteCarlo:
                 currentActiveVariantKeys.Add("8Ways");
                 currentActiveVariantKeys.Add("4Ways");
                 currentActiveVariantButtons = monteCarloModeButtons;
-                currentVariantKey = "8Ways";
+                fallbackVariant = "8Ways";
                 break;
             case GameType.Montana:
                 currentActiveVariantKeys.Add("Standard");
                 currentActiveVariantKeys.Add("Hard");
                 currentActiveVariantButtons = montanaModeButtons;
-                currentVariantKey = "Standard";
+                fallbackVariant = "Standard";
                 break;
             default:
                 currentActiveVariantButtons = null;
                 break;
+        }
+
+        // [ФИКС] Защита от сброса при повороте экрана
+        if (string.IsNullOrEmpty(currentVariantKey) || !currentActiveVariantKeys.Contains(currentVariantKey))
+        {
+            currentVariantKey = fallbackVariant;
         }
 
         if (currentActiveVariantButtons != null)

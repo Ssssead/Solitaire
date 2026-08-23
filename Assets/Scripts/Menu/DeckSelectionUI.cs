@@ -12,57 +12,39 @@ public class DeckSelectionUI : MonoBehaviour
     [Header("Кнопки колод (3 штуки)")]
     public RectTransform[] deckButtons = new RectTransform[3];
 
-    [Header("Настройки анимации")]
-    public float activeScale = 0.3f;
-    public float inactiveScale = 0.25f;
-    public float animSpeed = 15f;
-
     [Header("Премиум блокировка")]
     public GameObject premiumLockPanel;
 
+    public float animSpeed = 15f;
+
+    public static event System.Action<int> OnDeckStyleChangedGlobal;
+
+    private float baseActiveScale = 0.3f;
+    private float baseInactiveScale = 0.25f;
+
     private int activeIndex;
     private Coroutine[] scaleCoroutines;
+
+    // Переменные для отслеживания ориентации/разрешения
     private int lastWidth;
     private int lastHeight;
 
-    private void OnEnable()
+    private void Awake()
     {
-        CheckPremiumStatus();
-        UpdatePreviewCards(true); // При открытии панели обновляем мгновенно
-    }
-    private void Update()
-    {
-        if (Screen.width != lastWidth || Screen.height != lastHeight)
+        float maxScale = 0f;
+        float minScale = 10f;
+        foreach (var btn in deckButtons)
         {
-            lastWidth = Screen.width;
-            lastHeight = Screen.height;
-
-            AdjustScaleForResolution(); // Пересчитываем activeScale и inactiveScale
-            ApplyDynamicScale();        // Применяем к кнопкам-королям
+            if (btn == null) continue;
+            float s = btn.localScale.x;
+            if (s > maxScale) maxScale = s;
+            if (s < minScale) minScale = s;
         }
-    }
+        if (maxScale <= minScale) { maxScale = 0.3f; minScale = 0.25f; }
+        baseActiveScale = maxScale;
+        baseInactiveScale = minScale;
 
-    private void ApplyDynamicScale()
-    {
-        for (int i = 0; i < deckButtons.Length; i++)
-        {
-            if (deckButtons[i] == null) continue;
-
-            // Изменяем масштаб только если кнопка сейчас не анимируется кликом
-            if (scaleCoroutines == null || i >= scaleCoroutines.Length || scaleCoroutines[i] == null)
-            {
-                float currentScale = (i == activeIndex) ? activeScale : inactiveScale;
-                deckButtons[i].localScale = new Vector3(currentScale, currentScale, 1f);
-            }
-        }
-    }
-    private void Start()
-    {
-        
-
-        activeIndex = PlayerPrefs.GetInt("SelectedDeckStyle", 0);
         scaleCoroutines = new Coroutine[deckButtons.Length];
-
         for (int i = 0; i < deckButtons.Length; i++)
         {
             if (deckButtons[i] == null) continue;
@@ -73,47 +55,59 @@ public class DeckSelectionUI : MonoBehaviour
             int index = i;
             btn.onClick.RemoveAllListeners();
             btn.onClick.AddListener(() => OnDeckClicked(index));
+        }
+    }
 
-            float targetS = (i == activeIndex) ? activeScale : inactiveScale;
+    private void Start()
+    {
+        lastWidth = Screen.width;
+        lastHeight = Screen.height;
+    }
+
+    private void Update()
+    {
+        if (Screen.width != lastWidth || Screen.height != lastHeight)
+        {
+            lastWidth = Screen.width;
+            lastHeight = Screen.height;
+            SyncStateFromPrefs();
+        }
+    }
+
+    private void OnEnable()
+    {
+        CheckPremiumStatus();
+        OnDeckStyleChangedGlobal += SyncDeckStyle;
+        SyncStateFromPrefs();
+    }
+
+    private void OnDisable()
+    {
+        OnDeckStyleChangedGlobal -= SyncDeckStyle;
+    }
+
+    public void SyncStateFromPrefs()
+    {
+        activeIndex = PlayerPrefs.GetInt("SelectedDeckStyle", 0);
+        for (int i = 0; i < deckButtons.Length; i++)
+        {
+            if (deckButtons[i] == null) continue;
+            float targetS = (i == activeIndex) ? baseActiveScale : baseInactiveScale;
             deckButtons[i].localScale = new Vector3(targetS, targetS, 1f);
         }
+        UpdatePreviewCards(true);
 
-        UpdatePreviewCards(true); // При старте сцены тоже обновляем мгновенно
+        // ДОБАВЛЕНО: Жестко синхронизируем зависимые панели при включении
+        if (mainAppearanceUI != null) mainAppearanceUI.ChangeDeckStyle(true);
+        if (backSelectionUI != null) backSelectionUI.RefreshDeckSprites(true);
     }
-    private void AdjustScaleForResolution()
-    {
-        float targetAspect = 16f / 9f;
-        float currentAspect = (float)Screen.width / Screen.height;
-        float multiplier = 1f;
 
-        if (currentAspect > targetAspect)
-        {
-            multiplier = targetAspect / currentAspect;
-        }
-        else if (currentAspect < targetAspect)
-        {
-            float rawGrow = targetAspect / currentAspect;
-            multiplier = Mathf.Min(rawGrow, 1.15f);
-        }
-
-        activeScale = 0.3f * multiplier;
-        inactiveScale = 0.25f * multiplier;
-    }
-    // --- ОБНОВЛЕНИЕ КОРОЛЕЙ С АНИМАЦИЕЙ ---
     public void UpdatePreviewCards(bool instant)
     {
         if (mainAppearanceUI == null) return;
 
-        // ЗАЩИТА: Если панель закрыта (выключена), мы не имеем права запускать на ней корутины.
-        // Поэтому мы просто меняем спрайты мгновенно (игрок этого все равно не увидит).
-        if (instant || !gameObject.activeInHierarchy)
-        {
-            ApplyPreviewSprites();
-        }
-        else
-        {
-            StartCoroutine(FlipPreviewCardsRoutine());
-        }
+        if (instant || !gameObject.activeInHierarchy) ApplyPreviewSprites();
+        else StartCoroutine(FlipPreviewCardsRoutine());
     }
 
     private void ApplyPreviewSprites()
@@ -126,13 +120,11 @@ public class DeckSelectionUI : MonoBehaviour
             Image img = deckButtons[0].GetComponent<Image>();
             if (img != null) img.sprite = mainAppearanceUI.baseSpriteDb.GetSprite(currentSuit, kingRank);
         }
-
         if (deckButtons.Length > 1 && deckButtons[1] != null && mainAppearanceUI.premiumSpriteDb != null)
         {
             Image img = deckButtons[1].GetComponent<Image>();
             if (img != null) img.sprite = mainAppearanceUI.premiumSpriteDb.GetSprite(currentSuit, kingRank);
         }
-
         if (deckButtons.Length > 2 && deckButtons[2] != null && mainAppearanceUI.thirdSpriteDb != null)
         {
             Image img = deckButtons[2].GetComponent<Image>();
@@ -142,10 +134,7 @@ public class DeckSelectionUI : MonoBehaviour
 
     private IEnumerator FlipPreviewCardsRoutine()
     {
-        // Берем скорость переворота из главного скрипта
         float flipHalfSpeed = mainAppearanceUI != null ? mainAppearanceUI.flipSpeed : 0.15f;
-
-        // 1. Сжимаем (эффект переворота)
         float elapsed = 0f;
         while (elapsed < flipHalfSpeed)
         {
@@ -154,16 +143,14 @@ public class DeckSelectionUI : MonoBehaviour
             for (int i = 0; i < deckButtons.Length; i++)
             {
                 if (deckButtons[i] == null) continue;
-                float currentScale = (i == activeIndex) ? activeScale : inactiveScale;
+                float currentScale = (i == activeIndex) ? baseActiveScale : baseInactiveScale;
                 deckButtons[i].localScale = new Vector3(Mathf.Lerp(currentScale, 0f, t), currentScale, 1f);
             }
             yield return null;
         }
 
-        // 2. Меняем картинки пока они "тонкие"
         ApplyPreviewSprites();
 
-        // 3. Разжимаем обратно
         elapsed = 0f;
         while (elapsed < flipHalfSpeed)
         {
@@ -172,28 +159,25 @@ public class DeckSelectionUI : MonoBehaviour
             for (int i = 0; i < deckButtons.Length; i++)
             {
                 if (deckButtons[i] == null) continue;
-                float currentScale = (i == activeIndex) ? activeScale : inactiveScale;
+                float currentScale = (i == activeIndex) ? baseActiveScale : baseInactiveScale;
                 deckButtons[i].localScale = new Vector3(Mathf.Lerp(0f, currentScale, t), currentScale, 1f);
             }
             yield return null;
         }
 
-        // Страховка финального размера
         for (int i = 0; i < deckButtons.Length; i++)
         {
             if (deckButtons[i] == null) continue;
-            float currentScale = (i == activeIndex) ? activeScale : inactiveScale;
+            float currentScale = (i == activeIndex) ? baseActiveScale : baseInactiveScale;
             deckButtons[i].localScale = new Vector3(currentScale, currentScale, 1f);
         }
     }
 
-    // --- ОСТАЛЬНЫЕ МЕТОДЫ ---
     private void CheckPremiumStatus()
     {
         bool isPremium = false;
         if (StatisticsManager.Instance != null) isPremium = StatisticsManager.Instance.IsUserPremium;
         else isPremium = PlayerPrefs.GetInt("IsPremiumSaved", 0) == 1;
-
         if (premiumLockPanel != null) premiumLockPanel.SetActive(!isPremium);
     }
 
@@ -202,19 +186,44 @@ public class DeckSelectionUI : MonoBehaviour
         if (premiumLockPanel != null && premiumLockPanel.activeSelf) return;
         if (index == activeIndex) return;
 
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Flip");
+
         activeIndex = index;
         PlayerPrefs.SetInt("SelectedDeckStyle", activeIndex);
         PlayerPrefs.Save();
 
-        if (mainAppearanceUI != null) mainAppearanceUI.ChangeDeckStyle();
+        OnDeckStyleChangedGlobal?.Invoke(activeIndex);
+
+        // ЖЕСТКО запускаем анимацию на картах стола, передавая false
+        if (mainAppearanceUI != null) mainAppearanceUI.ChangeDeckStyle(false);
         if (backSelectionUI != null) backSelectionUI.RefreshDeckSprites(false);
 
+        AnimateScales();
+    }
+
+    private void SyncDeckStyle(int newIndex)
+    {
+        if (activeIndex == newIndex) return;
+        activeIndex = newIndex;
+
+        UpdatePreviewCards(true);
+        AnimateScales();
+
+        // А вот для невидимой фоновой панели передаем true (мгновенно), чтобы она подготовилась
+        if (mainAppearanceUI != null) mainAppearanceUI.ChangeDeckStyle(true);
+        if (backSelectionUI != null) backSelectionUI.RefreshDeckSprites(true);
+    }
+
+    private void AnimateScales()
+    {
         for (int i = 0; i < deckButtons.Length; i++)
         {
             if (deckButtons[i] == null) continue;
-            float targetS = (i == activeIndex) ? activeScale : inactiveScale;
+            float targetS = (i == activeIndex) ? baseActiveScale : baseInactiveScale;
             if (scaleCoroutines[i] != null) StopCoroutine(scaleCoroutines[i]);
-            scaleCoroutines[i] = StartCoroutine(ScaleRoutine(deckButtons[i], targetS));
+
+            if (gameObject.activeInHierarchy) scaleCoroutines[i] = StartCoroutine(ScaleRoutine(deckButtons[i], targetS));
+            else deckButtons[i].localScale = new Vector3(targetS, targetS, 1f);
         }
     }
 

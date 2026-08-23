@@ -123,8 +123,12 @@ public class CardController : MonoBehaviour,
         {
             isDragging = false;
             if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
-            // Возвращаем на место, если карта зависла
-            transform.localPosition = Vector3.zero;
+
+            // --- ИСПРАВЛЕНИЕ: Правильный возврат карты на место ---
+            if (dragManager != null)
+            {
+                dragManager.ForceSnapBackLastDrop();
+            }
             return;
         }
 

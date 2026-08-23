@@ -1,43 +1,52 @@
 using UnityEngine;
 using TMPro;
-using YG; // Подключаем пространство имен плагина
+using YG;
 
-[RequireComponent(typeof(LeaderboardYG))] // Требует, чтобы скрипт плагина висел на этом же объекте
 public class DynamicLeaderboardController : MonoBehaviour
 {
-    [Header("UI Headers")]
-    public TMP_Text titleText; // Сюда перетащите текст заголовка
+    [Header("Landscape UI")]
+    public LeaderboardYG landscapeLeaderboard;
+    public TMP_Text landscapeTitleText;
 
-    private LeaderboardYG ygLeaderboard;
-
-    private void Awake()
-    {
-        // Получаем ссылку на стандартный скрипт плагина
-        ygLeaderboard = GetComponent<LeaderboardYG>();
-    }
+    [Header("Portrait UI")]
+    public LeaderboardYG portraitLeaderboard;
+    public TMP_Text portraitTitleText;
 
     // Вызывается из MenuController при открытии панели
     public void LoadLeaderboard(string lbName)
     {
         // --- 1. ДИНАМИЧЕСКИЙ ЗАГОЛОВОК ---
-        if (titleText != null)
-        {
-            // Берем чистые названия для перевода (Leaderboard_Global, Leaderboard_Klondike)
-            string targetKey = $"Leaderboard_{lbName}";
-            string locTitle = GetLocalizedValue(targetKey);
+        string targetKey = $"Leaderboard_{lbName}";
+        string locTitle = GetLocalizedValue(targetKey);
+        string finalTitle = string.IsNullOrEmpty(locTitle) ? $"Leaderboard: {lbName}" : locTitle;
 
-            titleText.text = string.IsNullOrEmpty(locTitle) ? $"Leaderboard: {lbName}" : locTitle;
-        }
+        // Обновляем текст на обеих панелях
+        if (landscapeTitleText != null) landscapeTitleText.text = finalTitle;
+        if (portraitTitleText != null) portraitTitleText.text = finalTitle;
 
         // --- 2. ПЕРЕДАЕМ ИМЯ В ПЛАГИН И ОБНОВЛЯЕМ ---
-        if (ygLeaderboard != null)
+        string finalLbName = lbName + "LVL";
+
+        if (landscapeLeaderboard != null)
         {
-            // ---> ИСПРАВЛЕНИЕ: Автоматически приклеиваем "LVL" к любому запросу <---
-            ygLeaderboard.nameLB = lbName + "LVL";
-            ygLeaderboard.UpdateLB();
+            landscapeLeaderboard.nameLB = finalLbName;
+            // Если панель сейчас активна, дергаем обновление сразу
+            if (landscapeLeaderboard.gameObject.activeInHierarchy)
+            {
+                landscapeLeaderboard.UpdateLB();
+            }
+        }
+
+        if (portraitLeaderboard != null)
+        {
+            portraitLeaderboard.nameLB = finalLbName;
+            // Если панель сейчас активна, дергаем обновление сразу
+            if (portraitLeaderboard.gameObject.activeInHierarchy)
+            {
+                portraitLeaderboard.UpdateLB();
+            }
         }
     }
-
 
     private string GetLocalizedValue(string key)
     {

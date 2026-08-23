@@ -480,7 +480,7 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
         if (!IsInputAllowed || isGameWon || card == null) return;
 
         // На ПК (Desktop) запускаем авто-перенос по двойному клику
-        if (YG.YG2.envir.isDesktop)
+        if (GameSettings.AutoMoveClickMode == 1)
         {
             ExecuteAutoMove(card);
         }
@@ -946,12 +946,16 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
     }
     public void OnCardClicked(CardController card)
     {
-        hasGameStarted = true;
+        // УБРАНО: hasGameStarted = true; (Она ломала старт статистики)
 
-        // Если это мобильное устройство или планшет — запускаем авто-перенос
-        if (YG.YG2.envir.isMobile || YG.YG2.envir.isTablet)
+        if (!IsInputAllowed || isGameWon) return;
+
+        // Если включен авто-перенос по одному клику — запускаем авто-перенос
+        if (GameSettings.AutoMoveClickMode == 0)
         {
+            var dragManager = FindObjectOfType<DragManager>();
             dragManager?.ForceSnapBackLastDrop();
+
             ExecuteAutoMove(card);
         }
     }

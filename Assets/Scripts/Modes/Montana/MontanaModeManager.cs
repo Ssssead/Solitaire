@@ -89,7 +89,7 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
         animationService.Initialize(this);
 
         if (undoButton != null) undoButton.onClick.AddListener(OnUndoButtonClicked);
-        if (undoAllButton != null) undoAllButton.onClick.AddListener(OnUndoAllButtonClicked);
+        if (undoAllButton != null) LongPressHoldTrigger.SubscribeToButton(undoAllButton, OnUndoAllButtonClicked);
 
         if (reshuffleButton != null) originalReshuffleScale = reshuffleButton.transform.localScale;
     }
@@ -781,7 +781,6 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
                     GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, -1, record.Card.cardModel.rank.ToString());
                 }
             }
-            // --------------------------------------------------------------
         }
 
         if (rowsToRollback > 0) GameQuestTracker.Instance?.SendEvent(QuestActionType.CompleteMontanaRow, -rowsToRollback);
@@ -800,11 +799,14 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
             var card = kvp.Key;
             var initialSlot = kvp.Value;
 
+            if (card == null) continue; // Защита от удаленных карт
+
             allCards.Add(card);
             startPositions.Add(card.transform.position);
             targetSlots.Add(initialSlot);
 
-            var currentSlot = card.GetComponentInParent<MontanaSlot>();
+            // ИСПРАВЛЕНИЕ: Ищем слот логически, а не через иерархию, чтобы избежать багов, если карта была в полете
+            var currentSlot = pileManager.Slots.FirstOrDefault(s => s.GetTopCard() == card);
             if (currentSlot != null) currentSlot.RemoveCard(card);
 
             card.transform.SetParent(DragLayer, true);
@@ -829,6 +831,9 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
 
         while (gatherElapsed < gatherDuration)
         {
+            // ИСПРАВЛЕНИЕ: Добавлено прибавление времени. Без него цикл был бесконечным!
+            gatherElapsed += Time.deltaTime;
+
             float t = Mathf.Clamp01(gatherElapsed / gatherDuration);
             t = t * t * (3f - 2f * t);
 
@@ -913,7 +918,7 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
         lastInteractionSource = card.GetComponentInParent<ICardContainer>();
 
         // На мобилках и планшетах запускаем авто-перенос
-        if (YG.YG2.envir.isMobile || YG.YG2.envir.isTablet)
+        if (GameSettings.AutoMoveClickMode == 0)
         {
             // Защита от микро-свайпов: отменяем технический захват карты
             var mCard = card as MontanaCardController;
@@ -941,9 +946,10 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
         if (!IsInputAllowed) return;
 
         // На ПК авто-перенос срабатывает только по двойному клику
-        if (!YG2.envir.isDesktop) return;
-
-        ExecuteAutoMove(card);
+        if (GameSettings.AutoMoveClickMode == 1)
+        {
+            ExecuteAutoMove(card);
+        }
     }
 
     private void ExecuteAutoMove(CardController card)

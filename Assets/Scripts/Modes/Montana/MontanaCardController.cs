@@ -68,14 +68,20 @@ public class MontanaCardController : CardController
     public override void OnPointerClick(PointerEventData eventData)
     {
         if (IsLockedCard) return;
+
+        // --- ЗАЩИТА ОТ БАГА ---
+        // Игнорируем клик, если карта сейчас летит (анимация) или если мы её перетаскиваем!
+        if (_isAnimating) return;
+        if (eventData.dragging) return;
+        // ----------------------
+
         var data = GetComponent<CardData>();
         if (data != null && !data.IsFaceUp()) return;
 
         // ВАЖНО: Сначала всегда вызываем базовый метод! 
-        // Именно внутри него CardController считывает первый клик и запускает таймер.
         base.OnPointerClick(eventData);
 
-        // Затем отправляем наш одиночный клик в менеджер для мобилок
+        // Затем отправляем наш одиночный клик в менеджер
         if (eventData.clickCount == 1)
         {
             if (_mode != null && _mode.IsInputAllowed)
@@ -111,6 +117,15 @@ public class MontanaCardController : CardController
 
     public override void OnBeginDrag(PointerEventData eventData)
     {
+        // --- ПОЛНОЕ ОТКЛЮЧЕНИЕ ПЕРЕТАСКИВАНИЯ ---
+        // Если в настройках выбран "Один клик" (0), жестко блокируем Drag & Drop
+        if (GameSettings.AutoMoveClickMode == 0)
+        {
+            eventData.pointerDrag = null;
+            return;
+        }
+        // ----------------------------------------
+
         if (_isAnimating || IsLockedCard) { eventData.pointerDrag = null; return; }
         if (_mode != null && !_mode.IsInputAllowed) { eventData.pointerDrag = null; return; }
 

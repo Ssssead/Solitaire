@@ -520,7 +520,7 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
         if (!IsInputAllowed) return;
 
         // Если это мобильное устройство или планшет — запускаем авто-перенос (как при двойном клике)
-        if (YG.YG2.envir.isMobile || YG.YG2.envir.isTablet)
+        if (GameSettings.AutoMoveClickMode == 0)
         {
             var dragManager = FindObjectOfType<DragManager>();
             dragManager?.ForceSnapBackLastDrop();
@@ -534,7 +534,7 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
         if (!IsInputAllowed) return;
 
         // На ПК авто-перенос срабатывает только по двойному клику
-        if (YG.YG2.envir.isDesktop)
+        if (GameSettings.AutoMoveClickMode == 1)
         {
             ExecuteAutoMove(card);
         }

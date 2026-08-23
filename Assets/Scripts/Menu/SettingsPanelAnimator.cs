@@ -4,17 +4,19 @@ using System;
 
 public class SettingsPanelAnimator : MonoBehaviour
 {
-    [Header("Animation Settings")]
-    public float animationDuration = 0.4f; // Должно совпадать с длительностью полета карт
+    [Header("Animation Durations")]
+    public float landscapeDuration = 0.4f; // Должно совпадать с длительностью полета карт
+    public float portraitDuration = 0.4f; // В вертикальном быстрее
     public AnimationCurve motionCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-    [Header("Positions")]
-    [Tooltip("Если 0, то смещение будет вычислено автоматически по ширине экрана")]
-    public float offScreenXOffset = 0f;
+    [Header("Off-Screen Offsets (Смещение влево)")]
+    public float landscapeXOffset = -1500f;
+    public float portraitXOffset = -2500f; // В вертикальном улетает дальше
 
     private RectTransform rectTransform;
-    private Vector2 onScreenPos; // Позиция "В центре" (или где вы поставили в редакторе)
-    private Vector2 offScreenPos; // Позиция "Слева за экраном"
+    private Vector2 onScreenPos; // Позиция "В центре"
+    private Vector2 landscapeOffScreenPos;
+    private Vector2 portraitOffScreenPos;
 
     private Coroutine currentRoutine;
     private bool isPanelOpen = false;
@@ -26,21 +28,15 @@ public class SettingsPanelAnimator : MonoBehaviour
         // Запоминаем ту позицию, где панель стоит в редакторе (это будет конечная точка "Открыто")
         onScreenPos = rectTransform.anchoredPosition;
 
-        // Вычисляем позицию за экраном (слева)
-        // Если вы не задали вручную, берем ширину экрана с запасом
-        float width = rectTransform.rect.width;
-        if (offScreenXOffset == 0)
-        {
-            // Сдвигаем влево на ширину панели + немного запаса
-            offScreenXOffset = -width - 100f;
-
-            // Если анкоры по центру, возможно, нужно сдвигать сильнее (на пол-экрана)
-            // Для надежности сдвинем сильно влево
-            if (offScreenXOffset > -1000) offScreenXOffset = -1500f;
-        }
-
-        offScreenPos = new Vector2(offScreenXOffset, onScreenPos.y);
+        // Фиксируем точки вылета за экран
+        landscapeOffScreenPos = new Vector2(landscapeXOffset, onScreenPos.y);
+        portraitOffScreenPos = new Vector2(portraitXOffset, onScreenPos.y);
     }
+
+    // Вспомогательные методы для получения текущих параметров в зависимости от ориентации
+    private bool IsPortrait() => Screen.width < Screen.height;
+    private float CurrentDuration => IsPortrait() ? portraitDuration : landscapeDuration;
+    private Vector2 CurrentOffScreenPos => IsPortrait() ? portraitOffScreenPos : landscapeOffScreenPos;
 
     /// <summary>
     /// Просто открыть панель (выезд слева)
@@ -52,9 +48,12 @@ public class SettingsPanelAnimator : MonoBehaviour
 
         if (currentRoutine != null) StopCoroutine(currentRoutine);
 
+        float duration = CurrentDuration;
+        Vector2 offScreenPos = CurrentOffScreenPos;
+
         // Ставим в позицию "за кадром" и запускаем анимацию "в кадр"
         rectTransform.anchoredPosition = offScreenPos;
-        currentRoutine = StartCoroutine(MoveRoutine(offScreenPos, onScreenPos, animationDuration));
+        currentRoutine = StartCoroutine(MoveRoutine(offScreenPos, onScreenPos, duration));
     }
 
     /// <summary>
@@ -65,8 +64,11 @@ public class SettingsPanelAnimator : MonoBehaviour
         isPanelOpen = false;
         if (currentRoutine != null) StopCoroutine(currentRoutine);
 
+        float duration = CurrentDuration;
+        Vector2 offScreenPos = CurrentOffScreenPos;
+
         // Едем из текущей позиции "за кадр"
-        currentRoutine = StartCoroutine(MoveRoutine(rectTransform.anchoredPosition, offScreenPos, animationDuration, () =>
+        currentRoutine = StartCoroutine(MoveRoutine(rectTransform.anchoredPosition, offScreenPos, duration, () =>
         {
             gameObject.SetActive(false); // Выключаем объект после анимации
         }));
@@ -83,23 +85,23 @@ public class SettingsPanelAnimator : MonoBehaviour
 
         if (currentRoutine != null) StopCoroutine(currentRoutine);
 
-        // Поскольку нам нужно успеть за 0.4 секунды (время карт), 
-        // делим время: 50% на выезд, 50% на въезд.
-        float halfDuration = animationDuration / 2f;
+        // Делим текущее время: 50% на выезд, 50% на въезд.
+        float halfDuration = CurrentDuration / 2f;
+        Vector2 offScreenPos = CurrentOffScreenPos;
 
-        currentRoutine = StartCoroutine(SwitchRoutine(halfDuration, onUpdateContent));
+        currentRoutine = StartCoroutine(SwitchRoutine(halfDuration, offScreenPos, onUpdateContent));
     }
 
-    private IEnumerator SwitchRoutine(float duration, Action onUpdateContent)
+    private IEnumerator SwitchRoutine(float halfDuration, Vector2 offScreenPos, Action onUpdateContent)
     {
         // 1. Уезжаем влево
-        yield return MoveRoutine(rectTransform.anchoredPosition, offScreenPos, duration);
+        yield return MoveRoutine(rectTransform.anchoredPosition, offScreenPos, halfDuration);
 
         // 2. Пока мы за кадром — обновляем текст/кнопки
         onUpdateContent?.Invoke();
 
         // 3. Выезжаем обратно (слева направо)
-        yield return MoveRoutine(offScreenPos, onScreenPos, duration);
+        yield return MoveRoutine(offScreenPos, onScreenPos, halfDuration);
     }
 
     private IEnumerator MoveRoutine(Vector2 start, Vector2 end, float time, Action onComplete = null)

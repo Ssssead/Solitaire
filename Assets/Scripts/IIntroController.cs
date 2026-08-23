@@ -9,4 +9,7 @@ public interface IIntroController
 
     // Возвращает список элементов, которые должны уезжать ВНИЗ за экран
     List<RectTransform> GetBottomUIElements();
+
+    void UpdateSavedPositions();
+
 }

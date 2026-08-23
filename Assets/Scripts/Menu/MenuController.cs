@@ -11,11 +11,31 @@ public class MenuController : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        if (Instance == null) Instance = this;
+
+        // --- ВЫПОЛНЯЕТСЯ ДО ОТРИСОВКИ ПЕРВОГО КАДРА ---
+
+        // 1. Определяем ориентацию сразу
+        isPortrait = Screen.width < Screen.height;
+        isSettingsMode = false;
+
+        // 2. Прячем все панели настроек мгновенно
+        if (landscapeSettings != null && landscapeSettings.panel) landscapeSettings.panel.SetActive(false);
+        if (portraitSettings != null && portraitSettings.panel) portraitSettings.panel.SetActive(false);
+
+        CloseAllOverlaysInstant();
+
+        // 3. Расставляем верхние кнопки по якорям до появления на экране
+        SnapButtonToTarget(leaderboardBtn);
+        SnapButtonToTarget(statsBtn);
+        foreach (var el in otherResponsiveElements)
         {
-            Instance = this;
+            SnapSimpleElementToTarget(el);
         }
     }
+
+    
+
     [System.Serializable]
     public struct GameDefinition
     {
@@ -25,15 +45,57 @@ public class MenuController : MonoBehaviour
 
         [Header("UI Options")]
         public bool showDifficulty;
-        public bool showSuitSelector;   // Spider
-        public bool showRoundsSelector; // Pyramid/TriPeaks
+        public bool showSuitSelector;
+        public bool showRoundsSelector;
 
         [Space]
-        public bool showDrawMode;       // Klondike (вместо слайдера)
-        public bool showYukonModes;     // Yukon
-        public bool showMonteCarloModes;// Monte Carlo
-        public bool showMontanaModes;   // Montana
+        public bool showDrawMode;
+        public bool showYukonModes;
+        public bool showMonteCarloModes;
+        public bool showMontanaModes;
         public bool showNoOptionsPanel;
+    }
+
+    // ==========================================
+    // НОВАЯ СТРУКТУРА ДЛЯ ПАНЕЛЕЙ НАСТРОЕК
+    // ==========================================
+    [System.Serializable]
+    public class SettingsUIGroup
+    {
+        public GameObject panel;
+        public SettingsPanelAnimator animator;
+
+        [Header("Texts")]
+        public TMP_Text xpPreviewText;
+
+        [Header("Containers")]
+        public GameObject difficultyContainer;
+        public GameObject suitSelectionContainer;
+        public GameObject roundsSelectionContainer;
+        public GameObject drawModeContainer;
+        public GameObject yukonModeContainer;
+        public GameObject monteCarloModeContainer;
+        public GameObject montanaModeContainer;
+        public GameObject noOptionsContainer;
+
+        [Header("Action Buttons")]
+        public Button startButton;
+        public Button tutorialButton;
+
+        [Header("Option Buttons")]
+        public Button draw1Button;
+        public Button draw3Button;
+        public Button yukonClassicButton;
+        public Button yukonRussianButton;
+        public Button monteCarlo8WaysButton;
+        public Button monteCarlo4WaysButton;
+        public Button montanaClassicButton;
+        public Button montanaHardButton;
+
+        [Header("Arrays")]
+        public Button[] diffButtons;
+        public Button[] suitButtons;
+        public Button[] roundsButtons;
     }
 
     [Header("Game Definitions")]
@@ -41,173 +103,368 @@ public class MenuController : MonoBehaviour
 
     [Header("UI Panels")]
     public GameObject mainSelectionPanel;
-    public GameObject settingsPanel;
-   
 
-    public GameObject appBasicStatsPanel;    // 1. Общая базовая (для всего приложения)
-    public GameObject appPremiumStatsPanel;  // 2. Общая премиум
-    public GameObject gameBasicStatsPanel;   // 3. Игра базовая (для конкретного пасьянса)
-    public GameObject gamePremiumStatsPanel; // 4. Игра премиум
+    [Header("Game Settings Panels (Dual Orientation)")]
+    public SettingsUIGroup landscapeSettings;
+    public SettingsUIGroup portraitSettings;
+
+    [System.Serializable]
+    public class StatsUIGroup
+    {
+        public GameObject appBasicPanel;
+        public GameObject appPremiumPanel;
+        public GameObject gameBasicPanel;
+        public GameObject gamePremiumPanel;
+    }
+
+    [Header("Stats Panels (Dual Orientation)")]
+    public StatsUIGroup landscapeStats;
+    public StatsUIGroup portraitStats;
 
     [Header("Controllers")]
     public MenuLevelController levelController;
     public CardAnimationController cardAnimator;
-    public SettingsPanelAnimator settingsPanelAnimator;
     public MenuExitController exitController;
     public DynamicLeaderboardController dynamicLeaderboard;
 
-    [Header("Menu Overlays (Restored)")]
-    public GameObject globalSettingsPanel; // Глобальные настройки (Звук/Музыка)
-    public GameObject leaderboardPanel;    // Лидерборд
-    public GameObject shopPanel;           // Магазин
-    public GameObject dailyQuestsPanel;    // Ежедневные задания
+    [Header("Menu Overlays")]
 
-    [Header("UI Containers")]
-    public GameObject difficultyContainer;
-    public GameObject suitSelectionContainer;
-    public GameObject roundsSelectionContainer;
-    public GameObject drawModeContainer;        // Klondike
-    public GameObject yukonModeContainer;       // Yukon
-    public GameObject monteCarloModeContainer;  // Monte Carlo
-    public GameObject montanaModeContainer;     // Montana
-    public GameObject noOptionsContainer;
+    public GameObject landscapeLeaderboardPanel;
+    public GameObject portraitLeaderboardPanel;
+    public GameObject landscapeShopPanel;
+    public GameObject portraitShopPanel;
+    public GameObject landscapeDailyQuestsPanel;
+    public GameObject portraitDailyQuestsPanel;
 
-    [Header("XP Preview UI")] // <--- НОВОЕ
-    [Tooltip("Текст внутри SettingsPanel, где написано 'Вы получите X опыта'")]
-    public TMP_Text xpPreviewText;
-    [Tooltip("Ключ локализации. Пример: 'xp_reward_preview'. В таблице должно быть 'You will get {0} XP'")]
+    [Header("XP Preview Loc Key")]
     public string xpPreviewLocKey = "xp_reward_preview";
 
-    [Header("Buttons: Klondike (Draw Mode)")]
-    public Button draw1Button;
-    public Button draw3Button;
+    // --- ДИНАМИЧЕСКИЕ КНОПКИ ---
+    [System.Serializable]
+    public class ResponsiveButtonDef
+    {
+        public RectTransform button;
+        [Header("Landscape Anchors")]
+        public RectTransform landscapeStart;
+        public RectTransform landscapeEnd;
+        [Header("Portrait Anchors")]
+        public RectTransform portraitStart;
+        public RectTransform portraitEnd;
 
-    [Header("Buttons: Yukon")]
-    public Button yukonClassicButton;
-    public Button yukonRussianButton;
+        public RectTransform GetTarget(bool isPortrait, bool isSettingsMode)
+        {
+            if (isPortrait) return isSettingsMode ? portraitEnd : portraitStart;
+            return isSettingsMode ? landscapeEnd : landscapeStart;
+        }
+    }
 
-    [Header("Buttons: Monte Carlo")]
-    public Button monteCarlo8WaysButton;
-    public Button monteCarlo4WaysButton;
+    [System.Serializable]
+    public class SimpleResponsiveDef
+    {
+        public RectTransform uiElement;
+        [Header("Anchors")]
+        public RectTransform landscapeAnchor;
+        public RectTransform portraitAnchor;
 
-    [Header("Buttons: Montana")]
-    public Button montanaClassicButton;
-    public Button montanaHardButton;
+        public RectTransform GetTarget(bool isPortrait)
+        {
+            return isPortrait ? portraitAnchor : landscapeAnchor;
+        }
+    }
 
-    [Header("Buttons: Arrays")]
-    public Button[] diffButtons;   // 0-Easy, 1-Medium, 2-Hard
-    public Button[] suitButtons;   // 0-[1 suit], 1-[2 suits], 2-[4 suits]
-    public Button[] roundsButtons; // 0-[1 round], 1-[2 rounds], 2-[3 rounds]
+    [Header("Dynamic Buttons (Responsive)")]
+    public ResponsiveButtonDef leaderboardBtn;
+    public ResponsiveButtonDef statsBtn;
 
-    [Header("Main Action Buttons")]
-    public Button startButton; // <--- НОВАЯ ССЫЛКА НА КНОПКУ СТАРТ
-    public Button tutorialButton;
-
-    // --- НОВАЯ СЕКЦИЯ: ДВИЖЕНИЕ ПО МАРКЕРАМ ---
-    [Header("Dynamic Buttons (Target Objects)")]
-    public RectTransform leaderboardButton; // Сама кнопка
-    public RectTransform statsButton;       // Сама кнопка
-
-    [Header("Position Markers")]
-    [Tooltip("Пустой объект, где кнопка Лидерборда стоит в ГЛАВНОМ МЕНЮ")]
-    public Transform lbStartMarker;
-    [Tooltip("Пустой объект, куда кнопка Лидерборда уезжает в НАСТРОЙКАХ")]
-    public Transform lbEndMarker;
-
-    [Tooltip("Пустой объект, где кнопка Статистики стоит в ГЛАВНОМ МЕНЮ")]
-    public Transform statsStartMarker;
-    [Tooltip("Пустой объект, куда кнопка Статистики уезжает в НАСТРОЙКАХ")]
-    public Transform statsEndMarker;
+    [Header("Other Responsive UI (Player Panel, Settings, etc.)")]
+    public List<SimpleResponsiveDef> otherResponsiveElements;
 
     private Coroutine buttonsMoveCoroutine;
+    private bool isSettingsMode = false;
+    private bool isPortrait;
 
     [Header("Visual Settings (Background)")]
-    // FFB01A (Orange)
     public Color bgSelectedColor = new Color32(255, 176, 26, 255);
-    // 9A5F40 (Brown)
     public Color bgNormalColor = new Color32(154, 95, 64, 255);
     public Color bgDisabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
 
     [Header("Visual Settings (Text)")]
-    // 24140C (Dark Brown/Black)
     public Color textSelectedColor = new Color32(36, 20, 12, 255);
-    // C0C0C0 (Silver/Grey)
     public Color textNormalColor = new Color32(192, 192, 192, 255);
     public Color buttonDisabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
 
     private GameDefinition currentGame;
-    [Header("Overlay Animations")]
-    public float overlayAnimDuration = 0.4f;
-    public float overlayFlyDistanceX = 2500f; // Расстояние, на которое улетают панели за экран
 
-    [Header("Audio Settings UI (Radio Buttons)")]
-    public Button soundOnButton;
-    public Button soundOffButton;
+    [Header("Overlay Animations (Horizontal)")]
+    public float landscapeOverlayDuration = 0.4f;
+    public float portraitOverlayDuration = 0.3f; // Быстрее
+    public float landscapeOverlayFlyDistanceX = 2500f;
+    public float portraitOverlayFlyDistanceX = 3000f; // Дальше
 
-    [Header("Language Settings UI")]
-    public Button[] languageButtons; // Массив из 5 кнопок
-    public string[] languageCodes = new string[] { "ru", "en", "tr", "es", "pt" }; // Коды языков в том же порядке
+    [System.Serializable]
+    public class GlobalSettingsUIGroup
+    {
+        public GameObject panel;
+
+        [Header("Audio Settings UI")]
+        public Button soundOnButton;
+        public Button soundOffButton;
+
+        [Header("Language Settings UI")]
+        public Button[] languageButtons;
+
+        [Header("Click Mode Settings UI")]
+        public Button singleClickButton;
+        public Button doubleClickButton;
+    }
+
+    [Header("Global Settings Panels (Dual Orientation)")]
+    public GlobalSettingsUIGroup landscapeGlobalSettings;
+    public GlobalSettingsUIGroup portraitGlobalSettings;
+    public string[] languageCodes = new string[] { "ru", "en", "tr", "es", "pt" };
+
+    
 
     [Header("Button Animation Settings")]
-    public float buttonAnimDuration = 0.15f; // Скорость изменения размера
-    public Vector3 buttonActiveScale = new Vector3(1.05f, 1.05f, 1f); // Насколько увеличивается активная кнопка
+    public float buttonAnimDuration = 0.15f;
+    public Vector3 buttonActiveScale = new Vector3(1.05f, 1.05f, 1f);
 
-    [Header("Background Selection UI")]
-    public GameObject backgroundSelectionPanel; // Ваша новая нижняя панель
-    public GameObject cardAppearancePanel;
-    public float verticalFlyDistance = 1500f;
+    // ==========================================
+    // СТРУКТУРА ДЛЯ ПАНЕЛЕЙ КАСТОМИЗАЦИИ
+    // ==========================================
+    [System.Serializable]
+    public class CustomizationUIGroup
+    {
+        public GameObject backgroundSelectionPanel;
+        public GameObject cardAppearancePanel;
+        public GameObject cardBackSelectionPanel;
+        public GameObject deckSelectionPanel;
+    }
 
-    [Header("Card Back Selection UI")]
-    public GameObject cardBackSelectionPanel; // Ссылка на боковую панель рубашек
-    [Header("Панели кастомизации")]
-    public GameObject deckSelectionPanel;
+    [Header("Customization Panels (Dual Orientation)")]
+    public CustomizationUIGroup landscapeCustomization;
+    public CustomizationUIGroup portraitCustomization;
 
-    // Словарь для хранения активных анимаций кнопок (чтобы они не конфликтовали)
+    [Header("Customization Animation Settings")]
+    public float landscapeVerticalFlyDistance = 1500f;
+    public float portraitVerticalFlyDistance = 3500f;
+
     private Dictionary<RectTransform, Coroutine> buttonScaleCoroutines = new Dictionary<RectTransform, Coroutine>();
     private Dictionary<GameObject, Vector2> panelInitialPositions = new Dictionary<GameObject, Vector2>();
     private Dictionary<GameObject, Coroutine> activePanelCoroutines = new Dictionary<GameObject, Coroutine>();
 
     private void Start()
     {
-        if (settingsPanel) settingsPanel.SetActive(false);
+        // Оставляем в Start только включение главного меню и регистрацию позиций для анимаций
         if (mainSelectionPanel) mainSelectionPanel.SetActive(true);
 
-        // Регистрируем оверлеи, чтобы запомнить их идеальные позиции в центре экрана
-        RegisterOverlay(globalSettingsPanel);
-        RegisterOverlay(appBasicStatsPanel);     // <---
-        RegisterOverlay(appPremiumStatsPanel);   // <---
-        RegisterOverlay(gameBasicStatsPanel);    // <---
-        RegisterOverlay(gamePremiumStatsPanel);
-        RegisterOverlay(leaderboardPanel);
-        RegisterOverlay(shopPanel);
-        RegisterOverlay(dailyQuestsPanel);
-        RegisterOverlay(backgroundSelectionPanel);
+        RegisterOverlay(landscapeGlobalSettings.panel);
+        RegisterOverlay(portraitGlobalSettings.panel);
 
-        // --- ДОБАВЬТЕ ЭТУ СТРОКУ ---
-        RegisterOverlay(cardAppearancePanel);
-        RegisterOverlay(cardBackSelectionPanel);
-        // Прячем их без анимации при старте игры
-        CloseAllOverlaysInstant();
+        RegisterOverlay(landscapeStats.appBasicPanel);
+        RegisterOverlay(landscapeStats.appPremiumPanel);
+        RegisterOverlay(landscapeStats.gameBasicPanel);
+        RegisterOverlay(landscapeStats.gamePremiumPanel);
+
+        RegisterOverlay(portraitStats.appBasicPanel);
+        RegisterOverlay(portraitStats.appPremiumPanel);
+        RegisterOverlay(portraitStats.gameBasicPanel);
+        RegisterOverlay(portraitStats.gamePremiumPanel);
+
+        RegisterOverlay(landscapeLeaderboardPanel);
+        RegisterOverlay(portraitLeaderboardPanel);
+        RegisterOverlay(landscapeShopPanel);
+        RegisterOverlay(portraitShopPanel);
+        RegisterOverlay(landscapeDailyQuestsPanel);
+        RegisterOverlay(portraitDailyQuestsPanel);
+
+        RegisterOverlay(landscapeCustomization.backgroundSelectionPanel);
+        RegisterOverlay(landscapeCustomization.cardAppearancePanel);
+        RegisterOverlay(landscapeCustomization.cardBackSelectionPanel);
+        RegisterOverlay(landscapeCustomization.deckSelectionPanel);
+
+        RegisterOverlay(portraitCustomization.backgroundSelectionPanel);
+        RegisterOverlay(portraitCustomization.cardAppearancePanel);
+        RegisterOverlay(portraitCustomization.cardBackSelectionPanel);
+        RegisterOverlay(portraitCustomization.deckSelectionPanel);
+
         UpdateSoundButtonsVisuals(true);
         UpdateLanguageButtonsVisuals(true);
-    }
-    // Подписываемся на глобальное событие смены локализации
-    private void OnEnable()
-    {
-        LocalizationManager.OnLocalizationLoaded += OnLocalizationChanged;
+        UpdateClickModeButtonsVisuals(true);
     }
 
-    private void OnDisable()
+    private void SnapButtonToTarget(ResponsiveButtonDef btnDef)
     {
-        LocalizationManager.OnLocalizationLoaded -= OnLocalizationChanged;
+        if (btnDef.button == null) return;
+        RectTransform target = btnDef.GetTarget(isPortrait, isSettingsMode);
+        if (target != null)
+        {
+            btnDef.button.SetParent(target, false);
+            SetAsStretchChild(btnDef.button);
+        }
+    }
+    private void SnapSimpleElementToTarget(SimpleResponsiveDef def)
+    {
+        if (def.uiElement == null) return;
+        RectTransform target = def.GetTarget(isPortrait);
+        if (target != null)
+        {
+            def.uiElement.SetParent(target, false);
+            SetAsStretchChild(def.uiElement);
+        }
+    }
+
+    private void SetAsStretchChild(RectTransform rt)
+    {
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        rt.localScale = Vector3.one;
+        rt.localRotation = Quaternion.identity;
+    }
+
+    private void SetAsFixedCenterAnchor(RectTransform rt, Vector2 currentAbsoluteSize)
+    {
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = currentAbsoluteSize;
+    }
+
+    private void OnEnable() => LocalizationManager.OnLocalizationLoaded += OnLocalizationChanged;
+    private void OnDisable() => LocalizationManager.OnLocalizationLoaded -= OnLocalizationChanged;
+
+    private void Update()
+    {
+        bool checkPortrait = Screen.width < Screen.height;
+        if (checkPortrait != isPortrait)
+        {
+            HandleOrientationChange(checkPortrait);
+        }
+    }
+
+    // --- ЛОГИКА ПОВОРОТА ЭКРАНА ---
+    private void HandleOrientationChange(bool newIsPortrait)
+    {
+        bool wasSettingsOpen = IsSettingsPanelOpen();
+        bool wasGlobalSettingsOpen = IsGlobalSettingsOpen();
+
+        // 1. Прячем старые панели
+        if (wasSettingsOpen)
+        {
+            if (landscapeSettings.panel) landscapeSettings.panel.SetActive(false);
+            if (portraitSettings.panel) portraitSettings.panel.SetActive(false);
+        }
+        if (wasGlobalSettingsOpen)
+        {
+            if (landscapeGlobalSettings.panel) landscapeGlobalSettings.panel.SetActive(false);
+            if (portraitGlobalSettings.panel) portraitGlobalSettings.panel.SetActive(false);
+        }
+        bool wasBgOpen = IsPanelOpen(landscapeCustomization.backgroundSelectionPanel, portraitCustomization.backgroundSelectionPanel);
+        bool wasAppOpen = IsPanelOpen(landscapeCustomization.cardAppearancePanel, portraitCustomization.cardAppearancePanel);
+        bool wasBackOpen = IsPanelOpen(landscapeCustomization.cardBackSelectionPanel, portraitCustomization.cardBackSelectionPanel);
+        bool wasDeckOpen = IsPanelOpen(landscapeCustomization.deckSelectionPanel, portraitCustomization.deckSelectionPanel);
+        // ДОБАВЛЕНА ЭТА СТРОКА:
+        bool wasShopOpen = IsPanelOpen(landscapeShopPanel, portraitShopPanel);
+        bool wasLbOpen = IsPanelOpen(landscapeLeaderboardPanel, portraitLeaderboardPanel);
+        bool wasAppBasicOpen = IsPanelOpen(landscapeStats.appBasicPanel, portraitStats.appBasicPanel);
+        bool wasAppPremiumOpen = IsPanelOpen(landscapeStats.appPremiumPanel, portraitStats.appPremiumPanel);
+        bool wasGameBasicOpen = IsPanelOpen(landscapeStats.gameBasicPanel, portraitStats.gameBasicPanel);
+        bool wasGamePremiumOpen = IsPanelOpen(landscapeStats.gamePremiumPanel, portraitStats.gamePremiumPanel);
+        bool wasQuestsOpen = IsPanelOpen(landscapeDailyQuestsPanel, portraitDailyQuestsPanel);
+        isPortrait = newIsPortrait;
+        MoveButtonsToTarget(isSettingsMode);
+        SwapCustomizationPanel(landscapeCustomization.backgroundSelectionPanel, portraitCustomization.backgroundSelectionPanel, wasBgOpen);
+        SwapCustomizationPanel(landscapeCustomization.cardAppearancePanel, portraitCustomization.cardAppearancePanel, wasAppOpen);
+        SwapCustomizationPanel(landscapeCustomization.cardBackSelectionPanel, portraitCustomization.cardBackSelectionPanel, wasBackOpen);
+        SwapCustomizationPanel(landscapeCustomization.deckSelectionPanel, portraitCustomization.deckSelectionPanel, wasDeckOpen);
+        SwapStatsPanel(landscapeStats.appBasicPanel, portraitStats.appBasicPanel, wasAppBasicOpen, false);
+        SwapStatsPanel(landscapeStats.appPremiumPanel, portraitStats.appPremiumPanel, wasAppPremiumOpen, false);
+        SwapStatsPanel(landscapeStats.gameBasicPanel, portraitStats.gameBasicPanel, wasGameBasicOpen, true);
+        SwapStatsPanel(landscapeStats.gamePremiumPanel, portraitStats.gamePremiumPanel, wasGamePremiumOpen, true);
+        SwapCustomizationPanel(landscapeShopPanel, portraitShopPanel, wasShopOpen);
+        SwapCustomizationPanel(landscapeLeaderboardPanel, portraitLeaderboardPanel, wasLbOpen);
+        SwapCustomizationPanel(landscapeDailyQuestsPanel, portraitDailyQuestsPanel, wasQuestsOpen);
+        // 2. Показываем новые
+        if (wasSettingsOpen)
+        {
+            SetupSettingsPanel();
+            UpdateXPPreview();
+            SettingsUIGroup activeGroup = isPortrait ? portraitSettings : landscapeSettings;
+            if (activeGroup.animator != null) activeGroup.animator.AnimateOpen();
+            else if (activeGroup.panel != null) activeGroup.panel.SetActive(true);
+        }
+
+        if (wasGlobalSettingsOpen)
+        {
+            GameObject activeGlobalPanel = isPortrait ? portraitGlobalSettings.panel : landscapeGlobalSettings.panel;
+            if (activeGlobalPanel) activeGlobalPanel.SetActive(true);
+
+            // Если вы используете корутины анимаций оверлеев, фиксируем их якоря сразу, чтобы не сломался вылет
+            RectTransform rt = activeGlobalPanel.GetComponent<RectTransform>();
+            if (rt != null && panelInitialPositions.ContainsKey(activeGlobalPanel))
+                rt.anchoredPosition = panelInitialPositions[activeGlobalPanel];
+        }
+    }
+    private void SwapCustomizationPanel(GameObject landscapePanel, GameObject portraitPanel, bool wasOpen)
+    {
+        if (!wasOpen) return;
+        if (landscapePanel) landscapePanel.SetActive(false);
+        if (portraitPanel) portraitPanel.SetActive(false);
+
+        GameObject activePanel = isPortrait ? portraitPanel : landscapePanel;
+        if (activePanel)
+        {
+            activePanel.SetActive(true);
+            RectTransform rt = activePanel.GetComponent<RectTransform>();
+            if (rt != null && panelInitialPositions.ContainsKey(activePanel))
+                rt.anchoredPosition = panelInitialPositions[activePanel];
+        }
+    }
+    private void SwapStatsPanel(GameObject landscapePanel, GameObject portraitPanel, bool wasOpen, bool isGameSpecific)
+    {
+        if (!wasOpen) return;
+        if (landscapePanel) landscapePanel.SetActive(false);
+        if (portraitPanel) portraitPanel.SetActive(false);
+
+        GameObject activePanel = isPortrait ? portraitPanel : landscapePanel;
+        if (activePanel)
+        {
+            if (isGameSpecific)
+            {
+                // Игровой статистике нужно передать текущую игру, чтобы она отрисовала графики
+                var premiumUI = activePanel.GetComponent<StatisticsUI>();
+                if (premiumUI != null) premiumUI.ShowStatsForGame(currentGame.type);
+
+                var basicUI = activePanel.GetComponent<BasicStatisticsUI>();
+                if (basicUI != null) basicUI.ShowStatsForGame(currentGame.type);
+            }
+            else
+            {
+                // Глобальная статистика обновляется сама в OnEnable
+                activePanel.SetActive(true);
+            }
+
+            RectTransform rt = activePanel.GetComponent<RectTransform>();
+            if (rt != null && panelInitialPositions.ContainsKey(activePanel))
+                rt.anchoredPosition = panelInitialPositions[activePanel];
+        }
+    }
+    private bool IsPanelOpen(GameObject p1, GameObject p2)
+    {
+        return (p1 != null && p1.activeSelf) || (p2 != null && p2.activeSelf);
+    }
+    private bool IsSettingsPanelOpen()
+    {
+        return (landscapeSettings.panel != null && landscapeSettings.panel.activeSelf) ||
+               (portraitSettings.panel != null && portraitSettings.panel.activeSelf);
     }
 
     private void OnLocalizationChanged()
     {
-        // Как только язык загрузился, заставляем меню перекрасить кнопки.
-        // Передаем true, чтобы кнопки переключились мгновенно, без анимации "растягивания"
         UpdateLanguageButtonsVisuals(true);
     }
+
     private void RegisterOverlay(GameObject panel)
     {
         if (panel == null) return;
@@ -217,12 +474,14 @@ public class MenuController : MonoBehaviour
             panelInitialPositions.Add(panel, rt.anchoredPosition);
         }
     }
+
+    // ==========================================
+    // ЛОГИКА ИНТЕРФЕЙСА (СИНХРОНИЗАЦИЯ 2 ПАНЕЛЕЙ)
+    // ==========================================
+
     private void UpdateXPPreview()
     {
-        // 1. Формируем строку варианта ИЗ ЕДИНОГО ЦЕНТРА
         string variant = GameSettings.GetCurrentVariantString(currentGame.type);
-
-        // 2. Получаем текущий уровень игрока 
         int currentLvl = 1;
         if (StatisticsManager.Instance != null)
         {
@@ -230,99 +489,72 @@ public class MenuController : MonoBehaviour
             if (data != null) currentLvl = data.currentLevel;
         }
 
-        // 3. Считаем потенциальный опыт
         bool isPremium = StatisticsManager.Instance != null && StatisticsManager.Instance.IsUserPremium;
+        int xpAmount = LevelingUtils.CalculateXP(currentGame.type, currentLvl, GameSettings.CurrentDifficulty, variant, isPremium);
 
-        int xpAmount = LevelingUtils.CalculateXP(
-            currentGame.type,
-            currentLvl,
-            GameSettings.CurrentDifficulty,
-            variant,
-            isPremium
-        );
-
-        // ---> ИНТЕГРАЦИЯ БУСТЕРА Х2 <---
         if (QuestManager.Instance != null && System.Enum.TryParse(currentGame.type.ToString(), out QuestCategory cat))
         {
-            if (QuestManager.Instance.HasActiveXpBuff(cat))
-            {
-                xpAmount *= 2;
-            }
+            if (QuestManager.Instance.HasActiveXpBuff(cat)) xpAmount *= 2;
         }
-        // ------------------------------
 
-        // 4. Обновляем ТЕКСТ через LocalizationManager
-        if (xpPreviewText != null)
+        string coloredXP = $"<color=#FFC400>{xpAmount}</color>";
+        string format = LocalizationManager.instance != null && LocalizationManager.instance.IsReady()
+            ? LocalizationManager.instance.GetLocalizedValue(xpPreviewLocKey)
+            : "{0} XP";
+
+        if (string.IsNullOrEmpty(format)) format = "{0} XP";
+
+        string finalText = "";
+        try { finalText = string.Format(format, coloredXP); }
+        catch { finalText = $"{coloredXP} XP"; }
+
+        // Обновляем текст в обеих панелях
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
         {
-            // Формируем число с цветом #FFC400
-            string coloredXP = $"<color=#FFC400>{xpAmount}</color>";
-
-            if (LocalizationManager.instance != null && LocalizationManager.instance.IsReady())
-            {
-                // Получаем строку вида "Вы получите {0} опыта"
-                string format = LocalizationManager.instance.GetLocalizedValue(xpPreviewLocKey);
-                if (string.IsNullOrEmpty(format)) format = "{0} XP";
-
-                try
-                {
-                    // Вставляем покрашенное число в строку
-                    xpPreviewText.text = string.Format(format, coloredXP);
-                }
-                catch
-                {
-                    xpPreviewText.text = $"{coloredXP} XP";
-                }
-            }
-            else
-            {
-                xpPreviewText.text = $"{coloredXP} XP";
-            }
+            if (group.xpPreviewText != null) group.xpPreviewText.text = finalText;
         }
 
-        // 5. Обновляем БАР (визуальное заполнение)
-        if (levelController != null)
-        {
-            levelController.ShowXPGainPreview(currentGame.type, xpAmount);
-        }
+        if (levelController != null) levelController.ShowXPGainPreview(currentGame.type, xpAmount);
     }
-    // --- ЛОГИКА ПЕРЕХОДОВ ---
 
     public void OnGameSelected(int gameIndex)
     {
         if (gameIndex < 0 || gameIndex >= games.Count) return;
 
-        // 1. Звук выбора самой карты (резкий шлепок/клик)
-        if (AudioManager.Instance != null)
-            AudioManager.Instance.PlaySound("Card_Select");
-
-        // 2. Звук выезда панели настроек (мягкое скольжение)
         if (AudioManager.Instance != null)
         {
-            // Длительность анимации оверлеев у нас 0.4f. 
-            // Мы проигрываем звук 0.25 сек и затухаем за 0.15 сек.
+            AudioManager.Instance.PlaySound("Card_Select");
             AudioManager.Instance.PlaySoundWithAutoFade("Panel_Slide_In", 0.25f, 0.15f);
         }
-        // --- НОВОЕ: Закрываем панели статистики и лидербордов при смене пасьянса ---
+
         CloseAllOverlaysAnimated();
 
         currentGame = games[gameIndex];
         GameSettings.CurrentGameType = currentGame.type;
 
-        SetButtonState(startButton, true);
+        // Включаем кнопки старта в обеих панелях
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
+        {
+            SetButtonState(group.startButton, true);
+            if (group.startButton) group.startButton.interactable = true;
+            if (group.tutorialButton) group.tutorialButton.interactable = true;
+        }
+
         ResetGameSettingsDefault();
         SetupSettingsPanel();
         UpdateXPPreview();
 
-        // Запускаем анимацию К "EndMarker"
         MoveButtonsToTarget(true);
 
         if (cardAnimator != null) cardAnimator.SelectCard(currentGame.type);
 
-        if (settingsPanelAnimator != null)
+        SettingsUIGroup activeGroup = isPortrait ? portraitSettings : landscapeSettings;
+
+        if (activeGroup.animator != null)
         {
-            if (settingsPanelAnimator.IsOpen())
+            if (activeGroup.animator.IsOpen())
             {
-                settingsPanelAnimator.AnimateSwitch(() =>
+                activeGroup.animator.AnimateSwitch(() =>
                 {
                     SetupSettingsPanel();
                     if (levelController != null) levelController.UpdatePreviewBar(currentGame.type);
@@ -332,13 +564,13 @@ public class MenuController : MonoBehaviour
             else
             {
                 if (levelController != null) levelController.UpdatePreviewBar(currentGame.type);
-                settingsPanelAnimator.AnimateOpen();
+                activeGroup.animator.AnimateOpen();
                 UpdateXPPreview();
             }
         }
         else
         {
-            settingsPanel.SetActive(true);
+            if (activeGroup.panel) activeGroup.panel.SetActive(true);
             SetupSettingsPanel();
             if (levelController != null) levelController.UpdatePreviewBar(currentGame.type);
             UpdateXPPreview();
@@ -347,10 +579,7 @@ public class MenuController : MonoBehaviour
 
     private void ResetGameSettingsDefault()
     {
-        // Базовая сложность
         GameSettings.CurrentDifficulty = Difficulty.Medium;
-
-        // Специфичные настройки
         GameSettings.RoundsCount = 1;
         GameSettings.KlondikeDrawCount = 1;
         GameSettings.SpiderSuitCount = 1;
@@ -358,306 +587,57 @@ public class MenuController : MonoBehaviour
         GameSettings.MonteCarlo4Ways = false;
         GameSettings.MontanaHard = false;
 
-        // Если это Паук, нужно убедиться, что сложность соответствует мастям
-        if (currentGame.type == GameType.Spider)
-        {
-            if (GameSettings.CurrentDifficulty == Difficulty.Hard)
-                GameSettings.CurrentDifficulty = Difficulty.Medium;
-        }
-        // --- ДЕЛАЕМ КАК У ПАУКА ---
-        else if (currentGame.type == GameType.Octagon)
+        if (currentGame.type == GameType.Spider || currentGame.type == GameType.Octagon)
         {
             if (GameSettings.CurrentDifficulty != Difficulty.Medium)
                 GameSettings.CurrentDifficulty = Difficulty.Medium;
         }
         else
         {
-            // Для остальных игр разблокируем все сложности
-            foreach (var btn in diffButtons) if (btn) btn.interactable = true;
+            foreach (var group in new[] { landscapeSettings, portraitSettings })
+            {
+                if (group.diffButtons != null)
+                {
+                    foreach (var btn in group.diffButtons) if (btn) btn.interactable = true;
+                }
+            }
             UpdateDifficultyVisuals();
         }
     }
 
     public void OnBackClicked()
     {
-        // 1. Звук клика «Назад» (акцент на действии)
-        if (AudioManager.Instance != null)
-            AudioManager.Instance.PlaySound("UI_Back");
-
-        // 2. Звук улетающей панели (акцент на анимации)
         if (AudioManager.Instance != null)
         {
-            // Используем тот же тайминг: 0.25 сек игры + 0.15 сек затухания
+            AudioManager.Instance.PlaySound("UI_Back");
             AudioManager.Instance.PlaySoundWithAutoFade("Panel_Slide_Out", 0.25f, 0.15f);
         }
-        if (settingsPanelAnimator != null) settingsPanelAnimator.AnimateClose();
-        else settingsPanel.SetActive(false);
+
+        SettingsUIGroup activeGroup = isPortrait ? portraitSettings : landscapeSettings;
+
+        if (activeGroup.animator != null) activeGroup.animator.AnimateClose();
+        else if (activeGroup.panel != null) activeGroup.panel.SetActive(false);
 
         if (cardAnimator != null) cardAnimator.ResetGrid();
         if (levelController != null) levelController.HideAllPreviews();
 
-        // Запускаем анимацию обратно К "StartMarker"
         MoveButtonsToTarget(false);
     }
 
-    private void MoveButtonsToTarget(bool toSettingsMode)
-    {
-        if (buttonsMoveCoroutine != null) StopCoroutine(buttonsMoveCoroutine);
-        buttonsMoveCoroutine = StartCoroutine(AnimateButtonsRoutine(toSettingsMode));
-    }
-
-    private IEnumerator AnimateButtonsRoutine(bool toSettingsMode)
-    {
-        // Проверка ссылок, чтобы не было ошибок
-        if (!leaderboardButton || !statsButton || !lbStartMarker || !lbEndMarker || !statsStartMarker || !statsEndMarker)
-            yield break;
-
-        float duration = 0.4f;
-        float elapsed = 0f;
-
-        // Откуда летим (текущая позиция, чтобы не дергалось, если анимация прервана)
-        Vector3 startPosL = leaderboardButton.position;
-        Vector3 startPosS = statsButton.position;
-
-        // Куда летим
-        Vector3 targetPosL = toSettingsMode ? lbEndMarker.position : lbStartMarker.position;
-        Vector3 targetPosS = toSettingsMode ? statsEndMarker.position : statsStartMarker.position;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            float t = elapsed / duration;
-            float smoothT = Mathf.SmoothStep(0f, 1f, t);
-
-            // Используем .position (Global World Position) для точного совпадения с маркером
-            leaderboardButton.position = Vector3.Lerp(startPosL, targetPosL, smoothT);
-            statsButton.position = Vector3.Lerp(startPosS, targetPosS, smoothT);
-
-            yield return null;
-        }
-
-        leaderboardButton.position = targetPosL;
-        statsButton.position = targetPosS;
-    }
-
-    // --- OVERLAYS (Магазин, Лидерборд и т.д.) ---
-
-    public void OnGlobalSettingsClicked()
-    {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
-        ToggleOverlay(globalSettingsPanel, true);
-    }
-    public void OnLeaderboardClicked()
-    {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
-
-        // 1. Понимаем контекст: открыта ли панель настроек конкретной игры?
-        bool isGameSpecific = settingsPanel != null && settingsPanel.activeSelf;
-
-        // 2. Формируем техническое имя лидерборда (оно полетит в Яндекс)
-        string lbName = isGameSpecific ? currentGame.type.ToString() : "Global";
-
-        // 3. Отправляем команду в наш контроллер
-        if (dynamicLeaderboard != null)
-        {
-            dynamicLeaderboard.LoadLeaderboard(lbName);
-        }
-
-        ToggleOverlay(leaderboardPanel, true);
-    }
-    public void OnShopClicked()
-    {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
-        ToggleOverlay(shopPanel, true);
-    }
-    public void OnDailyQuestsClicked()
-    {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
-        ToggleOverlay(dailyQuestsPanel, true);
-    }
-
-    public void OnStatisticsClicked()
-    {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
-        // 1. Узнаем статус игрока
-        bool isPremium = StatisticsManager.Instance != null && StatisticsManager.Instance.IsUserPremium;
-
-        // 2. Понимаем контекст: открыта ли панель конкретной игры?
-        // (Если settingsPanel активна — значит игрок выбрал пасьянс)
-        bool isGameSpecific = settingsPanel != null && settingsPanel.activeSelf;
-
-        // 3. Выбираем нужную панель из 4-х
-        GameObject panelToOpen = null;
-
-        if (isGameSpecific)
-        {
-            panelToOpen = isPremium ? gamePremiumStatsPanel : gameBasicStatsPanel;
-        }
-        else
-        {
-            panelToOpen = isPremium ? appPremiumStatsPanel : appBasicStatsPanel;
-        }
-
-        // 4. Открываем и передаем данные
-        if (panelToOpen != null)
-        {
-            ToggleOverlay(panelToOpen, true);
-
-            // Если открыли статистику конкретной игры, подкидываем ей GameType
-            if (isGameSpecific)
-            {
-                var premiumUI = panelToOpen.GetComponent<StatisticsUI>();
-                if (premiumUI != null) premiumUI.ShowStatsForGame(currentGame.type);
-
-                var basicUI = panelToOpen.GetComponent<BasicStatisticsUI>();
-                if (basicUI != null) basicUI.ShowStatsForGame(currentGame.type);
-            }
-            else
-            {
-                // Если открыли ОБЩУЮ статистику приложения
-                // (здесь позже вызовешь метод скрипта общей статистики, если он будет нужен)
-                // Пример: panelToOpen.GetComponent<AppGlobalStatsUI>()?.ShowGlobalStats();
-            }
-        }
-    }
-
-    public void OnCloseOverlayClicked()
-    {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Back");
-        CloseAllOverlaysAnimated();
-
-        if (!settingsPanel.activeSelf)
-        {
-            mainSelectionPanel.SetActive(true);
-        }
-    }
-
-    private void ToggleOverlay(GameObject panel, bool show)
-    {
-        if (panel == null) return;
-
-        // --- НОВОЕ: Эксклюзивное открытие ---
-        // Если мы открываем панель, заставляем все остальные открытые панели закрыться
-        if (show)
-        {
-            if (globalSettingsPanel && globalSettingsPanel.activeSelf && globalSettingsPanel != panel) ToggleOverlay(globalSettingsPanel, false);
-            if (appBasicStatsPanel && appBasicStatsPanel.activeSelf && appBasicStatsPanel != panel) ToggleOverlay(appBasicStatsPanel, false);
-            if (appPremiumStatsPanel && appPremiumStatsPanel.activeSelf && appPremiumStatsPanel != panel) ToggleOverlay(appPremiumStatsPanel, false);
-            if (gameBasicStatsPanel && gameBasicStatsPanel.activeSelf && gameBasicStatsPanel != panel) ToggleOverlay(gameBasicStatsPanel, false);
-            if (gamePremiumStatsPanel && gamePremiumStatsPanel.activeSelf && gamePremiumStatsPanel != panel) ToggleOverlay(gamePremiumStatsPanel, false);
-            if (leaderboardPanel && leaderboardPanel.activeSelf && leaderboardPanel != panel) ToggleOverlay(leaderboardPanel, false);
-            if (shopPanel && shopPanel.activeSelf && shopPanel != panel) ToggleOverlay(shopPanel, false);
-            if (dailyQuestsPanel && dailyQuestsPanel.activeSelf && dailyQuestsPanel != panel) ToggleOverlay(dailyQuestsPanel, false);
-        }
-
-        // Если панель уже анимируется, прерываем старую анимацию для плавного реверса
-        if (activePanelCoroutines.ContainsKey(panel) && activePanelCoroutines[panel] != null)
-        {
-            StopCoroutine(activePanelCoroutines[panel]);
-        }
-
-        activePanelCoroutines[panel] = StartCoroutine(AnimateOverlayRoutine(panel, show));
-    }
-
-    private IEnumerator AnimateOverlayRoutine(GameObject panel, bool show)
-    {
-        RectTransform rt = panel.GetComponent<RectTransform>();
-        if (rt == null) yield break;
-
-        // <--- ИСПОЛЬЗУЕМ НОВЫЙ МЕТОД С ЗАТУХАНИЕМ --->
-        if (AudioManager.Instance != null)
-        {
-            string soundToPlay = show ? "Panel_Slide_In" : "Panel_Slide_Out";
-
-            // Начинаем заглушать звук за 0.15 сек до конца анимации
-            float delay = overlayAnimDuration - 0.15f;
-            if (delay < 0) delay = 0;
-
-            AudioManager.Instance.PlaySoundWithAutoFade(soundToPlay, delay, 0.15f);
-        }
-
-        Vector2 centerPos = panelInitialPositions.ContainsKey(panel) ? panelInitialPositions[panel] : Vector2.zero;
-        Vector2 leftPos = centerPos + new Vector2(-overlayFlyDistanceX, 0);  // Точка слева за экраном
-        Vector2 rightPos = centerPos + new Vector2(overlayFlyDistanceX, 0); // Точка справа за экраном
-
-        if (show)
-        {
-            // Если панель полностью закрыта, кидаем её влево, чтобы она вылетела оттуда
-            if (!panel.activeSelf) rt.anchoredPosition = leftPos;
-            panel.SetActive(true);
-        }
-
-        Vector2 startPos = rt.anchoredPosition;
-        Vector2 endPos = show ? centerPos : rightPos;
-
-        float elapsed = 0f;
-        while (elapsed < overlayAnimDuration)
-        {
-            elapsed += Time.deltaTime;
-            float t = elapsed / overlayAnimDuration;
-
-            // Используем Cubic Ease-Out для вылета (быстро появляется) 
-            // и Cubic Ease-In для улета (плавно начинает исчезать)
-            float curveT = show ? (1f - Mathf.Pow(1f - t, 3)) : (t * t * t);
-
-            rt.anchoredPosition = Vector2.LerpUnclamped(startPos, endPos, curveT);
-            yield return null;
-        }
-
-        rt.anchoredPosition = endPos;
-        if (!show) panel.SetActive(false);
-    }
-
-    private void CloseAllOverlaysAnimated()
-    {
-        
-        if (globalSettingsPanel && globalSettingsPanel.activeSelf) ToggleOverlay(globalSettingsPanel, false);
-        if (appBasicStatsPanel && appBasicStatsPanel.activeSelf) ToggleOverlay(appBasicStatsPanel, false);
-        if (appPremiumStatsPanel && appPremiumStatsPanel.activeSelf) ToggleOverlay(appPremiumStatsPanel, false);
-        if (gameBasicStatsPanel && gameBasicStatsPanel.activeSelf) ToggleOverlay(gameBasicStatsPanel, false);
-        if (gamePremiumStatsPanel && gamePremiumStatsPanel.activeSelf) ToggleOverlay(gamePremiumStatsPanel, false);
-        if (leaderboardPanel && leaderboardPanel.activeSelf) ToggleOverlay(leaderboardPanel, false);
-        if (shopPanel && shopPanel.activeSelf) ToggleOverlay(shopPanel, false);
-        if (dailyQuestsPanel && dailyQuestsPanel.activeSelf) ToggleOverlay(dailyQuestsPanel, false);
-        if (cardAppearancePanel && cardAppearancePanel.activeSelf) ToggleOverlay(cardAppearancePanel, false);
-        if (cardBackSelectionPanel && cardBackSelectionPanel.activeSelf)
-        {
-            ToggleOverlayRight(cardBackSelectionPanel, false);
-        }
-        if (deckSelectionPanel.activeSelf) ToggleOverlayRight(deckSelectionPanel, false);
-    }
-
-    private void CloseAllOverlaysInstant()
-    {
-        if (globalSettingsPanel) globalSettingsPanel.SetActive(false);
-        if (appBasicStatsPanel) appBasicStatsPanel.SetActive(false);
-        if (appPremiumStatsPanel) appPremiumStatsPanel.SetActive(false);
-        if (gameBasicStatsPanel) gameBasicStatsPanel.SetActive(false);
-        if (gamePremiumStatsPanel) gamePremiumStatsPanel.SetActive(false);
-        if (leaderboardPanel) leaderboardPanel.SetActive(false);
-        if (shopPanel) shopPanel.SetActive(false);
-        if (dailyQuestsPanel) dailyQuestsPanel.SetActive(false);
-        if (cardAppearancePanel) cardAppearancePanel.SetActive(false);
-        if (cardBackSelectionPanel) cardBackSelectionPanel.SetActive(false);
-        if (deckSelectionPanel) deckSelectionPanel.SetActive(false);
-    }
-
-    // --- НАСТРОЙКА ПАНЕЛИ ---
-
     private void SetupSettingsPanel()
     {
-        // 1. Включаем нужные контейнеры
-        SetContainerActive(difficultyContainer, currentGame.showDifficulty);
-        SetContainerActive(suitSelectionContainer, currentGame.showSuitSelector);
-        SetContainerActive(roundsSelectionContainer, currentGame.showRoundsSelector);
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
+        {
+            SetContainerActive(group.difficultyContainer, currentGame.showDifficulty);
+            SetContainerActive(group.suitSelectionContainer, currentGame.showSuitSelector);
+            SetContainerActive(group.roundsSelectionContainer, currentGame.showRoundsSelector);
+            SetContainerActive(group.drawModeContainer, currentGame.showDrawMode);
+            SetContainerActive(group.yukonModeContainer, currentGame.showYukonModes);
+            SetContainerActive(group.monteCarloModeContainer, currentGame.showMonteCarloModes);
+            SetContainerActive(group.montanaModeContainer, currentGame.showMontanaModes);
+            SetContainerActive(group.noOptionsContainer, currentGame.showNoOptionsPanel);
+        }
 
-        SetContainerActive(drawModeContainer, currentGame.showDrawMode);
-        SetContainerActive(yukonModeContainer, currentGame.showYukonModes);
-        SetContainerActive(monteCarloModeContainer, currentGame.showMonteCarloModes);
-        SetContainerActive(montanaModeContainer, currentGame.showMontanaModes);
-        SetContainerActive(noOptionsContainer, currentGame.showNoOptionsPanel);
-
-        // 2. Обновляем визуал (цвета кнопок)
         UpdateDifficultyVisuals();
 
         if (currentGame.showDrawMode) UpdateDrawModeVisuals();
@@ -667,19 +647,17 @@ public class MenuController : MonoBehaviour
         if (currentGame.showMonteCarloModes) UpdateMonteCarloVisuals();
         if (currentGame.showMontanaModes) UpdateMontanaVisuals();
 
-        // --- КАК У ПАУКА: Блокировка сложности при открытии панели ---
-        if (currentGame.type == GameType.Spider)
-        {
-            ValidateSpiderConstraints(GameSettings.SpiderSuitCount);
-        }
-        else if (currentGame.type == GameType.Octagon)
-        {
-            ValidateOctagonConstraints();
-        }
+        if (currentGame.type == GameType.Spider) ValidateSpiderConstraints(GameSettings.SpiderSuitCount);
+        else if (currentGame.type == GameType.Octagon) ValidateOctagonConstraints();
         else
         {
-            // Для остальных игр разблокируем все сложности
-            foreach (var btn in diffButtons) if (btn) btn.interactable = true;
+            foreach (var group in new[] { landscapeSettings, portraitSettings })
+            {
+                if (group.diffButtons != null)
+                {
+                    foreach (var btn in group.diffButtons) if (btn) btn.interactable = true;
+                }
+            }
             UpdateDifficultyVisuals();
         }
     }
@@ -689,12 +667,9 @@ public class MenuController : MonoBehaviour
         if (container != null) container.SetActive(active);
     }
 
-    // -----------------------------------------------------------------------
-    // KLONDIKE (Draw 1 / 3)
-    // -----------------------------------------------------------------------
-    public void OnDrawModeClicked(int count) // 1 или 3
+    public void OnDrawModeClicked(int count)
     {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click"); // <--- ДОБАВИТЬ
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
         GameSettings.KlondikeDrawCount = count;
         UpdateDrawModeVisuals();
         UpdateXPPreview();
@@ -702,16 +677,16 @@ public class MenuController : MonoBehaviour
 
     private void UpdateDrawModeVisuals()
     {
-        SetButtonState(draw1Button, GameSettings.KlondikeDrawCount == 1);
-        SetButtonState(draw3Button, GameSettings.KlondikeDrawCount == 3);
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
+        {
+            SetButtonState(group.draw1Button, GameSettings.KlondikeDrawCount == 1);
+            SetButtonState(group.draw3Button, GameSettings.KlondikeDrawCount == 3);
+        }
     }
 
-    // -----------------------------------------------------------------------
-    // YUKON (Classic / Russian)
-    // -----------------------------------------------------------------------
-    public void OnYukonModeClicked(int mode) // 0=Classic, 1=Russian
+    public void OnYukonModeClicked(int mode)
     {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click"); // <--- ДОБАВИТЬ
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
         GameSettings.YukonRussian = (mode == 1);
         UpdateYukonVisuals();
         UpdateXPPreview();
@@ -719,16 +694,16 @@ public class MenuController : MonoBehaviour
 
     private void UpdateYukonVisuals()
     {
-        SetButtonState(yukonClassicButton, !GameSettings.YukonRussian);
-        SetButtonState(yukonRussianButton, GameSettings.YukonRussian);
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
+        {
+            SetButtonState(group.yukonClassicButton, !GameSettings.YukonRussian);
+            SetButtonState(group.yukonRussianButton, GameSettings.YukonRussian);
+        }
     }
 
-    // -----------------------------------------------------------------------
-    // MONTE CARLO (8 Ways / 4 Ways)
-    // -----------------------------------------------------------------------
-    public void OnMonteCarloModeClicked(int mode) // 0=8Ways, 1=4Ways
+    public void OnMonteCarloModeClicked(int mode)
     {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click"); // <--- ДОБАВИТЬ
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
         GameSettings.MonteCarlo4Ways = (mode == 1);
         UpdateMonteCarloVisuals();
         UpdateXPPreview();
@@ -736,16 +711,16 @@ public class MenuController : MonoBehaviour
 
     private void UpdateMonteCarloVisuals()
     {
-        SetButtonState(monteCarlo8WaysButton, !GameSettings.MonteCarlo4Ways);
-        SetButtonState(monteCarlo4WaysButton, GameSettings.MonteCarlo4Ways);
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
+        {
+            SetButtonState(group.monteCarlo8WaysButton, !GameSettings.MonteCarlo4Ways);
+            SetButtonState(group.monteCarlo4WaysButton, GameSettings.MonteCarlo4Ways);
+        }
     }
 
-    // -----------------------------------------------------------------------
-    // MONTANA (Classic / Hard)
-    // -----------------------------------------------------------------------
-    public void OnMontanaModeClicked(int mode) // 0=Classic, 1=Hard
+    public void OnMontanaModeClicked(int mode)
     {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click"); // <--- ДОБАВИТЬ
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
         GameSettings.MontanaHard = (mode == 1);
         UpdateMontanaVisuals();
         UpdateXPPreview();
@@ -753,16 +728,16 @@ public class MenuController : MonoBehaviour
 
     private void UpdateMontanaVisuals()
     {
-        SetButtonState(montanaClassicButton, !GameSettings.MontanaHard);
-        SetButtonState(montanaHardButton, GameSettings.MontanaHard);
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
+        {
+            SetButtonState(group.montanaClassicButton, !GameSettings.MontanaHard);
+            SetButtonState(group.montanaHardButton, GameSettings.MontanaHard);
+        }
     }
 
-    // -----------------------------------------------------------------------
-    // SPIDER & SUITS
-    // -----------------------------------------------------------------------
     public void OnSuitClicked(int suitCount)
     {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click"); // <--- ДОБАВИТЬ
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
         GameSettings.SpiderSuitCount = suitCount;
         UpdateSuitsVisuals(suitCount);
         ValidateSpiderConstraints(suitCount);
@@ -771,52 +746,52 @@ public class MenuController : MonoBehaviour
 
     private void UpdateSuitsVisuals(int count)
     {
-        // 1->index 0, 2->index 1, 4->index 2
         int selectedIndex = (count == 1) ? 0 : (count == 2 ? 1 : 2);
 
-        for (int i = 0; i < suitButtons.Length; i++)
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
         {
-            if (suitButtons[i] == null) continue;
-            SetButtonState(suitButtons[i], i == selectedIndex);
+            if (group.suitButtons == null) continue;
+            for (int i = 0; i < group.suitButtons.Length; i++)
+            {
+                SetButtonState(group.suitButtons[i], i == selectedIndex);
+            }
         }
     }
 
     private void ValidateSpiderConstraints(int suitCount)
     {
-        // Сначала включаем все кнопки сложности
-        foreach (var btn in diffButtons) if (btn) btn.interactable = true;
-
-        if (suitCount == 1)
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
         {
-            // Для 1 масти блокируем Hard (индекс 2)
-            if (diffButtons.Length > 2) diffButtons[2].interactable = false;
+            if (group.diffButtons == null) continue;
+            foreach (var btn in group.diffButtons) if (btn) btn.interactable = true;
 
-            // Если выбран Hard, переключаем на Medium
-            if (GameSettings.CurrentDifficulty == Difficulty.Hard)
-                SetDifficulty((int)Difficulty.Medium);
+            if (suitCount == 1)
+            {
+                if (group.diffButtons.Length > 2 && group.diffButtons[2]) group.diffButtons[2].interactable = false;
+            }
+            else if (suitCount == 4)
+            {
+                if (group.diffButtons.Length > 0 && group.diffButtons[0]) group.diffButtons[0].interactable = false;
+            }
         }
-        else if (suitCount == 4)
-        {
-            // Для 4 мастей блокируем Easy (индекс 0)
-            if (diffButtons.Length > 0) diffButtons[0].interactable = false;
 
-            // Если выбран Easy, переключаем на Medium
-            if (GameSettings.CurrentDifficulty == Difficulty.Easy)
-                SetDifficulty((int)Difficulty.Medium);
-        }
+        if (suitCount == 1 && GameSettings.CurrentDifficulty == Difficulty.Hard) SetDifficulty((int)Difficulty.Medium);
+        else if (suitCount == 4 && GameSettings.CurrentDifficulty == Difficulty.Easy) SetDifficulty((int)Difficulty.Medium);
 
         UpdateDifficultyVisuals();
     }
+
     private void ValidateOctagonConstraints()
     {
-        // Сначала включаем все кнопки сложности (как у Паука)
-        foreach (var btn in diffButtons) if (btn) btn.interactable = true;
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
+        {
+            if (group.diffButtons == null) continue;
+            foreach (var btn in group.diffButtons) if (btn) btn.interactable = true;
 
-        // Блокируем Easy (индекс 0) и Hard (индекс 2)
-        if (diffButtons.Length > 0 && diffButtons[0] != null) diffButtons[0].interactable = false;
-        if (diffButtons.Length > 2 && diffButtons[2] != null) diffButtons[2].interactable = false;
+            if (group.diffButtons.Length > 0 && group.diffButtons[0]) group.diffButtons[0].interactable = false;
+            if (group.diffButtons.Length > 2 && group.diffButtons[2]) group.diffButtons[2].interactable = false;
+        }
 
-        // Если выбран Easy или Hard, переключаем на Medium (как у Паука)
         if (GameSettings.CurrentDifficulty == Difficulty.Easy || GameSettings.CurrentDifficulty == Difficulty.Hard)
         {
             SetDifficulty((int)Difficulty.Medium);
@@ -826,12 +801,10 @@ public class MenuController : MonoBehaviour
             UpdateDifficultyVisuals();
         }
     }
-    // -----------------------------------------------------------------------
-    // ROUNDS
-    // -----------------------------------------------------------------------
-    public void OnRoundsClicked(int index) // 0, 1, 2
+
+    public void OnRoundsClicked(int index)
     {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click"); // <--- ДОБАВИТЬ
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
         GameSettings.RoundsCount = index + 1;
         UpdateRoundsVisuals();
         UpdateXPPreview();
@@ -840,19 +813,19 @@ public class MenuController : MonoBehaviour
     private void UpdateRoundsVisuals()
     {
         int currentIndex = GameSettings.RoundsCount - 1;
-        for (int i = 0; i < roundsButtons.Length; i++)
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
         {
-            if (roundsButtons[i] == null) continue;
-            SetButtonState(roundsButtons[i], i == currentIndex);
+            if (group.roundsButtons == null) continue;
+            for (int i = 0; i < group.roundsButtons.Length; i++)
+            {
+                SetButtonState(group.roundsButtons[i], i == currentIndex);
+            }
         }
     }
 
-    // -----------------------------------------------------------------------
-    // DIFFICULTY
-    // -----------------------------------------------------------------------
     public void OnDifficultyClicked(int diffIndex)
     {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click"); // <--- ДОБАВИТЬ
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
         SetDifficulty(diffIndex);
         UpdateXPPreview();
     }
@@ -866,236 +839,447 @@ public class MenuController : MonoBehaviour
     private void UpdateDifficultyVisuals()
     {
         int currentIndex = (int)GameSettings.CurrentDifficulty;
-        for (int i = 0; i < diffButtons.Length; i++)
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
         {
-            if (diffButtons[i] == null) continue;
-            // Проверка на interactable нужна для логики Паука
-            if (!diffButtons[i].interactable)
+            if (group.diffButtons == null) continue;
+            for (int i = 0; i < group.diffButtons.Length; i++)
             {
-                diffButtons[i].image.color = buttonDisabledColor;
-            }
-            else
-            {
-                SetButtonState(diffButtons[i], i == currentIndex);
+                if (group.diffButtons[i] == null) continue;
+                if (!group.diffButtons[i].interactable)
+                {
+                    group.diffButtons[i].image.color = buttonDisabledColor;
+                }
+                else
+                {
+                    SetButtonState(group.diffButtons[i], i == currentIndex);
+                }
             }
         }
     }
 
-    // -----------------------------------------------------------------------
-    // HELPER & START
-    // -----------------------------------------------------------------------
     private void SetButtonState(Button btn, bool isSelected)
     {
         if (btn == null) return;
-
-        // 1. Меняем фон
         btn.image.color = isSelected ? bgSelectedColor : bgNormalColor;
-
-        // 2. Ищем текст внутри кнопки и меняем его цвет
-        // Поддержка TextMeshPro
         var tmpText = btn.GetComponentInChildren<TMP_Text>();
-        if (tmpText != null)
-        {
-            tmpText.color = isSelected ? textSelectedColor : textNormalColor;
-        }
+        if (tmpText != null) tmpText.color = isSelected ? textSelectedColor : textNormalColor;
         else
         {
-            // Поддержка старого UI Text (на всякий случай)
             var legacyText = btn.GetComponentInChildren<Text>();
-            if (legacyText != null)
-            {
-                legacyText.color = isSelected ? textSelectedColor : textNormalColor;
-            }
+            if (legacyText != null) legacyText.color = isSelected ? textSelectedColor : textNormalColor;
         }
     }
 
     public void OnStartGameClicked()
     {
-        // <--- ДОБАВИТЬ ЭТО: Торжественный клик старта --->
-        if (AudioManager.Instance != null)
-            AudioManager.Instance.PlaySound("Game_Start");
-        // [FIX] Гарантируем, что при нажатии "Играть" туториал выключен
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Game_Start");
         GameSettings.IsTutorialMode = false;
 
-        // 1. Визуальный эффект нажатия
-        SetButtonState(startButton, false);
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
+        {
+            SetButtonState(group.startButton, false);
+            if (group.startButton) group.startButton.interactable = false;
+            if (group.tutorialButton) group.tutorialButton.interactable = false;
+        }
 
-        // 2. Возврат раздачи в пул (если используется)
         if (DealCacheSystem.Instance != null) DealCacheSystem.Instance.ReturnActiveDealToQueue();
-
-        if (string.IsNullOrEmpty(currentGame.sceneName))
-        {
-            Debug.LogError($"Scene name not set for this game: {currentGame.name}");
-            return;
-        }
-
-        // 3. ЗАПУСК АНИМАЦИИ ВЫХОДА
-        if (exitController != null)
-        {
-            startButton.interactable = false;
-            if (tutorialButton != null) tutorialButton.interactable = false;
-
-            exitController.PlayExitAnimation(currentGame.type, () =>
-            {
-                SceneManager.LoadScene(currentGame.sceneName);
-            });
-        }
-        else
-        {
-            SceneManager.LoadScene(currentGame.sceneName);
-        }
-    }
-    public void OnTutorialButtonClicked()
-    {
-        if (AudioManager.Instance != null)
-            AudioManager.Instance.PlaySound("Game_Start");
-        // [FIX] Включаем режим обучения
-        GameSettings.IsTutorialMode = true;
-
-        if (tutorialButton != null) SetButtonState(tutorialButton, false);
 
         if (string.IsNullOrEmpty(currentGame.sceneName)) return;
 
         if (exitController != null)
         {
-            if (startButton != null) startButton.interactable = false;
-            if (tutorialButton != null) tutorialButton.interactable = false;
+            exitController.PlayExitAnimation(currentGame.type, () => SceneManager.LoadScene(currentGame.sceneName));
+        }
+        else SceneManager.LoadScene(currentGame.sceneName);
+    }
 
-            exitController.PlayExitAnimation(currentGame.type, () =>
+    public void OnTutorialButtonClicked()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Game_Start");
+        GameSettings.IsTutorialMode = true;
+
+        foreach (var group in new[] { landscapeSettings, portraitSettings })
+        {
+            SetButtonState(group.tutorialButton, false);
+            if (group.startButton) group.startButton.interactable = false;
+            if (group.tutorialButton) group.tutorialButton.interactable = false;
+        }
+
+        if (string.IsNullOrEmpty(currentGame.sceneName)) return;
+
+        if (exitController != null)
+        {
+            exitController.PlayExitAnimation(currentGame.type, () => SceneManager.LoadScene(currentGame.sceneName));
+        }
+        else SceneManager.LoadScene(currentGame.sceneName);
+    }
+
+    // ==========================================
+    // ОСТАЛЬНОЙ КОД (Корутины и прочее)
+    // ==========================================
+    private IEnumerator AnimateButtonsRoutine()
+    {
+        yield return null;
+        Canvas.ForceUpdateCanvases();
+
+        float duration = 0.4f;
+        float elapsed = 0f;
+
+        List<(RectTransform ui, RectTransform target)> items = new List<(RectTransform, RectTransform)>();
+
+        if (leaderboardBtn.button != null) items.Add((leaderboardBtn.button, leaderboardBtn.GetTarget(isPortrait, isSettingsMode)));
+        if (statsBtn.button != null) items.Add((statsBtn.button, statsBtn.GetTarget(isPortrait, isSettingsMode)));
+
+        foreach (var el in otherResponsiveElements)
+        {
+            if (el.uiElement != null) items.Add((el.uiElement, el.GetTarget(isPortrait)));
+        }
+
+        Dictionary<RectTransform, Vector3> startPositions = new Dictionary<RectTransform, Vector3>();
+        Dictionary<RectTransform, Vector2> startSizes = new Dictionary<RectTransform, Vector2>();
+        Dictionary<RectTransform, Vector3> startScales = new Dictionary<RectTransform, Vector3>();
+
+        foreach (var item in items)
+        {
+            if (item.ui == null || item.target == null) continue;
+            startPositions[item.ui] = item.ui.position;
+            item.ui.SetParent(item.target, true);
+            SetAsFixedCenterAnchor(item.ui, item.ui.rect.size);
+            startSizes[item.ui] = item.ui.sizeDelta;
+            startScales[item.ui] = item.ui.localScale;
+            item.ui.position = startPositions[item.ui];
+        }
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            float smoothT = Mathf.SmoothStep(0f, 1f, t);
+
+            foreach (var item in items)
             {
-                SceneManager.LoadScene(currentGame.sceneName);
-            });
+                if (item.ui == null || item.target == null) continue;
+                item.ui.position = Vector3.LerpUnclamped(startPositions[item.ui], item.target.position, smoothT);
+                item.ui.sizeDelta = Vector2.LerpUnclamped(startSizes[item.ui], item.target.rect.size, smoothT);
+                item.ui.localScale = Vector3.LerpUnclamped(startScales[item.ui], Vector3.one, smoothT);
+            }
+            yield return null;
         }
-        else
+
+        foreach (var item in items)
         {
-            SceneManager.LoadScene(currentGame.sceneName);
+            if (item.ui != null && item.target != null) SetAsStretchChild(item.ui);
         }
     }
-    public void OnSoundOnClicked()
+
+    private void MoveButtonsToTarget(bool toSettingsMode)
     {
-        if (AudioManager.Instance != null && AudioManager.Instance.isMuted)
-        {
-            AudioManager.Instance.SetMute(false);
-            AudioManager.Instance.PlaySound("UI_Click"); // Звук клика (т.к. звук только что включился)
-            UpdateSoundButtonsVisuals(false);
-        }
+        isSettingsMode = toSettingsMode;
+        if (buttonsMoveCoroutine != null) StopCoroutine(buttonsMoveCoroutine);
+        buttonsMoveCoroutine = StartCoroutine(AnimateButtonsRoutine());
     }
-    public void OnSoundOffClicked()
+
+    // --- ОВЕРЛЕИ, НАСТРОЙКИ ЗВУКА И ПРОЧЕЕ ---
+    // (Ниже расположены ваши неизмененные методы для настроек звука, языков, и анимации оверлеев)
+
+    public void OnGlobalSettingsClicked()
     {
-        if (AudioManager.Instance != null && !AudioManager.Instance.isMuted)
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+        GameObject activePanel = isPortrait ? portraitGlobalSettings.panel : landscapeGlobalSettings.panel;
+        ToggleOverlay(activePanel, true);
+    }
+    private bool IsGlobalSettingsOpen()
+    {
+        return (landscapeGlobalSettings.panel != null && landscapeGlobalSettings.panel.activeSelf) ||
+               (portraitGlobalSettings.panel != null && portraitGlobalSettings.panel.activeSelf);
+    }
+
+    public void OnLeaderboardClicked()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+        string lbName = IsSettingsPanelOpen() ? currentGame.type.ToString() : "Global";
+
+        if (dynamicLeaderboard != null) dynamicLeaderboard.LoadLeaderboard(lbName);
+
+        GameObject activePanel = isPortrait ? portraitLeaderboardPanel : landscapeLeaderboardPanel;
+        ToggleOverlay(activePanel, true);
+    }
+    public void OnShopClicked()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+        GameObject activePanel = isPortrait ? portraitShopPanel : landscapeShopPanel;
+        ToggleOverlay(activePanel, true);
+    }
+    public void OnDailyQuestsClicked()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+        GameObject activePanel = isPortrait ? portraitDailyQuestsPanel : landscapeDailyQuestsPanel;
+        ToggleOverlay(activePanel, true);
+    }
+
+    public void OnStatisticsClicked()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+        bool isPremium = StatisticsManager.Instance != null && StatisticsManager.Instance.IsUserPremium;
+        bool isGameSpecific = IsSettingsPanelOpen();
+
+        StatsUIGroup activeStats = isPortrait ? portraitStats : landscapeStats;
+        GameObject panelToOpen = isGameSpecific ? (isPremium ? activeStats.gamePremiumPanel : activeStats.gameBasicPanel) : (isPremium ? activeStats.appPremiumPanel : activeStats.appBasicPanel);
+
+        if (panelToOpen != null)
         {
-            // Сначала играем звук клика, а потом глушим систему
-            AudioManager.Instance.PlaySound("UI_Click");
-            AudioManager.Instance.SetMute(true);
-            UpdateSoundButtonsVisuals(false);
+            ToggleOverlay(panelToOpen, true);
+            if (isGameSpecific)
+            {
+                var premiumUI = panelToOpen.GetComponent<StatisticsUI>();
+                if (premiumUI != null) premiumUI.ShowStatsForGame(currentGame.type);
+                var basicUI = panelToOpen.GetComponent<BasicStatisticsUI>();
+                if (basicUI != null) basicUI.ShowStatsForGame(currentGame.type);
+            }
         }
     }
+
+    public void OnCloseOverlayClicked()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Back");
+        CloseAllOverlaysAnimated();
+        if (!IsSettingsPanelOpen() && mainSelectionPanel) mainSelectionPanel.SetActive(true);
+    }
+
+    private void ToggleOverlay(GameObject panel, bool show)
+    {
+        if (panel == null) return;
+
+        if (show)
+        {
+            // Глобальные настройки
+            if (landscapeGlobalSettings.panel && landscapeGlobalSettings.panel.activeSelf && landscapeGlobalSettings.panel != panel) ToggleOverlay(landscapeGlobalSettings.panel, false);
+            if (portraitGlobalSettings.panel && portraitGlobalSettings.panel.activeSelf && portraitGlobalSettings.panel != panel) ToggleOverlay(portraitGlobalSettings.panel, false);
+
+            // Статистика и прочее
+            if (landscapeStats.appBasicPanel && landscapeStats.appBasicPanel.activeSelf && landscapeStats.appBasicPanel != panel) ToggleOverlay(landscapeStats.appBasicPanel, false);
+            if (landscapeStats.appPremiumPanel && landscapeStats.appPremiumPanel.activeSelf && landscapeStats.appPremiumPanel != panel) ToggleOverlay(landscapeStats.appPremiumPanel, false);
+            if (landscapeStats.gameBasicPanel && landscapeStats.gameBasicPanel.activeSelf && landscapeStats.gameBasicPanel != panel) ToggleOverlay(landscapeStats.gameBasicPanel, false);
+            if (landscapeStats.gamePremiumPanel && landscapeStats.gamePremiumPanel.activeSelf && landscapeStats.gamePremiumPanel != panel) ToggleOverlay(landscapeStats.gamePremiumPanel, false);
+
+            if (portraitStats.appBasicPanel && portraitStats.appBasicPanel.activeSelf && portraitStats.appBasicPanel != panel) ToggleOverlay(portraitStats.appBasicPanel, false);
+            if (portraitStats.appPremiumPanel && portraitStats.appPremiumPanel.activeSelf && portraitStats.appPremiumPanel != panel) ToggleOverlay(portraitStats.appPremiumPanel, false);
+            if (portraitStats.gameBasicPanel && portraitStats.gameBasicPanel.activeSelf && portraitStats.gameBasicPanel != panel) ToggleOverlay(portraitStats.gameBasicPanel, false);
+            if (portraitStats.gamePremiumPanel && portraitStats.gamePremiumPanel.activeSelf && portraitStats.gamePremiumPanel != panel) ToggleOverlay(portraitStats.gamePremiumPanel, false);
+            if (landscapeLeaderboardPanel && landscapeLeaderboardPanel.activeSelf && landscapeLeaderboardPanel != panel) ToggleOverlay(landscapeLeaderboardPanel, false);
+            if (portraitLeaderboardPanel && portraitLeaderboardPanel.activeSelf && portraitLeaderboardPanel != panel) ToggleOverlay(portraitLeaderboardPanel, false);
+            if (landscapeShopPanel && landscapeShopPanel.activeSelf && landscapeShopPanel != panel) ToggleOverlay(landscapeShopPanel, false);
+            if (portraitShopPanel && portraitShopPanel.activeSelf && portraitShopPanel != panel) ToggleOverlay(portraitShopPanel, false);
+            if (landscapeDailyQuestsPanel && landscapeDailyQuestsPanel.activeSelf && landscapeDailyQuestsPanel != panel) ToggleOverlay(landscapeDailyQuestsPanel, false);
+            if (portraitDailyQuestsPanel && portraitDailyQuestsPanel.activeSelf && portraitDailyQuestsPanel != panel) ToggleOverlay(portraitDailyQuestsPanel, false);
+
+            // Кастомизация (если используете ToggleOverlay для них)
+            if (landscapeCustomization.cardAppearancePanel && landscapeCustomization.cardAppearancePanel.activeSelf && landscapeCustomization.cardAppearancePanel != panel) ToggleOverlay(landscapeCustomization.cardAppearancePanel, false);
+            if (portraitCustomization.cardAppearancePanel && portraitCustomization.cardAppearancePanel.activeSelf && portraitCustomization.cardAppearancePanel != panel) ToggleOverlay(portraitCustomization.cardAppearancePanel, false);
+        }
+
+        if (activePanelCoroutines.ContainsKey(panel) && activePanelCoroutines[panel] != null)
+        {
+            StopCoroutine(activePanelCoroutines[panel]);
+        }
+
+        activePanelCoroutines[panel] = StartCoroutine(AnimateOverlayRoutine(panel, show));
+    }
+
+    private IEnumerator AnimateOverlayRoutine(GameObject panel, bool show)
+    {
+        RectTransform rt = panel.GetComponent<RectTransform>();
+        if (rt == null) yield break;
+
+        // Выбираем скорость и дистанцию на лету
+        float currentDuration = isPortrait ? portraitOverlayDuration : landscapeOverlayDuration;
+        float currentDistance = isPortrait ? portraitOverlayFlyDistanceX : landscapeOverlayFlyDistanceX;
+
+        if (AudioManager.Instance != null)
+        {
+            string soundToPlay = show ? "Panel_Slide_In" : "Panel_Slide_Out";
+            float delay = currentDuration - 0.15f;
+            if (delay < 0) delay = 0;
+            AudioManager.Instance.PlaySoundWithAutoFade(soundToPlay, delay, 0.15f);
+        }
+
+        Vector2 centerPos = panelInitialPositions.ContainsKey(panel) ? panelInitialPositions[panel] : Vector2.zero;
+        Vector2 leftPos = centerPos + new Vector2(-currentDistance, 0);  // Используем новую дистанцию
+        Vector2 rightPos = centerPos + new Vector2(currentDistance, 0);
+
+        if (show)
+        {
+            if (!panel.activeSelf) rt.anchoredPosition = leftPos;
+            panel.SetActive(true);
+        }
+
+        Vector2 startPos = rt.anchoredPosition;
+        Vector2 endPos = show ? centerPos : rightPos;
+
+        float elapsed = 0f;
+        while (elapsed < currentDuration) // Используем новое время
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / currentDuration;
+            float curveT = show ? (1f - Mathf.Pow(1f - t, 3)) : (t * t * t);
+
+            rt.anchoredPosition = Vector2.LerpUnclamped(startPos, endPos, curveT);
+            yield return null;
+        }
+
+        rt.anchoredPosition = endPos;
+        if (!show) panel.SetActive(false);
+    }
+
+    private void CloseAllOverlaysAnimated()
+    {
+        // Глобальные настройки
+        if (landscapeGlobalSettings.panel && landscapeGlobalSettings.panel.activeSelf) ToggleOverlay(landscapeGlobalSettings.panel, false);
+        if (portraitGlobalSettings.panel && portraitGlobalSettings.panel.activeSelf) ToggleOverlay(portraitGlobalSettings.panel, false);
+
+        // Статистика и прочее
+        if (landscapeStats.appBasicPanel && landscapeStats.appBasicPanel.activeSelf) ToggleOverlay(landscapeStats.appBasicPanel, false);
+        if (landscapeStats.appPremiumPanel && landscapeStats.appPremiumPanel.activeSelf) ToggleOverlay(landscapeStats.appPremiumPanel, false);
+        if (landscapeStats.gameBasicPanel && landscapeStats.gameBasicPanel.activeSelf) ToggleOverlay(landscapeStats.gameBasicPanel, false);
+        if (landscapeStats.gamePremiumPanel && landscapeStats.gamePremiumPanel.activeSelf) ToggleOverlay(landscapeStats.gamePremiumPanel, false);
+
+        if (portraitStats.appBasicPanel && portraitStats.appBasicPanel.activeSelf) ToggleOverlay(portraitStats.appBasicPanel, false);
+        if (portraitStats.appPremiumPanel && portraitStats.appPremiumPanel.activeSelf) ToggleOverlay(portraitStats.appPremiumPanel, false);
+        if (portraitStats.gameBasicPanel && portraitStats.gameBasicPanel.activeSelf) ToggleOverlay(portraitStats.gameBasicPanel, false);
+        if (portraitStats.gamePremiumPanel && portraitStats.gamePremiumPanel.activeSelf) ToggleOverlay(portraitStats.gamePremiumPanel, false);
+        if (landscapeLeaderboardPanel && landscapeLeaderboardPanel.activeSelf) ToggleOverlay(landscapeLeaderboardPanel, false);
+        if (portraitLeaderboardPanel && portraitLeaderboardPanel.activeSelf) ToggleOverlay(portraitLeaderboardPanel, false);
+        if (landscapeShopPanel && landscapeShopPanel.activeSelf) ToggleOverlay(landscapeShopPanel, false);
+        if (portraitShopPanel && portraitShopPanel.activeSelf) ToggleOverlay(portraitShopPanel, false);
+        if (landscapeDailyQuestsPanel && landscapeDailyQuestsPanel.activeSelf) ToggleOverlay(landscapeDailyQuestsPanel, false);
+        if (portraitDailyQuestsPanel && portraitDailyQuestsPanel.activeSelf) ToggleOverlay(portraitDailyQuestsPanel, false);
+
+        // Панели кастомизации (Левые/Вертикальные вылеты)
+        if (landscapeCustomization.backgroundSelectionPanel && landscapeCustomization.backgroundSelectionPanel.activeSelf) ToggleOverlay(landscapeCustomization.backgroundSelectionPanel, false);
+        if (portraitCustomization.backgroundSelectionPanel && portraitCustomization.backgroundSelectionPanel.activeSelf) ToggleOverlay(portraitCustomization.backgroundSelectionPanel, false);
+
+        if (landscapeCustomization.cardAppearancePanel && landscapeCustomization.cardAppearancePanel.activeSelf) ToggleOverlay(landscapeCustomization.cardAppearancePanel, false);
+        if (portraitCustomization.cardAppearancePanel && portraitCustomization.cardAppearancePanel.activeSelf) ToggleOverlay(portraitCustomization.cardAppearancePanel, false);
+
+        // Панели кастомизации (Правые вылеты)
+        if (landscapeCustomization.cardBackSelectionPanel && landscapeCustomization.cardBackSelectionPanel.activeSelf) ToggleOverlayRight(landscapeCustomization.cardBackSelectionPanel, false);
+        if (portraitCustomization.cardBackSelectionPanel && portraitCustomization.cardBackSelectionPanel.activeSelf) ToggleOverlayRight(portraitCustomization.cardBackSelectionPanel, false);
+
+        if (landscapeCustomization.deckSelectionPanel && landscapeCustomization.deckSelectionPanel.activeSelf) ToggleOverlayRight(landscapeCustomization.deckSelectionPanel, false);
+        if (portraitCustomization.deckSelectionPanel && portraitCustomization.deckSelectionPanel.activeSelf) ToggleOverlayRight(portraitCustomization.deckSelectionPanel, false);
+    }
+
+    private void CloseAllOverlaysInstant()
+    {
+        // Глобальные настройки
+        if (landscapeGlobalSettings.panel) landscapeGlobalSettings.panel.SetActive(false);
+        if (portraitGlobalSettings.panel) portraitGlobalSettings.panel.SetActive(false);
+
+        // Статистика и прочее
+        if (landscapeStats.appBasicPanel) landscapeStats.appBasicPanel.SetActive(false);
+        if (landscapeStats.appPremiumPanel) landscapeStats.appPremiumPanel.SetActive(false);
+        if (landscapeStats.gameBasicPanel) landscapeStats.gameBasicPanel.SetActive(false);
+        if (landscapeStats.gamePremiumPanel) landscapeStats.gamePremiumPanel.SetActive(false);
+
+        if (portraitStats.appBasicPanel) portraitStats.appBasicPanel.SetActive(false);
+        if (portraitStats.appPremiumPanel) portraitStats.appPremiumPanel.SetActive(false);
+        if (portraitStats.gameBasicPanel) portraitStats.gameBasicPanel.SetActive(false);
+        if (portraitStats.gamePremiumPanel) portraitStats.gamePremiumPanel.SetActive(false);
+        if (landscapeLeaderboardPanel) landscapeLeaderboardPanel.SetActive(false);
+        if (portraitLeaderboardPanel) portraitLeaderboardPanel.SetActive(false);
+        if (landscapeShopPanel) landscapeShopPanel.SetActive(false);
+        if (portraitShopPanel) portraitShopPanel.SetActive(false);
+        if (landscapeDailyQuestsPanel) landscapeDailyQuestsPanel.SetActive(false);
+        if (portraitDailyQuestsPanel) portraitDailyQuestsPanel.SetActive(false);
+
+        // Панели кастомизации (Горизонтальные)
+        if (landscapeCustomization.backgroundSelectionPanel) landscapeCustomization.backgroundSelectionPanel.SetActive(false);
+        if (landscapeCustomization.cardAppearancePanel) landscapeCustomization.cardAppearancePanel.SetActive(false);
+        if (landscapeCustomization.cardBackSelectionPanel) landscapeCustomization.cardBackSelectionPanel.SetActive(false);
+        if (landscapeCustomization.deckSelectionPanel) landscapeCustomization.deckSelectionPanel.SetActive(false);
+
+        // Панели кастомизации (Вертикальные)
+        if (portraitCustomization.backgroundSelectionPanel) portraitCustomization.backgroundSelectionPanel.SetActive(false);
+        if (portraitCustomization.cardAppearancePanel) portraitCustomization.cardAppearancePanel.SetActive(false);
+        if (portraitCustomization.cardBackSelectionPanel) portraitCustomization.cardBackSelectionPanel.SetActive(false);
+        if (portraitCustomization.deckSelectionPanel) portraitCustomization.deckSelectionPanel.SetActive(false);
+    }
+
+    public void OnSoundOnClicked() { if (AudioManager.Instance != null && AudioManager.Instance.isMuted) { AudioManager.Instance.SetMute(false); AudioManager.Instance.PlaySound("UI_Click"); UpdateSoundButtonsVisuals(false); } }
+    public void OnSoundOffClicked() { if (AudioManager.Instance != null && !AudioManager.Instance.isMuted) { AudioManager.Instance.PlaySound("UI_Click"); AudioManager.Instance.SetMute(true); UpdateSoundButtonsVisuals(false); } }
+
     private void UpdateSoundButtonsVisuals(bool instant = false)
     {
         if (AudioManager.Instance == null) return;
         bool isMuted = AudioManager.Instance.isMuted;
 
-        // 1. Меняем цвета (фон и текст вашим готовым методом)
-        SetButtonState(soundOnButton, !isMuted);
-        SetButtonState(soundOffButton, isMuted);
-
-        // --- НОВОЕ: Меняем цвет иконки динамика ---
-        TintButtonIcon(soundOnButton, !isMuted);
-        TintButtonIcon(soundOffButton, isMuted);
-
-        // 2. Меняем размеры (плавно или мгновенно при старте)
-        if (soundOnButton != null)
+        foreach (var group in new[] { landscapeGlobalSettings, portraitGlobalSettings })
         {
-            Vector3 targetScale = !isMuted ? buttonActiveScale : Vector3.one;
-            AnimateOrSetScale(soundOnButton.GetComponent<RectTransform>(), targetScale, instant);
-        }
+            SetButtonState(group.soundOnButton, !isMuted);
+            SetButtonState(group.soundOffButton, isMuted);
+            TintButtonIcon(group.soundOnButton, !isMuted);
+            TintButtonIcon(group.soundOffButton, isMuted);
 
-        if (soundOffButton != null)
-        {
-            Vector3 targetScale = isMuted ? buttonActiveScale : Vector3.one;
-            AnimateOrSetScale(soundOffButton.GetComponent<RectTransform>(), targetScale, instant);
+            if (group.soundOnButton != null) AnimateOrSetScale(group.soundOnButton.GetComponent<RectTransform>(), !isMuted ? buttonActiveScale : Vector3.one, instant);
+            if (group.soundOffButton != null) AnimateOrSetScale(group.soundOffButton.GetComponent<RectTransform>(), isMuted ? buttonActiveScale : Vector3.one, instant);
         }
     }
 
-    // --- НОВЫЙ МЕТОД ---
-    // Вспомогательный метод для покраски иконки (пропуская фон кнопки)
     private void TintButtonIcon(Button btn, bool isSelected)
     {
         if (btn == null) return;
-
-        // Получаем все компоненты Image внутри кнопки (включая фон самой кнопки)
-        Image[] images = btn.GetComponentsInChildren<Image>();
-
-        foreach (var img in images)
+        foreach (var img in btn.GetComponentsInChildren<Image>())
         {
-            // Если картинка НЕ является фоном самой кнопки, значит это наша иконка
-            if (img != btn.image)
-            {
-                // Красим ее в цвета текста из ваших настроек
-                img.color = isSelected ? textSelectedColor : textNormalColor;
-            }
+            if (img != btn.image) img.color = isSelected ? textSelectedColor : textNormalColor;
         }
     }
+
     public void OnLanguageButtonClicked(int index)
     {
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
-
-        if (index < 0 || index >= languageCodes.Length) return;
-
-        string code = languageCodes[index];
-
-        // Меняем язык через ваш существующий менеджер
-        if (LocalizationManager.instance != null)
-        {
-            LocalizationManager.instance.SetLanguage(code);
-        }
-
-        // Запускаем обновление интерфейса (плавное изменение размера и цвета)
+        if (index >= 0 && index < languageCodes.Length && LocalizationManager.instance != null) LocalizationManager.instance.SetLanguage(languageCodes[index]);
         UpdateLanguageButtonsVisuals(false);
     }
 
     private void UpdateLanguageButtonsVisuals(bool instant = false)
     {
-        if (languageButtons == null || languageButtons.Length == 0) return;
+        string currentLang = LocalizationManager.instance != null ? LocalizationManager.instance.CurrentLanguage : "en";
 
-        // Узнаем текущий язык из менеджера (если он еще не прогрузился, берем дефолтный "en")
-        string currentLang = "en";
-        if (LocalizationManager.instance != null)
+        foreach (var group in new[] { landscapeGlobalSettings, portraitGlobalSettings })
         {
-            currentLang = LocalizationManager.instance.CurrentLanguage;
-        }
-
-        for (int i = 0; i < languageButtons.Length; i++)
-        {
-            if (languageButtons[i] == null) continue;
-
-            // Если код кнопки совпадает с текущим языком - она активна
-            bool isSelected = (languageCodes[i] == currentLang);
-
-            // 1. Меняем цвета (используем ваш готовый метод)
-            SetButtonState(languageButtons[i], isSelected);
-
-            // 2. Меняем размеры (плавно или мгновенно)
-            Vector3 targetScale = isSelected ? buttonActiveScale : Vector3.one;
-            AnimateOrSetScale(languageButtons[i].GetComponent<RectTransform>(), targetScale, instant);
+            if (group.languageButtons == null) continue;
+            for (int i = 0; i < group.languageButtons.Length; i++)
+            {
+                if (group.languageButtons[i] == null) continue;
+                bool isSelected = (languageCodes[i] == currentLang);
+                SetButtonState(group.languageButtons[i], isSelected);
+                AnimateOrSetScale(group.languageButtons[i].GetComponent<RectTransform>(), isSelected ? buttonActiveScale : Vector3.one, instant);
+            }
         }
     }
+
+    public void OnClickModeButtonClicked(int mode)
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+        GameSettings.AutoMoveClickMode = mode;
+        UpdateClickModeButtonsVisuals(false);
+    }
+
+    private void UpdateClickModeButtonsVisuals(bool instant = false)
+    {
+        int mode = GameSettings.AutoMoveClickMode;
+        foreach (var group in new[] { landscapeGlobalSettings, portraitGlobalSettings })
+        {
+            if (group.singleClickButton != null) { SetButtonState(group.singleClickButton, mode == 0); AnimateOrSetScale(group.singleClickButton.GetComponent<RectTransform>(), mode == 0 ? buttonActiveScale : Vector3.one, instant); }
+            if (group.doubleClickButton != null) { SetButtonState(group.doubleClickButton, mode == 1); AnimateOrSetScale(group.doubleClickButton.GetComponent<RectTransform>(), mode == 1 ? buttonActiveScale : Vector3.one, instant); }
+        }
+    }
+
     private void AnimateOrSetScale(RectTransform target, Vector3 targetScale, bool instant)
     {
         if (target == null) return;
-
-        if (instant)
-        {
-            target.localScale = targetScale;
-            return;
-        }
-
-        // Останавливаем старую анимацию для этой кнопки, если она была
-        if (buttonScaleCoroutines.ContainsKey(target) && buttonScaleCoroutines[target] != null)
-        {
-            StopCoroutine(buttonScaleCoroutines[target]);
-        }
-
+        if (instant) { target.localScale = targetScale; return; }
+        if (buttonScaleCoroutines.ContainsKey(target) && buttonScaleCoroutines[target] != null) StopCoroutine(buttonScaleCoroutines[target]);
         buttonScaleCoroutines[target] = StartCoroutine(ScaleButtonRoutine(target, targetScale));
     }
 
@@ -1103,102 +1287,83 @@ public class MenuController : MonoBehaviour
     {
         float elapsed = 0f;
         Vector3 startScale = target.localScale;
-
         while (elapsed < buttonAnimDuration)
         {
             elapsed += Time.deltaTime;
-            float t = elapsed / buttonAnimDuration;
-            // Используем SmoothStep для приятной "мягкости" анимации
-            float smoothT = Mathf.SmoothStep(0f, 1f, t);
-
-            target.localScale = Vector3.Lerp(startScale, targetScale, smoothT);
+            target.localScale = Vector3.Lerp(startScale, targetScale, Mathf.SmoothStep(0f, 1f, elapsed / buttonAnimDuration));
             yield return null;
         }
-
         target.localScale = targetScale;
     }
+
     public void OpenBackgroundSelection()
     {
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+        GameObject activeGlobalPanel = isPortrait ? portraitGlobalSettings.panel : landscapeGlobalSettings.panel;
+        GameObject activeBgPanel = isPortrait ? portraitCustomization.backgroundSelectionPanel : landscapeCustomization.backgroundSelectionPanel;
+        float flyDist = isPortrait ? portraitVerticalFlyDistance : landscapeVerticalFlyDistance;
 
-        // Настройки улетают ВВЕРХ, а панель фонов выезжает СНИЗУ
-        // Проверяем, что обе панели назначены в инспекторе
-        if (globalSettingsPanel != null && backgroundSelectionPanel != null)
-        {
-            StartCoroutine(VerticalTransitionRoutine(globalSettingsPanel, backgroundSelectionPanel, true));
-        }
+        if (activeGlobalPanel && activeBgPanel)
+            StartCoroutine(VerticalTransitionRoutine(activeGlobalPanel, activeBgPanel, true, flyDist));
     }
     public void CloseBackgroundSelection()
     {
-        // ДОБАВЛЕНО: Звук клика при закрытии
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+        GameObject activeGlobalPanel = isPortrait ? portraitGlobalSettings.panel : landscapeGlobalSettings.panel;
+        GameObject activeBgPanel = isPortrait ? portraitCustomization.backgroundSelectionPanel : landscapeCustomization.backgroundSelectionPanel;
+        float flyDist = isPortrait ? portraitVerticalFlyDistance : landscapeVerticalFlyDistance;
 
-        // Панель фонов уезжает ВНИЗ, а настройки возвращаются СВЕРХУ
-        if (backgroundSelectionPanel != null && globalSettingsPanel != null)
-        {
-            StartCoroutine(VerticalTransitionRoutine(backgroundSelectionPanel, globalSettingsPanel, false));
-        }
+        if (activeBgPanel && activeGlobalPanel)
+            StartCoroutine(VerticalTransitionRoutine(activeBgPanel, activeGlobalPanel, false, flyDist));
     }
-    // --- НОВЫЕ МЕТОДЫ ДЛЯ ПАНЕЛИ КАРТ ---
+
     public void OpenCardAppearance()
     {
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+        GameObject activeGlobalPanel = isPortrait ? portraitGlobalSettings.panel : landscapeGlobalSettings.panel;
+        GameObject activeAppPanel = isPortrait ? portraitCustomization.cardAppearancePanel : landscapeCustomization.cardAppearancePanel;
+        float flyDist = isPortrait ? portraitVerticalFlyDistance : landscapeVerticalFlyDistance;
 
-        // Настройки улетают вверх, панель карт выезжает снизу
-        if (globalSettingsPanel != null && cardAppearancePanel != null)
-        {
-            StartCoroutine(VerticalTransitionRoutine(globalSettingsPanel, cardAppearancePanel, true));
-        }
+        if (activeGlobalPanel && activeAppPanel)
+            StartCoroutine(VerticalTransitionRoutine(activeGlobalPanel, activeAppPanel, true, flyDist));
     }
 
     public void CloseCardAppearance()
     {
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+        GameObject activeGlobalPanel = isPortrait ? portraitGlobalSettings.panel : landscapeGlobalSettings.panel;
+        GameObject activeAppPanel = isPortrait ? portraitCustomization.cardAppearancePanel : landscapeCustomization.cardAppearancePanel;
+        float flyDist = isPortrait ? portraitVerticalFlyDistance : landscapeVerticalFlyDistance;
 
-        // Панель карт улетает вниз, настройки выезжают сверху
-        if (cardAppearancePanel != null && globalSettingsPanel != null)
-        {
-            StartCoroutine(VerticalTransitionRoutine(cardAppearancePanel, globalSettingsPanel, false));
-        }
+        if (activeAppPanel && activeGlobalPanel)
+            StartCoroutine(VerticalTransitionRoutine(activeAppPanel, activeGlobalPanel, false, flyDist));
     }
-    private IEnumerator VerticalTransitionRoutine(GameObject panelToHide, GameObject panelToShow, bool isOpeningBg)
+    private IEnumerator VerticalTransitionRoutine(GameObject panelToHide, GameObject panelToShow, bool isOpeningBg, float flyDistance)
     {
-        // 1. ЗВУК СКОЛЬЗЕНИЯ
+        // Выбираем время анимации в зависимости от ориентации
+        float currentDuration = isPortrait ? portraitOverlayDuration : landscapeOverlayDuration;
+
         if (AudioManager.Instance != null)
-        {
-            string soundToPlay = isOpeningBg ? "Panel_Slide_In" : "Panel_Slide_Out";
-            float delay = overlayAnimDuration - 0.15f;
-            if (delay < 0) delay = 0;
-            AudioManager.Instance.PlaySoundWithAutoFade(soundToPlay, delay, 0.15f);
-        }
+            AudioManager.Instance.PlaySoundWithAutoFade(isOpeningBg ? "Panel_Slide_In" : "Panel_Slide_Out", Mathf.Max(0, currentDuration - 0.15f), 0.15f);
 
         RectTransform hideRt = panelToHide.GetComponent<RectTransform>();
         RectTransform showRt = panelToShow.GetComponent<RectTransform>();
 
-        // Определяем идеальный центр (куда панели должны приходить)
         Vector2 hideCenterPos = panelInitialPositions.ContainsKey(panelToHide) ? panelInitialPositions[panelToHide] : Vector2.zero;
         Vector2 showCenterPos = panelInitialPositions.ContainsKey(panelToShow) ? panelInitialPositions[panelToShow] : Vector2.zero;
 
-        // Определяем цели
-        // Если открываем фоны (isOpeningBg=true): прячем настройки ВВЕРХ, показываем фоны снизу
-        // Если закрываем фоны (isOpeningBg=false): прячем фоны ВНИЗ, показываем настройки сверху
-        Vector2 hideTargetPos = hideCenterPos + new Vector2(0, isOpeningBg ? verticalFlyDistance : -verticalFlyDistance);
-        Vector2 showStartPos = showCenterPos + new Vector2(0, isOpeningBg ? -verticalFlyDistance : verticalFlyDistance);
+        Vector2 hideTargetPos = hideCenterPos + new Vector2(0, isOpeningBg ? flyDistance : -flyDistance);
+        Vector2 showStartPos = showCenterPos + new Vector2(0, isOpeningBg ? -flyDistance : flyDistance);
 
-        // Подготовка показываемой панели
         panelToShow.SetActive(true);
         showRt.anchoredPosition = showStartPos;
-
-        // Стартовые точки для Лерпа (откуда начинаем движение в данный момент)
         Vector2 hideStartPos = hideRt.anchoredPosition;
 
         float elapsed = 0f;
-        while (elapsed < overlayAnimDuration)
+        while (elapsed < currentDuration) // Используем новое время
         {
             elapsed += Time.deltaTime;
-            float t = elapsed / overlayAnimDuration;
-
-            // Используем ту же кривую, что и в горизонтальных оверлеях
+            float t = elapsed / currentDuration;
             float curveT = isOpeningBg ? (1f - Mathf.Pow(1f - t, 3)) : (t * t * t);
 
             hideRt.anchoredPosition = Vector2.LerpUnclamped(hideStartPos, hideTargetPos, curveT);
@@ -1206,33 +1371,41 @@ public class MenuController : MonoBehaviour
             yield return null;
         }
 
-        // Финальная фиксация
         hideRt.anchoredPosition = hideTargetPos;
         showRt.anchoredPosition = showCenterPos;
         panelToHide.SetActive(false);
     }
+
     public void OpenCardBackSelection()
     {
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
-        // Вызываем ToggleOverlay, но с флагом появления справа
-        ToggleOverlayRight(cardBackSelectionPanel, true);
+        GameObject activePanel = isPortrait ? portraitCustomization.cardBackSelectionPanel : landscapeCustomization.cardBackSelectionPanel;
+        ToggleOverlayRight(activePanel, true);
     }
+
     public void CloseCardBackSelection()
     {
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Back");
-        ToggleOverlayRight(cardBackSelectionPanel, false);
+        GameObject activePanel = isPortrait ? portraitCustomization.cardBackSelectionPanel : landscapeCustomization.cardBackSelectionPanel;
+        ToggleOverlayRight(activePanel, false);
     }
 
-    // Специальная версия Toggle для правой панели
+    public void OpenDeckSelection()
+    {
+        GameObject activePanel = isPortrait ? portraitCustomization.deckSelectionPanel : landscapeCustomization.deckSelectionPanel;
+        ToggleOverlayRight(activePanel, true);
+    }
+
+    public void CloseDeckSelection()
+    {
+        GameObject activePanel = isPortrait ? portraitCustomization.deckSelectionPanel : landscapeCustomization.deckSelectionPanel;
+        ToggleOverlayRight(activePanel, false);
+    }
+
     private void ToggleOverlayRight(GameObject panel, bool show)
     {
         if (panel == null) return;
-
-        if (activePanelCoroutines.ContainsKey(panel) && activePanelCoroutines[panel] != null)
-        {
-            StopCoroutine(activePanelCoroutines[panel]);
-        }
-
+        if (activePanelCoroutines.ContainsKey(panel) && activePanelCoroutines[panel] != null) StopCoroutine(activePanelCoroutines[panel]);
         activePanelCoroutines[panel] = StartCoroutine(AnimateOverlayRightRoutine(panel, show));
     }
 
@@ -1241,20 +1414,22 @@ public class MenuController : MonoBehaviour
         RectTransform rt = panel.GetComponent<RectTransform>();
         if (rt == null) yield break;
 
-        // Звук скольжения
+        // Выбираем скорость и дистанцию на лету
+        float currentDuration = isPortrait ? portraitOverlayDuration : landscapeOverlayDuration;
+        float currentDistance = isPortrait ? portraitOverlayFlyDistanceX : landscapeOverlayFlyDistanceX;
+
         if (AudioManager.Instance != null)
         {
             string soundToPlay = show ? "Panel_Slide_In" : "Panel_Slide_Out";
-            float delay = overlayAnimDuration - 0.15f;
+            float delay = currentDuration - 0.15f;
             AudioManager.Instance.PlaySoundWithAutoFade(soundToPlay, Mathf.Max(0, delay), 0.15f);
         }
 
         Vector2 centerPos = panelInitialPositions.ContainsKey(panel) ? panelInitialPositions[panel] : Vector2.zero;
-        Vector2 rightPos = centerPos + new Vector2(overlayFlyDistanceX, 0); // Точка справа за экраном
+        Vector2 rightPos = centerPos + new Vector2(currentDistance, 0); // Используем новую дистанцию
 
         if (show)
         {
-            // Если открываем — ставим панель СТРОГО СПРАВА перед началом анимации
             if (!panel.activeSelf) rt.anchoredPosition = rightPos;
             panel.SetActive(true);
         }
@@ -1263,12 +1438,10 @@ public class MenuController : MonoBehaviour
         Vector2 endPos = show ? centerPos : rightPos;
 
         float elapsed = 0f;
-        while (elapsed < overlayAnimDuration)
+        while (elapsed < currentDuration) // Используем новое время
         {
             elapsed += Time.deltaTime;
-            float t = elapsed / overlayAnimDuration;
-
-            // Используем Cubic Ease для плавности
+            float t = elapsed / currentDuration;
             float curveT = show ? (1f - Mathf.Pow(1f - t, 3)) : (t * t * t);
 
             rt.anchoredPosition = Vector2.LerpUnclamped(startPos, endPos, curveT);
@@ -1278,17 +1451,5 @@ public class MenuController : MonoBehaviour
         rt.anchoredPosition = endPos;
         if (!show) panel.SetActive(false);
         activePanelCoroutines[panel] = null;
-    }
-    public void OpenDeckSelection()
-    {
-        // Открываем оверлей справа
-        ToggleOverlayRight(deckSelectionPanel, true);
-    }
-
-    // Вызывается кнопкой "Принять" или "Закрыть" на самой панели колод
-    public void CloseDeckSelection()
-    {
-        // Закрываем оверлей
-        ToggleOverlayRight(deckSelectionPanel, false);
     }
 }

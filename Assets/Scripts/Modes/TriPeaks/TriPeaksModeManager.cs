@@ -100,7 +100,7 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         if (animationService == null) animationService = gameObject.AddComponent<TriPeaksAnimationService>();
 
         if (undoButton != null) undoButton.onClick.AddListener(OnUndoAction);
-        if (undoAllButton != null) undoAllButton.onClick.AddListener(OnUndoAllAction);
+        if (undoAllButton != null) LongPressHoldTrigger.SubscribeToButton(undoAllButton, OnUndoAllAction);
 
         currentDifficulty = GameSettings.CurrentDifficulty;
         totalRounds = GameSettings.RoundsCount;

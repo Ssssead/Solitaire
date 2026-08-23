@@ -70,7 +70,10 @@ public class MontanaIntroController : MonoBehaviour, IIntroController
             }
         }
     }
-
+    public void UpdateSavedPositions()
+    {
+        SaveInitialPositions();
+    }
     public void PrepareIntro(bool isRestarting)
     {
         isSkipping = false;

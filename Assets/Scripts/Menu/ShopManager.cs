@@ -6,24 +6,33 @@ public class ShopManager : MonoBehaviour
 {
     [Header("ID покупок (строго как в консоли!)")]
     public string premiumId = "Premium";
-    public string premium2Id = "Premium2"; // <--- НОВЫЙ ID СО СКИДКОЙ
+    public string premium2Id = "Premium2";
     public string noAdsId = "NoADS";
 
-    [Header("Кнопки интерфейса")]
-    public Button premiumButton;
-    public Button noAdsButton;
-    public LocalizedText premiumDescText; // Сюда перетащим текст описания Премиума
-    [Header("Тексты статуса (Купить / Куплено)")]
-    public LocalizedText premiumStatusText;
-    public LocalizedText noAdsStatusText;
+    [System.Serializable]
+    public class ShopUIGroup
+    {
+        [Header("Кнопки интерфейса")]
+        public Button premiumButton;
+        public Button noAdsButton;
+        public LocalizedText premiumDescText;
 
-    [Header("Объекты Цены (скрываются после покупки)")]
-    public GameObject premiumPriceObj;
-    public GameObject noAdsPriceObj;
+        [Header("Тексты статуса (Купить / Куплено)")]
+        public LocalizedText premiumStatusText;
+        public LocalizedText noAdsStatusText;
 
-    [Header("Иконки валюты (скрываются после покупки)")]
-    public GameObject premiumCurrencyIcon;
-    public GameObject noAdsCurrencyIcon;
+        [Header("Объекты Цены (скрываются после покупки)")]
+        public GameObject premiumPriceObj;
+        public GameObject noAdsPriceObj;
+
+        [Header("Иконки валюты (скрываются после покупки)")]
+        public GameObject premiumCurrencyIcon;
+        public GameObject noAdsCurrencyIcon;
+    }
+
+    [Header("UI Магазина (Dual Orientation)")]
+    public ShopUIGroup landscapeUI;
+    public ShopUIGroup portraitUI;
 
     private void OnEnable()
     {
@@ -43,9 +52,7 @@ public class ShopManager : MonoBehaviour
         if (StatisticsManager.Instance != null && StatisticsManager.Instance.IsUserPremium) return;
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
 
-        // Определяем, какой именно Премиум продавать (зависит от того, куплена ли реклама)
         string targetId = (StatisticsManager.Instance != null && StatisticsManager.Instance.IsAdsDisabled) ? premium2Id : premiumId;
-
         YG2.BuyPayments(targetId);
     }
 
@@ -71,105 +78,75 @@ public class ShopManager : MonoBehaviour
         bool hasPremium = StatisticsManager.Instance.IsUserPremium;
         bool hasNoAds = StatisticsManager.Instance.IsAdsDisabled;
 
+        UpdateGroupUI(landscapeUI, hasPremium, hasNoAds);
+        UpdateGroupUI(portraitUI, hasPremium, hasNoAds);
+    }
+
+    private void UpdateGroupUI(ShopUIGroup group, bool hasPremium, bool hasNoAds)
+    {
+        if (group == null) return;
+
         // --- Блокировка Премиума (или применение скидки) ---
-        if (premiumButton != null)
+        if (group.premiumButton != null)
         {
-            premiumButton.interactable = !hasPremium;
-            var py = premiumButton.GetComponent<PurchaseYG>();
+            group.premiumButton.interactable = !hasPremium;
+            var py = group.premiumButton.GetComponent<PurchaseYG>();
 
             if (hasPremium)
             {
-                if (premiumStatusText != null)
-                {
-                    premiumStatusText.key = "Shop_Purchased";
-                    premiumStatusText.UpdateText();
-                }
-                if (premiumPriceObj != null) premiumPriceObj.SetActive(false);
-                if (premiumCurrencyIcon != null) premiumCurrencyIcon.SetActive(false);
+                if (group.premiumStatusText != null) { group.premiumStatusText.key = "Shop_Purchased"; group.premiumStatusText.UpdateText(); }
+                if (group.premiumPriceObj != null) group.premiumPriceObj.SetActive(false);
+                if (group.premiumCurrencyIcon != null) group.premiumCurrencyIcon.SetActive(false);
                 if (py != null) py.enabled = false;
             }
             else
             {
-                // ТОВАР ЕЩЕ НЕ КУПЛЕН:
                 string currentPremiumId = hasNoAds ? premium2Id : premiumId;
 
-                // ---> НОВОЕ: МЕНЯЕМ ОПИСАНИЕ <---
-                if (premiumDescText != null)
+                if (group.premiumDescText != null)
                 {
-                    premiumDescText.key = hasNoAds ? "Shop_Premium2_Desc" : "Shop_Premium_Desc";
-                    premiumDescText.UpdateText();
+                    group.premiumDescText.key = hasNoAds ? "Shop_Premium2_Desc" : "Shop_Premium_Desc";
+                    group.premiumDescText.UpdateText();
                 }
-                // ---------------------------------
-                // Подменяем ID в скрипте Яндекса и заставляем его обновить текст цены
+
                 if (py != null)
                 {
                     py.id = currentPremiumId;
-
-                    // Если данные о товарах от Яндекса уже загружены - мгновенно обновляем UI
                     if (YG2.purchases != null && YG2.purchases.Length > 0)
                     {
                         var purchaseData = YG2.PurchaseByID(currentPremiumId);
                         if (purchaseData != null) py.UpdateEntries(purchaseData);
                     }
-
                     if (!py.enabled) py.enabled = true;
                 }
 
-                if (premiumStatusText != null)
-                {
-                    premiumStatusText.key = "Shop_Buy";
-                    premiumStatusText.UpdateText();
-                }
-                if (premiumPriceObj != null) premiumPriceObj.SetActive(true);
-                if (premiumCurrencyIcon != null) premiumCurrencyIcon.SetActive(true);
+                if (group.premiumStatusText != null) { group.premiumStatusText.key = "Shop_Buy"; group.premiumStatusText.UpdateText(); }
+                if (group.premiumPriceObj != null) group.premiumPriceObj.SetActive(true);
+                if (group.premiumCurrencyIcon != null) group.premiumCurrencyIcon.SetActive(true);
             }
         }
 
         // --- Блокировка Отключения рекламы ---
-        if (noAdsButton != null)
+        if (group.noAdsButton != null)
         {
             bool shouldBlockNoAds = hasNoAds || hasPremium;
-            noAdsButton.interactable = !shouldBlockNoAds;
-            var py = noAdsButton.GetComponent<PurchaseYG>();
+            group.noAdsButton.interactable = !shouldBlockNoAds;
+            var py = group.noAdsButton.GetComponent<PurchaseYG>();
 
             if (shouldBlockNoAds)
             {
-                if (noAdsStatusText != null)
-                {
-                    noAdsStatusText.key = "Shop_Purchased";
-                    noAdsStatusText.UpdateText();
-                }
-                if (noAdsPriceObj != null) noAdsPriceObj.SetActive(false);
-                if (noAdsCurrencyIcon != null) noAdsCurrencyIcon.SetActive(false);
+                if (group.noAdsStatusText != null) { group.noAdsStatusText.key = "Shop_Purchased"; group.noAdsStatusText.UpdateText(); }
+                if (group.noAdsPriceObj != null) group.noAdsPriceObj.SetActive(false);
+                if (group.noAdsCurrencyIcon != null) group.noAdsCurrencyIcon.SetActive(false);
                 if (py != null) py.enabled = false;
             }
             else
             {
-                if (noAdsStatusText != null)
-                {
-                    noAdsStatusText.key = "Shop_Buy";
-                    noAdsStatusText.UpdateText();
-                }
-                if (noAdsPriceObj != null) noAdsPriceObj.SetActive(true);
-                if (noAdsCurrencyIcon != null) noAdsCurrencyIcon.SetActive(true);
+                if (group.noAdsStatusText != null) { group.noAdsStatusText.key = "Shop_Buy"; group.noAdsStatusText.UpdateText(); }
+                if (group.noAdsPriceObj != null) group.noAdsPriceObj.SetActive(true);
+                if (group.noAdsCurrencyIcon != null) group.noAdsCurrencyIcon.SetActive(true);
                 if (py != null && !py.enabled) py.enabled = true;
             }
         }
     }
-/*
-    // МЕТОДЫ СБРОСА ДЛЯ ТЕСТОВ
-    public void OnResetStatsClicked()
-    {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
-        if (StatisticsManager.Instance != null) StatisticsManager.Instance.ResetAllStatistics();
-        if (MenuController.Instance != null) MenuController.Instance.OnCloseOverlayClicked();
-    }
-
-    public void OnResetPurchasesClicked()
-    {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
-      
-        RefreshShopUI();
-    }
-*/
 }

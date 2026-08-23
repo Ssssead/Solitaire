@@ -592,9 +592,8 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
         if (!IsInputAllowed) return;
 
         // Если это мобилка или планшет — перехватываем одиночный тап
-        if (YG2.envir.isMobile || YG2.envir.isTablet)
+        if (GameSettings.AutoMoveClickMode == 0)
         {
-            // Отменяем техническую анимацию возврата от микро-свайпа
             var dragManager = FindObjectOfType<DragManager>();
             dragManager?.ForceSnapBackLastDrop();
 
@@ -607,9 +606,10 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
         if (!IsInputAllowed) return;
 
         // На ПК авто-перенос срабатывает только по двойному клику
-        if (!YG2.envir.isDesktop) return;
-
-        ExecuteAutoMove(card);
+        if (GameSettings.AutoMoveClickMode == 1)
+        {
+            ExecuteAutoMove(card);
+        }
     }
     private void ExecuteAutoMove(CardController card)
     {
@@ -877,7 +877,7 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
             }
             if (undoManager.undoAllButton != null)
             {
-                undoManager.undoAllButton.onClick.AddListener(OnUndoAllClicked);
+                LongPressHoldTrigger.SubscribeToButton(undoManager.undoAllButton, OnUndoAllClicked);
             }
         }
     }

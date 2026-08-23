@@ -141,11 +141,135 @@ MonoBehaviour:
     postponeCallByFail: 0
     postponeCallTimer: 10
     labelAdvSimLabel: 0
+  Localization:
+    setLanguageMod: 1
+  Payments:
+    durationPayPanel: 1
+    testBuyFail: 0
+    purshases:
+    - id: Premium
+      title: premium
+      description: premium
+      imageURI: demo image
+      price: 249 YAN
+      priceValue: 249
+      priceCurrencyCode: YAN
+      currencyImageURL: https://yastatic.net/s3/games-static/static-data/images/payments/sdk/currency-icon-s@2x.png
+      consumed: 1
+    - id: NoADS
+      title: no ads
+      description: no ads
+      imageURI: demo image
+      price: 99 YAN
+      priceValue: 99
+      priceCurrencyCode: YAN
+      currencyImageURL: https://yastatic.net/s3/games-static/static-data/images/payments/sdk/currency-icon-s@2x.png
+      consumed: 1
+    - id: Premium2
+      title: Premium
+      description: Premium
+      imageURI: demo image
+      price: 149 YAN
+      priceValue: 149
+      priceCurrencyCode: YAN
+      currencyImageURL: https://yastatic.net/s3/games-static/static-data/images/payments/sdk/currency-icon-s@2x.png
+      consumed: 1
+  RewardedAdv:
+    skipInterAdvAfterReward: 0
+    labelAdvSimLabel: 0
+  ServerTime:
+    manualDateSetup: 0
+    year: 2025
+    month: 6
+    day: 15
+    hour: 12
+    minute: 30
+    second: 30
+  Storage:
+    saveLocal: 0
+    saveCloud: 1
+    flush: 0
+  Basic:
+    platform: {fileID: 11400000, guid: c2a303d33a9fd394bae4c4b88b9a1c44, type: 2}
+    autoApplySettings: 1
+    autoPauseGame: 1
+    editTimeScale: 1
+    editEventSystem: 1
+    autoGRA: 1
+    logInEditor: 1
+    archivingBuild: 1
+    autoDefineSymbols: 1
+    syncInitSDK: 1
+    loadSceneIfSDKLate: 0
+    loadSceneIndex: 0
+    initDelaySimulation: 0
+    buildNumber: 40
+  Simulation:
+    device: 0
+    language: ru
+    enableInterAdv: 1
+    advIntervalSimulation: 60
+    durationAdv: 0.5
+    loadAdv: 0
+    testFailAds: 0
+    pauseOnFocusGame: 0
+  Templates:
+    logoImageFormat: 1
+    backgroundImgFormat: 3
+    gradientBackgroundByLoadGame:
+      radial: 0
+      angleInclination: 140
+      color1: {r: 1, g: 0.831, b: 0.149, a: 1}
+      color2: {r: 0.36, g: 0.09, b: 1, a: 1}
+    customProgressBar: 1
+    progressBarSettigs:
+      round: 1
+      roundAngle: 10
+      width: 30
+      height: 24
+      color1: {r: 0, g: 0, b: 0, a: 0.8509804}
+      color2: {r: 0, g: 0, b: 0, a: 0.7}
+    fixedAspectRatio: 0
+    aspectRatio: 16/9
+    disableForMobile: 1
+    fillBackground: 0
+    imageBackground: 0
+    imageName: background.jpg
+    gradientBackgroundByAspectRatio:
+      radial: 0
+      angleInclination: 140
+      color1: {r: 1, g: 0.831, b: 0.149, a: 1}
+      color2: {r: 0.36, g: 0.09, b: 1, a: 1}
+    pixelRatioEnable: 0
+    pixelRatioValue: 1.3
+    developerBuild: 0
+  platformInfo:
+    ownHost: 0
+  platformToggles:
+    showFirstAdv: 0
+    interAdvInterval: 0
+    postponeCallByFail: 0
+    setLanguageMod: 0
+    skipInterAdvAfterReward: 0
+    saveLocal: 0
+    saveCloud: 0
+    autoPauseGame: 0
+    selectWebGLTemplate: 1
+    runInBackground: 1
+    enableExceptions: 1
+    compressionFormat: 1
+    decompressionFallback: 1
+    autoGraphicsAPI: 1
+    managedStrippingLevel: 1
+    dataCaching: 1
+    colorSpace: 0
+    archivingBuild: 0
+    syncInitSDK: 1
   Leaderboards:
     enable: 1
     saveScoreAnonymousPlayers: 1
     listLBSim:
-    - technoName: Global
+    - technoName: GlobalLVL
       entries: '1. Max: 10
 
         2. Masha: 15
@@ -168,7 +292,7 @@ MonoBehaviour:
 
         10.
         Player 10: 90'
-      isDefault: 0
+      isDefault: 1
       isInvertSortOrder: 0
       decimalOffset: 0
       type: numeric
@@ -1157,127 +1281,3 @@ MonoBehaviour:
         rank: 5
         score: 60
         extraData: 
-  Localization:
-    setLanguageMod: 1
-  Payments:
-    durationPayPanel: 1
-    testBuyFail: 0
-    purshases:
-    - id: Premium
-      title: premium
-      description: premium
-      imageURI: demo image
-      price: 249 YAN
-      priceValue: 249
-      priceCurrencyCode: YAN
-      currencyImageURL: https://yastatic.net/s3/games-static/static-data/images/payments/sdk/currency-icon-s@2x.png
-      consumed: 1
-    - id: NoADS
-      title: no ads
-      description: no ads
-      imageURI: demo image
-      price: 99 YAN
-      priceValue: 99
-      priceCurrencyCode: YAN
-      currencyImageURL: https://yastatic.net/s3/games-static/static-data/images/payments/sdk/currency-icon-s@2x.png
-      consumed: 1
-    - id: Premium2
-      title: Premium
-      description: Premium
-      imageURI: demo image
-      price: 149 YAN
-      priceValue: 149
-      priceCurrencyCode: YAN
-      currencyImageURL: https://yastatic.net/s3/games-static/static-data/images/payments/sdk/currency-icon-s@2x.png
-      consumed: 1
-  RewardedAdv:
-    skipInterAdvAfterReward: 0
-    labelAdvSimLabel: 0
-  ServerTime:
-    manualDateSetup: 0
-    year: 2025
-    month: 6
-    day: 15
-    hour: 12
-    minute: 30
-    second: 30
-  Storage:
-    saveLocal: 0
-    saveCloud: 1
-    flush: 0
-  Basic:
-    platform: {fileID: 11400000, guid: c2a303d33a9fd394bae4c4b88b9a1c44, type: 2}
-    autoApplySettings: 1
-    autoPauseGame: 1
-    editTimeScale: 1
-    editEventSystem: 1
-    autoGRA: 1
-    logInEditor: 1
-    archivingBuild: 1
-    autoDefineSymbols: 1
-    syncInitSDK: 1
-    loadSceneIfSDKLate: 0
-    loadSceneIndex: 0
-    initDelaySimulation: 0
-    buildNumber: 40
-  Simulation:
-    device: 1
-    language: ru
-    enableInterAdv: 1
-    advIntervalSimulation: 60
-    durationAdv: 0.5
-    loadAdv: 0
-    testFailAds: 0
-    pauseOnFocusGame: 0
-  Templates:
-    logoImageFormat: 1
-    backgroundImgFormat: 3
-    gradientBackgroundByLoadGame:
-      radial: 0
-      angleInclination: 140
-      color1: {r: 1, g: 0.831, b: 0.149, a: 1}
-      color2: {r: 0.36, g: 0.09, b: 1, a: 1}
-    customProgressBar: 1
-    progressBarSettigs:
-      round: 1
-      roundAngle: 10
-      width: 30
-      height: 24
-      color1: {r: 0, g: 0, b: 0, a: 0.8509804}
-      color2: {r: 0, g: 0, b: 0, a: 0.7}
-    fixedAspectRatio: 0
-    aspectRatio: 16/9
-    disableForMobile: 1
-    fillBackground: 0
-    imageBackground: 0
-    imageName: background.jpg
-    gradientBackgroundByAspectRatio:
-      radial: 0
-      angleInclination: 140
-      color1: {r: 1, g: 0.831, b: 0.149, a: 1}
-      color2: {r: 0.36, g: 0.09, b: 1, a: 1}
-    pixelRatioEnable: 0
-    pixelRatioValue: 1.3
-    developerBuild: 0
-  platformInfo:
-    ownHost: 0
-  platformToggles:
-    showFirstAdv: 0
-    interAdvInterval: 0
-    postponeCallByFail: 0
-    setLanguageMod: 0
-    skipInterAdvAfterReward: 0
-    saveLocal: 0
-    saveCloud: 0
-    autoPauseGame: 0
-    selectWebGLTemplate: 1
-    runInBackground: 1
-    enableExceptions: 1
-    compressionFormat: 1
-    decompressionFallback: 1
-    autoGraphicsAPI: 1
-    managedStrippingLevel: 1
-    dataCaching: 1
-    colorSpace: 0
-    archivingBuild: 0
-    syncInitSDK: 1

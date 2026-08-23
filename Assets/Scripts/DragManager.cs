@@ -313,16 +313,13 @@ public class DragManager : MonoBehaviour
         localOffsets.Clear();
         draggingStack.Clear();
 
-        // Используем dragLayer или canvas как fallback
         RectTransform targetDragLayer = dragLayer ?? (canvas != null ? canvas.transform as RectTransform : null);
 
-        // 1) СОХРАНЯЕМ ВСЕ ДАННЫЕ ПЕРЕД ПЕРЕМЕЩЕНИЕМ
         for (int i = 0; i < sequence.Count; i++)
         {
             var card = sequence[i];
             if (card == null) continue;
 
-            // Сохраняем parent (для tableau сохраняем tableau.transform)
             Transform savedParent = card.rectTransform.parent;
             if (sourceInfo.tableauPile != null)
             {
@@ -330,52 +327,43 @@ public class DragManager : MonoBehaviour
             }
             originalParents.Add(savedParent);
 
-            // Сохраняем anchoredPosition (если RectTransform) и z
             var rt = card.rectTransform;
             Vector3 savedLocal = Vector3.zero;
             if (rt != null)
             {
-                // Сохраняем anchoredPosition.x/y и localPosition.z
                 savedLocal.x = rt.anchoredPosition.x;
                 savedLocal.y = rt.anchoredPosition.y;
                 savedLocal.z = rt.localPosition.z;
             }
             originalLocalPositions.Add(savedLocal);
-
-            // СОХРАНЯЕМ SIBLING INDEX ПЕРЕД ПЕРЕМЕЩЕНИЕМ (КЛЮЧЕВОЕ ИЗМЕНЕНИЕ!)
             originalSiblingIndices.Add(rt.GetSiblingIndex());
 
             draggingStack.Add(card);
         }
 
-        // 2) ТЕПЕРЬ ПЕРЕМЕЩАЕМ ВСЕ КАРТЫ В DRAG LAYER
         for (int i = 0; i < draggingStack.Count; i++)
         {
             var card = draggingStack[i];
             if (card == null) continue;
 
-            // Получаем мировую позицию ДО смены parent
             Vector3 worldPos = card.rectTransform.position;
 
+            // --- ИСПРАВЛЕНИЕ: Используем true, чтобы карта сохраняла визуальный размер ---
             if (targetDragLayer != null)
-                card.rectTransform.SetParent(targetDragLayer, false);  // false чтобы не менять позицию
+                card.rectTransform.SetParent(targetDragLayer, true);
 
-            // Устанавливаем мировую позицию
             card.rectTransform.position = worldPos;
 
-            // Сбрасываем Z локально в dragLayer
             Vector3 lp = card.rectTransform.localPosition;
             lp.z = 0f;
             card.rectTransform.localPosition = lp;
 
-            // Отключаем raycast
             if (card.canvasGroup != null)
             {
                 card.canvasGroup.blocksRaycasts = false;
             }
         }
 
-        // 3) Вычисляем локальные оффсеты относительно ведущей карты (в dragLayer)
         if (draggingStack.Count > 0)
         {
             Vector3 topLocal = draggingStack[0].rectTransform.localPosition;
@@ -568,7 +556,6 @@ public class DragManager : MonoBehaviour
     {
         if (data == null || data.cards == null || data.cards.Count == 0) yield break;
 
-        // 1. БЛОКИРУЕМ СТОПКИ-ИСТОЧНИКИ
         HashSet<TableauPile> lockedPiles = new HashSet<TableauPile>();
         foreach (var parentTransform in data.parents)
         {
@@ -581,7 +568,6 @@ public class DragManager : MonoBehaviour
 
         foreach (var pile in lockedPiles) pile.SetAnimatingCard(true);
 
-        // Подготовка (отключаем лучи летящим)
         foreach (var c in data.cards)
         {
             if (c != null && c.canvasGroup != null) c.canvasGroup.blocksRaycasts = false;
@@ -610,7 +596,6 @@ public class DragManager : MonoBehaviour
 
         Canvas.ForceUpdateCanvases();
 
-        // Расчет позиций
         var animSvc = mode?.AnimationService;
         List<Vector3> targetWorldPositions = new List<Vector3>();
 
@@ -626,7 +611,6 @@ public class DragManager : MonoBehaviour
                 if (animSvc != null) targetWorld = animSvc.AnchoredToWorldPosition(parentRt, anchored);
                 else
                 {
-                    // Fallback
                     GameObject tmp = new GameObject("TMP_Return");
                     tmp.transform.SetParent(parentRt, false);
                     var rt = tmp.AddComponent<RectTransform>();
@@ -643,7 +627,6 @@ public class DragManager : MonoBehaviour
             targetWorldPositions.Add(targetWorld);
         }
 
-        // Анимация полета
         float duration = 0.2f;
         float elapsed = 0f;
         while (elapsed < duration)
@@ -661,7 +644,6 @@ public class DragManager : MonoBehaviour
             yield return null;
         }
 
-        // Финализация (возврат родителя)
         HashSet<TableauPile> affectedTableaus = new HashSet<TableauPile>();
 
         for (int i = 0; i < data.cards.Count; i++)
@@ -675,6 +657,8 @@ public class DragManager : MonoBehaviour
             if (savedParent != null)
             {
                 card.rectTransform.SetParent(savedParent, true);
+                // --- ИСПРАВЛЕНИЕ: Принудительный сброс после возвращения в слот ---
+                card.rectTransform.localScale = Vector3.one;
                 var tab = savedParent.GetComponent<TableauPile>();
                 if (tab != null) affectedTableaus.Add(tab);
             }
@@ -691,7 +675,6 @@ public class DragManager : MonoBehaviour
                 card.rectTransform.SetSiblingIndex(idx);
             }
 
-            // Включаем Raycast для самих карт
             if (card.canvasGroup != null)
             {
                 card.canvasGroup.blocksRaycasts = true;
@@ -706,23 +689,16 @@ public class DragManager : MonoBehaviour
             foreach (var p in parentsToUpdate) mode.AnimationService.ReorderContainerZ(p);
         }
 
-        // --- ИСПРАВЛЕНИЕ: ПОРЯДОК РАЗБЛОКИРОВКИ ---
-
-        // 1. Сначала СНИМАЕМ БЛОКИРОВКУ со стопок
-        // Теперь стопки снова интерактивны и могут запускать свои внутренние анимации
         foreach (var pile in lockedPiles)
         {
             pile.SetAnimatingCard(false);
         }
 
-        // 2. Теперь запускаем выравнивание
-        // Так как стопки разблокированы, StartLayoutAnimationPublic сработает корректно
         foreach (var tab in affectedTableaus)
         {
             tab.StartLayoutAnimationPublic();
         }
 
-        // --- НОВОЕ: Очищаем ссылки после завершения ---
         if (lastDropSnapshot == data)
         {
             lastDropSnapshot = null;
@@ -736,15 +712,15 @@ public class DragManager : MonoBehaviour
 
     public void OnCardDroppedToContainer(CardController card, ICardContainer container)
     {
-        // 1. Базовые проверки
         if (draggingStack == null || draggingStack.Count == 0)
         {
-            // Обработка одиночной карты без драг-сессии (на всякий случай)
             if (card != null && container != null && card.transform.parent != container.Transform)
             {
                 var cardData = card.GetComponent<CardData>();
                 cardData?.SetFaceUp(true);
-                card.rectTransform.SetParent(container.Transform, false);
+                card.rectTransform.SetParent(container.Transform, true);
+                // --- ИСПРАВЛЕНИЕ ---
+                card.rectTransform.localScale = Vector3.one;
                 card.rectTransform.anchoredPosition = container.GetDropAnchoredPosition(card);
 
                 if (container is TableauPile tableau) tableau.AddCard(card, true);
@@ -752,7 +728,6 @@ public class DragManager : MonoBehaviour
                 else if (container is WastePile waste) waste.AddCard(card, true);
                 else if (container is FreeCellPile fc) fc.AcceptCard(card);
 
-                // Даже одиночный перенос считается ходом
                 NotifyGameModeOnMove();
             }
             ClearDraggingState();
@@ -767,7 +742,6 @@ public class DragManager : MonoBehaviour
 
         var scoreMgr = FindObjectOfType<FreeCellScoreManager>();
 
-        // 2. ИЗЪЯТИЕ КАРТ
         List<CardController> removedSequence = null;
         bool sourceFlipped = false;
         int sourceFlippedIndex = -1;
@@ -795,22 +769,15 @@ public class DragManager : MonoBehaviour
             }
         }
 
-        // ==========================================================================================
-        // ЦЕЛЬ: TABLEAU
-        // ==========================================================================================
         if (container is TableauPile targetTableau)
         {
             targetTableau.SetAnimatingCard(true);
             RecordMoveToUndo(removedSequence ?? draggingStack, container);
 
-            // --- ДОБАВИТЬ ЭТО: Трекинг ручной сортировки и стопок ---
             if (sourceContainer is TableauPile) GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveTableauToTableau);
             if (draggingStack != null && draggingStack.Count > 1) GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardSequence, draggingStack.Count);
-            // --------------------------------------------------------
 
-            // >>> СТАТИСТИКА: ВЫЗОВ НОВОГО МЕТОДА <<<
             NotifyGameModeOnMove();
-            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
             if (sourceFlipped && undoManager != null) undoManager.RecordFlipInSource(sourceFlippedIndex);
 
@@ -822,10 +789,6 @@ public class DragManager : MonoBehaviour
             StartCoroutine(AnimateSequenceToTableau(cardsToFly, targetTableau));
             return;
         }
-
-        // ==========================================================================================
-        // ЦЕЛЬ: FOUNDATION
-        // ==========================================================================================
         else if (container is FoundationPile targetFoundation)
         {
             var firstCard = draggingStack[0];
@@ -855,11 +818,8 @@ public class DragManager : MonoBehaviour
             }
 
             if (sourceContainer is WastePile) GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveFromWasteToFoundation);
-            // --------------------------------------------------------------
 
-            // >>> СТАТИСТИКА <<<
             NotifyGameModeOnMove();
-            // >>>>>>>>>>>>>>>>>
 
             if (sourceFlipped && undoManager != null) undoManager.RecordFlipInSource(sourceFlippedIndex);
 
@@ -873,10 +833,6 @@ public class DragManager : MonoBehaviour
             ClearDraggingState();
             return;
         }
-
-        // ==========================================================================================
-        // ЦЕЛЬ: FREE CELL
-        // ==========================================================================================
         else if (container is FreeCellPile freeCell)
         {
             if (draggingStack.Count > 1)
@@ -897,9 +853,7 @@ public class DragManager : MonoBehaviour
             freeCell.AcceptCard(cardToDrop);
             RecordMoveToUndo(draggingStack, container);
 
-            // >>> СТАТИСТИКА <<<
             NotifyGameModeOnMove();
-            // >>>>>>>>>>>>>>>>>
 
             if (sourceFlipped && undoManager != null)
             {
@@ -912,10 +866,6 @@ public class DragManager : MonoBehaviour
             ClearDraggingState();
             return;
         }
-
-        // ==========================================================================================
-        // ИНАЧЕ
-        // ==========================================================================================
         else
         {
             OnCardDroppedToBoardEvent(card);
@@ -959,7 +909,9 @@ public class DragManager : MonoBehaviour
                 var c = draggingStack[i];
                 if (c == null) continue;
 
-                c.rectTransform.SetParent(sourceTableau.transform, false);
+                c.rectTransform.SetParent(sourceTableau.transform, true);
+                // --- ИСПРАВЛЕНИЕ ---
+                c.rectTransform.localScale = Vector3.one;
                 sourceTableau.AddCard(c, true);
 
                 if (c.canvasGroup != null)
@@ -977,7 +929,9 @@ public class DragManager : MonoBehaviour
                 var c = draggingStack[i];
                 if (c == null) continue;
 
-                c.rectTransform.SetParent(waste.transform, false);
+                c.rectTransform.SetParent(waste.transform, true);
+                // --- ИСПРАВЛЕНИЕ ---
+                c.rectTransform.localScale = Vector3.one;
                 waste.AddCard(c, true);
 
                 if (c.canvasGroup != null)
@@ -997,23 +951,21 @@ public class DragManager : MonoBehaviour
         if (draggingStack == null || draggingStack.Count == 0)
             return;
 
-        // Список для запоминания уникальных контейнеров
         var affectedParents = new HashSet<Transform>();
 
-        // 1) Восстанавливаем parent / anchored / z
         for (int i = 0; i < draggingStack.Count; i++)
         {
             var card = draggingStack[i];
             if (card == null) continue;
 
-            // restore parent
             if (i < originalParents.Count && originalParents[i] != null)
             {
-                card.rectTransform.SetParent(originalParents[i], false);
+                card.rectTransform.SetParent(originalParents[i], true);
+                // --- ИСПРАВЛЕНИЕ ---
+                card.rectTransform.localScale = Vector3.one;
                 affectedParents.Add(originalParents[i]);
             }
 
-            // restore anchoredPosition.x/y and local z
             if (i < originalLocalPositions.Count)
             {
                 Vector3 saved = originalLocalPositions[i];
@@ -1028,14 +980,12 @@ public class DragManager : MonoBehaviour
                 card.rectTransform.localPosition = lp;
             }
 
-            // temporarily disable raycast
             if (card.canvasGroup != null)
             {
                 card.canvasGroup.blocksRaycasts = false;
             }
         }
 
-        // 2) Восстанавливаем sibling indices в правильном порядке
         for (int i = 0; i < draggingStack.Count; i++)
         {
             var card = draggingStack[i];
@@ -1044,14 +994,12 @@ public class DragManager : MonoBehaviour
             if (i < originalSiblingIndices.Count && originalSiblingIndices[i] >= 0)
             {
                 var parent = card.rectTransform.parent;
-                int desired = originalSiblingIndices[i];
                 int childCount = parent != null ? parent.childCount : 0;
-                int clamped = Mathf.Clamp(desired, 0, Mathf.Max(0, childCount));
+                int clamped = Mathf.Clamp(originalSiblingIndices[i], 0, Mathf.Max(0, childCount));
                 card.rectTransform.SetSiblingIndex(clamped);
             }
         }
 
-        // 3) Включаем raycast для всех карт
         foreach (var card in draggingStack)
         {
             if (card == null) continue;
@@ -1061,7 +1009,6 @@ public class DragManager : MonoBehaviour
             }
         }
 
-        // 4) Обновляем контейнеры
         var animSvc = mode?.AnimationService;
         foreach (var parent in affectedParents)
         {
@@ -1083,17 +1030,7 @@ public class DragManager : MonoBehaviour
         }
 
         Canvas.ForceUpdateCanvases();
-
-        // 5) Очистка
-        draggingStack.Clear();
-        localOffsets.Clear();
-        originalParents.Clear();
-        originalLocalPositions.Clear();
-        originalSiblingIndices.Clear();
-        sourceTableau = null;
-        sourceContainer = null;
-        sourceIndex = -1;
-        draggingTopCard = null;
+        ClearDraggingState();
     }
 
 
@@ -1282,8 +1219,10 @@ public class DragManager : MonoBehaviour
                 if (savedParent != null)
                 {
                     card.rectTransform.SetParent(savedParent, true);
+                    // --- ИСПРАВЛЕНИЕ ---
+                    card.rectTransform.localScale = Vector3.one;
                     var tab = savedParent.GetComponent<TableauPile>();
-                    if (tab != null) tab.SetAnimatingCard(false); // разблокируем
+                    if (tab != null) tab.SetAnimatingCard(false);
                 }
 
                 card.rectTransform.anchoredPosition = new Vector2(savedLocal.x, savedLocal.y);
@@ -1315,7 +1254,6 @@ public class DragManager : MonoBehaviour
         }
         else
         {
-            // Если клик сработал до того, как палец отпустили
             ReturnDraggingStackToOrigin();
         }
     }
@@ -1327,17 +1265,12 @@ public class DragManager : MonoBehaviour
     {
         if (sequence == null || sequence.Count == 0 || targetTableau == null)
         {
-            // Если анимация не состоялась, нужно обязательно разблокировать стопку!
             if (targetTableau != null) targetTableau.SetAnimatingCard(false);
             yield break;
         }
 
-        // --- СТРОКУ targetTableau.SetAnimatingCard(true) УДАЛЯЕМ ОТСЮДА ---
-        // (Мы уже вызвали её в OnCardDroppedToContainer)
-
         Canvas.ForceUpdateCanvases();
 
-        // 1. ПОДГОТОВКА: Отключаем лучи у летящих карт
         RectTransform layer = dragLayer ?? (mode?.RootCanvas?.transform as RectTransform);
         List<Vector3> startWorldPositions = new List<Vector3>();
 
@@ -1356,7 +1289,6 @@ public class DragManager : MonoBehaviour
             if (c.canvasGroup != null) c.canvasGroup.blocksRaycasts = false;
         }
 
-        // 2. РАСЧЕТ ПОЗИЦИЙ
         Vector2 topAnchor = targetTableau.GetDropAnchoredPosition(sequence[0]);
         List<Vector3> targetWorldPositions = new List<Vector3>();
         float gap = mode != null ? mode.TableauVerticalGap : 40f;
@@ -1383,7 +1315,6 @@ public class DragManager : MonoBehaviour
             targetWorldPositions.Add(world);
         }
 
-        // 3. АНИМАЦИЯ
         float duration = 0.22f;
         float elapsed = 0f;
         while (elapsed < duration)
@@ -1401,7 +1332,6 @@ public class DragManager : MonoBehaviour
             yield return null;
         }
 
-        // 4. ФИНАЛИЗАЦИЯ
         for (int i = 0; i < sequence.Count; i++)
         {
             var card = sequence[i];
@@ -1412,6 +1342,8 @@ public class DragManager : MonoBehaviour
             if (card.rectTransform.parent != targetTableau.transform)
             {
                 card.rectTransform.SetParent(targetTableau.transform, true);
+                // --- ИСПРАВЛЕНИЕ ---
+                card.rectTransform.localScale = Vector3.one;
             }
 
             if (card.canvasGroup != null)
@@ -1426,11 +1358,7 @@ public class DragManager : MonoBehaviour
         if (animSvc != null) animSvc.ReorderContainerZ(targetTableau.transform);
 
         Canvas.ForceUpdateCanvases();
-
-        // --- РАЗБЛОКИРУЕМ ЦЕЛЕВУЮ СТОПКУ ---
-        // Анимация завершена, включаем Raycast обратно для карт в стопке
         targetTableau.SetAnimatingCard(false);
-
         targetTableau.StartLayoutAnimation();
     }
 

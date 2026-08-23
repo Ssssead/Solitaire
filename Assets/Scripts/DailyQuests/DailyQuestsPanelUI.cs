@@ -76,7 +76,14 @@ public class DailyQuestsPanelUI : MonoBehaviour
         UpdateTopBar();
         LoadQuestsForDate(viewedDate, false);
     }
-
+    private void OnDisable()
+    {
+        // Принудительно выключаем панель наград, если главная панель квестов закрылась или скрылась
+        if (rewardsPanel != null && rewardsPanel.activeSelf)
+        {
+            rewardsPanel.SetActive(false);
+        }
+    }
     private void UpdateTimerFormatCache()
     {
         string currentLang = "en";
@@ -166,7 +173,8 @@ public class DailyQuestsPanelUI : MonoBehaviour
             var distPanel = rewardsPanel.GetComponent<RewardDistributionPanelUI>();
             if (distPanel != null)
             {
-                rewardsPanel.SetActive(true);
+                // УДАЛЕНА СТРОКА: rewardsPanel.SetActive(true);
+                // Скрипт distPanel.OpenPanel сам включит объект и запустит анимацию
                 distPanel.OpenPanel(QuestManager.Instance.SelectedDateKey, this);
             }
         }

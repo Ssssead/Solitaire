@@ -286,7 +286,7 @@
         },
         {
             "key": "UndoAll",
-            "value": "Отменить все ходы"
+            "value": "Отменить все ходы (Зажать)"
         },
         {
             "key": "ToMenu",
@@ -1615,7 +1615,7 @@
         },
         {
             "key": "Quest_FreeCell_Hard_03_Desc_1",
-            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Свободную ячейку</color> (на сложности <color=#eeae32>Medium</color> или <color=#e14849>Hard</color>), ни разу не использовав отмену хода."
+            "value": "Выиграть <color=#ffbb00>{0} партию</color> в <color=#a8d9e0>Свободную ячейку</color> (на <color=#eeae32>Средней</color> или  <color=#e14849>Сложной</color> сложности), ни разу не использовав отмену хода."
         },
         {
             "key": "Quest_Pyramid_Easy_01_Title",
@@ -3151,7 +3151,7 @@
         },
         {
             "key": "Hint_Settings",
-            "value": "Настройте игру под себя! Выберите <color=#FCA311>красивый фон</color> и включите привычную <color=#FCA311>русскую колоду</color> (В, Д, К, Т)."
+            "value": "Настройте игру под себя! Выберите <color=#FCA311>красивый фон</color>, привычную <color=#FCA311>русскую колоду</color> (В, Д, К, Т) и удобный <color=#FCA311>авто-перенос</color> карт."
         },
         {
             "key": "Hint_Shop",
@@ -3164,6 +3164,18 @@
         {
             "key": "Hint_Leaderboard",
             "value": "Соревнуйтесь с лучшими! В <color=#FCA311>таблице лидеров</color> вы можете сравнить свои <color=#FCA311>результаты</color> с другими игроками."
+        },
+        {
+            "key": "Settings_AutoMove",
+            "value": "Авто-перенос"
+        },
+        {
+            "key": "Settings_SingleClick",
+            "value": "Один клик"
+        },
+        {
+            "key": "Settings_DoubleClick",
+            "value": "Двойной клик"
         }
     ]
 }

@@ -131,27 +131,69 @@ public class TitleSelectionPanel : MonoBehaviour
     private void RebuildList()
     {
         if (LocalizationManager.instance == null || !LocalizationManager.instance.IsReady())
-            return;
+            return; //
 
-        foreach (var item in spawnedItems) Destroy(item);
-        spawnedItems.Clear();
+        foreach (var item in spawnedItems) Destroy(item); //
+        spawnedItems.Clear(); //[cite: 1]
 
-        foreach (TitleDef titleDef in TitleManager.Instance.allTitles)
+        foreach (TitleDef titleDef in TitleManager.Instance.allTitles) //[cite: 1]
         {
-            if (titleDef.category != currentCategory) continue;
+            if (titleDef.category != currentCategory) continue; //[cite: 1]
 
-            GameObject obj = Instantiate(titleItemPrefab, contentContainer);
-            spawnedItems.Add(obj);
+            GameObject obj = Instantiate(titleItemPrefab, contentContainer); //[cite: 1]
+            spawnedItems.Add(obj); //[cite: 1]
 
-            Button selectBtn = obj.GetComponent<Button>();
-            string keyToSet = titleDef.titleKey;
+            Button selectBtn = obj.GetComponent<Button>(); //[cite: 1]
+            string keyToSet = titleDef.titleKey; //[cite: 1]
 
-            selectBtn.onClick.AddListener(() => SelectTitle(keyToSet));
+            selectBtn.onClick.AddListener(() => SelectTitle(keyToSet)); //[cite: 1]
         }
 
-        UpdateListVisuals();
-    }
+        UpdateListVisuals(); //[cite: 1]
 
+        // --- НОВАЯ СТРОКА ---
+        AdjustGridCellSize();
+    }
+    /// <summary>
+    /// Динамически пересчитывает ширину ячеек Grid Layout Group под текущий размер экрана.
+    /// </summary>
+    private void AdjustGridCellSize()
+    {
+        if (contentContainer == null) return; // Защита от ошибок до инициализации
+
+        GridLayoutGroup grid = contentContainer.GetComponent<GridLayoutGroup>();
+        RectTransform containerRect = contentContainer.GetComponent<RectTransform>();
+
+        if (grid != null && containerRect != null)
+        {
+            float totalWidth = containerRect.rect.width;
+
+            // Если UI еще не прогрузился и ширина равна 0, пропускаем
+            if (totalWidth <= 0) return;
+
+            int columns = grid.constraintCount;
+            if (columns <= 0) columns = 3;
+
+            float paddingX = grid.padding.left + grid.padding.right;
+            float spacingX = grid.spacing.x * (columns - 1);
+
+            float cellWidth = (totalWidth - paddingX - spacingX) / columns;
+
+            // ВАЖНО: меняем размер ячейки только если он действительно изменился (защита от зацикливания)
+            if (Mathf.Abs(grid.cellSize.x - cellWidth) > 0.1f)
+            {
+                grid.cellSize = new Vector2(cellWidth, grid.cellSize.y);
+            }
+        }
+    }
+    protected void OnRectTransformDimensionsChange()
+    {
+        // Пересчитываем сетку только если контейнер уже назначен и панель активна
+        if (contentContainer != null && gameObject.activeInHierarchy)
+        {
+            AdjustGridCellSize();
+        }
+    }
     private void UpdateListVisuals()
     {
         if (LocalizationManager.instance == null || !LocalizationManager.instance.IsReady()) return;

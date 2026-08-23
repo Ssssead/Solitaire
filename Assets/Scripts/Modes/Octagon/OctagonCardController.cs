@@ -71,6 +71,12 @@ public class OctagonCardController : CardController
     {
         if (IsContainerLockedByFlyingCard()) return;
 
+        // --- ЗАЩИТА ОТ БАГА ---
+        // Игнорируем клик, если карта сейчас летит (анимация) или если мы её перетаскиваем!
+        if (_isAnimating) return;
+        if (eventData.dragging) return;
+        // ----------------------
+
         if (GetComponentInParent<OctagonStockPile>() != null)
         {
             if (_mode != null && _mode.IsInputAllowed) _mode.OnStockClicked();

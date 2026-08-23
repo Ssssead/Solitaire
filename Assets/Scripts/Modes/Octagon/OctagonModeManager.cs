@@ -88,7 +88,7 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         }
 
         if (undoButton) undoButton.onClick.AddListener(OnUndoAction);
-        if (undoAllButton) undoAllButton.onClick.AddListener(OnUndoAllAction);
+        if (undoAllButton) LongPressHoldTrigger.SubscribeToButton(undoAllButton, OnUndoAllAction);
 
         // --- НОВОЕ: Защита от багов UI ---
         FixGameUIReferences();
@@ -351,10 +351,11 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
     {
         if (!IsInputAllowed || _isGameFinished || isUndoing) return;
 
-        // На ПК авто-перенос срабатывает только по двойному клику
-        if (!YG2.envir.isDesktop) return;
-
-        ProcessAutoMove(card);
+        // Читаем глобальную настройку: 1 = Двойной клик
+        if (GameSettings.AutoMoveClickMode == 1)
+        {
+            ProcessAutoMove(card);
+        }
     }
 
     // Вспомогательный метод, объединяющий логику авто-переноса для обоих типов клика
@@ -1327,7 +1328,7 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         if (!IsInputAllowed || _isGameFinished || isUndoing) return;
 
         // На мобильных устройствах и планшетах авто-перенос срабатывает по одинарному клику
-        if (YG2.envir.isMobile || YG2.envir.isTablet)
+        if(GameSettings.AutoMoveClickMode == 0)
         {
             // Защита от микро-свайпов: если палец сдвинулся, возвращаем карту на место
             var octCard = card as OctagonCardController;

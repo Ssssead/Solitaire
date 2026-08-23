@@ -50,7 +50,10 @@ public class FreeCellIntroController : MonoBehaviour, IIntroController
         bottomButtonsStartPos.Clear();
         foreach (var btn in bottomButtons) if (btn != null) bottomButtonsStartPos.Add(btn.anchoredPosition);
     }
-
+    public void UpdateSavedPositions()
+    {
+        SaveInitialPositions();
+    }
     public List<RectTransform> GetTopUIElements()
     {
         var list = new List<RectTransform>();

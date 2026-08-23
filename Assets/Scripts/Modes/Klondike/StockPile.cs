@@ -81,17 +81,28 @@ public class StockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
         var graphic = GetComponent<Graphic>();
         if (graphic == null)
         {
-            // Добавляем прозрачный Image
+            // Добавляем прозрачный Image, если его нет
             var image = gameObject.AddComponent<Image>();
             image.color = new Color(1f, 1f, 1f, 0f);  // Прозрачный
             image.raycastTarget = true;
-            LogDebug("Added transparent Image for raycast");
         }
         else
         {
             // Убеждаемся что raycastTarget включён
             graphic.raycastTarget = true;
         }
+
+        // === ПРИНУДИТЕЛЬНАЯ ЗАЩИТА ===
+        // Если на слоте есть CanvasGroup, он ОБЯЗАН пропускать лучи, иначе клики не сработают!
+        var cg = GetComponent<CanvasGroup>();
+        if (cg != null && !cg.blocksRaycasts)
+        {
+            Debug.LogWarning($"[StockPile] Исправлен CanvasGroup на {gameObject.name}: Blocks Raycasts был выключен!");
+            cg.blocksRaycasts = true;
+        }
+
+        // Мы удалили жесткое переопределение размера (250х350), 
+        // так как теперь GameLayoutManager корректно растягивает слот по якорю.
     }
 
     public void Clear()
@@ -118,13 +129,14 @@ public class StockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
 
         if (card.rectTransform.parent != transform)
         {
-            card.rectTransform.SetParent(transform, false);
+            // === ФИКС ===
+            // Заменено на true для сохранения мирового масштаба при перемещении в слот
+            card.rectTransform.SetParent(transform, true);
         }
 
-        // --- ИЗМЕНЕНИЕ: Смещение по X вместо Y ---
+        // --- Смещение по X вместо Y ---
         float xOffset = cards.Count * stackGap;
         card.rectTransform.anchoredPosition = new Vector2(xOffset, 0);
-        // -----------------------------------------
 
         card.rectTransform.SetAsLastSibling();
 
@@ -225,32 +237,36 @@ public class StockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
     /// </summary>
     public void OnPointerClick(PointerEventData eventData)
     {
-        // 1. Проверки
         if (eventData != null && eventData.button != PointerEventData.InputButton.Left) return;
+
+        Debug.Log($"[StockPile] КЛИК ЗАРЕГИСТРИРОВАН по слоту {gameObject.name}. Ищем DeckManager...");
+
         GameQuestTracker.Instance?.RecordStockDraw();
-        // 2. ДЕЛЕГИРОВАНИЕ: Передаем управление в DragManager
+
+        DeckManager deckManager = null;
+
+        // Ищем DeckManager через менеджер режима или напрямую
         if (manager != null)
         {
-            var deckManager = manager.deckManager ?? manager.GetComponent< DeckManager> ();
-            if (deckManager != null)
-            {
-                // Вызываем метод DrawFromStock в DragManager.
-                // В DragManager этот метод уже содержит логику: "Если Stock пуст -> RecycleWasteToStock".
-                // А RecycleWasteToStock в DragManager уже содержит запись Undo.
-                deckManager.DrawFromStock();
-                return;
-            }
+            deckManager = manager.deckManager ?? manager.GetComponent<DeckManager>();
         }
 
-        // 3. Fallback (если вдруг менеджера нет, что вряд ли)
-        // Этот код сработает только в крайнем случае
-        if (cards.Count == 0)
+        if (deckManager == null)
         {
-            RecycleWasteToStock(); // Внутренний метод без Undo
+            deckManager = FindObjectOfType<DeckManager>();
+        }
+
+        if (deckManager != null)
+        {
+            Debug.Log("[StockPile] DeckManager найден. Вызываем DrawFromStock!");
+            deckManager.DrawFromStock();
         }
         else
         {
-            DrawCardsFromStock((int)currentDealMode); // Внутренний метод без Undo
+            // Крайний случай, если скрипта DeckManager вообще нет на сцене
+            Debug.LogWarning("[StockPile] DeckManager НЕ НАЙДЕН! Выполняем экстренный Fallback.");
+            if (cards.Count == 0) RecycleWasteToStock();
+            else DrawCardsFromStock((int)currentDealMode);
         }
     }
     /// <summary>

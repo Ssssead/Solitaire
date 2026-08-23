@@ -60,7 +60,10 @@ public class TriPeaksIntroController : MonoBehaviour, IIntroController
             }
         }
     }
-
+    public void UpdateSavedPositions()
+    {
+        SaveInitialPositions();
+    }
     public List<RectTransform> GetTopUIElements()
     {
         var list = new List<RectTransform>();

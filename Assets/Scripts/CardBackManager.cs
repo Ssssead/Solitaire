@@ -18,24 +18,29 @@ public class CardBackSelectionUI : MonoBehaviour
     [Header("Сами карты (8 штук)")]
     public CardData[] allBackCards = new CardData[8];
 
+    [Header("Настройки визуала")]
+    public float maxRandomRotation = 4f;
+
     [Header("Настройки анимации полета")]
     public float flightDuration = 0.35f;
     public AnimationCurve flightCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
-
-    [Header("Настройки визуала")]
-    public float tableScale = 0.3f;
-    public float sideScale = 0.2f;
-    public float sideBaseRotation = 90f;
-    public float maxRandomRotation = 4f;
 
     [Header("Настройки Hover (Наведение)")]
     public float hoverScaleMultiplier = 1.05f;
     public float hoverSpeed = 15f;
 
+    public static event System.Action<int> OnBackStyleChangedGlobal;
+
+    private float baseTableScale = 0.35f;
+    private float baseSideScale = 0.25f;
+    private float sideBaseRotation = 0f;
+
     private Dictionary<Transform, Coroutine> hoverCoroutines = new Dictionary<Transform, Coroutine>();
     private int activeIndex;
     private Coroutine[] moveCoroutines = new Coroutine[8];
-    private Coroutine globalFlipCoroutine; // Для анимации смены колоды
+    private Coroutine globalFlipCoroutine;
+
+    // Переменные для отслеживания ориентации/разрешения
     private int lastWidth;
     private int lastHeight;
 
@@ -49,40 +54,32 @@ public class CardBackSelectionUI : MonoBehaviour
             return baseSpriteDb;
         }
     }
-    private void Update()
-    {
-        if (Screen.width != lastWidth || Screen.height != lastHeight)
-        {
-            lastWidth = Screen.width;
-            lastHeight = Screen.height;
 
-            AdjustScaleForResolution(); // Пересчитываем tableScale и sideScale
-            ApplyDynamicScale();        // Применяем изменения
-        }
-    }
-    private void ApplyDynamicScale()
+    private void Awake()
     {
-        // Обновляем размеры только если сейчас нет глобального переворота колоды
-        if (globalFlipCoroutine == null)
+        float maxScale = 0f;
+        float minScale = 10f;
+        float rot = 0f;
+
+        foreach (var card in allBackCards)
         {
-            for (int i = 0; i < allBackCards.Length; i++)
+            if (card == null) continue;
+            float s = card.transform.localScale.x;
+            if (s > maxScale) maxScale = s;
+            if (s < minScale)
             {
-                if (allBackCards[i] == null) continue;
-
-                // Если карта сейчас не летит анимацией, плавно правим её масштаб под экран
-                if (moveCoroutines[i] == null)
-                {
-                    float currentScale = (i == activeIndex) ? tableScale : sideScale;
-                    allBackCards[i].transform.localScale = new Vector3(currentScale, currentScale, 1f);
-                }
+                minScale = s;
+                float rotZ = card.transform.localEulerAngles.z;
+                if (rotZ > 180) rotZ -= 360;
+                rot = rotZ;
             }
         }
-    }
-    private void Start()
-    {
-        
+        if (maxScale <= minScale) { maxScale = 0.35f; minScale = 0.25f; rot = 0f; }
 
-        activeIndex = PlayerPrefs.GetInt("SelectedBackIndex", 0);
+        baseTableScale = maxScale;
+        baseSideScale = minScale;
+        sideBaseRotation = rot;
+
         for (int i = 0; i < allBackCards.Length; i++)
         {
             if (allBackCards[i] == null) continue;
@@ -90,62 +87,87 @@ public class CardBackSelectionUI : MonoBehaviour
             Button btn = allBackCards[i].gameObject.GetComponent<Button>();
             if (btn == null) btn = allBackCards[i].gameObject.AddComponent<Button>();
 
-            // Фикс белой прозрачности кнопки (убираем полупрозрачность неактивной карты)
             ColorBlock cb = btn.colors;
-            cb.normalColor = Color.white;
-            cb.highlightedColor = Color.white;
-            cb.pressedColor = Color.white;
-            cb.selectedColor = Color.white;
-            cb.disabledColor = Color.white;
-            cb.colorMultiplier = 1f;
+            cb.normalColor = Color.white; cb.highlightedColor = Color.white;
+            cb.pressedColor = Color.white; cb.selectedColor = Color.white;
+            cb.disabledColor = Color.white; cb.colorMultiplier = 1f;
             btn.colors = cb;
 
             btn.enabled = true;
             btn.interactable = true;
 
             CanvasGroup cg = allBackCards[i].GetComponent<CanvasGroup>();
-            if (cg != null)
-            {
-                cg.interactable = true;
-                cg.blocksRaycasts = true;
-            }
+            if (cg != null) { cg.interactable = true; cg.blocksRaycasts = true; }
 
             btn.onClick.RemoveAllListeners();
             int indexToSelect = i;
             btn.onClick.AddListener(() => OnCardClicked(indexToSelect));
 
-            // Активируем отслеживание мыши
             SetupHoverEvents(allBackCards[i], i);
         }
-
-        RefreshDeckSprites(true); // Мгновенная настройка спрайтов при старте
-        ArrangeCards(true);       // Мгновенная расстановка при старте
     }
-    private void AdjustScaleForResolution()
+
+    private void Start()
     {
-        float targetAspect = 16f / 9f;
-        float currentAspect = (float)Screen.width / Screen.height;
-        float multiplier = 1f;
-
-        if (currentAspect > targetAspect)
-        {
-            multiplier = targetAspect / currentAspect;
-        }
-        else if (currentAspect < targetAspect)
-        {
-            float rawGrow = targetAspect / currentAspect;
-            multiplier = Mathf.Min(rawGrow, 1.15f); // Тот же безопасный лимит
-        }
-
-        tableScale = 0.3f * multiplier;
-        sideScale = 0.2f * multiplier;
+        lastWidth = Screen.width;
+        lastHeight = Screen.height;
     }
-    // --- ОБНОВЛЕНИЕ РУБАШЕК ПРИ СМЕНЕ КОЛОДЫ ---
+
+    private void Update()
+    {
+        // ИДЕАЛЬНАЯ СИНХРОНИЗАЦИЯ: Если разрешение/ориентация изменились, жестко сверяемся с PlayerPrefs
+        if (Screen.width != lastWidth || Screen.height != lastHeight)
+        {
+            lastWidth = Screen.width;
+            lastHeight = Screen.height;
+            SyncStateFromPrefs();
+        }
+    }
+
+    private void OnEnable()
+    {
+        OnBackStyleChangedGlobal += SyncBackStyle;
+        // ДОБАВЛЕНО: Теперь рубашки слушают смену колоды напрямую
+        DeckSelectionUI.OnDeckStyleChangedGlobal += SyncDeckStyle;
+        SyncStateFromPrefs();
+    }
+
+    private void OnDisable()
+    {
+        OnBackStyleChangedGlobal -= SyncBackStyle;
+        // ДОБАВЛЕНО: Отписываемся от события
+        DeckSelectionUI.OnDeckStyleChangedGlobal -= SyncDeckStyle;
+        ArrangeCards(true);
+    }
+
+    // ДОБАВЛЕНО: Метод, который обновит спрайты при смене колоды
+    private void SyncDeckStyle(int newDeckIndex)
+    {
+        RefreshDeckSprites(!gameObject.activeInHierarchy);
+    }
+
+    public void SyncStateFromPrefs()
+    {
+        activeIndex = PlayerPrefs.GetInt("SelectedBackIndex", 0);
+        RefreshDeckSprites(true);
+        ArrangeCards(true);
+    }
+
     public void RefreshDeckSprites(bool instant)
     {
         CardSpriteDatabase db = ActiveSpriteDb;
         if (db == null) return;
         db.BuildCache();
+
+        // Мы будем использовать саму карту для корутины, так как она ВСЕГДА включена на столе!
+        CardData activeCard = allBackCards[activeIndex];
+        if (activeCard == null) return;
+
+        if (globalFlipCoroutine != null)
+        {
+            activeCard.StopCoroutine(globalFlipCoroutine);
+            globalFlipCoroutine = null;
+        }
 
         if (instant)
         {
@@ -154,16 +176,13 @@ public class CardBackSelectionUI : MonoBehaviour
                 if (allBackCards[i] == null) continue;
                 allBackCards[i].UpdateBackVisual(db.backSprites[i]);
                 allBackCards[i].SetFaceUp(false, false);
+                float baseS = (i == activeIndex) ? baseTableScale : baseSideScale;
+                allBackCards[i].transform.localScale = new Vector3(baseS, baseS, 1f);
             }
         }
         else
         {
-            // ИСПРАВЛЕНИЕ ОШИБКИ INACTIVE GAMEOBJECT:
-            // Так как сама панель сейчас может быть выключена, мы просим запустить корутину 
-            // ту карту, которая сейчас лежит на столе (она гарантированно активна!)
-            CardData activeCard = allBackCards[activeIndex];
-
-            if (globalFlipCoroutine != null) activeCard.StopCoroutine(globalFlipCoroutine);
+            // Запускаем корутину на Карте, а не на панели!
             globalFlipCoroutine = activeCard.StartCoroutine(FlipAllBacksRoutine(db));
         }
     }
@@ -171,9 +190,8 @@ public class CardBackSelectionUI : MonoBehaviour
     private IEnumerator FlipAllBacksRoutine(CardSpriteDatabase db)
     {
         float flipHalfSpeed = 0.15f;
-
-        // 1. Сжимаем все карты по оси X (эффект переворота)
         float elapsed = 0f;
+
         while (elapsed < flipHalfSpeed)
         {
             elapsed += Time.deltaTime;
@@ -181,20 +199,18 @@ public class CardBackSelectionUI : MonoBehaviour
             for (int i = 0; i < allBackCards.Length; i++)
             {
                 if (allBackCards[i] == null) continue;
-                float baseS = (i == activeIndex) ? tableScale : sideScale;
+                float baseS = (i == activeIndex) ? baseTableScale : baseSideScale;
                 allBackCards[i].transform.localScale = new Vector3(Mathf.Lerp(baseS, 0, t), baseS, 1f);
             }
             yield return null;
         }
 
-        // 2. Меняем спрайты, пока карты "плоские"
         for (int i = 0; i < allBackCards.Length; i++)
         {
             if (allBackCards[i] == null) continue;
             allBackCards[i].UpdateBackVisual(db.backSprites[i]);
         }
 
-        // 3. Разжимаем обратно
         elapsed = 0f;
         while (elapsed < flipHalfSpeed)
         {
@@ -203,24 +219,22 @@ public class CardBackSelectionUI : MonoBehaviour
             for (int i = 0; i < allBackCards.Length; i++)
             {
                 if (allBackCards[i] == null) continue;
-                float baseS = (i == activeIndex) ? tableScale : sideScale;
+                float baseS = (i == activeIndex) ? baseTableScale : baseSideScale;
                 allBackCards[i].transform.localScale = new Vector3(Mathf.Lerp(0, baseS, t), baseS, 1f);
             }
             yield return null;
         }
 
-        // Жестко фиксируем финальный размер для надежности
         for (int i = 0; i < allBackCards.Length; i++)
         {
             if (allBackCards[i] == null) continue;
-            float baseS = (i == activeIndex) ? tableScale : sideScale;
+            float baseS = (i == activeIndex) ? baseTableScale : baseSideScale;
             allBackCards[i].transform.localScale = new Vector3(baseS, baseS, 1f);
         }
 
         globalFlipCoroutine = null;
     }
 
-    // --- ЛОГИКА НАВЕДЕНИЯ МЫШИ (HOVER) ---
     private void SetupHoverEvents(CardData cardData, int index)
     {
         GameObject cardObj = cardData.gameObject;
@@ -238,7 +252,6 @@ public class CardBackSelectionUI : MonoBehaviour
 
     private void StartHover(int index, bool isEnter)
     {
-        // Не увеличиваем, если карта летит или сейчас идет анимация смены колоды
         if (moveCoroutines[index] != null || globalFlipCoroutine != null) return;
 
         CardData card = allBackCards[index];
@@ -247,11 +260,9 @@ public class CardBackSelectionUI : MonoBehaviour
         if (hoverCoroutines.ContainsKey(target) && hoverCoroutines[target] != null)
             card.StopCoroutine(hoverCoroutines[target]);
 
-        // Определяем базовый масштаб: на столе он больше, в панели меньше
-        float baseScale = (index == activeIndex) ? tableScale : sideScale;
+        float baseScale = (index == activeIndex) ? baseTableScale : baseSideScale;
         float targetScaleF = isEnter ? baseScale * hoverScaleMultiplier : baseScale;
 
-        // Запускаем корутину на самой карте
         hoverCoroutines[target] = card.StartCoroutine(HoverRoutine(target, targetScaleF, index));
     }
 
@@ -260,27 +271,32 @@ public class CardBackSelectionUI : MonoBehaviour
         Vector3 targetScale = new Vector3(targetScaleF, targetScaleF, 1f);
         while (Vector3.Distance(target.localScale, targetScale) > 0.001f)
         {
-            // Прерываем увеличение, если игрок кликнул и начался полет или смена колоды
             if (moveCoroutines[index] != null || globalFlipCoroutine != null) yield break;
-
             target.localScale = Vector3.Lerp(target.localScale, targetScale, Time.unscaledDeltaTime * hoverSpeed);
             yield return null;
         }
         target.localScale = targetScale;
     }
 
-    // --- ЛОГИКА КЛИКА И ПОЛЕТА ---
     public void OnCardClicked(int clickedIndex)
     {
         if (clickedIndex == activeIndex) return;
-
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("BG_Switch");
 
         activeIndex = clickedIndex;
         PlayerPrefs.SetInt("SelectedBackIndex", activeIndex);
         PlayerPrefs.Save();
 
+        OnBackStyleChangedGlobal?.Invoke(activeIndex);
+
         ArrangeCards(false);
+    }
+
+    private void SyncBackStyle(int newIndex)
+    {
+        if (activeIndex == newIndex) return;
+        activeIndex = newIndex;
+        ArrangeCards(!gameObject.activeInHierarchy);
     }
 
     private void ArrangeCards(bool instant)
@@ -299,7 +315,7 @@ public class CardBackSelectionUI : MonoBehaviour
             if (isTable)
             {
                 targetAnchor = tableAnchor;
-                targetScaleF = tableScale;
+                targetScaleF = baseTableScale;
                 targetRot = Quaternion.Euler(0, 0, Random.Range(-maxRandomRotation, maxRandomRotation));
                 allBackCards[i].GetComponent<Button>().interactable = false;
             }
@@ -311,7 +327,7 @@ public class CardBackSelectionUI : MonoBehaviour
                 }
                 currentSideSlot++;
 
-                targetScaleF = sideScale;
+                targetScaleF = baseSideScale;
                 targetRot = Quaternion.Euler(0, 0, sideBaseRotation + Random.Range(-maxRandomRotation, maxRandomRotation));
                 allBackCards[i].GetComponent<Button>().interactable = true;
             }

@@ -54,7 +54,10 @@ public class SultanIntroController : MonoBehaviour, IIntroController
             if (btn != null) bottomButtonsStartPos.Add(btn.anchoredPosition);
         }
     }
-
+    public void UpdateSavedPositions()
+    {
+        SaveInitialPositions();
+    }
     public void PrepareIntro(bool isRestart)
     {
         isSkipping = false; // —брасываем флаг

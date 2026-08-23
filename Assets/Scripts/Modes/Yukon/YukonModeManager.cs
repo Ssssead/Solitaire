@@ -85,8 +85,7 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
 
             if (undoManager.undoAllButton != null)
             {
-                undoManager.undoAllButton.onClick.RemoveAllListeners();
-                undoManager.undoAllButton.onClick.AddListener(RestartCurrentDeal);
+                LongPressHoldTrigger.SubscribeToButton(undoManager.undoAllButton, RestartCurrentDeal);
             }
         }
 
@@ -732,9 +731,10 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
     public void OnCardDoubleClicked(CardController card)
     {
         if (!IsInputAllowed) return;
-        if (!YG.YG2.envir.isDesktop) return;
-
-        ExecuteAutoMove(card);
+        if (GameSettings.AutoMoveClickMode == 1)
+        {
+            ExecuteAutoMove(card);
+        }
     }
     private void ExecuteAutoMove(CardController card)
     {
@@ -1150,7 +1150,7 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
         if (!IsInputAllowed) return;
 
         // На мобилках и планшетах запускаем авто-перенос
-        if (YG.YG2.envir.isMobile || YG.YG2.envir.isTablet)
+        if (GameSettings.AutoMoveClickMode == 0)
         {
             ExecuteAutoMove(card);
         }

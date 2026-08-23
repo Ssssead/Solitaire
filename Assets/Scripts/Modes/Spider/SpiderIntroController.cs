@@ -33,7 +33,6 @@ public class SpiderIntroController : MonoBehaviour, IIntroController
         if (modeManager == null) modeManager = GetComponent<SpiderModeManager>();
     }
 
-    // --- НОВОЕ: Отслеживаем клик для пропуска ---
     private void Update()
     {
         if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
@@ -47,23 +46,10 @@ public class SpiderIntroController : MonoBehaviour, IIntroController
         isSkipping = false; // Сбрасываем флаг перед началом
         Canvas.ForceUpdateCanvases();
 
-        // Запоминаем оригинальные позиции UI
-        if (topPanel != null && topPanelStartPos == Vector2.zero)
-        {
-            topPanelStartPos = topPanel.anchoredPosition;
-            topPanelHiddenPos = topPanelStartPos + new Vector2(0, 300f);
-        }
-
+        // Запоминаем оригинальные позиции UI, если они еще не сохранены
         if (buttonsStartPos.Count == 0)
         {
-            foreach (var btn in bottomButtons)
-            {
-                if (btn != null)
-                {
-                    buttonsStartPos.Add(btn.anchoredPosition);
-                    buttonsHiddenPos.Add(btn.anchoredPosition + new Vector2(0, -300f));
-                }
-            }
+            SaveInitialPositions();
         }
 
         // Если это первый запуск, прячем UI и прозрачность слотов
@@ -77,12 +63,40 @@ public class SpiderIntroController : MonoBehaviour, IIntroController
         }
     }
 
+    // ---> ВЫНЕСЕННЫЙ МЕТОД СОХРАНЕНИЯ ПОЗИЦИЙ <---
+    private void SaveInitialPositions()
+    {
+        if (topPanel != null)
+        {
+            topPanelStartPos = topPanel.anchoredPosition;
+            topPanelHiddenPos = topPanelStartPos + new Vector2(0, 300f);
+        }
+
+        buttonsStartPos.Clear();
+        buttonsHiddenPos.Clear();
+
+        foreach (var btn in bottomButtons)
+        {
+            if (btn != null)
+            {
+                buttonsStartPos.Add(btn.anchoredPosition);
+                buttonsHiddenPos.Add(btn.anchoredPosition + new Vector2(0, -300f));
+            }
+        }
+    }
+
+    // ---> РЕАЛИЗАЦИЯ ИНТЕРФЕЙСА ДЛЯ ПОВОРОТА ЭКРАНА <---
+    public void UpdateSavedPositions()
+    {
+        SaveInitialPositions();
+    }
+
     public IEnumerator PlayIntro(bool skipUI)
     {
         // 1 ФАЗА: Появление слотов и выезд UI (пропускаем при рестарте)
         if (!skipUI)
         {
-            yield return StartCoroutine(SkippableWait(startDelay)); // Заменили WaitForSeconds
+            yield return StartCoroutine(SkippableWait(startDelay));
 
             StartCoroutine(FadeInSlots(slotsFadeDuration));
 
@@ -99,12 +113,12 @@ public class SpiderIntroController : MonoBehaviour, IIntroController
                 if (bottomButtons[i] != null)
                 {
                     StartCoroutine(AnimateUIElement(bottomButtons[i], buttonsHiddenPos[i], buttonsStartPos[i], uiSlideDuration));
-                    yield return StartCoroutine(SkippableWait(buttonStaggerDelay)); // Заменили WaitForSeconds
+                    yield return StartCoroutine(SkippableWait(buttonStaggerDelay));
                 }
             }
 
             // Ждем окончания UI анимации
-            yield return StartCoroutine(SkippableWait(uiSlideDuration)); // Заменили WaitForSeconds
+            yield return StartCoroutine(SkippableWait(uiSlideDuration));
         }
         else
         {
@@ -119,7 +133,6 @@ public class SpiderIntroController : MonoBehaviour, IIntroController
         }
     }
 
-    // --- НОВОЕ: Пропускаемый таймер ---
     private IEnumerator SkippableWait(float duration)
     {
         float elapsed = 0f;

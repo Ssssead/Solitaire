@@ -102,8 +102,7 @@ public class MonteCarloModeManager : MonoBehaviour, ICardGameMode
         }
         if (undoAllButton != null)
         {
-            undoAllButton.onClick.RemoveAllListeners();
-            undoAllButton.onClick.AddListener(OnUndoAllAction);
+            LongPressHoldTrigger.SubscribeToButton(undoAllButton, OnUndoAllAction);
         }
     }
 

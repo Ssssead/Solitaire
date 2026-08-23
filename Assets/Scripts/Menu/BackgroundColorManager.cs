@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic; // Не забудь добавить для Dictionary
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,10 +10,20 @@ public class BackgroundColorManager : MonoBehaviour
     private const string ColorPrefKey = "SavedBackgroundColor";
     private const string DefaultColorHex = "#204D20";
 
+    // ==========================================
+    // СТРУКТУРА ДЛЯ ПАНЕЛЕЙ (Двойная ориентация)
+    // ==========================================
+    [System.Serializable]
+    public class BackgroundUIGroup
+    {
+        public RectTransform selectionOutline;
+        public Button[] colorButtons;
+    }
+
     [Header("Настройки UI (только для Меню)")]
     public MenuController menuController;
-    public RectTransform selectionOutline;
-    public Button[] colorButtons;
+    public BackgroundUIGroup landscapeUI;
+    public BackgroundUIGroup portraitUI;
     public string[] hexColors = new string[8];
 
     [Header("Настройки анимаций")]
@@ -22,10 +33,10 @@ public class BackgroundColorManager : MonoBehaviour
     public float uiAnimDuration = 0.2f;
 
     private Coroutine colorTransitionCoroutine;
-    private Coroutine[] scaleCoroutines;
+    // Используем словарь, чтобы хранить анимацию конкретной кнопки
+    private Dictionary<RectTransform, Coroutine> scaleCoroutines = new Dictionary<RectTransform, Coroutine>();
     private int currentIndex = -1;
 
-    // --- НОВОЕ: Статическая переменная для отслеживания первого запуска ---
     private static bool isFirstLaunch = true;
 
     void Awake()
@@ -34,46 +45,66 @@ public class BackgroundColorManager : MonoBehaviour
 
         if (isFirstLaunch)
         {
-            // 1. При самом первом запуске: ставим дефолтный цвет и ждем
             if (ColorUtility.TryParseHtmlString(DefaultColorHex, out Color defaultColor))
             {
                 backgroundImage.color = defaultColor;
             }
             StartCoroutine(LoadColorWithDelay());
-
-            // Отмечаем, что первый запуск прошел. Больше в эту ветку мы не зайдем до перезапуска приложения.
             isFirstLaunch = false;
         }
         else
         {
-            // 2. При переходе между сценами: применяем цвет моментально
             ApplySavedColorInstantly();
         }
     }
 
     void Start()
     {
-        if (colorButtons == null || colorButtons.Length == 0) return;
-
-        scaleCoroutines = new Coroutine[colorButtons.Length];
         string savedHex = PlayerPrefs.GetString(ColorPrefKey, DefaultColorHex);
 
-        for (int i = 0; i < colorButtons.Length; i++)
+        // Определяем стартовый индекс
+        for (int i = 0; i < hexColors.Length; i++)
         {
-            int index = i;
-            if (colorButtons[i] != null)
-                colorButtons[i].onClick.AddListener(() => OnColorButtonClicked(index));
-
-            if (hexColors.Length > i && hexColors[i].Equals(savedHex, System.StringComparison.OrdinalIgnoreCase))
-                currentIndex = index;
+            if (hexColors[i].Equals(savedHex, System.StringComparison.OrdinalIgnoreCase))
+            {
+                currentIndex = i;
+                break;
+            }
         }
 
-        if (currentIndex != -1 && selectionOutline != null)
+        // Настраиваем обе панели
+        SetupUIGroup(landscapeUI);
+        SetupUIGroup(portraitUI);
+    }
+
+    // --- Инициализация конкретной группы UI ---
+    private void SetupUIGroup(BackgroundUIGroup group)
+    {
+        if (group == null || group.colorButtons == null) return;
+
+        for (int i = 0; i < group.colorButtons.Length; i++)
         {
-            selectionOutline.gameObject.SetActive(true);
-            selectionOutline.position = colorButtons[currentIndex].GetComponent<RectTransform>().position;
-            colorButtons[currentIndex].GetComponent<RectTransform>().localScale = new Vector3(selectedScale, selectedScale, 1f);
-            selectionOutline.localScale = new Vector3(outlineScale, outlineScale, 1f);
+            int index = i;
+            if (group.colorButtons[i] != null)
+            {
+                group.colorButtons[i].onClick.AddListener(() => OnColorButtonClicked(index));
+            }
+        }
+
+        // Если нашли сохраненный цвет, сразу выделяем его рамкой и размером
+        if (currentIndex != -1 && currentIndex < group.colorButtons.Length)
+        {
+            if (group.selectionOutline != null)
+            {
+                group.selectionOutline.gameObject.SetActive(true);
+                group.selectionOutline.position = group.colorButtons[currentIndex].GetComponent<RectTransform>().position;
+                group.selectionOutline.localScale = new Vector3(outlineScale, outlineScale, 1f);
+            }
+
+            if (group.colorButtons[currentIndex] != null)
+            {
+                group.colorButtons[currentIndex].GetComponent<RectTransform>().localScale = new Vector3(selectedScale, selectedScale, 1f);
+            }
         }
     }
 
@@ -83,19 +114,24 @@ public class BackgroundColorManager : MonoBehaviour
 
         if (currentIndex == index) return;
 
-        if (currentIndex >= 0 && currentIndex < colorButtons.Length)
-            AnimateButtonScale(currentIndex, 1f);
-
-        currentIndex = index;
-        AnimateButtonScale(currentIndex, selectedScale);
-
-        if (selectionOutline != null && colorButtons[currentIndex] != null)
+        // 1. Уменьшаем старые кнопки в обеих панелях
+        if (currentIndex >= 0)
         {
-            selectionOutline.gameObject.SetActive(true);
-            selectionOutline.position = colorButtons[currentIndex].GetComponent<RectTransform>().position;
-            selectionOutline.localScale = new Vector3(outlineScale, outlineScale, 1f);
+            AnimateButtonInGroup(landscapeUI, currentIndex, 1f);
+            AnimateButtonInGroup(portraitUI, currentIndex, 1f);
         }
 
+        currentIndex = index;
+
+        // 2. Увеличиваем новые кнопки в обеих панелях
+        AnimateButtonInGroup(landscapeUI, currentIndex, selectedScale);
+        AnimateButtonInGroup(portraitUI, currentIndex, selectedScale);
+
+        // 3. Двигаем рамку в обеих панелях
+        UpdateOutlineInGroup(landscapeUI);
+        UpdateOutlineInGroup(portraitUI);
+
+        // 4. Меняем цвет
         if (index < hexColors.Length)
         {
             string hex = hexColors[index];
@@ -104,6 +140,33 @@ public class BackgroundColorManager : MonoBehaviour
 
             if (ColorUtility.TryParseHtmlString(hex, out Color newColor))
                 ChangeColorSmoothly(newColor);
+        }
+    }
+
+    // --- Вспомогательные методы для синхронизации групп ---
+    private void AnimateButtonInGroup(BackgroundUIGroup group, int index, float targetScale)
+    {
+        if (group == null || group.colorButtons == null || index >= group.colorButtons.Length || group.colorButtons[index] == null) return;
+
+        RectTransform target = group.colorButtons[index].GetComponent<RectTransform>();
+
+        if (scaleCoroutines.ContainsKey(target) && scaleCoroutines[target] != null)
+        {
+            StopCoroutine(scaleCoroutines[target]);
+        }
+
+        scaleCoroutines[target] = StartCoroutine(ScaleRoutine(target, targetScale));
+    }
+
+    private void UpdateOutlineInGroup(BackgroundUIGroup group)
+    {
+        if (group == null || group.selectionOutline == null || group.colorButtons == null) return;
+
+        if (currentIndex >= 0 && currentIndex < group.colorButtons.Length && group.colorButtons[currentIndex] != null)
+        {
+            group.selectionOutline.gameObject.SetActive(true);
+            group.selectionOutline.position = group.colorButtons[currentIndex].GetComponent<RectTransform>().position;
+            group.selectionOutline.localScale = new Vector3(outlineScale, outlineScale, 1f);
         }
     }
 
@@ -117,10 +180,9 @@ public class BackgroundColorManager : MonoBehaviour
 
     // --- ЛОГИКА ЦВЕТА И АНИМАЦИЙ ---
 
-    // Корутина для плавного появления при старте игры
     private IEnumerator LoadColorWithDelay()
     {
-        yield return new WaitForSeconds(1f); // Ждем 1 секунду
+        yield return new WaitForSeconds(1f);
 
         string savedHex = PlayerPrefs.GetString(ColorPrefKey, DefaultColorHex);
         if (savedHex != DefaultColorHex && ColorUtility.TryParseHtmlString(savedHex, out Color targetColor))
@@ -155,13 +217,6 @@ public class BackgroundColorManager : MonoBehaviour
             yield return null;
         }
         backgroundImage.color = targetColor;
-    }
-
-    private void AnimateButtonScale(int index, float targetScale)
-    {
-        if (colorButtons == null || index < 0 || index >= colorButtons.Length || colorButtons[index] == null) return;
-        if (scaleCoroutines[index] != null) StopCoroutine(scaleCoroutines[index]);
-        scaleCoroutines[index] = StartCoroutine(ScaleRoutine(colorButtons[index].GetComponent<RectTransform>(), targetScale));
     }
 
     private IEnumerator ScaleRoutine(RectTransform target, float targetScale)

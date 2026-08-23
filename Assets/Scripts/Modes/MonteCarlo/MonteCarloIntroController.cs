@@ -64,7 +64,10 @@ public class MonteCarloIntroController : MonoBehaviour, IIntroController
             }
         }
     }
-
+    public void UpdateSavedPositions()
+    {
+        SaveInitialPositions();
+    }
     public List<RectTransform> GetTopUIElements()
     {
         List<RectTransform> list = new List<RectTransform>();

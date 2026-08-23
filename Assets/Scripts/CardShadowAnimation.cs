@@ -147,7 +147,13 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
 
     private void UpdateShadowGeometry(bool isWideMode)
     {
-        if (shadowRect.parent != transform.parent) shadowRect.SetParent(transform.parent, true);
+        // --- ИСПРАВЛЕНИЕ: синхронизация скейла при смене родителя ---
+        if (shadowRect.parent != transform.parent)
+        {
+            shadowRect.SetParent(transform.parent, false);
+            shadowRect.localScale = myRect.localScale;
+        }
+
         if (shadowRect.GetSiblingIndex() != 0) shadowRect.SetAsFirstSibling();
 
         float currentCardWidth = myRect.rect.width;
@@ -185,12 +191,6 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         shadowRect.rotation = transform.rotation;
 
         if (shadowCanvasGroup != null) shadowCanvasGroup.alpha = currentAlpha;
-
-        if (shadowSprite != null && currentCardWidth > 0)
-        {
-            Image img = shadowObject.GetComponent<Image>();
-            if (img != null) img.pixelsPerUnitMultiplier = shadowSprite.rect.width / currentCardWidth;
-        }
     }
 
     // Порог, при котором стопка считается "разорванной"
@@ -336,21 +336,17 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
     {
         shadowObject = new GameObject("Shadow_Monolith");
         shadowRect = shadowObject.AddComponent<RectTransform>();
+
+        // --- ИСПРАВЛЕНИЕ: Задаем центральные якоря ---
+        shadowRect.anchorMin = new Vector2(0.5f, 0.5f);
+        shadowRect.anchorMax = new Vector2(0.5f, 0.5f);
         shadowRect.pivot = new Vector2(0.5f, 1f);
 
         Image img = shadowObject.AddComponent<Image>();
         img.sprite = shadowSprite;
         img.color = Color.black;
         img.raycastTarget = false;
-        img.type = Image.Type.Sliced;
-
-        float currentCardWidth = myRect.rect.width;
-        if (shadowSprite != null && currentCardWidth > 0)
-        {
-            float ratio = shadowSprite.rect.width / currentCardWidth;
-            img.pixelsPerUnitMultiplier = ratio;
-        }
-        else img.pixelsPerUnitMultiplier = 1f;
+        img.type = Image.Type.Simple;
 
         shadowCanvasGroup = shadowObject.AddComponent<CanvasGroup>();
         shadowCanvasGroup.alpha = currentAlpha;
@@ -358,7 +354,10 @@ public class CardDragShadow : MonoBehaviour, IBeginDragHandler, IEndDragHandler,
         shadowCanvasGroup.interactable = false;
 
         shadowRect.SetParent(transform.parent, false);
-        shadowRect.localScale = Vector3.one;
+
+        // --- ИСПРАВЛЕНИЕ: Копируем масштаб у самой карты ---
+        shadowRect.localScale = myRect.localScale;
+
         shadowRect.SetAsFirstSibling();
     }
 

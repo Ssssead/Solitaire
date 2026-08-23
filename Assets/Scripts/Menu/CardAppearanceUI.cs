@@ -9,7 +9,7 @@ public class CardAppearanceUI : MonoBehaviour
 {
     [Header("UI Ссылки")]
     public MenuController menuController;
-    public DeckSelectionUI deckSelectionUI; // <--- НОВОЕ: Ссылка на панель колод
+    public DeckSelectionUI deckSelectionUI;
 
     [Header("Базы данных спрайтов")]
     public CardSpriteDatabase baseSpriteDb;
@@ -21,8 +21,10 @@ public class CardAppearanceUI : MonoBehaviour
 
     [Header("Настройки анимации и масштаба карт")]
     public float flipSpeed = 0.15f;
-    public float cardScale = 0.3f;
     public float maxRandomRotation = 10f;
+
+    public static event System.Action<int> OnSuitChangedGlobal;
+    public static event System.Action<bool> OnRussianLettersChangedGlobal;
 
     [Header("Настройки Hover (Наведение)")]
     public float hoverScaleMultiplier = 1.05f;
@@ -47,11 +49,15 @@ public class CardAppearanceUI : MonoBehaviour
     public TMP_Text russianLettersText;
 
     private Suit currentSuit = Suit.Spades;
-    public Suit CurrentSuit => currentSuit; // <--- НОВОЕ: Публичное свойство текущей масти
+    public Suit CurrentSuit => currentSuit;
 
     private Coroutine flipCoroutine;
+    private float baseCardScale = 0.3f;
+
+    // Переменные для отслеживания ориентации/разрешения
     private int lastWidth;
     private int lastHeight;
+
     public CardSpriteDatabase ActiveSpriteDb
     {
         get
@@ -62,67 +68,66 @@ public class CardAppearanceUI : MonoBehaviour
             return baseSpriteDb;
         }
     }
+
+    private void Awake()
+    {
+        if (faceUpCards.Length > 0 && faceUpCards[0] != null)
+        {
+            baseCardScale = faceUpCards[0].transform.localScale.x;
+        }
+        else
+        {
+            baseCardScale = 0.35f;
+        }
+    }
+
+    private void Start()
+    {
+        lastWidth = Screen.width;
+        lastHeight = Screen.height;
+    }
+
     private void Update()
     {
-        // Проверяем, изменился ли размер экрана (появление/скрытие рекламы Яндекс)
         if (Screen.width != lastWidth || Screen.height != lastHeight)
         {
             lastWidth = Screen.width;
             lastHeight = Screen.height;
+            SyncStateFromPrefs();
+        }
+    }
 
-            AdjustScaleForResolution(); // Пересчитываем cardScale
-            ApplyDynamicScale();        // Применяем новый масштаб к картам на сцене
-        }
-    }
-    private void ApplyDynamicScale()
-    {
-        // Если в данный момент карты не переворачиваются, обновляем их масштаб
-        if (flipCoroutine == null)
-        {
-            foreach (var card in faceUpCards)
-            {
-                if (card != null)
-                {
-                    card.transform.localScale = new Vector3(cardScale, cardScale, cardScale);
-                }
-            }
-        }
-    }
     private void OnEnable()
     {
         CheckRussianLanguageVisibility();
         LocalizationManager.OnLocalizationLoaded += CheckRussianLanguageVisibility;
+        OnSuitChangedGlobal += HandleSuitChanged;
+        OnRussianLettersChangedGlobal += HandleRussianLettersChanged;
+
+        SyncStateFromPrefs();
     }
 
     private void OnDisable()
     {
         LocalizationManager.OnLocalizationLoaded -= CheckRussianLanguageVisibility;
+        OnSuitChangedGlobal -= HandleSuitChanged;
+        OnRussianLettersChangedGlobal -= HandleRussianLettersChanged;
     }
 
-    private void Start()
+    public void SyncStateFromPrefs()
     {
+        currentSuit = (Suit)PlayerPrefs.GetInt("SelectedSuit", 0);
         SyncSymbolModeWithLanguage();
+
+        CardData activeCard = faceUpCards[0];
+        if (activeCard != null && flipCoroutine != null)
+        {
+            activeCard.StopCoroutine(flipCoroutine);
+            flipCoroutine = null;
+        }
+
         SetupInitialCards();
         UpdateSuitButtons((int)currentSuit, true);
-    }
-    private void AdjustScaleForResolution()
-    {
-        float targetAspect = 16f / 9f;
-        float currentAspect = (float)Screen.width / Screen.height;
-        float multiplier = 1f;
-
-        if (currentAspect > targetAspect)
-        {
-            multiplier = targetAspect / currentAspect; // Сужаем для широких 21:9
-        }
-        else if (currentAspect < targetAspect)
-        {
-            float rawGrow = targetAspect / currentAspect;
-            // ЖЕСТКИЙ ЛИМИТ: Разрешаем картам вырасти максимум на 15% (1.15f)
-            multiplier = Mathf.Min(rawGrow, 1.15f);
-        }
-
-        cardScale = 0.3f * multiplier;
     }
 
     private void SetupInitialCards()
@@ -141,9 +146,13 @@ public class CardAppearanceUI : MonoBehaviour
             faceUpCards[i].SetModel(model, face);
             faceUpCards[i].SetFaceUp(true, false);
 
-            faceUpCards[i].transform.localScale = new Vector3(cardScale, cardScale, cardScale);
-            float randomRotationZ = Random.Range(-maxRandomRotation, maxRandomRotation);
-            faceUpCards[i].transform.localRotation = Quaternion.Euler(0, 0, randomRotationZ);
+            faceUpCards[i].transform.localScale = new Vector3(baseCardScale, baseCardScale, 1f);
+
+            if (faceUpCards[i].transform.localEulerAngles.z == 0)
+            {
+                float randomRotationZ = Random.Range(-maxRandomRotation, maxRandomRotation);
+                faceUpCards[i].transform.localRotation = Quaternion.Euler(0, 0, randomRotationZ);
+            }
 
             SetupHoverEvents(faceUpCards[i]);
         }
@@ -201,13 +210,36 @@ public class CardAppearanceUI : MonoBehaviour
         PlayerPrefs.SetInt("UseRussianSymbols", newRusState ? 1 : 0);
         PlayerPrefs.Save();
 
+        OnRussianLettersChangedGlobal?.Invoke(newRusState);
+        ApplyRussianLettersChange();
+    }
+
+    private void HandleRussianLettersChanged(bool isRus)
+    {
+        ApplyRussianLettersChange();
+    }
+
+    private void ApplyRussianLettersChange()
+    {
         SyncSymbolModeWithLanguage();
         UpdateRussianButtonText();
 
-        if (flipCoroutine != null) StopCoroutine(flipCoroutine);
+        CardData activeCard = faceUpCards[0];
+        if (activeCard != null && flipCoroutine != null)
+        {
+            activeCard.StopCoroutine(flipCoroutine);
+            flipCoroutine = null;
+        }
 
-        int[] cardsToFlip = new int[] { 0, 10, 11 };
-        flipCoroutine = StartCoroutine(FlipSpecificCardsRoutine(cardsToFlip));
+        if (gameObject.activeInHierarchy && activeCard != null)
+        {
+            int[] cardsToFlip = new int[] { 0, 10, 11 };
+            flipCoroutine = activeCard.StartCoroutine(FlipSpecificCardsRoutine(cardsToFlip));
+        }
+        else
+        {
+            SetupInitialCards();
+        }
     }
 
     private IEnumerator FlipSpecificCardsRoutine(int[] indicesToFlip)
@@ -216,10 +248,10 @@ public class CardAppearanceUI : MonoBehaviour
         while (elapsed < flipSpeed)
         {
             elapsed += Time.deltaTime;
-            float scaleX = Mathf.Lerp(cardScale, 0f, elapsed / flipSpeed);
+            float scaleX = Mathf.Lerp(baseCardScale, 0f, elapsed / flipSpeed);
             foreach (int i in indicesToFlip)
                 if (i < faceUpCards.Length && faceUpCards[i] != null)
-                    faceUpCards[i].transform.localScale = new Vector3(scaleX, cardScale, cardScale);
+                    faceUpCards[i].transform.localScale = new Vector3(scaleX, baseCardScale, 1f);
             yield return null;
         }
 
@@ -240,47 +272,84 @@ public class CardAppearanceUI : MonoBehaviour
         while (elapsed < flipSpeed)
         {
             elapsed += Time.deltaTime;
-            float scaleX = Mathf.Lerp(0f, cardScale, elapsed / flipSpeed);
+            float scaleX = Mathf.Lerp(0f, baseCardScale, elapsed / flipSpeed);
             foreach (int i in indicesToFlip)
                 if (i < faceUpCards.Length && faceUpCards[i] != null)
-                    faceUpCards[i].transform.localScale = new Vector3(scaleX, cardScale, cardScale);
+                    faceUpCards[i].transform.localScale = new Vector3(scaleX, baseCardScale, 1f);
             yield return null;
         }
 
         foreach (int i in indicesToFlip)
             if (i < faceUpCards.Length && faceUpCards[i] != null)
-                faceUpCards[i].transform.localScale = new Vector3(cardScale, cardScale, cardScale);
+                faceUpCards[i].transform.localScale = new Vector3(baseCardScale, baseCardScale, 1f);
         flipCoroutine = null;
     }
 
-    // --- ЛОГИКА СМЕНЫ МАСТИ ---
     public void SetSuit(int suitIndex)
     {
-        Suit newSuit = (Suit)suitIndex;
-        if (currentSuit == newSuit) return;
-
+        if (currentSuit == (Suit)suitIndex) return;
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Flip");
-        currentSuit = newSuit;
 
-        UpdateSuitButtons(suitIndex, false);
+        // СОХРАНЯЕМ ВЫБОР МАСТИ В ПАМЯТЬ
+        PlayerPrefs.SetInt("SelectedSuit", suitIndex);
+        PlayerPrefs.Save();
 
-        // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-        // Передаем false, чтобы включить плавную анимацию переворота!
-        if (deckSelectionUI != null)
-        {
-            deckSelectionUI.UpdatePreviewCards(false);
-        }
-
-        if (flipCoroutine != null) StopCoroutine(flipCoroutine);
-        flipCoroutine = StartCoroutine(FlipToNewSuitRoutine());
+        OnSuitChangedGlobal?.Invoke(suitIndex);
+        ApplySuitChange(suitIndex);
     }
 
-    public void ChangeDeckStyle()
+    private void HandleSuitChanged(int suitIndex)
     {
-        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Flip");
+        if (currentSuit == (Suit)suitIndex) return;
+        ApplySuitChange(suitIndex);
+    }
+
+    private void ApplySuitChange(int suitIndex)
+    {
+        currentSuit = (Suit)suitIndex;
+        UpdateSuitButtons(suitIndex, !gameObject.activeInHierarchy);
+
+        if (deckSelectionUI != null) deckSelectionUI.UpdatePreviewCards(!gameObject.activeInHierarchy);
+
+        CardData activeCard = faceUpCards[0];
+        if (activeCard != null && flipCoroutine != null)
+        {
+            activeCard.StopCoroutine(flipCoroutine);
+            flipCoroutine = null;
+        }
+
+        if (gameObject.activeInHierarchy && activeCard != null)
+        {
+            flipCoroutine = activeCard.StartCoroutine(FlipToNewSuitRoutine());
+        }
+        else
+        {
+            SetupInitialCards();
+        }
+    }
+
+    public void ChangeDeckStyle(bool instant = false)
+    {
         SyncSymbolModeWithLanguage();
-        if (flipCoroutine != null) StopCoroutine(flipCoroutine);
-        flipCoroutine = StartCoroutine(FlipToNewSuitRoutine());
+
+        CardData activeCard = faceUpCards[0];
+        if (activeCard == null) return;
+
+        if (flipCoroutine != null)
+        {
+            activeCard.StopCoroutine(flipCoroutine);
+            flipCoroutine = null;
+        }
+
+        if (instant)
+        {
+            SetupInitialCards();
+        }
+        else
+        {
+            // Здесь мы используем саму карту, так как она всегда видна на столе!
+            flipCoroutine = activeCard.StartCoroutine(FlipToNewSuitRoutine());
+        }
     }
 
     private void UpdateSuitButtons(int activeIndex, bool instant)
@@ -294,7 +363,6 @@ public class CardAppearanceUI : MonoBehaviour
             Color targetBtnColor = isActive ? activeBtnColor : defaultBtnColor;
             Color targetIconColor = isActive ? activeIconColor : defaultIconColor;
 
-            // Жестко отключаем встроенные эффекты Unity, чтобы они не конфликтовали
             suitButtons[i].transition = Selectable.Transition.None;
 
             Image btnImage = suitButtons[i].GetComponent<Image>();
@@ -329,8 +397,6 @@ public class CardAppearanceUI : MonoBehaviour
             yield return null;
         }
 
-        // --- ГЛАВНОЕ ИСПРАВЛЕНИЕ: ЖЕСТКАЯ ФИКСАЦИЯ В КОНЦЕ ---
-        // Теперь, даже если цикл пропустит кадры, цвет и размер 100% применятся!
         target.localScale = targetScale;
         if (btnImage != null) btnImage.color = targetBtnColor;
         if (iconImage != null) iconImage.color = targetIconColor;
@@ -342,9 +408,9 @@ public class CardAppearanceUI : MonoBehaviour
         while (elapsed < flipSpeed)
         {
             elapsed += Time.deltaTime;
-            float scaleX = Mathf.Lerp(cardScale, 0f, elapsed / flipSpeed);
+            float scaleX = Mathf.Lerp(baseCardScale, 0f, elapsed / flipSpeed);
             foreach (var card in faceUpCards)
-                if (card != null) card.transform.localScale = new Vector3(scaleX, cardScale, cardScale);
+                if (card != null) card.transform.localScale = new Vector3(scaleX, baseCardScale, 1f);
             yield return null;
         }
 
@@ -363,18 +429,16 @@ public class CardAppearanceUI : MonoBehaviour
         while (elapsed < flipSpeed)
         {
             elapsed += Time.deltaTime;
-            float scaleX = Mathf.Lerp(0f, cardScale, elapsed / flipSpeed);
+            float scaleX = Mathf.Lerp(0f, baseCardScale, elapsed / flipSpeed);
             foreach (var card in faceUpCards)
-                if (card != null) card.transform.localScale = new Vector3(scaleX, cardScale, cardScale);
+                if (card != null) card.transform.localScale = new Vector3(scaleX, baseCardScale, 1f);
             yield return null;
         }
 
         foreach (var card in faceUpCards)
-            if (card != null) card.transform.localScale = new Vector3(cardScale, cardScale, cardScale);
+            if (card != null) card.transform.localScale = new Vector3(baseCardScale, baseCardScale, 1f);
         flipCoroutine = null;
     }
-
-    // --- HOVER ---
 
     private void SetupHoverEvents(CardData cardData)
     {
@@ -404,13 +468,13 @@ public class CardAppearanceUI : MonoBehaviour
         Transform target = cardData.transform;
         if (hoverCoroutines.ContainsKey(target) && hoverCoroutines[target] != null)
             cardData.StopCoroutine(hoverCoroutines[target]);
-        float targetScaleF = isEnter ? cardScale * hoverScaleMultiplier : cardScale;
+        float targetScaleF = isEnter ? baseCardScale * hoverScaleMultiplier : baseCardScale;
         hoverCoroutines[target] = cardData.StartCoroutine(HoverRoutine(target, targetScaleF));
     }
 
     private IEnumerator HoverRoutine(Transform target, float targetScaleF)
     {
-        Vector3 targetScale = new Vector3(targetScaleF, targetScaleF, targetScaleF);
+        Vector3 targetScale = new Vector3(targetScaleF, targetScaleF, 1f);
         while (Vector3.Distance(target.localScale, targetScale) > 0.001f)
         {
             if (flipCoroutine != null) yield break;

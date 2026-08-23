@@ -7,23 +7,19 @@ using System.Collections;
 public class RewardDistributionPanelUI : MonoBehaviour
 {
     [Header("Animation Settings")]
-    public float animationDuration = 0.3f;
+    public float animationDuration = 0.25f;
     public AnimationCurve easeCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     [Header("UI Elements")]
     public TMP_Text descriptionText;
     public TMP_Text remainingBoostersText;
     public Button acceptButton;
-    public Button closeButton; // Ссылка на крестик
+    public Button closeButton;
 
     [Header("10 Game Cards")]
     public List<RewardCardUI> cards;
 
-    private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
-    private Vector2 hiddenPosition;
-    private Vector2 visiblePosition = Vector2.zero;
-
     private string currentDateKey;
     private DailyQuestsPanelUI parentPanel;
     public int AvailableBank { get; private set; }
@@ -31,20 +27,17 @@ public class RewardDistributionPanelUI : MonoBehaviour
 
     private void Awake()
     {
-        rectTransform = GetComponent<RectTransform>();
         canvasGroup = GetComponent<CanvasGroup>();
         if (canvasGroup == null) canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
-        // Устанавливаем стартовую позицию далеко слева
-        float panelWidth = rectTransform.rect.width;
-        hiddenPosition = new Vector2(-panelWidth - 500f, 0);
-        rectTransform.anchoredPosition = hiddenPosition;
-        canvasGroup.alpha = 0;
-
-        // Отключаем при запуске сцены
-        gameObject.SetActive(false);
-
         if (closeButton != null) closeButton.onClick.AddListener(OnCloseClicked);
+    }
+
+    private void OnDisable()
+    {
+        StopAllCoroutines();
+        if (canvasGroup != null) canvasGroup.alpha = 0f;
+        transform.localScale = Vector3.one * 0.8f;
     }
 
     public void OpenPanel(string dateKey, DailyQuestsPanelUI parent)
@@ -55,7 +48,6 @@ public class RewardDistributionPanelUI : MonoBehaviour
         AvailableBank = QuestManager.Instance.saveData.availableXpTickets;
         GamesPerBooster = QuestManager.Instance.HasPremium ? 6 : 3;
 
-        // Локализация описания
         string descKey = "Reward_Desc";
         string locDesc = LocalizationManager.instance?.GetLocalizedValue(descKey) ??
             "Распределите награду! Каждый вложенный бустер дает <color=#ffbb00>x2 опыта</color> на <color=#ffbb00>следующие {0} игр</color>.";
@@ -65,42 +57,45 @@ public class RewardDistributionPanelUI : MonoBehaviour
 
         UpdateAllCardsUI();
 
-        // ---> ФИКС 1: Анимация запускается ТОЛЬКО если панель была закрыта <---
         if (!gameObject.activeSelf)
         {
+            // ---> ЗВУК ОТКРЫТИЯ ПАНЕЛИ <---
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound("Panel_Slide_In");
+
             gameObject.SetActive(true);
             StopAllCoroutines();
             StartCoroutine(ShowPanelRoutine());
-        }
-        else
-        {
-            // Если панель уже на экране, просто гарантируем её правильное положение и альфу
-            rectTransform.anchoredPosition = visiblePosition;
-            canvasGroup.alpha = 1f;
         }
     }
 
     private IEnumerator ShowPanelRoutine()
     {
         float elapsed = 0;
+
+        canvasGroup.alpha = 0;
+        transform.localScale = Vector3.one * 0.8f;
+
         while (elapsed < animationDuration)
         {
             elapsed += Time.unscaledDeltaTime;
             float t = easeCurve.Evaluate(elapsed / animationDuration);
 
-            rectTransform.anchoredPosition = Vector2.Lerp(hiddenPosition, visiblePosition, t);
             canvasGroup.alpha = Mathf.Lerp(0, 1, t);
+            transform.localScale = Vector3.Lerp(Vector3.one * 0.8f, Vector3.one, t);
             yield return null;
         }
 
-        rectTransform.anchoredPosition = visiblePosition;
         canvasGroup.alpha = 1;
+        transform.localScale = Vector3.one;
     }
 
     public void OnCloseClicked()
     {
-        // ---> ФИКС 2: Защита от вызова Coroutine на выключенном объекте <---
         if (!gameObject.activeInHierarchy) return;
+
+        // ---> ЗВУК КЛИКА <---
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
 
         StopAllCoroutines();
         StartCoroutine(HidePanelRoutine());
@@ -109,6 +104,9 @@ public class RewardDistributionPanelUI : MonoBehaviour
     public void OnAcceptClicked()
     {
         if (!gameObject.activeInHierarchy) return;
+
+        // ---> ЗВУК КЛИКА <---
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
 
         Dictionary<QuestCategory, int> distribution = new Dictionary<QuestCategory, int>();
         foreach (var card in cards)
@@ -127,18 +125,24 @@ public class RewardDistributionPanelUI : MonoBehaviour
 
     private IEnumerator HidePanelRoutine()
     {
+        // ---> ЗВУК ЗАКРЫТИЯ ПАНЕЛИ <---
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound("Panel_Slide_Out");
+
         float elapsed = 0;
+        float startAlpha = canvasGroup.alpha;
+        Vector3 startScale = transform.localScale;
+
         while (elapsed < animationDuration)
         {
             elapsed += Time.unscaledDeltaTime;
             float t = easeCurve.Evaluate(elapsed / animationDuration);
 
-            rectTransform.anchoredPosition = Vector2.Lerp(visiblePosition, hiddenPosition, t);
-            canvasGroup.alpha = Mathf.Lerp(1, 0, t);
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, 0, t);
+            transform.localScale = Vector3.Lerp(startScale, Vector3.one * 0.8f, t);
             yield return null;
         }
 
-        rectTransform.anchoredPosition = hiddenPosition;
         canvasGroup.alpha = 0;
         gameObject.SetActive(false);
     }

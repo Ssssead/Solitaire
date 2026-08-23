@@ -15,7 +15,6 @@ public class RewardCardUI : MonoBehaviour
     public Button plusButton;
     public Button minusButton;
 
-    // В базе мы храним количество ИГР, а не бустеров (защита от потери при смене премиума)
     public int CommittedGames { get; private set; }
     public int PendingBoosters { get; private set; }
 
@@ -26,7 +25,6 @@ public class RewardCardUI : MonoBehaviour
         mainPanel = panel;
         PendingBoosters = 0;
 
-        // Считываем уже сохраненные победы из базы
         var buff = QuestManager.Instance.saveData.activeXpBuffs?.FirstOrDefault(b => b.gameCategory == category);
         CommittedGames = buff != null ? buff.remainingWins : 0;
     }
@@ -35,6 +33,9 @@ public class RewardCardUI : MonoBehaviour
     {
         if (mainPanel.TryAddBooster())
         {
+            // ---> ЗВУК КЛИКА <---
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+
             PendingBoosters++;
             mainPanel.UpdateAllCardsUI();
         }
@@ -42,9 +43,11 @@ public class RewardCardUI : MonoBehaviour
 
     public void OnMinusClicked()
     {
-        // Отменяем только "ожидающие" бустеры! Старые достижения защищены.
         if (PendingBoosters > 0)
         {
+            // ---> ЗВУК КЛИКА <---
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
+
             PendingBoosters--;
             mainPanel.RemoveBooster();
         }
@@ -52,29 +55,25 @@ public class RewardCardUI : MonoBehaviour
 
     public void RefreshUI(bool canAddMore)
     {
-        // Считаем общее количество бонусных игр
         int totalGames = CommittedGames + (PendingBoosters * mainPanel.GamesPerBooster);
         gamesCountText.text = totalGames.ToString();
 
-        // А. Текст "Х2"
         if (totalGames > 0)
-            x2Text.color = new Color32(255, 196, 0, 255); // FFC400
+            x2Text.color = new Color32(255, 196, 0, 255);
         else
-            x2Text.color = new Color32(0, 0, 0, 102); // Черный 40% Alpha
+            x2Text.color = new Color32(0, 0, 0, 102);
 
-        // Б. Кнопка "+"
         plusButton.interactable = canAddMore;
         if (canAddMore)
-            plusButton.image.color = new Color32(255, 196, 0, 255); // FFC400 Золотой
+            plusButton.image.color = new Color32(255, 196, 0, 255);
         else
-            plusButton.image.color = new Color32(180, 180, 180, 255); // Серый
+            plusButton.image.color = new Color32(180, 180, 180, 255);
 
-        // В. Кнопка "-"
         bool canMinus = PendingBoosters > 0;
         minusButton.interactable = canMinus;
         if (canMinus)
-            minusButton.image.color = new Color32(140, 155, 181, 255); // 8C9BB5 Сине-серый
+            minusButton.image.color = new Color32(140, 155, 181, 255);
         else
-            minusButton.image.color = new Color32(180, 180, 180, 255); // Серый
+            minusButton.image.color = new Color32(180, 180, 180, 255);
     }
 }

@@ -34,7 +34,12 @@ public class UndoManager : MonoBehaviour
         if (pileManager == null) pileManager = FindObjectOfType<PileManager>();
 
         if (undoButton != null) undoButton.onClick.AddListener(OnUndoButtonClick);
-        if (undoAllButton != null) undoAllButton.onClick.AddListener(OnUndoAllButtonClick);
+        // --- ИЗМЕНЕННАЯ ПОДПИСКА ДЛЯ UNDO ALL ---
+        if (undoAllButton != null)
+        {
+            LongPressHoldTrigger.SubscribeToButton(undoAllButton, OnUndoAllButtonClick);
+        }
+        // ----------------------------------------
         UpdateButtons();
     }
 

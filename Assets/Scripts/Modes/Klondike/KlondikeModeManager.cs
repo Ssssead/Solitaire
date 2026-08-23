@@ -33,14 +33,21 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
     [Header("Tutorial")]
     public KlondikeTutorialManager tutorialManager;
 
-    [Header("UI & HUD")]
-
+    [Header("UI & HUD - Landscape")]
     [Tooltip("Текст для отображения количества ходов")]
     public TMP_Text movesText;
     [Tooltip("Текст для отображения очков")]
-    public TMP_Text scoreText; // [NEW]
+    public TMP_Text scoreText;
     [Tooltip("Текст для отображения времени")]
-    public TMP_Text timeText;  // [NEW]
+    public TMP_Text timeText;
+
+    [Header("UI & HUD - Portrait")]
+    [Tooltip("Текст для отображения количества ходов (Портрет)")]
+    public TMP_Text portraitMovesText;
+    [Tooltip("Текст для отображения очков (Портрет)")]
+    public TMP_Text portraitScoreText;
+    [Tooltip("Текст для отображения времени (Портрет)")]
+    public TMP_Text portraitTimeText;
 
     [Header("UI Buttons")]
     public Button autoWinButton;
@@ -101,6 +108,12 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
 
         object[] initArgs = PrepareInitializationArguments();
         InitializeAllServices(initArgs);
+
+        // --- ФИКС 1: Собираем слоты ЗДЕСЬ, до того как они поменяют родителя! ---
+        if (pileManager != null)
+        {
+            pileManager.CreatePiles();
+        }
 
         isInitialized = true;
         LogDebug("=== Awake Complete ===");
@@ -244,12 +257,12 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
 
     public void StartNewGame()
     {
-       
         if (hasGameStarted && !hasWonGame && StatisticsManager.Instance != null)
             StatisticsManager.Instance.OnGameAbandoned();
-        // Сообщаем трекеру настройки матча ДО раздачи
+
         string variant = (GameSettings.KlondikeDrawCount == 3) ? "Draw3" : "Draw1";
         GameQuestTracker.Instance?.StartMatch("Klondike", GameSettings.CurrentDifficulty, variant);
+
         IsInputAllowed = false;
         hasWonGame = false;
         hasGameStarted = false;
@@ -265,7 +278,9 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
 
         UpdateFullUI();
         pileManager.ClearAllPiles();
-        pileManager.CreatePiles();
+
+        // --- ФИКС 2: Убран вызов pileManager.CreatePiles(), так как слоты уже собраны ---
+
         if (dragManager != null) dragManager.RefreshContainers();
         cardFactory.DestroyAllCards();
 
@@ -278,7 +293,6 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
             cachedDeal = DealCacheSystem.Instance.GetDeal(GameType.Klondike, GameSettings.CurrentDifficulty, drawParam);
         }
 
-        // Запускаем корутину интро, логика ветвится внутри
         StartCoroutine(IntroSequenceRoutine(cachedDeal));
     }
     private IEnumerator IntroSequenceRoutine(Deal deal)
@@ -361,56 +375,43 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
     private void UpdateFullUI()
     {
         // 1. Ходы
-        if (movesText != null)
+        string movesStr = "0";
+        if (hasGameStarted && StatisticsManager.Instance != null)
         {
-            // [FIX] Если игра еще не началась (идет анимация или ожидание первого хода),
-            // мы ВСЕГДА показываем 0, игнорируя старые данные из StatisticsManager.
-            if (!hasGameStarted)
-            {
-                movesText.text = "0";
-            }
-            else if (StatisticsManager.Instance != null)
-            {
-                movesText.text = $"{StatisticsManager.Instance.GetCurrentMoves()}";
-            }
-            else
-            {
-                movesText.text = "0";
-            }
+            movesStr = $"{StatisticsManager.Instance.GetCurrentMoves()}";
         }
 
+        if (movesText != null) movesText.text = movesStr;
+        if (portraitMovesText != null) portraitMovesText.text = movesStr;
+
         // 2. Очки
-        if (scoreText != null)
+        string scoreStr = "0";
+        if (hasGameStarted)
         {
-            // То же самое для очков: если игра не началась, очков визуально 0
-            if (!hasGameStarted)
-            {
-                scoreText.text = "0";
-            }
-            else
-            {
-                int score = scoreManager != null ? scoreManager.CurrentScore : 0;
-                scoreText.text = $"{score}";
-            }
+            int score = scoreManager != null ? scoreManager.CurrentScore : 0;
+            scoreStr = $"{score}";
         }
+
+        if (scoreText != null) scoreText.text = scoreStr;
+        if (portraitScoreText != null) portraitScoreText.text = scoreStr;
 
         // 3. Время
         if (!hasGameStarted)
         {
-            UpdateTimeUI(); // Сбросит в 0:00, так как gameTimer мы обнулили в Restart
+            UpdateTimeUI(); // Сбросит в 0:00
         }
     }
 
     // [NEW] Обновление только текста времени
     private void UpdateTimeUI()
     {
-        if (timeText != null)
-        {
-            int totalSeconds = Mathf.FloorToInt(gameTimer);
-            int minutes = totalSeconds / 60;
-            int seconds = totalSeconds % 60;
-            timeText.text = string.Format("{0}:{1:00}", minutes, seconds);
-        }
+        int totalSeconds = Mathf.FloorToInt(gameTimer);
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        string timeStr = string.Format("{0}:{1:00}", minutes, seconds);
+
+        if (timeText != null) timeText.text = timeStr;
+        if (portraitTimeText != null) portraitTimeText.text = timeStr;
     }
 
     #endregion
@@ -721,57 +722,38 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
     }
     private IEnumerator SoftRestartRoutine(DeckManager deck)
     {
-        // Блокируем ввод
         IsInputAllowed = false;
-
-        // Сброс переменных состояния
         hasWonGame = false;
         hasGameStarted = false;
         gameTimer = 0f;
         isTimerRunning = false;
-
-        // Прячем кнопку авто-победы
         isAutoWinVisible = false;
-        if (autoWinButton != null) autoWinButton.gameObject.SetActive(false);
 
-        // Сброс менеджеров
+        if (autoWinButton != null) autoWinButton.gameObject.SetActive(false);
         if (defeatManager != null) defeatManager.ResetManager();
         if (scoreManager != null) scoreManager.ResetScore();
 
-        // Обновляем UI (счет 0, время 0:00)
         UpdateFullUI();
-
-        // ОЧИСТКА СТОЛА
         pileManager.ClearAllPiles();
-        // Пересоздаем слоты (на всякий случай, если что-то сбилось)
-        pileManager.CreatePiles();
-        if (dragManager != null) dragManager.RefreshContainers();
 
-        // Удаляем физические объекты карт (те, что упали вниз в SceneExitAnimator)
+        // --- ФИКС 3: Убран вызов pileManager.CreatePiles() ---
+
+        if (dragManager != null) dragManager.RefreshContainers();
         cardFactory.DestroyAllCards();
 
-        // Ждем 1 кадр, чтобы Unity успела всё удалить
         yield return null;
 
-        // ПРИЛЕТ НОВОЙ КОЛОДЫ
         if (deck != null)
         {
-            // Эта функция сама сгенерирует расклад, анимирует прилет и раздаст карты
             yield return StartCoroutine(deck.PlayIntroDeckArrival(1.2f));
         }
         else
         {
-            // Если DeckManager нет, просто запускаем мгновенно
             StartNewGame();
         }
 
-        // Разблокируем ввод
         IsInputAllowed = true;
-
-        // Обновляем Z-индексы слотов
         animationService?.ReorderAllContainers(pileManager.GetAllContainerTransforms());
-
-        // Финальное обновление UI
         UpdateFullUI();
     }
 
@@ -1063,7 +1045,9 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
 
     public bool IsGameWon()
     {
-        if (pileManager?.Foundations == null) return false;
+        // --- ФИКС 4: Защита от ложной победы, если фундаментов 0 ---
+        if (pileManager?.Foundations == null || pileManager.Foundations.Count == 0) return false;
+
         foreach (var foundation in pileManager.Foundations)
         {
             if (foundation == null || !foundation.IsComplete()) return false;

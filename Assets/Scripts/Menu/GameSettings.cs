@@ -1,4 +1,4 @@
-// GameSettings.cs
+using UnityEngine;
 public static class GameSettings
 {
     // --- Основные ---
@@ -39,6 +39,23 @@ public static class GameSettings
 
             // FreeCell, Sultan, Octagon не имеют режимов, поэтому всегда "Standard"
             default: return "Standard";
+        }
+    }
+    public static int AutoMoveClickMode
+    {
+        get
+        {
+            if (!PlayerPrefs.HasKey("AutoMoveClickMode"))
+            {
+                // По умолчанию: Десктоп = 1 (Двойной), Мобилки = 0 (Одинарный)
+                return YG.YG2.envir.isDesktop ? 1 : 0;
+            }
+            return PlayerPrefs.GetInt("AutoMoveClickMode");
+        }
+        set
+        {
+            PlayerPrefs.SetInt("AutoMoveClickMode", value);
+            PlayerPrefs.Save();
         }
     }
 }

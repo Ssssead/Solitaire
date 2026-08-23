@@ -45,7 +45,9 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
     public void SetHoverEnabled(bool isEnabled)
     {
         isInteractionAllowed = isEnabled;
-        if (!isEnabled && isHovering && !isSelectedMode)
+
+        // Расширенная проверка: глушим эффект, если есть корутина ИЛИ если карточка считает себя isHovering
+        if (!isEnabled && (isHovering || activeCoroutine != null) && !isSelectedMode)
         {
             ForceStop();
         }
@@ -71,7 +73,6 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
             isHovering = false;
             if (activeCoroutine != null) StopCoroutine(activeCoroutine);
 
-            // ИСПРАВЛЕНИЕ: Обнуляем корутину, чтобы указать, что карта в покое
             activeCoroutine = null;
             transform.localRotation = Quaternion.identity;
         }
@@ -80,10 +81,22 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
     private void ForceStop()
     {
         isHovering = false;
-        if (activeCoroutine != null) StopCoroutine(activeCoroutine);
 
-        // ИСПРАВЛЕНИЕ: Обнуляем корутину
-        activeCoroutine = null;
+        if (activeCoroutine != null)
+        {
+            StopCoroutine(activeCoroutine);
+            activeCoroutine = null;
+        }
+
+        // ---> КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ 2: Мгновенно возвращаем не только масштаб, 
+        // но и ПОЗИЦИЮ с ВРАЩЕНИЕМ. Это дает CardAnimationController'у идеально 
+        // "чистую" карту перед началом перестроения.
+        if (baseScale != Vector3.zero)
+        {
+            transform.localScale = baseScale;
+            transform.localPosition = basePos;
+            transform.localRotation = baseRot;
+        }
     }
 
     // --- События мыши ---
@@ -95,8 +108,6 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
         bool isButtonActive = (targetButton == null || targetButton.interactable);
         if (!isButtonActive && !workEvenIfDisabled) return;
 
-        // ИСПРАВЛЕНИЕ ГЛАВНОГО БАГА (ГИГАНТСКАЯ КАРТА):
-        // Перезаписываем базовые значения ТОЛЬКО если сейчас не идет анимация ухода/появления.
         if (activeCoroutine == null)
         {
             baseScale = transform.localScale;
@@ -106,7 +117,6 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
             targetHoverScale = baseScale * hoverScaleMult;
             targetHoverPos = basePos + new Vector3(0, hoverYOffset, 0);
 
-            // <--- ДОБАВИТЬ ЭТО: Звук при наведении курсора --->
             if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Hover");
         }
 
@@ -191,7 +201,6 @@ public class CardHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExit
         transform.localPosition = basePos;
         transform.localRotation = baseRot;
 
-        // ИСПРАВЛЕНИЕ: Анимация завершена, карта снова в полном покое
         activeCoroutine = null;
     }
 }

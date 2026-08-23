@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI; // <--- ДОБАВЛЕНО для создания прозрачной панели (Image)
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -15,7 +15,12 @@ public class MenuIntroController : MonoBehaviour
     [Header("Dealing Settings")]
     public float cardFlyDuration = 0.8f;
     public float delayBetweenCards = 0.05f;
+
+    [Tooltip("На сколько пикселей левее от своей финальной точки стартует карта")]
     public float startXOffset = -1200f;
+
+    [Tooltip("На сколько пикселей ВЫШЕ своей финальной точки стартует верхний UI")]
+    public float topUiStartOffset = 1000f; // <--- НОВОЕ ПОЛЕ (По умолчанию 1000)
 
     [Header("Speed Up Settings")]
     [Tooltip("Во сколько раз ускорить анимацию при клике экрана")]
@@ -33,13 +38,18 @@ public class MenuIntroController : MonoBehaviour
     private List<Vector2> cardsFinalPositions = new List<Vector2>();
     private List<Vector2> topUiFinalPositions = new List<Vector2>();
 
-    // Внутренние переменные для контроля анимации
     private float currentSpeedMultiplier = 1f;
     private bool isAnimating = false;
     private GameObject raycastBlocker;
 
-    private void Awake()
+    // ИСПРАВЛЕНИЕ: Ждем 1 кадр перед стартом, чтобы адаптивный Canvas принял правильный размер
+    private void Start() // Убрали IEnumerator!
     {
+        // Принудительно заставляем Unity пересчитать все размеры Canvas прямо сейчас, 
+        // не дожидаясь следующего кадра!
+        Canvas.ForceUpdateCanvases();
+
+        // 1. Запоминаем финальные идеальные позиции
         foreach (var card in cardObjects)
         {
             if (card != null)
@@ -49,37 +59,50 @@ public class MenuIntroController : MonoBehaviour
                 cardsFinalPositions.Add(card.anchoredPosition);
             }
         }
-        foreach (var ui in topUiElements)
-            if (ui != null) topUiFinalPositions.Add(ui.anchoredPosition);
-        PrepareStacks();
-    }
 
-    private void Start()
-    {
+        foreach (var ui in topUiElements)
+        {
+            if (ui != null) topUiFinalPositions.Add(ui.anchoredPosition);
+        }
+
+        // 2. Раскидываем элементы за экран В ТОМ ЖЕ КАДРЕ
+        PrepareStacks();
+
+        // 3. Запускаем анимацию
         StartCoroutine(IntroSequenceRoutine());
     }
 
     private void Update()
     {
-        // Слушаем клик по экрану (или тап на телефоне)
         if (isAnimating && Input.GetMouseButtonDown(0))
         {
-            // Резко ускоряем анимацию
             currentSpeedMultiplier = fastForwardMultiplier;
         }
     }
 
     private void PrepareStacks()
     {
+        // Прячем верхний UI за экран, используя новую переменную
         foreach (var ui in topUiElements)
-            if (ui != null) ui.anchoredPosition += new Vector2(0, 300f);
+        {
+            if (ui != null)
+            {
+                ui.anchoredPosition += new Vector2(0, topUiStartOffset);
+            }
+        }
 
+        // Прячем карты влево (собирая их в красивые стопки)
         for (int i = 0; i < cardObjects.Count; i++)
         {
             if (cardObjects[i] == null) continue;
-            float stackY = (i < 5) ? cardsFinalPositions[0].y : cardsFinalPositions[5].y;
-            Vector2 stackPos = new Vector2(startXOffset, stackY);
-            cardObjects[i].anchoredPosition = stackPos + new Vector2(Random.Range(-messyPositionJitter, messyPositionJitter), Random.Range(-messyPositionJitter, messyPositionJitter));
+
+            Vector2 finalPos = cardsFinalPositions[i];
+            Vector2 stackPos = new Vector2(finalPos.x + startXOffset, finalPos.y);
+
+            cardObjects[i].anchoredPosition = stackPos + new Vector2(
+                Random.Range(-messyPositionJitter, messyPositionJitter),
+                Random.Range(-messyPositionJitter, messyPositionJitter));
+
             cardObjects[i].localRotation = Quaternion.Euler(0, 0, startRotation + Random.Range(-10f, 10f));
         }
     }
@@ -89,7 +112,6 @@ public class MenuIntroController : MonoBehaviour
         isAnimating = true;
         currentSpeedMultiplier = 1f;
 
-        // Включаем невидимый щит, чтобы кнопки не реагировали
         SetInputBlocker(true);
 
         yield return StartCoroutine(SmartWait(0.3f));
@@ -99,7 +121,6 @@ public class MenuIntroController : MonoBehaviour
             if (cardObjects[i] == null) continue;
             Quaternion targetRot = Quaternion.Euler(0, 0, Random.Range(-finalRandomRotation, finalRandomRotation));
 
-            // <--- ДОБАВИТЬ ЭТО: Звук вылета карты --->
             if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Deal");
 
             StartCoroutine(AnimateCard(cardObjects[i], cardsFinalPositions[i], targetRot, cardFlyDuration));
@@ -115,7 +136,6 @@ public class MenuIntroController : MonoBehaviour
 
         foreach (var ui in topUiElements)
         {
-            // Убрали звук отсюда!
             if (ui != null) StartCoroutine(AnimateUi(ui, topUiFinalPositions[topUiElements.IndexOf(ui)], 0.5f));
             yield return StartCoroutine(SmartWait(0.1f));
         }
@@ -124,7 +144,6 @@ public class MenuIntroController : MonoBehaviour
 
         EnableHoverEffects();
 
-        // Снимаем блокировку, возвращаем интерфейсу жизнь
         SetInputBlocker(false);
         isAnimating = false;
     }
@@ -132,14 +151,14 @@ public class MenuIntroController : MonoBehaviour
     private void EnableHoverEffects()
     {
         foreach (var card in cardObjects)
+        {
             if (card != null)
             {
                 var hover = card.GetComponent<CardHoverEffect>();
                 if (hover != null) hover.SetHoverEnabled(true);
             }
+        }
     }
-
-    // --- Умные корутины, которые умеют ускоряться ---
 
     private IEnumerator SmartWait(float duration)
     {
@@ -158,7 +177,7 @@ public class MenuIntroController : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime * currentSpeedMultiplier; // Применяем ускорение
+            elapsed += Time.deltaTime * currentSpeedMultiplier;
             float t = cardFlyCurve.Evaluate(elapsed / duration);
             target.anchoredPosition = Vector2.LerpUnclamped(startPos, destPos, t);
             target.localRotation = Quaternion.Lerp(startRot, destRot, t);
@@ -174,18 +193,14 @@ public class MenuIntroController : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime * currentSpeedMultiplier; // Применяем ускорение
+            elapsed += Time.deltaTime * currentSpeedMultiplier;
             target.anchoredPosition = Vector2.Lerp(startPos, destPos, uiDropCurve.Evaluate(elapsed / duration));
             yield return null;
         }
         target.anchoredPosition = destPos;
 
-        // <--- ПЕРЕНЕСЛИ ЗВУК СЮДА --->
-        // Теперь звук удара проигрывается ровно в момент приземления элемента
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Drop");
     }
-
-    // --- Логика блокировки интерфейса (Невидимый щит) ---
 
     private void SetInputBlocker(bool active)
     {
@@ -193,38 +208,31 @@ public class MenuIntroController : MonoBehaviour
         {
             if (raycastBlocker == null)
             {
-                // Создаем пустышку
                 raycastBlocker = new GameObject("IntroInputBlocker");
                 var rect = raycastBlocker.AddComponent<RectTransform>();
 
-                // Цепляем к Canvas
                 Canvas canvas = GetComponentInParent<Canvas>();
                 if (canvas != null) rect.SetParent(canvas.transform, false);
                 else rect.SetParent(transform, false);
 
-                // Растягиваем на весь экран
                 rect.anchorMin = Vector2.zero;
                 rect.anchorMax = Vector2.one;
                 rect.offsetMin = Vector2.zero;
                 rect.offsetMax = Vector2.zero;
 
-                // Делаем её прозрачной, но ловящей клики
                 var img = raycastBlocker.AddComponent<Image>();
                 img.color = Color.clear;
             }
-            // Выдвигаем на самый передний план
             raycastBlocker.transform.SetAsLastSibling();
         }
         else
         {
-            // Уничтожаем щит после анимации
             if (raycastBlocker != null) Destroy(raycastBlocker);
         }
     }
 
     private void OnDestroy()
     {
-        // Подчищаем за собой на случай, если сцена была закрыта принудительно во время анимации
         if (raycastBlocker != null) Destroy(raycastBlocker);
     }
 }

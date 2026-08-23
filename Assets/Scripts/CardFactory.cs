@@ -1,5 +1,6 @@
 // CardFactory.cs
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -56,12 +57,17 @@ public class CardFactory : MonoBehaviour
 
     // Кэш созданных карт для отладки/управления
     private List<CardController> createdCards = new List<CardController>();
-
+    private Vector2 lastScreenSize;
+    private Coroutine resizeCoroutine;
     private void Reset()
     {
         if (rootCanvas == null) rootCanvas = FindObjectOfType<Canvas>();
     }
-
+    private void Start()
+    {
+        // Запоминаем изначальное разрешение при старте
+        lastScreenSize = new Vector2(Screen.width, Screen.height);
+    }
     private void Awake()
     {
         if (cardPrefab == null) Debug.LogError("[CardFactory] cardPrefab is not assigned!");
@@ -71,7 +77,79 @@ public class CardFactory : MonoBehaviour
             if (rootCanvas == null) Debug.LogError("[CardFactory] rootCanvas not found!");
         }
     }
+    private void Update()
+    {
+        // Если разрешение экрана изменилось по ходу игры
+        if (Screen.width != lastScreenSize.x || Screen.height != lastScreenSize.y)
+        {
+            lastScreenSize = new Vector2(Screen.width, Screen.height);
 
+            // Если корутина уже запущена — останавливаем её, чтобы не было дублей
+            if (resizeCoroutine != null)
+            {
+                StopCoroutine(resizeCoroutine);
+            }
+            // Запускаем отложенное обновление размеров
+            resizeCoroutine = StartCoroutine(DelayedResizeCards());
+        }
+    }
+    private IEnumerator DelayedResizeCards()
+    {
+        // Ждем два кадра. За это время Unity 100% успеет пересчитать Grid Layout Group
+        // и referenceSlot получит правильную актуальную ширину.
+        yield return null;
+        yield return null;
+
+        // Принудительно обновляем канвас на всякий случай
+        if (rootCanvas != null)
+        {
+            Canvas.ForceUpdateCanvases();
+        }
+
+        UpdateAllCardsSize();
+        resizeCoroutine = null;
+    }
+
+    /// <summary>
+    /// Метод пересчитывает размеры и применяет их ко всем существующим картам
+    /// </summary>
+    public void UpdateAllCardsSize()
+    {
+        if (!autoResizeCards) return; // Если авто-сайз выключен, ничего не делаем
+
+        float targetWidth = defaultCardSize.x;
+        Vector2 finalSize = defaultCardSize;
+
+        // 1. Заново высчитываем нужную ширину, ориентируясь на referenceSlot
+        if (referenceSlot != null && referenceSlot.rect.width > 10)
+        {
+            targetWidth = referenceSlot.rect.width;
+        }
+        else if (rootCanvas != null)
+        {
+            RectTransform parentRect = rootCanvas.GetComponent<RectTransform>();
+            if (parentRect != null && parentRect.rect.width > 10 && parentRect.rect.width < Screen.width * 0.5f)
+            {
+                targetWidth = parentRect.rect.width;
+            }
+        }
+
+        // 2. Рассчитываем итоговый размер с сохранением пропорций
+        if (defaultCardSize.y > 0 && defaultCardSize.x > 0)
+        {
+            float aspectRatio = defaultCardSize.x / defaultCardSize.y;
+            finalSize = new Vector2(targetWidth, targetWidth / aspectRatio);
+        }
+
+        // 3. Проходимся по списку ВСЕХ созданных карт и обновляем их размер
+        foreach (var card in createdCards)
+        {
+            if (card != null && card.rectTransform != null)
+            {
+                card.rectTransform.sizeDelta = finalSize;
+            }
+        }
+    }
     /// <summary>
     /// Создаёт визуальный GameObject карты с заданной моделью.
     /// </summary>

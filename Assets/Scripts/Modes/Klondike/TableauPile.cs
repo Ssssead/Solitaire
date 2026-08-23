@@ -1,7 +1,7 @@
-﻿// TableauPile.cs [FINAL: Fixed Inheritance + Gizmos]
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class TableauPile : MonoBehaviour, ICardContainer
 {
@@ -15,18 +15,32 @@ public class TableauPile : MonoBehaviour, ICardContainer
     private bool isLayoutLocked = false;
     public bool IsLocked => isLayoutLocked;
 
-    [SerializeField] private float faceDownGap = 6f;
-    [SerializeField] private float faceUpGapMax = 35f;
-    [SerializeField] private float faceUpGapMin = 15f;
-    [SerializeField] private float firstOpenGap = 12f;
+    [Header("Spacing - Landscape")]
+    [FormerlySerializedAs("faceDownGap")]
+    [SerializeField] private float faceDownGapLandscape = 6f;
+    [FormerlySerializedAs("faceUpGapMax")]
+    [SerializeField] private float faceUpGapMaxLandscape = 35f;
+    [FormerlySerializedAs("faceUpGapMin")]
+    [SerializeField] private float faceUpGapMinLandscape = 15f;
+    [FormerlySerializedAs("firstOpenGap")]
+    [SerializeField] private float firstOpenGapLandscape = 12f;
 
-    [SerializeField] private float bottomPadding = 200f; // Оставлено для совместимости, но не используется если есть boundary
+    [Header("Spacing - Portrait")]
+    [SerializeField] private float faceDownGapPortrait = 14f;
+    [SerializeField] private float faceUpGapMaxPortrait = 60f;
+    [SerializeField] private float faceUpGapMinPortrait = 25f;
+    [SerializeField] private float firstOpenGapPortrait = 24f;
 
-    // --- Dynamic Limits ---
+    [SerializeField] private float bottomPadding = 200f;
+
+    private bool IsPortrait => GameLayoutManager.Instance != null && GameLayoutManager.Instance.IsPortrait;
+    private float FaceDownGap => IsPortrait ? faceDownGapPortrait : faceDownGapLandscape;
+    private float FaceUpGapMax => IsPortrait ? faceUpGapMaxPortrait : faceUpGapMaxLandscape;
+    private float FaceUpGapMin => IsPortrait ? faceUpGapMinPortrait : faceUpGapMinLandscape;
+    private float FirstOpenGap => IsPortrait ? firstOpenGapPortrait : firstOpenGapLandscape;
+
     [Header("Dynamic Limits")]
-    [Tooltip("Перетащите сюда объект-границу. Для правого слота (над кнопками) используйте отдельный объект, поднятый выше.")]
     public Transform bottomBoundary;
-    [Tooltip("Дополнительный отступ от границы (в пикселях)")]
     [SerializeField] private float bottomMargin = 10f;
 
     private float dynamicMaxHeight;
@@ -47,8 +61,6 @@ public class TableauPile : MonoBehaviour, ICardContainer
     {
         manager = m;
         rect = tf ?? GetComponent<RectTransform>();
-
-        // Рассчитываем высоту один раз при старте
         CalculateDynamicHeight();
 
         if (manager != null) animationService = manager.AnimationService;
@@ -60,16 +72,13 @@ public class TableauPile : MonoBehaviour, ICardContainer
         CalculateDynamicHeight();
     }
 
-    // [NEW] Вынесли расчет высоты в отдельный метод для чистоты и использования в Initialize
     private void CalculateDynamicHeight()
     {
         if (bottomBoundary != null)
         {
-            // 1. Считаем разницу в МИРОВЫХ координатах
             float worldHeightAvailable = transform.position.y - bottomBoundary.position.y;
             if (worldHeightAvailable < 0) worldHeightAvailable = 0;
 
-            // 2. Конвертируем в локальные пиксели Канваса
             float currentScale = transform.lossyScale.y;
             if (currentScale < 0.0001f) currentScale = 1f;
 
@@ -78,7 +87,6 @@ public class TableauPile : MonoBehaviour, ICardContainer
         }
         else
         {
-            // Fallback (старая логика)
             Canvas c = manager?.rootCanvas ?? GetComponentInParent<Canvas>();
             if (c != null && rect != null)
             {
@@ -95,15 +103,12 @@ public class TableauPile : MonoBehaviour, ICardContainer
         if (dynamicMaxHeight < cardHeight * 1.5f) dynamicMaxHeight = cardHeight * 1.5f;
     }
 
-    // [NEW] Визуализация границ в редакторе (чтобы видеть разные высоты слотов)
     private void OnDrawGizmos()
     {
         if (bottomBoundary != null)
         {
             Gizmos.color = Color.red;
-            // Рисуем линию от верха стопки до границы
             Gizmos.DrawLine(transform.position, new Vector3(transform.position.x, bottomBoundary.position.y, transform.position.z));
-            // Рисуем точку на границе
             Gizmos.DrawWireSphere(new Vector3(transform.position.x, bottomBoundary.position.y, transform.position.z), 10f);
         }
     }
@@ -132,14 +137,12 @@ public class TableauPile : MonoBehaviour, ICardContainer
         int faceDownCount = 0;
         for (int i = 0; i < faceUp.Count; i++) { if (faceUp[i]) faceUpCount++; else faceDownCount++; }
 
-        // По умолчанию хотим максимальный отступ
-        currentFaceUpGap = faceUpGapMax;
+        currentFaceUpGap = FaceUpGapMax;
 
         if (faceUpCount > 1)
         {
-            // 1. Получаем реальные размеры карты и её Pivot
             float currentCardHeight = cardHeight;
-            float pivotY = 0.5f; // Стандартный Pivot в центре
+            float pivotY = 0.5f;
 
             if (cards.Count > 0 && cards[0] != null)
             {
@@ -147,34 +150,19 @@ public class TableauPile : MonoBehaviour, ICardContainer
                 pivotY = cards[0].rectTransform.pivot.y;
             }
 
-            // 2. Считаем место, занятое закрытыми картами
-            float heightTakenByFaceDown = (faceDownCount * faceDownGap) + (faceDownCount > 0 ? firstOpenGap : 0);
-
-            // 3. Считаем, сколько места карты заняли бы ВНИЗ от начала стопки при максимальном gap.
-            // ВАЖНО: Учитываем Pivot!
-            // Если Pivot = 0.5 (центр), то карта торчит вниз на 0.5 своей высоты от своей точки якоря.
-            // Нижний край последней карты = (Сумма всех отступов) + (Высота * PivotY)
-
-            float totalGapOffset = heightTakenByFaceDown + ((faceUpCount - 1) * faceUpGapMax);
+            float heightTakenByFaceDown = (faceDownCount * FaceDownGap) + (faceDownCount > 0 ? FirstOpenGap : 0);
+            float totalGapOffset = heightTakenByFaceDown + ((faceUpCount - 1) * FaceUpGapMax);
             float neededHeight = totalGapOffset + (currentCardHeight * pivotY);
 
-            // 4. Проверяем, влезаем ли мы
             if (neededHeight > dynamicMaxHeight)
             {
-                // Места мало! Считаем, сколько места доступно чисто для промежутков между открытыми картами.
-                // Доступно = (Все место) - (Закрытые) - (Половина последней карты)
                 float availableForGaps = dynamicMaxHeight - heightTakenByFaceDown - (currentCardHeight * pivotY);
-
-                // Делим на количество промежутков
                 float newGap = availableForGaps / (faceUpCount - 1);
-
-                // Ограничиваем минимумом
-                currentFaceUpGap = Mathf.Max(newGap, faceUpGapMin);
+                currentFaceUpGap = Mathf.Max(newGap, FaceUpGapMin);
             }
         }
     }
 
-    // [FIX] Добавлено virtual для Spider/FreeCell
     public virtual void AddCard(CardController card, bool faceUpFlag)
     {
         if (card == null) return;
@@ -190,7 +178,6 @@ public class TableauPile : MonoBehaviour, ICardContainer
         ForceRecalculateLayout();
     }
 
-    // [FIX] Добавлено virtual для Spider/FreeCell (исправляет ошибку компиляции)
     public virtual void AddCardsBatch(List<CardController> cardsToAdd, bool faceUpFlag)
     {
         if (cardsToAdd == null || cardsToAdd.Count == 0) return;
@@ -246,14 +233,14 @@ public class TableauPile : MonoBehaviour, ICardContainer
 
             if (!faceUp[i])
             {
-                currentY += faceDownGap;
+                currentY += FaceDownGap;
                 prevOpen = false;
             }
             else
             {
                 if (!prevOpen)
                 {
-                    currentY += (hasClosed ? firstOpenGap : 0);
+                    currentY += (hasClosed ? FirstOpenGap : 0);
                     prevOpen = true;
                 }
                 currentY += currentFaceUpGap;
@@ -261,7 +248,6 @@ public class TableauPile : MonoBehaviour, ICardContainer
         }
     }
 
-    // [FIX] Добавлено virtual
     public virtual void ForceRecalculateLayout()
     {
         ComputeFaceUpGap();
@@ -270,19 +256,15 @@ public class TableauPile : MonoBehaviour, ICardContainer
     }
 
     public void StartLayoutAnimationPublic() => ForceRecalculateLayout();
-
     public bool HasHiddenCards() => faceUp.Contains(false);
 
-    // --- ICardContainer ---
-
-    // [FIX] Добавлено virtual для Spider/FreeCell (исправляет ошибку компиляции)
     public virtual bool CanAccept(CardController card)
     {
         if (card == null) return false;
         var cardData = card.GetComponent<CardData>();
         if (cardData == null || !cardData.IsFaceUp()) return false;
 
-        if (cards.Count == 0) return cardData.model.rank == 13; // King
+        if (cards.Count == 0) return cardData.model.rank == 13;
 
         var topCard = cards[cards.Count - 1];
         var topData = topCard.GetComponent<CardData>();
@@ -296,10 +278,7 @@ public class TableauPile : MonoBehaviour, ICardContainer
     }
 
     public void OnCardIncoming(CardController card) { }
-
-    // [FIX] Добавлено virtual
     public virtual void AcceptCard(CardController card) => AddCard(card, true);
-
     public bool IsEmpty() => cards.Count == 0;
     public CardController GetTopCard() => cards.Count == 0 ? null : cards[cards.Count - 1];
 
@@ -313,16 +292,13 @@ public class TableauPile : MonoBehaviour, ICardContainer
         Vector2 lastPos = targets[targets.Count - 1];
 
         bool lastWasOpen = faceUp[faceUp.Count - 1];
-        float gapToAdd = lastWasOpen ? currentFaceUpGap : (faceDownGap + firstOpenGap);
+        float gapToAdd = lastWasOpen ? currentFaceUpGap : (FaceDownGap + FirstOpenGap);
 
         return new Vector2(0f, lastPos.y - gapToAdd);
     }
 
-    // --- Sequence Operations ---
-
     public int IndexOfCard(CardController card) => cards.IndexOf(card);
 
-    // [FIX] Добавлено virtual
     public virtual List<CardController> GetFaceUpSequenceFrom(int idx)
     {
         var sequence = new List<CardController>();
@@ -350,9 +326,7 @@ public class TableauPile : MonoBehaviour, ICardContainer
 
         ForceRecalculateLayout();
 
-        // --- ДОБАВИТЬ ЭТО: Если после удаления карт не осталось, столбец очищен ---
         if (cards.Count == 0) GameQuestTracker.Instance?.SendEvent(QuestActionType.ClearTableauColumn);
-        // --------------------------------------------------------------------------
 
         return seq;
     }
@@ -389,9 +363,7 @@ public class TableauPile : MonoBehaviour, ICardContainer
         var cardData = cards[index].GetComponent<CardData>();
         if (cardData != null) cardData.SetFaceUp(false, animate: !immediate);
 
-        // ---> ДОБАВИТЬ ЭТО: Анти-чит при отмене хода (Undo) <---
         GameQuestTracker.Instance?.SendEvent(QuestActionType.FlipHiddenCards, -1);
-        // -------------------------------------------------------
 
         ForceRecalculateLayout();
     }
@@ -429,8 +401,6 @@ public class TableauPile : MonoBehaviour, ICardContainer
         isLayoutLocked = false;
     }
 
-    // --- Helpers ---
-
     private bool HasClosedCardsBeforeFirstOpen()
     {
         foreach (bool isOpen in faceUp)
@@ -461,8 +431,6 @@ public class TableauPile : MonoBehaviour, ICardContainer
         faceUp = newFaceUp;
         ForceRecalculateLayout();
     }
-
-    // --- ANIMATION ---
 
     public void SetAnimatingCard(bool animating)
     {
@@ -553,14 +521,14 @@ public class TableauPile : MonoBehaviour, ICardContainer
             if (!faceUp[i])
             {
                 offset = accum;
-                accum += faceDownGap;
+                accum += FaceDownGap;
                 prevWasOpen = false;
             }
             else
             {
                 if (!prevWasOpen)
                 {
-                    offset = hasClosedBeforeFirstOpen ? accum + firstOpenGap : accum;
+                    offset = hasClosedBeforeFirstOpen ? accum + FirstOpenGap : accum;
                     prevWasOpen = true;
                     accum = offset + currentFaceUpGap;
                 }

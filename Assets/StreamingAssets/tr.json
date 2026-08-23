@@ -286,7 +286,7 @@
         },
         {
             "key": "UndoAll",
-            "value": "Tüm hamleleri geri al"
+            "value": "Tüm hamleleri geri al (Basılı tut)"
         },
         {
             "key": "ToMenu",
@@ -2598,7 +2598,7 @@
         },
         {
             "key": "Hint_Settings",
-            "value": "Oyununuzu özelleştirin! Güzel bir <color=#FCA311>arka plan</color> seçin ve favori <color=#FCA311>kart tasarımınızı</color> belirleyin."
+            "value": "Oyununuzu özelleştirin! Güzel bir <color=#FCA311>arka plan</color> ve <color=#FCA311>kart tasarımı</color> seçin, ardından <color=#FCA311>oto-taşıma</color> ayarlarınızı yapın."
         },
         {
             "key": "Hint_Shop",
@@ -2611,6 +2611,18 @@
         {
             "key": "Hint_Leaderboard",
             "value": "En iyilerle yarışın! <color=#FCA311>Liderlik tablosunda</color> kendi <color=#FCA311>sonuçlarınızı</color> diğer oyuncularla karşılaştırabilirsiniz."
+        },
+        {
+            "key": "Settings_AutoMove",
+            "value": "Oto-taşıma"
+        },
+        {
+            "key": "Settings_SingleClick",
+            "value": "Tek tık"
+        },
+        {
+            "key": "Settings_DoubleClick",
+            "value": "Çift tık"
         }
     ]
 }

@@ -61,6 +61,9 @@ public class PileManager : MonoBehaviour
     /// </summary>
     public void CreatePiles()
     {
+        // --- ФИКС 5: Защита от повторного сбора (чтобы не обнулялись ссылки после рестарта) ---
+        if (tableau != null && tableau.Count > 0) return;
+
         // Очищаем предыдущие ссылки
         tableau.Clear();
         foundations.Clear();
