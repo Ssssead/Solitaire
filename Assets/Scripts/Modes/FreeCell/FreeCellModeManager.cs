@@ -22,15 +22,17 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
 
     private bool hasGameStarted = false;
 
-    [Header("UI & HUD")]
-    [Tooltip("����� ���� ��� ����������� (SuperMove)")]
+    [Header("UI & HUD - Landscape")]
     public TMP_Text moveLimitText;
-    [Tooltip("����� ��� ����������� ���������� �����")]
     public TMP_Text movesText;
-    [Tooltip("����� ��� ����������� �����")]
     public TMP_Text scoreText;
-    [Tooltip("����� ��� ����������� �������")]
     public TMP_Text timeText;
+
+    [Header("UI & HUD - Portrait")]
+    public TMP_Text portraitMoveLimitText;
+    public TMP_Text portraitMovesText;
+    public TMP_Text portraitScoreText;
+    public TMP_Text portraitTimeText;
     private float gameTimer = 0f;
     private bool isTimerRunning = false;
     [HideInInspector] public bool JustFailedDueToLimit = false;
@@ -38,7 +40,11 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
     [Header("FreeCell Specific")]
     public Transform freeCellSlotsParent;
     private List<FreeCellPile> freeCells = new List<FreeCellPile>();
-
+    [Header("Hint System")]
+    public FreeCellHintSolver hintSolver;
+    private Coroutine backgroundSolverCoroutine = null;
+    private List<HintMoveCommand> cachedHintPath = null;
+    private bool isExecutingHint = false;
     [Header("Rules")]
     public float tableauVerticalGap = 35f;
 
@@ -71,9 +77,14 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
     public Canvas RootCanvas => rootCanvas;
     public float TableauVerticalGap => tableauVerticalGap;
     public StockDealMode StockDealMode => StockDealMode.Draw1;
-
+    // --- ОТСЛЕЖИВАНИЕ РАЗРЕШЕНИЯ ---
+    private int _lastScreenWidth;
+    private int _lastScreenHeight;
     private void Start()
     {
+        _lastScreenWidth = Screen.width;
+        _lastScreenHeight = Screen.height;
+
         StartCoroutine(LateInitialize());
     }
 
@@ -84,16 +95,27 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
 
     private void Update()
     {
+        // --- ЗАЩИТА РАЗМЕРОВ ПРИ ПОВОРОТЕ ЭКРАНА ---
+        if (Screen.width != _lastScreenWidth || Screen.height != _lastScreenHeight)
+        {
+            _lastScreenWidth = Screen.width;
+            _lastScreenHeight = Screen.height;
+            StartCoroutine(DelayedLayoutFixRoutine());
+        }
+
         if (pileManager == null) return;
 
-        // 1. ���������� SuperMove ������
+        // 1. Ограничение SuperMove (Лимит)
         if (!IsInputAllowed && !hasGameStarted)
         {
             if (_cachedLimit != 5 || _cachedEmptyLimit != 5)
             {
                 _cachedLimit = 5;
                 _cachedEmptyLimit = 5;
-                if (moveLimitText != null) moveLimitText.text = "5";
+
+                // --- ИСПРАВЛЕНИЕ: Вызываем общий метод вместо хардкода! ---
+                // Он обновит и landscape, и portrait тексты.
+                UpdateMoveLimitText();
             }
         }
         else
@@ -109,45 +131,68 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
             }
         }
 
-        // 2. ���������� ������� � HUD (����������)
-
-        // ������ ���� ������, ���� ���� ������ � ��� �� �������� (���� ���� �������� ����-����)
+        // 2. Таймер
         if (hasGameStarted && !isGameWon)
         {
             if (!isTimerRunning) isTimerRunning = true;
             if (isTimerRunning) gameTimer += Time.deltaTime;
         }
 
-        // ��������� ����� HUD � ������ ����� ��� ����������!
-        // ��� �������� ������, ��� ���� ������ �������� ����� �� ����� ������� ���� � ���.
         UpdateHUD();
     }
-
-    private void UpdateHUD()
+    private IEnumerator DelayedLayoutFixRoutine()
     {
-        if (movesText != null && StatisticsManager.Instance != null)
-            movesText.text = $"{StatisticsManager.Instance.GetCurrentMoves()}";
+        // Ждем 3 кадра, пока GameLayoutManager перестроит сетку
+        yield return null;
+        yield return null;
+        yield return new WaitForEndOfFrame();
 
-        if (timeText != null)
+        Canvas.ForceUpdateCanvases();
+
+        // 1. Форсируем фабрику обновить размер карт
+        var factory = FindObjectOfType<CardFactory>();
+        if (factory != null)
         {
-            int timeInSeconds = Mathf.FloorToInt(gameTimer);
-            int minutes = timeInSeconds / 60;
-            int seconds = timeInSeconds % 60;
-            timeText.text = $"{minutes:0}:{seconds:00}";
+            factory.UpdateAllCardsSize();
         }
 
-        if (scoreText != null) scoreText.text = $"{CurrentScore}";
+        // 2. Восстанавливаем отступы у всех столбцов
+        if (pileManager != null && pileManager.Tableau != null)
+        {
+            foreach (var tab in pileManager.Tableau)
+            {
+                if (tab != null)
+                {
+                    tab.ForceRecalculateLayout();
+                }
+            }
+        }
+    }
+    private void UpdateHUD()
+    {
+        string movesStr = "0";
+        if (StatisticsManager.Instance != null)
+            movesStr = $"{StatisticsManager.Instance.GetCurrentMoves()}";
+
+        if (movesText != null) movesText.text = movesStr;
+        if (portraitMovesText != null) portraitMovesText.text = movesStr;
+
+        string scoreStr = $"{CurrentScore}";
+        if (scoreText != null) scoreText.text = scoreStr;
+        if (portraitScoreText != null) portraitScoreText.text = scoreStr;
+
+        UpdateTimeUI();
     }
 
     private void UpdateTimeUI()
     {
-        if (timeText != null)
-        {
-            int totalSeconds = Mathf.FloorToInt(gameTimer);
-            int minutes = totalSeconds / 60;
-            int seconds = totalSeconds % 60;
-            timeText.text = string.Format("{0}:{1:00}", minutes, seconds);
-        }
+        int timeInSeconds = Mathf.FloorToInt(gameTimer);
+        int minutes = timeInSeconds / 60;
+        int seconds = timeInSeconds % 60;
+        string timeStr = $"{minutes:0}:{seconds:00}";
+
+        if (timeText != null) timeText.text = timeStr;
+        if (portraitTimeText != null) portraitTimeText.text = timeStr;
     }
 
     public void InitializeMode(Difficulty difficulty, int seed)
@@ -187,6 +232,9 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
         {
             if (StatisticsManager.Instance != null)
                 StatisticsManager.Instance.OnGameAbandoned();
+
+            // ДОБАВИТЬ ЭТУ СТРОКУ:
+            SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
         }
     }
 
@@ -195,6 +243,8 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
         isGameWon = false;
         IsInputAllowed = false;
         isRestarting = true;
+
+        if (hintSolver != null) hintSolver.CancelSearch(); // Гарантированно убиваем старый поиск
 
         pileManager.ClearAllPiles();
         foreach (var fc in freeCells) foreach (Transform child in fc.transform) Destroy(child.gameObject);
@@ -212,34 +262,28 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
     }
     private void UpdateMoveLimitText()
     {
-        if (moveLimitText == null) return;
-
+        string limitStr = "";
         if (_cachedLimit == _cachedEmptyLimit)
         {
-            // ������� ���, ���� ������ �����
-            moveLimitText.text = $"{_cachedLimit}";
+            limitStr = $"{_cachedLimit}";
         }
         else
         {
-            // --- �������� ���� �� ��������� ���������� ---
-
-            // ������� 1 (�����: 5/4): ����� � ������ ������ ����� ����� ����, ������ ������ � ���� ������.
-            moveLimitText.text = $"{_cachedLimit}<color=#FFD700><size=75%>/{_cachedEmptyLimit}</size></color>";
-
-            // ������� 2 (��� ������): �������� ����� ������, ����� ��� ������ �����.
-            // moveLimitText.text = $"{_cachedLimit}\n<color=#FFD700><size=50%>{_cachedEmptyLimit}</size></color>";
+            limitStr = $"{_cachedLimit}<color=#FFD700><size=75%>/{_cachedEmptyLimit}</size></color>";
         }
+
+        if (moveLimitText != null) moveLimitText.text = limitStr;
+        if (portraitMoveLimitText != null) portraitMoveLimitText.text = limitStr;
     }
 
     private void StartNewGame()
     {
-        // 1. ������� ������ ��������� ������ ����
         if (hasGameStarted && !isGameWon && StatisticsManager.Instance != null)
-        {
             StatisticsManager.Instance.OnGameAbandoned();
-        }
 
-        // 2. ����� �������� ������� ��������� ������ ����� �� �������
+        // ДОБАВИТЬ ЭТУ СТРОКУ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
+
         string variant = GameSettings.GetCurrentVariantString(GameType.FreeCell) ?? "None";
         GameQuestTracker.Instance?.StartMatch("FreeCell", GameSettings.CurrentDifficulty, variant);
 
@@ -260,11 +304,9 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
 
         if (introController != null) introController.PrepareIntro(isRestarting);
 
-        // --- ���������� ��������� ---
         if (GameSettings.IsTutorialMode && tutorialManager != null)
         {
-            StartCoroutine(tutorialManager.PlayTutorialIntro(null));
-            isRestarting = false;
+            StartCoroutine(TutorialIntroRoutine());
             return;
         }
 
@@ -276,7 +318,7 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
             if (cachedDeal != null)
             {
                 dealLoadedFromCache = true;
-                StartCoroutine(introController.PlayIntroSequence(cachedDeal, isRestarting));
+                StartCoroutine(IntroSequenceRoutine(cachedDeal));
             }
         }
 
@@ -285,11 +327,31 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
             var generator = GetComponent<FreeCellGenerator>() ?? gameObject.AddComponent<FreeCellGenerator>();
             StartCoroutine(generator.GenerateDeal(currentDifficulty, currentSeed, (deal, m) =>
             {
-                StartCoroutine(introController.PlayIntroSequence(deal, isRestarting));
+                StartCoroutine(IntroSequenceRoutine(deal));
             }));
         }
-
+    }
+    // --- НОВЫЕ МЕТОДЫ ОЖИДАНИЯ АНИМАЦИИ СТАРТА ---
+    private IEnumerator IntroSequenceRoutine(Deal deal)
+    {
+        if (introController != null)
+        {
+            yield return StartCoroutine(introController.PlayIntroSequence(deal, isRestarting));
+        }
         isRestarting = false;
+        IsInputAllowed = true;
+        StartBackgroundSolver(); // ЗАПУСК СОЛВЕРА СО СТАРТА!
+    }
+
+    private IEnumerator TutorialIntroRoutine()
+    {
+        if (tutorialManager != null)
+        {
+            yield return StartCoroutine(tutorialManager.PlayTutorialIntro(null));
+        }
+        isRestarting = false;
+        IsInputAllowed = true;
+        StartBackgroundSolver();
     }
     private void ApplyDeal(Deal deal)
     {
@@ -400,6 +462,7 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
 
         if (gameUI != null) gameUI.OnGameWon(finalMoves);
         else FindObjectOfType<GameUIController>()?.OnGameWon(finalMoves);
+        SimpleMetricsTracker.Instance?.TrackLevelWin(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
     }
     private IEnumerator LossSequence()
     {
@@ -428,30 +491,43 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
         JustFailedDueToLimit = false;
         CurrentDragCount = 1;
 
-        // �������������� ���������� ���������� � ������ ��� ������ ����
+        // Если это ручной ход - убиваем кэш и ищем новый путь
+        if (!isExecutingHint)
+        {
+            StartBackgroundSolver();
+        }
+
         if (!hasGameStarted)
         {
             hasGameStarted = true;
+            isTimerRunning = true; // Подстраховка
             if (StatisticsManager.Instance != null)
             {
                 string variant = GameSettings.GetCurrentVariantString(GameType.FreeCell) ?? "None";
                 StatisticsManager.Instance.OnGameStarted("FreeCell", currentDifficulty, variant);
             }
+            SimpleMetricsTracker.Instance?.TrackLevelStart(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
         }
 
         GameQuestTracker.Instance?.RecordMove();
-
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
     }
 
     public void OnUndoAction()
     {
-        // --- ���������: ������ ��������� ---
+        if (!IsInputAllowed) return;
+
         if (tutorialManager != null && tutorialManager.IsTutorialActive)
         {
             if (!tutorialManager.IsActionAllowed(TutorialActionType.Undo)) return;
         }
-        // -----------------------------------
+
+        // Отмена хода всегда меняет стол — путь подсказки для него больше не
+        // актуален. На всякий случай (защита от гонок) явно сбрасываем
+        // isExecutingHint ПЕРЕД OnMoveMade(), чтобы её внутренний
+        // "if (!isExecutingHint) StartBackgroundSolver()" точно сработал,
+        // а не пропустил пересчёт.
+        isExecutingHint = false;
 
         OnMoveMade();
         isGameWon = false;
@@ -1229,4 +1305,260 @@ public class FreeCellModeManager : MonoBehaviour, ICardGameMode, IModeManager, I
 
         return false;
     }
+    public void StartBackgroundSolver()
+    {
+        Debug.Log("[HintDebug] StartBackgroundSolver вызван.");
+        if (backgroundSolverCoroutine != null) StopCoroutine(backgroundSolverCoroutine);
+        if (hintSolver != null) hintSolver.CancelSearch();
+
+        cachedHintPath = null;
+        backgroundSolverCoroutine = StartCoroutine(BackgroundSolverRoutine());
+    }
+
+    private IEnumerator BackgroundSolverRoutine()
+    {
+        Debug.Log("[HintDebug] BackgroundSolver: Ждем завершения анимаций карт...");
+
+        // ЗАЩИТА: Ждем максимум 3 секунды, чтобы не зависнуть из-за забагованной карты
+        float animWaitTimer = 0f;
+        while ((dragLayer != null && dragLayer.childCount > 0) || CheckActiveAnimations())
+        {
+            animWaitTimer += Time.deltaTime;
+            if (animWaitTimer > 3f)
+            {
+                Debug.LogWarning("[HintDebug] ВНИМАНИЕ: Анимации шли дольше 3 секунд! Принудительно идем дальше.");
+                break;
+            }
+            yield return null;
+        }
+
+        Debug.Log("[HintDebug] BackgroundSolver: Анимации завершены. Ждем 0.1с для логики...");
+        yield return new WaitForSeconds(0.1f);
+
+        if (isGameWon) yield break;
+
+        bool solverFinished = false;
+        if (hintSolver == null) hintSolver = gameObject.AddComponent<FreeCellHintSolver>();
+
+        Debug.Log("[HintDebug] BackgroundSolver: Запускаем алгоритм hintSolver.FindPath()...");
+        hintSolver.FindPath(pileManager, path => {
+            Debug.Log($"[HintDebug] BackgroundSolver: Алгоритм вернул ответ! Путь найден: {path != null}");
+            cachedHintPath = path;
+            solverFinished = true;
+        });
+
+        while (!solverFinished) yield return null;
+
+        Debug.Log("[HintDebug] BackgroundSolver: Корутина полностью завершена.");
+        backgroundSolverCoroutine = null;
+    }
+
+    private bool CheckActiveAnimations()
+    {
+        foreach (var fc in pileManager.FreeCells)
+        {
+            var c = fc.GetComponentInChildren<CardController>();
+            if (c != null && c.IsAnimating) return true;
+        }
+        foreach (var tab in pileManager.Tableau)
+        {
+            foreach (var c in tab.cards) if (c.IsAnimating) return true;
+        }
+        return false;
+    }
+
+    public void RequestHint(System.Action onWaitStart, System.Action<bool> onHintResult)
+    {
+        Debug.Log("[HintDebug] RequestHint: Игрок нажал на кнопку подсказки.");
+        if (isGameWon || !IsInputAllowed)
+        {
+            Debug.Log($"[HintDebug] RequestHint ОТКЛОНЕН. isGameWon={isGameWon}, IsInputAllowed={IsInputAllowed}");
+            onHintResult?.Invoke(false);
+            return;
+        }
+        StartCoroutine(HintRoutine(onWaitStart, onHintResult));
+    }
+
+    private IEnumerator HintRoutine(System.Action onWaitStart, System.Action<bool> onResult)
+    {
+        Debug.Log("[HintDebug] HintRoutine: Блокируем ввод.");
+        IsInputAllowed = false;
+
+        if (cachedHintPath == null && backgroundSolverCoroutine == null)
+        {
+            Debug.Log("[HintDebug] HintRoutine: Кэш пуст, солвер не работает. Запускаем принудительно.");
+            backgroundSolverCoroutine = StartCoroutine(BackgroundSolverRoutine());
+        }
+
+        if (backgroundSolverCoroutine != null)
+        {
+            Debug.Log("[HintDebug] HintRoutine: Включаем UI загрузки и ждем фон...");
+            onWaitStart?.Invoke();
+
+            float solverWaitTimer = 0f;
+            while (backgroundSolverCoroutine != null)
+            {
+                solverWaitTimer += Time.deltaTime;
+                if (solverWaitTimer > 20f)
+                {
+                    Debug.LogError("[HintDebug] ОШИБКА: Солвер завис! Ждем уже больше 20 секунд.");
+                    break;
+                }
+                yield return null;
+            }
+            Debug.Log("[HintDebug] HintRoutine: Фон завершил работу.");
+        }
+
+        if (cachedHintPath != null && cachedHintPath.Count > 0)
+        {
+            var nextMove = cachedHintPath[0];
+            cachedHintPath.RemoveAt(0);
+
+            isExecutingHint = true;
+            bool moveOk = ExecuteHintMove(nextMove);
+
+            if (!moveOk)
+            {
+                // Кэш оказался неактуален для текущего стола — сбрасываем и пересчитываем.
+                isExecutingHint = false;
+                cachedHintPath = null;
+                StartBackgroundSolver();
+                IsInputAllowed = true;
+                onResult?.Invoke(false);
+                yield break;
+            }
+
+            onResult?.Invoke(true);
+        }
+        else
+        {
+            IsInputAllowed = true;
+            onResult?.Invoke(false);
+        }
+    }
+
+    private bool ExecuteHintMove(HintMoveCommand cmd)
+    {
+        ICardContainer source = null;
+        ICardContainer target = null;
+        List<CardController> sequence = new List<CardController>();
+
+        if (cmd.Type == HintMoveCommand.MoveType.ToFoundation || cmd.Type == HintMoveCommand.MoveType.TabToTab || cmd.Type == HintMoveCommand.MoveType.ToFreeCell)
+        {
+            if (cmd.FromIndex < 8)
+            {
+                var tab = pileManager.Tableau[cmd.FromIndex];
+                source = tab;
+                int startIndex = tab.cards.Count - cmd.SequenceLength;
+                if (startIndex < 0) return false; // стол разошёлся с ожиданиями солвера
+                for (int i = startIndex; i < tab.cards.Count; i++) sequence.Add(tab.cards[i]);
+            }
+            else
+            {
+                var fc = pileManager.FreeCells[cmd.FromIndex - 8];
+                if (fc.IsEmpty) return false;
+                source = fc;
+                sequence.Add(source.Transform.GetComponentInChildren<CardController>());
+            }
+        }
+        else if (cmd.Type == HintMoveCommand.MoveType.FreeCellToTab)
+        {
+            var fc = pileManager.FreeCells[cmd.FromIndex];
+            if (fc.IsEmpty) return false;
+            source = fc;
+            sequence.Add(source.Transform.GetComponentInChildren<CardController>());
+        }
+
+        if (sequence.Count == 0 || sequence[0] == null) return false;
+
+        if (cmd.Type == HintMoveCommand.MoveType.ToFoundation)
+        {
+            // ВАЖНО: cmd.ToIndex для ToFoundation — это ID МАСТИ (0-3) из внутренней модели
+            // FreeCellHintSolver (FastBoard.foundations индексируется мастью карты), а НЕ позиция
+            // дома в pileManager.Foundations! Порядок Foundations задаётся сортировкой по имени
+            // GameObject'а в сцене (FreeCellPileManager.InitializeFreeCell) и с мастью никак не
+            // связан. Индексирование Foundations[cmd.ToIndex] отправляло карту в произвольный
+            // физический дом без проверки CanAccept — отсюда карты не той масти/не по порядку
+            // (например 2♠ в отдельном доме, а не поверх туза пик). Ищем реальный подходящий дом
+            // так же, как это делает обычный (не через подсказку) авто-ход — по CanAccept.
+            foreach (var f in pileManager.Foundations)
+            {
+                if (f.CanAccept(sequence[0])) { target = f; break; }
+            }
+        }
+        else if (cmd.Type == HintMoveCommand.MoveType.ToFreeCell) target = pileManager.FreeCells[cmd.ToIndex];
+        else target = pileManager.Tableau[cmd.ToIndex];
+
+        if (target == null) return false;
+
+        // Доп. защита: даже когда цель найдена, перепроверяем легальность хода прямо сейчас.
+        // Стол мог разойтись с тем, что видел солвер (отмена хода, параллельное действие и т.п.) —
+        // тогда лучше отклонить подсказку (вызывающий код сам сбросит кэш и пересчитает путь),
+        // чем силой протолкнуть нелегальный ход и сломать логическое состояние стола.
+        if (!target.CanAccept(sequence[0])) return false;
+
+        ExecuteProgrammaticSequenceMove(sequence, source, target);
+        StartCoroutine(WaitAndUnlockAfterHint(sequence));
+        return true;
+    }
+
+    // НОВЫЙ МЕТОД: Ждет физического окончания полета карт, защищая от ложных поражений
+    private IEnumerator WaitAndUnlockAfterHint(List<CardController> sequence)
+    {
+        // Даем один кадр на запуск анимаций и смену родителей
+        yield return null;
+
+        // Ждем, пока слой перетаскивания не опустеет и карты не перестанут лететь
+        while (true)
+        {
+            bool isAnimating = false;
+
+            if (dragLayer != null && dragLayer.childCount > 0) isAnimating = true;
+
+            foreach (var c in sequence)
+            {
+                if (c != null && c.IsAnimating) isAnimating = true;
+            }
+
+            if (!isAnimating) break;
+            yield return null;
+        }
+
+        // Даем игре еще 0.1 сек на обновление логических списков после приземления
+        yield return new WaitForSeconds(0.1f);
+
+        UnlockAfterHint();
+    }
+
+    private void UnlockAfterHint()
+    {
+        isExecutingHint = false;
+        IsInputAllowed = true;
+
+        // ФИКС 1: Принудительно запускаем старт игры и таймер, если игрок начал игру с подсказки
+        if (!hasGameStarted)
+        {
+            hasGameStarted = true;
+            isTimerRunning = true;
+            if (StatisticsManager.Instance != null)
+            {
+                string variant = GameSettings.GetCurrentVariantString(GameType.FreeCell) ?? "None";
+                StatisticsManager.Instance.OnGameStarted("FreeCell", currentDifficulty, variant);
+            }
+        }
+
+        // Ручная регистрация хода для статистики (БЕЗ полного сброса пути в кэше)
+        GameQuestTracker.Instance?.RecordMove();
+        if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
+        UpdateHUD();
+
+        // Если кэш опустел, пора посчитать новый путь в фоне
+        if (cachedHintPath == null || cachedHintPath.Count == 0)
+        {
+            StartBackgroundSolver();
+        }
+
+        CheckGameState();
+    }
+
 }

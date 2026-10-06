@@ -16,11 +16,11 @@ PlayerSettings:
   productName: Cards
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
-  m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
+  m_SplashScreenBackgroundColor: {r: 0.13333334, g: 0.3019608, b: 0.13333334, a: 1}
   m_ShowUnitySplashScreen: 1
   m_ShowUnitySplashLogo: 1
   m_SplashScreenOverlayOpacity: 0.5
-  m_SplashScreenAnimation: 2
+  m_SplashScreenAnimation: 0
   m_SplashScreenLogoStyle: 1
   m_SplashScreenDrawMode: 0
   m_SplashScreenBackgroundAnimationZoom: 0
@@ -162,7 +162,8 @@ PlayerSettings:
   resetResolutionOnWindowResize: 0
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
-  applicationIdentifier: {}
+  applicationIdentifier:
+    Standalone: com.DefaultCompany.Cards
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -634,7 +635,7 @@ PlayerSettings:
   ps4IncludedModules: []
   ps4attribVROutputEnabled: 0
   monoEnv: 
-  splashScreenBackgroundSourceLandscape: {fileID: 21300000, guid: f4c445c01848aa746a3a30df782c6ee0, type: 3}
+  splashScreenBackgroundSourceLandscape: {fileID: 0}
   splashScreenBackgroundSourcePortrait: {fileID: 0}
   blurSplashScreenBackground: 0
   spritePackerPolicy: 
@@ -662,21 +663,22 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Android: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg
-    LinuxHeadlessSimulation: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg
-    Nintendo Switch: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg
-    PS4: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg
-    PS5: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg
-    Standalone: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg
-    WebGL: YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg
-    Windows Store Apps: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg
-    XboxOne: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg
-    iPhone: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg
-    tvOS: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg
+    Android: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg;Metrica_yg
+    LinuxHeadlessSimulation: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg;Metrica_yg
+    Nintendo Switch: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg;Metrica_yg
+    PS4: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg;Metrica_yg
+    PS5: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg;Metrica_yg
+    Standalone: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg;Metrica_yg
+    WebGL: YandexGamesPlatform_yg;PLUGIN_YG_2;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg;Metrica_yg
+    Windows Store Apps: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg;Metrica_yg
+    XboxOne: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg;Metrica_yg
+    iPhone: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg;Metrica_yg
+    tvOS: PLUGIN_YG_2;YandexGamesPlatform_yg;TMP_YG2;RewardedAdv_yg;EnvirData_yg;Storage_yg;PlayerStats_yg;RedefinePlayerPrefs_yg;Localization_yg;Authorization_yg;AutoTranslateLangs_yg;InterstitialAdv_yg;Payments_yg;ServerTime_yg;StickyAdv_yg;Leaderboards_yg;Metrica_yg
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}
-  il2cppCompilerConfiguration: {}
+  il2cppCompilerConfiguration:
+    WebGL: 1
   il2cppCodeGeneration:
     WebGL: 1
   managedStrippingLevel:

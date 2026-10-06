@@ -49,7 +49,10 @@ public class DailyQuestsPanelUI : MonoBehaviour
 
     private void OnEnable()
     {
+        Debug.Log($"[QuestDebug] Instance null: {QuestManager.Instance == null}");
         if (QuestManager.Instance == null) return;
+
+        Debug.Log($"[QuestDebug] templates null: {QuestManager.Instance.allQuestTemplates == null}, count: {QuestManager.Instance.allQuestTemplates?.Count}");
 
         QuestManager.Instance.SyncCurrentQuestsWithStatistics();
 

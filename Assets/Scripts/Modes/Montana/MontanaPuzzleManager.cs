@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+п»їusing System.Collections.Generic;
 using UnityEngine;
 using System;
 using System.Linq;
@@ -62,17 +62,11 @@ public class MontanaPuzzleManager : MonoBehaviour
         return length;
     }
 
-    // ====================================================================
-    // НОВАЯ СИСТЕМА ОРАКУЛА (ВЕРОЯТНОСТИ И КОНСТРУИРОВАНИЕ)
-    // ====================================================================
-
     public Dictionary<string, int> GetReshuffleWeights(MontanaPileManager pileManager, int rMax, int rLeft, Difficulty diff, bool isHardMode, out bool isWinningRoll)
     {
-        // 1. Прогресс Игрока (C)
         int C = 0;
         for (int r = 0; r < 4; r++) C += GetRowChainLength(pileManager, r);
 
-        // 2. Прогресс Золотого пути (goldenC)
         int goldenC = 0;
         if (CurrentCheckpointIndex < Checkpoints.Count)
         {
@@ -81,9 +75,8 @@ public class MontanaPuzzleManager : MonoBehaviour
         }
         else goldenC = 52;
 
-        CurrentCheckpointIndex++; // Сдвигаем чекпоинт для следующих пересдач
+        CurrentCheckpointIndex++;
 
-        // 3. Формула вероятности
         float I = (goldenC <= 0) ? 1.0f : Mathf.Clamp01((float)C / goldenC);
         float pBase = ((float)(rMax - rLeft) / rMax) * (1f + ((float)C / 52f) * ((float)rLeft / rMax));
 
@@ -93,24 +86,29 @@ public class MontanaPuzzleManager : MonoBehaviour
 
         float pWin = Mathf.Max(0f, pBase - wDiff * (1f - I));
 
-        // 4. Детерминированный бросок кубика (Хэш стола)
         int boardHash = GetBoardHash(pileManager);
         System.Random rng = new System.Random(boardHash);
         float roll = (float)rng.NextDouble();
 
-        isWinningRoll = roll <= pWin;
+        // вљЎ РРЎРџР РђР’Р›Р•РќРР•: РђР±СЃРѕР»СЋС‚РЅР°СЏ РіР°СЂР°РЅС‚РёСЏ РїРѕР±РµРґС‹ РїСЂРё РёРґРµР°Р»СЊРЅРѕР№ РёРіСЂРµ
+        if (I >= 0.99f)
+        {
+            isWinningRoll = true;
+        }
+        else
+        {
+            isWinningRoll = roll <= pWin;
+        }
 
-        // --- ЛОГИРОВАНИЕ В КОНСОЛЬ ---
-        Debug.Log($"<color=cyan>[Оракул] Режим: {diff} | Осталось пересдач: {rLeft}/{rMax}</color>");
-        Debug.Log($"<color=cyan>[Оракул] Карт игрока (C): {C} | Карт идеала (goldenC): {goldenC} | Индекс пути (I): {I:F2}</color>");
-        Debug.Log($"<color=cyan>[Оракул] Базовый шанс: {pBase:P1} | Штраф за отклонение: {wDiff * (1f - I):P1}</color>");
-        Debug.Log($"<color={(isWinningRoll ? "green" : "red")}><b>[Оракул] ИТОГОВЫЙ ШАНС ПОБЕДЫ: {pWin:P1} | Выпало: {roll:P1} -> {(isWinningRoll ? "УСПЕХ (Умный стол)" : "ПРОВАЛ (Случайный стол)")}</b></color>");
+        Debug.Log($"<color=cyan>[РћСЂР°РєСѓР»] Р РµР¶РёРј: {diff} | РћСЃС‚Р°Р»РѕСЃСЊ РїРµСЂРµСЃРґР°С‡: {rLeft}/{rMax}</color>");
+        Debug.Log($"<color=cyan>[РћСЂР°РєСѓР»] РљР°СЂС‚ РёРіСЂРѕРєР° (C): {C} | РљР°СЂС‚ РёРґРµР°Р»Р° (goldenC): {goldenC} | РРЅРґРµРєСЃ РїСѓС‚Рё (I): {I:F2}</color>");
+        Debug.Log($"<color=cyan>[РћСЂР°РєСѓР»] Р‘Р°Р·РѕРІС‹Р№ С€Р°РЅСЃ: {pBase:P1} | РЁС‚СЂР°С„ Р·Р° РѕС‚РєР»РѕРЅРµРЅРёРµ: {wDiff * (1f - I):P1}</color>");
+        Debug.Log($"<color={(isWinningRoll ? "green" : "red")}><b>[РћСЂР°РєСѓР»] РРўРћР“РћР’Р«Р™ РЁРђРќРЎ РџРћР‘Р•Р”Р«: {pWin:P1} | Р’С‹РїР°Р»Рѕ: {roll:P1} -> {(isWinningRoll ? "РЈРЎРџР•РҐ (РЈРјРЅС‹Р№ СЃС‚РѕР»)" : "РџР РћР’РђР› (РЎР»СѓС‡Р°Р№РЅС‹Р№ СЃС‚РѕР»)")}</b></color>");
 
-        // 5. Выдача расклада
         if (isWinningRoll)
             return FindSolvableWeights(pileManager, rng, isHardMode, rLeft, C);
         else
-            return GenerateRandomWeights(pileManager, rng, isHardMode, diff); // <--- Добавили diff
+            return GenerateRandomWeights(pileManager, rng, isHardMode, diff);
     }
 
     private Dictionary<string, int> FindSolvableWeights(MontanaPileManager pileManager, System.Random baseRng, bool isHardMode, int rLeft, int currentC)
@@ -118,13 +116,11 @@ public class MontanaPuzzleManager : MonoBehaviour
         int[] startBoard = GetIntBoard(pileManager);
         GetShuffleData(startBoard, isHardMode, out List<int> unlocked, out List<int> slots);
 
-        // Сколько карт алгоритм обязан собрать при проверке
         int targetC = (rLeft == 0) ? 52 : currentC + Mathf.Max(1, (52 - currentC) / (rLeft + 1));
 
         int[] bestBoardUnlocked = unlocked.ToArray();
         int bestC = 0;
 
-        // Пытаемся найти решаемый расклад (Мгновенная симуляция)
         for (int attempt = 0; attempt < 500; attempt++)
         {
             List<int> testUnlocked = unlocked.OrderBy(x => baseRng.Next()).ToList();
@@ -141,10 +137,10 @@ public class MontanaPuzzleManager : MonoBehaviour
                 bestBoardUnlocked = testUnlocked.ToArray();
             }
 
-            if (finalC >= targetC) break; // Нашли отличный расклад!
+            if (finalC >= targetC) break;
         }
 
-        Debug.Log($"<color=yellow>[Оракул] Скрытая симуляция: Требовалось собрать {targetC}, Алгоритм смог собрать {bestC}. Выдаем этот расклад.</color>");
+        Debug.Log($"<color=yellow>[РћСЂР°РєСѓР»] РЎРєСЂС‹С‚Р°СЏ СЃРёРјСѓР»СЏС†РёСЏ: РўСЂРµР±РѕРІР°Р»РѕСЃСЊ СЃРѕР±СЂР°С‚СЊ {targetC}, РђР»РіРѕСЂРёС‚Рј СЃРјРѕРі СЃРѕР±СЂР°С‚СЊ {bestC}. Р’С‹РґР°РµРј СЌС‚РѕС‚ СЂР°СЃРєР»Р°Рґ.</color>");
 
         Dictionary<string, int> weights = new Dictionary<string, int>();
         for (int i = 0; i < bestBoardUnlocked.Length; i++)
@@ -162,16 +158,13 @@ public class MontanaPuzzleManager : MonoBehaviour
         int[] startBoard = GetIntBoard(pileManager);
         GetShuffleData(startBoard, isHardMode, out List<int> unlocked, out List<int> slots);
 
-        // Базовая случайная тасовка (чтобы стол всегда выглядел естественно)
         List<int> finalUnlocked = unlocked.OrderBy(x => baseRng.Next()).ToList();
 
         if (diff == Difficulty.Hard || diff == Difficulty.Medium)
         {
-            // 1. Изымаем всех Королей из тасовки
             var kings = finalUnlocked.Where(v => ((v - 1) % 13) + 1 == 13).ToList();
             finalUnlocked.RemoveAll(v => ((v - 1) % 13) + 1 == 13);
 
-            // 2. Изымаем Двойки и Тройки (только для Харда)
             List<int> earlyCards = new List<int>();
             if (diff == Difficulty.Hard)
             {
@@ -179,39 +172,34 @@ public class MontanaPuzzleManager : MonoBehaviour
                 finalUnlocked.RemoveAll(v => { int r = ((v - 1) % 13) + 1; return r == 2 || r == 3; });
             }
 
-            // 3. Равномерно распределяем Королей в СЕРЕДИНЕ расклада
-            // Это избегает "стены" в начале, но гарантирует появление тупиков по мере игры
             int kCount = kings.Count;
             if (kCount > 0)
             {
                 int step = finalUnlocked.Count / kCount;
-                if (step < 2) step = 2; // Защита от слишком плотной вставки
+                if (step < 2) step = 2;
 
                 for (int i = 0; i < kCount; i++)
                 {
-                    // Смещение: первый король появится не раньше 2-3 позиции
                     int insertIndex = (i * step) + (step / 2);
                     if (insertIndex > finalUnlocked.Count) insertIndex = finalUnlocked.Count;
                     finalUnlocked.Insert(insertIndex, kings[i]);
                 }
             }
 
-            // 4. Добавляем Двойки и Тройки в самый конец (глубокая блокировка)
             if (diff == Difficulty.Hard)
             {
-                // Перемешаем их между собой перед добавлением
                 earlyCards = earlyCards.OrderBy(x => baseRng.Next()).ToList();
                 finalUnlocked.AddRange(earlyCards);
-                Debug.Log("<color=red>[Оракул] Злая тасовка (Хард): Короли разбросаны как ловушки, 2-3 спрятаны в конец.</color>");
+                Debug.Log("<color=red>[РћСЂР°РєСѓР»] Р—Р»Р°СЏ С‚Р°СЃРѕРІРєР° (РҐР°СЂРґ): РљРѕСЂРѕР»Рё СЂР°Р·Р±СЂРѕСЃР°РЅС‹ РєР°Рє Р»РѕРІСѓС€РєРё, 2-3 СЃРїСЂСЏС‚Р°РЅС‹ РІ РєРѕРЅРµС†.</color>");
             }
             else
             {
-                Debug.Log("<color=orange>[Оракул] Неприятная тасовка (Медиум): Короли разбросаны как ловушки.</color>");
+                Debug.Log("<color=orange>[РћСЂР°РєСѓР»] РќРµРїСЂРёСЏС‚РЅР°СЏ С‚Р°СЃРѕРІРєР° (РњРµРґРёСѓРј): РљРѕСЂРѕР»Рё СЂР°Р·Р±СЂРѕСЃР°РЅС‹ РєР°Рє Р»РѕРІСѓС€РєРё.</color>");
             }
         }
         else
         {
-            Debug.Log("<color=white>[Оракул] Случайная тасовка (Изи).</color>");
+            Debug.Log("<color=white>[РћСЂР°РєСѓР»] РЎР»СѓС‡Р°Р№РЅР°СЏ С‚Р°СЃРѕРІРєР° (РР·Рё).</color>");
         }
 
         Dictionary<string, int> weights = new Dictionary<string, int>();
@@ -225,7 +213,8 @@ public class MontanaPuzzleManager : MonoBehaviour
         return weights;
     }
 
-    private int SimulateFast(int[] board)
+    // вљЎ РРЎРџР РђР’Р›Р•РќРР•: Р”РµР»Р°РµРј РјРµС‚РѕРґ РїСѓР±Р»РёС‡РЅС‹Рј, С‡С‚РѕР±С‹ РџРѕРґСЃРєР°Р·РєР° РјРѕРіР»Р° РѕС†РµРЅРёРІР°С‚СЊ С…РѕРґС‹
+    public int SimulateFast(int[] board)
     {
         bool moved = true;
         int safety = 0;
@@ -235,7 +224,7 @@ public class MontanaPuzzleManager : MonoBehaviour
             safety++;
             for (int i = 0; i < 56; i++)
             {
-                if (board[i] == 0) // Пустой слот
+                if (board[i] == 0)
                 {
                     int r = i % 4; int c = i / 4;
                     int nSuit = -1, nRank = -1;
@@ -244,12 +233,14 @@ public class MontanaPuzzleManager : MonoBehaviour
                     {
                         nRank = 1;
                         nSuit = RowSuitRequirements[r];
-                        if (nSuit == -1) // Ищем любого свободного Туза
+                        if (nSuit == -1)
                         {
                             for (int s = 0; s < 4; s++)
                             {
                                 bool used = false;
-                                for (int j = 0; j < 56; j++) if (board[j] == s * 13 + 1) { used = true; break; }
+                                for (int rowCheck = 0; rowCheck < 4; rowCheck++)
+                                    if (board[rowCheck] == s * 13 + 1) { used = true; break; }
+
                                 if (!used) { nSuit = s; break; }
                             }
                         }
@@ -359,10 +350,6 @@ public class MontanaPuzzleManager : MonoBehaviour
         }
     }
 
-    // ====================================================================
-    // DECODE / ENCODE 
-    // ====================================================================
-
     public static void EncodeSolution(int masterSeed, int[] reqSuits, List<int[]> targets, List<int> goldenSeeds, Stack<CardInstance> stock)
     {
         stock.Clear();
@@ -388,8 +375,20 @@ public class MontanaPuzzleManager : MonoBehaviour
         int ptr = 0; MasterSeed = 0; int multiplier = 1;
         for (int i = 0; i < 4; i++) { MasterSeed += data[ptr++] * multiplier; multiplier *= 52; }
 
+        // вљЎ РРЎРџР РђР’Р›Р•РќРР•: Р’РѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј РёСЃС‚РёРЅРЅС‹Рµ РјС‹СЃР»Рё РіРµРЅРµСЂР°С‚РѕСЂР°
+        System.Random rng = new System.Random(MasterSeed);
+        List<int> dummy = new List<int>();
+        for (int i = 0; i < 52; i++) dummy.Add(i);
+        dummy = dummy.OrderBy(x => rng.Next()).ToList();
+        List<int> originalSuits = new List<int> { 0, 1, 2, 3 };
+        originalSuits = originalSuits.OrderBy(x => rng.Next()).ToList();
+
         RowSuitRequirements = new int[4];
-        for (int i = 0; i < 4; i++) { int v = data[ptr++]; RowSuitRequirements[i] = v == 4 ? -1 : v; }
+        for (int i = 0; i < 4; i++)
+        {
+            int v = data[ptr++]; // РџСЂРѕРєСЂСѓС‡РёРІР°РµРј РєСЌС€
+            RowSuitRequirements[i] = originalSuits[i]; // Р–Р•РЎРўРљРћ Р—РђРЁРР’РђР•Рњ РРЎРўРРќРќР«Р™ РџРЈРўР¬
+        }
 
         int cpCount = data[ptr++]; Checkpoints.Clear();
         for (int i = 0; i < cpCount; i++)

@@ -285,6 +285,10 @@
             "value": "Undo all moves (Hold)"
         },
         {
+            "key": "UndoAll2",
+            "value": "Undo all moves"
+        },
+        {
             "key": "ToMenu",
             "value": "Menu"
         },
@@ -2623,6 +2627,18 @@
         {
             "key": "Settings_DoubleClick",
             "value": "Double click"
+        },
+        {
+            "key": "DeadEndText",
+            "value": "No winning moves left. Use Undo."
+        },
+        {
+            "key": "HintText",
+            "value": "Hint"
+        },
+        {
+            "key": "RotateDevicePrompt",
+            "value": "Rotate your device horizontally for the tutorial"
         }
     ]
 }     

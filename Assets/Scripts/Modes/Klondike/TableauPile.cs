@@ -202,7 +202,7 @@ public class TableauPile : MonoBehaviour, ICardContainer
         ForceRecalculateLayout();
     }
 
-    public void ForceRebuildLayout()
+    public virtual void ForceRebuildLayout()
     {
         if (cards.Count == 0) return;
 

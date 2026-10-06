@@ -23,12 +23,14 @@ public class MontanaDeckManager : MonoBehaviour
 
     private void Update()
     {
-        if (!modeManager.IsInputAllowed && (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)))
+        if (Time.timeSinceLevelLoad > 0.3f)
         {
-            isSkippingIntro = true;
+            if (!modeManager.IsInputAllowed && (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)))
+            {
+                isSkippingIntro = true;
+            }
         }
     }
-
     public void DealInitial()
     {
         StartCoroutine(DealRoutine());

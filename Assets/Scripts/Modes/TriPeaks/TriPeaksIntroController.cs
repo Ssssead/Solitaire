@@ -1,54 +1,77 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
+[DefaultExecutionOrder(-50)] // Запускается первым, чтобы скрыть UI до отрисовки кадра
 public class TriPeaksIntroController : MonoBehaviour, IIntroController
 {
     [Header("References")]
-    public TriPeaksModeManager modeManager; // Ссылка на главный менеджер
-    public RectTransform topPanel;
+    public TriPeaksModeManager modeManager;
+
+    // --- ИЗМЕНЕНИЕ 1: Две панели ---
+    public RectTransform landscapeTopPanel;
+    public RectTransform portraitTopPanel;
     public List<RectTransform> bottomButtons;
 
     [Header("Animation Settings")]
     public float startDelay = 0.2f;
     public float uiSlideDuration = 0.5f;
     public float buttonStaggerDelay = 0.1f;
-    public float slotFadeDuration = 0.5f; // Длительность проявления слота
+    public float slotFadeDuration = 0.5f;
 
     public bool IsSkipping { get; private set; }
+    public bool forceInstantSkip = false;
 
-    private Vector2 topPanelStartPos;
-    private Vector2 topPanelHiddenPos;
+    // --- ИЗМЕНЕНИЕ 2: Двойные позиции ---
+    private Vector2 landscapeTopStartPos, landscapeTopHiddenPos;
+    private Vector2 portraitTopStartPos, portraitTopHiddenPos;
     private List<Vector2> buttonsStartPos = new List<Vector2>();
     private List<Vector2> buttonsHiddenPos = new List<Vector2>();
 
+    private bool positionsSaved = false;
+
     private void Awake()
     {
-        // Попробуем автоматически найти менеджер, если не назначен в инспекторе
         if (modeManager == null) modeManager = FindObjectOfType<TriPeaksModeManager>();
 
-        Canvas.ForceUpdateCanvases();
-        SaveInitialPositions();
+        // Мгновенно скрываем UI элементы
+        SetUIVisible(false);
 
-        PrepareIntro(true);
+        // Мгновенно скрываем слот сброса
+        if (modeManager != null && modeManager.pileManager != null)
+        {
+            modeManager.pileManager.SetWasteSlotAlpha(0f);
+        }
     }
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+        // Защита времени, чтобы клик по кнопке в меню не пропустил анимацию
+        if (Time.timeSinceLevelLoad > 0.3f)
         {
-            IsSkipping = true;
+            if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+            {
+                IsSkipping = true;
+            }
         }
     }
 
     private void SaveInitialPositions()
     {
-        if (topPanel != null)
+        if (positionsSaved) return;
+        Canvas.ForceUpdateCanvases();
+
+        if (landscapeTopPanel != null)
         {
-            topPanelStartPos = topPanel.anchoredPosition;
-            topPanelHiddenPos = topPanelStartPos + new Vector2(0, 300f);
+            landscapeTopStartPos = landscapeTopPanel.anchoredPosition;
+            landscapeTopHiddenPos = landscapeTopStartPos + new Vector2(0, 300f);
         }
+        if (portraitTopPanel != null)
+        {
+            portraitTopStartPos = portraitTopPanel.anchoredPosition;
+            portraitTopHiddenPos = portraitTopStartPos + new Vector2(0, 300f);
+        }
+
         buttonsStartPos.Clear();
         buttonsHiddenPos.Clear();
         foreach (var btn in bottomButtons)
@@ -59,15 +82,21 @@ public class TriPeaksIntroController : MonoBehaviour, IIntroController
                 buttonsHiddenPos.Add(btn.anchoredPosition + new Vector2(0, -300f));
             }
         }
+
+        positionsSaved = true;
     }
+
     public void UpdateSavedPositions()
     {
-        SaveInitialPositions();
+        forceInstantSkip = true;
+        IsSkipping = true;
     }
+
     public List<RectTransform> GetTopUIElements()
     {
         var list = new List<RectTransform>();
-        if (topPanel != null) list.Add(topPanel);
+        if (landscapeTopPanel != null) list.Add(landscapeTopPanel);
+        if (portraitTopPanel != null) list.Add(portraitTopPanel);
         return list;
     }
 
@@ -79,54 +108,70 @@ public class TriPeaksIntroController : MonoBehaviour, IIntroController
     public void PrepareIntro(bool playIntro)
     {
         IsSkipping = false;
+        forceInstantSkip = false;
+
+        if (!positionsSaved) SaveInitialPositions();
 
         if (playIntro)
         {
-            // Прячем слот Waste
             if (modeManager != null && modeManager.pileManager != null)
             {
                 modeManager.pileManager.SetWasteSlotAlpha(0f);
             }
 
-            if (topPanel != null) topPanel.anchoredPosition = topPanelHiddenPos;
+            SetUIVisible(false);
+
+            if (landscapeTopPanel != null) landscapeTopPanel.anchoredPosition = landscapeTopHiddenPos;
+            if (portraitTopPanel != null) portraitTopPanel.anchoredPosition = portraitTopHiddenPos;
+
             for (int i = 0; i < bottomButtons.Count; i++)
             {
-                if (bottomButtons[i] != null) bottomButtons[i].anchoredPosition = buttonsHiddenPos[i];
+                if (bottomButtons[i] != null && i < buttonsHiddenPos.Count)
+                    bottomButtons[i].anchoredPosition = buttonsHiddenPos[i];
             }
         }
         else
         {
-            // Показываем слот Waste мгновенно (для рестартов без интро)
             if (modeManager != null && modeManager.pileManager != null)
             {
                 modeManager.pileManager.SetWasteSlotAlpha(1f);
             }
 
-            if (topPanel != null) topPanel.anchoredPosition = topPanelStartPos;
+            SetUIVisible(true);
+
+            if (landscapeTopPanel != null) landscapeTopPanel.anchoredPosition = landscapeTopStartPos;
+            if (portraitTopPanel != null) portraitTopPanel.anchoredPosition = portraitTopStartPos;
+
             for (int i = 0; i < bottomButtons.Count; i++)
             {
-                if (bottomButtons[i] != null) bottomButtons[i].anchoredPosition = buttonsStartPos[i];
+                if (bottomButtons[i] != null && i < buttonsStartPos.Count)
+                    bottomButtons[i].anchoredPosition = buttonsStartPos[i];
             }
         }
     }
 
     public IEnumerator PlayUIIntroSequence()
     {
+        IsSkipping = false;
+        forceInstantSkip = false;
+
         yield return StartCoroutine(SkippableWait(startDelay));
 
-        // <--- ЗВУК: НАЧАЛО ДВИЖЕНИЯ ИНТЕРФЕЙСА --->
-        if (AudioManager.Instance != null)
+        if (AudioManager.Instance != null && !forceInstantSkip)
             AudioManager.Instance.PlaySound("Panel_Slide_In");
 
-        // Запускаем проявление слота Waste ПАРАЛЛЕЛЬНО с выездом UI
+        // Запускаем проявление слота Waste
         StartCoroutine(FadeInWasteSlot(slotFadeDuration));
 
-        if (topPanel != null)
-            StartCoroutine(AnimateUIElement(topPanel, topPanelHiddenPos, topPanelStartPos, uiSlideDuration));
+        if (landscapeTopPanel != null)
+            StartCoroutine(AnimateUIElement(landscapeTopPanel, landscapeTopHiddenPos, landscapeTopStartPos, uiSlideDuration));
+
+        if (portraitTopPanel != null)
+            StartCoroutine(AnimateUIElement(portraitTopPanel, portraitTopHiddenPos, portraitTopStartPos, uiSlideDuration));
 
         for (int i = 0; i < bottomButtons.Count; i++)
         {
-            if (bottomButtons[i] != null)
+            if (bottomButtons[i] != null && i < buttonsStartPos.Count)
             {
                 StartCoroutine(AnimateUIElement(bottomButtons[i], buttonsHiddenPos[i], buttonsStartPos[i], uiSlideDuration));
                 yield return StartCoroutine(SkippableWait(buttonStaggerDelay));
@@ -134,7 +179,6 @@ public class TriPeaksIntroController : MonoBehaviour, IIntroController
         }
     }
 
-    // НОВАЯ КОРУТИНА: Плавное проявление слота
     private IEnumerator FadeInWasteSlot(float duration)
     {
         if (modeManager == null || modeManager.pileManager == null) yield break;
@@ -142,6 +186,7 @@ public class TriPeaksIntroController : MonoBehaviour, IIntroController
         float elapsed = 0f;
         while (elapsed < duration)
         {
+            if (forceInstantSkip) break;
             float speed = IsSkipping ? 15f : 1f;
             elapsed += Time.deltaTime * speed;
             float t = Mathf.Clamp01(elapsed / duration);
@@ -156,6 +201,7 @@ public class TriPeaksIntroController : MonoBehaviour, IIntroController
         float elapsed = 0f;
         while (elapsed < duration)
         {
+            if (forceInstantSkip) break;
             float speed = IsSkipping ? 15f : 1f;
             elapsed += Time.deltaTime * speed;
             yield return null;
@@ -164,20 +210,53 @@ public class TriPeaksIntroController : MonoBehaviour, IIntroController
 
     private IEnumerator AnimateUIElement(RectTransform target, Vector2 from, Vector2 to, float duration)
     {
+        var cg = target.GetComponent<CanvasGroup>();
+        if (cg == null) cg = target.gameObject.AddComponent<CanvasGroup>();
+
         float elapsed = 0f;
         AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         while (elapsed < duration)
         {
+            if (forceInstantSkip) break;
             float speed = IsSkipping ? 15f : 1f;
             elapsed += Time.deltaTime * speed;
             float t = Mathf.Clamp01(elapsed / duration);
-            if (target != null) target.anchoredPosition = Vector2.Lerp(from, to, curve.Evaluate(t));
+
+            if (target != null) target.anchoredPosition = Vector2.LerpUnclamped(from, to, curve.Evaluate(t));
+            if (cg != null) cg.alpha = Mathf.Lerp(0f, 1f, curve.Evaluate(t));
+
             yield return null;
         }
-        if (target != null) target.anchoredPosition = to;
 
-        // <--- ЗВУК: ЭЛЕМЕНТ UI ПРИЗЕМЛИЛСЯ --->
-        if (AudioManager.Instance != null)
+        if (target != null && !forceInstantSkip) target.anchoredPosition = to;
+        if (cg != null && !forceInstantSkip) cg.alpha = 1f;
+
+        if (AudioManager.Instance != null && !forceInstantSkip)
             AudioManager.Instance.PlaySound("UI_Drop");
+    }
+
+    private void SetUIVisible(bool visible)
+    {
+        float alpha = visible ? 1f : 0f;
+
+        foreach (var el in GetTopUIElements())
+        {
+            if (el != null)
+            {
+                var cg = el.GetComponent<CanvasGroup>();
+                if (cg == null) cg = el.gameObject.AddComponent<CanvasGroup>();
+                cg.alpha = alpha;
+            }
+        }
+
+        foreach (var el in GetBottomUIElements())
+        {
+            if (el != null)
+            {
+                var cg = el.GetComponent<CanvasGroup>();
+                if (cg == null) cg = el.gameObject.AddComponent<CanvasGroup>();
+                cg.alpha = alpha;
+            }
+        }
     }
 }

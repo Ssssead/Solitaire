@@ -5,12 +5,11 @@ using System.Reflection;
 public class FreeCellPileManager : PileManager
 {
     [Header("FreeCell Specifics")]
-    public Transform freeCellSlotsParent;
+    public Transform freeCellSlotsParent; // Теперь используется только для обратной совместимости
     [SerializeField] private List<FreeCellPile> freeCells = new List<FreeCellPile>();
     public IReadOnlyList<FreeCellPile> FreeCells => freeCells;
 
     // --- ВАЖНО: ИСПРАВЛЕННЫЙ МЕТОД ---
-    // Теперь это работает, так как в PileManager мы добавили 'virtual'
     public override List<ICardContainer> GetAllContainers()
     {
         List<ICardContainer> list = new List<ICardContainer>();
@@ -22,31 +21,30 @@ public class FreeCellPileManager : PileManager
 
         return list;
     }
-    // ---------------------------------
 
     public void InitializeFreeCell(FreeCellModeManager modeManager)
     {
-        // 1. Собираем FreeCells
+        // 1. ИСПРАВЛЕНИЕ: Ищем Свободные ячейки ГЛОБАЛЬНО, чтобы они не терялись при повороте экрана
         freeCells.Clear();
-        if (freeCellSlotsParent != null)
-        {
-            freeCells.AddRange(freeCellSlotsParent.GetComponentsInChildren<FreeCellPile>());
-        }
+        var allFreeCells = FindObjectsOfType<FreeCellPile>();
+        var sortedFC = new List<FreeCellPile>(allFreeCells);
+        // Сортируем по имени (Slot0, Slot1...), чтобы они сохранили правильный порядок слева направо
+        sortedFC.Sort((a, b) => a.gameObject.name.CompareTo(b.gameObject.name));
+        freeCells.AddRange(sortedFC);
 
         // 2. Принудительно ищем и прописываем Tableau и Foundations
-        // (Это решает проблему, если в Инспекторе списки пустые)
-
         var allTabs = FindObjectsOfType<FreeCellTableauPile>();
-        // Сортируем по имени (Slot_0, Slot_1...), чтобы порядок был верным
         var sortedTabs = new List<TableauPile>(allTabs);
-        sortedTabs.Sort((a, b) => (a as MonoBehaviour).name.CompareTo((b as MonoBehaviour).name));
+        sortedTabs.Sort((a, b) => a.gameObject.name.CompareTo(b.gameObject.name));
         SetPrivateList("tableau", sortedTabs);
 
         var allFounds = FindObjectsOfType<FoundationPile>();
-        SetPrivateList("foundations", new List<FoundationPile>(allFounds));
+        var sortedFounds = new List<FoundationPile>(allFounds);
+        sortedFounds.Sort((a, b) => a.gameObject.name.CompareTo(b.gameObject.name));
+        SetPrivateList("foundations", sortedFounds);
 
-        // Инициализируем фундаменты, чтобы они знали про manager
-        foreach (var f in allFounds) f.Initialize(null, null);
+        // Инициализируем фундаменты
+        foreach (var f in sortedFounds) f.Initialize(null, null);
     }
 
     private void SetPrivateList<T>(string fieldName, List<T> list)

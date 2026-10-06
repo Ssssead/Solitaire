@@ -19,10 +19,15 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     [SerializeField] private Button undoButton;
     [SerializeField] private Button undoAllButton;
 
-    [Header("HUD (On Scene Texts)")]
+    [Header("HUD (On Scene Texts) - Landscape")]
     [SerializeField] private TMP_Text scoreText;
     [SerializeField] private TMP_Text movesText;
     [SerializeField] private TMP_Text timeText;
+
+    [Header("HUD (On Scene Texts) - Portrait")]
+    [SerializeField] private TMP_Text portraitScoreText;
+    [SerializeField] private TMP_Text portraitMovesText;
+    [SerializeField] private TMP_Text portraitTimeText;
 
     [Header("Animation Settings")]
     [SerializeField] private float dealAnimDuration = 0.3f;
@@ -37,6 +42,12 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     public bool playIntroOnStart = true;
     public PyramidIntroController introController;
     public SceneExitAnimator exitAnimator;
+
+    [Header("Hint System")]
+    public PyramidHintSolver hintSolver;
+    private Coroutine backgroundSolverCoroutine = null;
+    private List<PyramidHintMove> cachedHintPath = null;
+    private bool isExecutingHint = false;
 
     private CardController selectedA;
     private int currentRound = 1;
@@ -91,11 +102,11 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
 
     private void UpdateTimerUI()
     {
-        if (timeText != null)
-        {
-            System.TimeSpan t = System.TimeSpan.FromSeconds(gameTimer);
-            timeText.text = t.ToString(@"m\:ss");
-        }
+        System.TimeSpan t = System.TimeSpan.FromSeconds(gameTimer);
+        string timeStr = t.ToString(@"m\:ss");
+
+        if (timeText != null) timeText.text = timeStr;
+        if (portraitTimeText != null) portraitTimeText.text = timeStr;
     }
 
     public void InitializeGame(Difficulty difficulty, int rounds)
@@ -105,6 +116,8 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         {
             StatisticsManager.Instance.OnGameAbandoned();
         }
+        // ДОБАВИТЬ ЭТУ СТРОКУ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
 
         // 2. ЗАТЕМ сообщаем трекеру настройки нового матча
         string variant = GameSettings.GetCurrentVariantString(GameType.Pyramid) ?? "None";
@@ -154,6 +167,7 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
                 string variant = GameSettings.GetCurrentVariantString(GameType.Pyramid);
                 StatisticsManager.Instance.OnGameStarted("Pyramid", currentDifficulty, variant);
             }
+            SimpleMetricsTracker.Instance?.TrackLevelStart(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
         }
     }
 
@@ -163,6 +177,8 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         {
             StatisticsManager.Instance.OnGameAbandoned();
         }
+        // ДОБАВИТЬ ЭТУ СТРОКУ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
     }
 
     private void SetupButtons()
@@ -256,7 +272,8 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
             yield return StartCoroutine(animManager.PlayDealAnimation(cardsToAnimate, () => introController != null && introController.IsSkipping));
         else
             pileManager.UpdateLocks();
-
+        StartBackgroundSolver();
+        OnMoveMade();
         isRestarting = false;
         IsInputAllowed = true;
         UpdateUIState();
@@ -268,7 +285,7 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         currentDifficulty = GameSettings.CurrentDifficulty;
         totalRounds = GameSettings.RoundsCount;
         if (totalRounds < 1) totalRounds = 1;
-
+        if (hintSolver != null) hintSolver.CancelSearch();
         isRestarting = true;
         StopAllCoroutines();
         IsInputAllowed = false;
@@ -331,7 +348,7 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         GameQuestTracker.Instance?.RecordMove();
         GameQuestTracker.Instance?.RecordStockDraw();
         // ----------------------
-
+        OnMoveMade();
         IsInputAllowed = true;
         IsInputAllowed = true;
         UpdateUIState();
@@ -367,7 +384,7 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         GameQuestTracker.Instance?.RecordMove();
         GameQuestTracker.Instance?.RecordStockDraw(); // Считаем ресайкл тоже как обращение к колоде (и сброс комбо)
         // ----------------------
-
+        OnMoveMade();
         IsInputAllowed = true;
         IsInputAllowed = true;
         UpdateUIState();
@@ -496,8 +513,18 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         if (clearedRows.Contains(0)) GameQuestTracker.Instance?.SendEvent(QuestActionType.ClearPeak, 1);
         // -------------------------------------------
 
-        if (scoreText != null && scoreManager != null) scoreText.text = scoreManager.Score.ToString();
-        if (movesText != null && StatisticsManager.Instance != null) movesText.text = StatisticsManager.Instance.GetCurrentMoves().ToString();
+        if (scoreManager != null)
+        {
+            string s = scoreManager.Score.ToString();
+            if (scoreText != null) scoreText.text = s;
+            if (portraitScoreText != null) portraitScoreText.text = s;
+        }
+        if (StatisticsManager.Instance != null)
+        {
+            string m = StatisticsManager.Instance.GetCurrentMoves().ToString();
+            if (movesText != null) movesText.text = m;
+            if (portraitMovesText != null) portraitMovesText.text = m;
+        }
 
         // <--- ЗВУК 1: КАРТЫ СРЫВАЮТСЯ С МЕСТА --->
         if (AudioManager.Instance != null)
@@ -561,10 +588,12 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
 
                 if (gameUI != null)
                     gameUI.OnGameWon(finalMoves);
+                SimpleMetricsTracker.Instance?.TrackLevelWin(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
             }
         }
         else
         {
+            OnMoveMade();
             yield return null;
             IsInputAllowed = true;
             UpdateUIState();
@@ -615,7 +644,7 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
 
         if (pileManager.Stock != null) pileManager.Stock.UpdateLayout();
         if (pileManager.Waste != null) pileManager.Waste.UpdateLayout();
-
+        OnMoveMade();
         IsInputAllowed = true; UpdateUIState(); yield return null;
     }
 
@@ -876,7 +905,7 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
             if (scoreManager) scoreManager.AddPoints(-move.ScoreGained);
             if (move.ClearedRows != null) foreach (int row in move.ClearedRows) pileManager.RestoreRowFlag(row);
         }
-
+        OnMoveMade();
         if (!immediate) IsInputAllowed = true;
         UpdateUIState();
     }
@@ -928,8 +957,20 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
         bool hasHistory = undoStack.Count > 0 && IsInputAllowed;
         if (undoButton != null) undoButton.interactable = hasHistory;
         if (undoAllButton != null) undoAllButton.interactable = hasHistory;
-        if (scoreText != null && scoreManager != null) scoreText.text = scoreManager.Score.ToString();
-        if (movesText != null && StatisticsManager.Instance != null) movesText.text = StatisticsManager.Instance.GetCurrentMoves().ToString();
+
+        // ОБНОВЛЕННЫЕ ТЕКСТЫ
+        if (scoreManager != null)
+        {
+            string s = scoreManager.Score.ToString();
+            if (scoreText != null) scoreText.text = s;
+            if (portraitScoreText != null) portraitScoreText.text = s;
+        }
+        if (StatisticsManager.Instance != null)
+        {
+            string m = StatisticsManager.Instance.GetCurrentMoves().ToString();
+            if (movesText != null) movesText.text = m;
+            if (portraitMovesText != null) portraitMovesText.text = m;
+        }
     }
 
     public void CheckGameState()
@@ -953,4 +994,96 @@ public class PyramidModeManager : MonoBehaviour, ICardGameMode
     }
 
     public void OnCardDoubleClicked(CardController card) => OnCardClicked(card);
+    public void RequestHint(System.Action onWaitStart, System.Action<bool> onHintResult)
+    {
+        if (_isGameWon || !IsInputAllowed) { onHintResult?.Invoke(false); return; }
+        StartCoroutine(HintRoutine(onWaitStart, onHintResult));
+    }
+
+    private IEnumerator HintRoutine(System.Action onWaitStart, System.Action<bool> onResult)
+    {
+        IsInputAllowed = false;
+
+        // Если у игрока выделена карта, сбрасываем ее
+        if (selectedA != null)
+        {
+            var method = typeof(PyramidModeManager).GetMethod("DeselectCard", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            method?.Invoke(this, new object[] { true });
+        }
+
+        if (cachedHintPath == null && backgroundSolverCoroutine == null) StartBackgroundSolver();
+
+        if (backgroundSolverCoroutine != null)
+        {
+            onWaitStart?.Invoke();
+            while (backgroundSolverCoroutine != null) yield return null;
+        }
+
+        if (cachedHintPath != null && cachedHintPath.Count > 0)
+        {
+            var nextMove = cachedHintPath[0];
+            cachedHintPath.RemoveAt(0);
+
+            isExecutingHint = true;
+            IsInputAllowed = true;
+
+            // Симулируем действия игрока!
+            if (nextMove.Type == PyramidHintMove.MoveType.Deal || nextMove.Type == PyramidHintMove.MoveType.Recycle)
+            {
+                OnDealButtonClicked();
+            }
+            else
+            {
+                OnCardClicked(nextMove.CardA);
+                if (nextMove.CardB != null) OnCardClicked(nextMove.CardB);
+            }
+
+            // Ждем, пока анимации (RemoveSequence или DealRoutine) вернут IsInputAllowed
+            while (!IsInputAllowed) yield return null;
+
+            isExecutingHint = false;
+
+            if (cachedHintPath == null || cachedHintPath.Count == 0) StartBackgroundSolver();
+
+            onResult?.Invoke(true);
+        }
+        else
+        {
+            IsInputAllowed = true;
+            onResult?.Invoke(false); // Вызовет панель тупика
+        }
+    }
+
+    // --- 4. ДОБАВЬ НОВЫЕ МЕТОДЫ ДЛЯ ФОНОВОГО РАСЧЕТА ---
+    public void OnMoveMade()
+    {
+        if (!isExecutingHint) StartBackgroundSolver();
+    }
+
+    public void StartBackgroundSolver()
+    {
+        if (backgroundSolverCoroutine != null) StopCoroutine(backgroundSolverCoroutine);
+        if (hintSolver != null) hintSolver.CancelSearch();
+        cachedHintPath = null;
+        backgroundSolverCoroutine = StartCoroutine(BackgroundSolverRoutine());
+    }
+
+    private IEnumerator BackgroundSolverRoutine()
+    {
+        while (DragLayer != null && DragLayer.childCount > 0) yield return null;
+        yield return new WaitForSeconds(0.1f);
+
+        if (_isGameWon) yield break;
+
+        bool solverFinished = false;
+        if (hintSolver == null) hintSolver = gameObject.AddComponent<PyramidHintSolver>();
+
+        hintSolver.FindPath(pileManager, recyclesRemaining, maxRecycles, path => {
+            cachedHintPath = path;
+            solverFinished = true;
+        });
+
+        while (!solverFinished) yield return null;
+        backgroundSolverCoroutine = null;
+    }
 }

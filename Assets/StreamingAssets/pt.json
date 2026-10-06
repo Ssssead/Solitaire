@@ -289,6 +289,10 @@
             "value": "Desfazer tudo (Segurar)"
         },
         {
+            "key": "UndoAll2",
+            "value": "Desfazer tudo"
+        },
+        {
             "key": "ToMenu",
             "value": "Menu"
         },
@@ -2623,6 +2627,18 @@
         {
             "key": "Settings_DoubleClick",
             "value": "Duplo clique"
+        },
+        {
+            "key": "DeadEndText",
+            "value": "Não há movimentos para vencer. Use Desfazer."
+        },
+        {
+            "key": "HintText",
+            "value": "Dica"
+        },
+        {
+            "key": "RotateDevicePrompt",
+            "value": "Gire o dispositivo horizontalmente durante o tutorial"
         }
     ]
 }

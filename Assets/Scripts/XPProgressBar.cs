@@ -7,44 +7,39 @@ using System.Collections.Generic;
 public class XPProgressBar : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private Image fillImage;        // Основная полоска (текущий опыт)
-    [SerializeField] private Image previewFillImage; // НОВОЕ: Полоска предпросмотра (прозрачная)
+    [SerializeField] private Image fillImage;
+    [SerializeField] private Image previewFillImage;
     [SerializeField] private TMP_Text levelText;
     [SerializeField] private TMP_Text xpText;
 
     [Header("Visuals (Tiers)")]
-    [SerializeField] private List<Sprite> tierSprites;
+    // Заменили List<Sprite> на List<Color>
+    [SerializeField] private List<Color> tierColors;
     [SerializeField] private Image targetImageToChange;
 
     private Coroutine animationCoroutine;
     private Coroutine previewAnimationCoroutine;
     private Image TargetGraphic => targetImageToChange != null ? targetImageToChange : fillImage;
 
-    // --- НОВЫЙ МЕТОД: Предпросмотр XP ---
     public void ShowPreviewXP(int currentXP, int addedXP, int targetXP)
     {
         if (targetXP <= 0) targetXP = 1;
         if (previewFillImage == null || fillImage == null) return;
 
-        // 1. Настройка визуала (копируем спрайт, ставим прозрачность)
-        previewFillImage.sprite = fillImage.sprite;
         previewFillImage.type = fillImage.type;
         previewFillImage.fillMethod = fillImage.fillMethod;
 
-        Color c = previewFillImage.color;
+        // Берем цвет текущего тира и делаем его полупрозрачным для превью
+        Color c = TargetGraphic.color;
         c.a = 0.6f;
         previewFillImage.color = c;
 
-        // 2. Считаем точки
-        float startFill = fillImage.fillAmount; // Начинаем от текущего прогресса
+        float startFill = fillImage.fillAmount;
         float targetFill = (float)(currentXP + addedXP) / targetXP;
         if (targetFill > 1.0f) targetFill = 1.0f;
 
-        // 3. Запускаем анимацию РОСТА
         if (previewAnimationCoroutine != null) StopCoroutine(previewAnimationCoroutine);
 
-        // Ставим превью в начальную точку (равную основному бару), чтобы он "выехал" из него
-        // Но только если мы еще не показываем превью (чтобы не дергалось при переключении кнопок сложности)
         if (previewFillImage.fillAmount < startFill || previewFillImage.fillAmount > targetFill)
         {
             previewFillImage.fillAmount = startFill;
@@ -52,16 +47,17 @@ public class XPProgressBar : MonoBehaviour
 
         previewAnimationCoroutine = StartCoroutine(AnimatePreviewRoutine(targetFill, 0.3f));
     }
+
     public void HidePreviewXP()
     {
         if (previewFillImage == null || fillImage == null) return;
 
-        // Цель "сдувания" - текущий уровень основного бара
         float targetFill = fillImage.fillAmount;
 
         if (previewAnimationCoroutine != null) StopCoroutine(previewAnimationCoroutine);
         previewAnimationCoroutine = StartCoroutine(AnimatePreviewRoutine(targetFill, 0.3f));
     }
+
     private IEnumerator AnimatePreviewRoutine(float targetFill, float duration)
     {
         float startFill = previewFillImage.fillAmount;
@@ -77,7 +73,6 @@ public class XPProgressBar : MonoBehaviour
         previewFillImage.fillAmount = targetFill;
     }
 
-    // Мгновенное обновление (для Меню)
     public void UpdateBar(int level, int currentXP, int targetXP)
     {
         if (animationCoroutine != null) StopCoroutine(animationCoroutine);
@@ -88,16 +83,11 @@ public class XPProgressBar : MonoBehaviour
 
         SetUI(level, currentXP, targetXP, ratio);
 
-        // При жестком обновлении превью прячется за основной бар
         if (previewFillImage != null)
         {
-            if (fillImage != null) previewFillImage.sprite = fillImage.sprite;
             previewFillImage.fillAmount = ratio;
         }
     }
-
-    // ... (Остальные методы AnimateBar, AnimateLevelUp, UpdateVisuals, LerpFill без изменений) ...
-    // Скопируйте их из вашего текущего файла, они не меняются.
 
     public void AnimateBar(int level, int startXP, int endXP, int targetXP, float delay = 0.5f)
     {
@@ -123,12 +113,22 @@ public class XPProgressBar : MonoBehaviour
         animationCoroutine = StartCoroutine(LevelUpRoutine(oldLevel, oldXP, oldTarget, newLevel, newXP, newTarget, delay));
     }
 
+    // Измененный метод: меняет Image.color вместо Image.sprite
     private void UpdateVisuals(int level)
     {
-        if (tierSprites == null || tierSprites.Count == 0) return;
+        if (tierColors == null || tierColors.Count == 0) return;
         if (TargetGraphic == null) return;
-        int tierIndex = (level / 10) % tierSprites.Count;
-        if (tierSprites[tierIndex] != null) TargetGraphic.sprite = tierSprites[tierIndex];
+
+        int tierIndex = (level / 10) % tierColors.Count;
+        TargetGraphic.color = tierColors[tierIndex];
+
+        // Синхронизируем цвет у preview бара
+        if (previewFillImage != null)
+        {
+            Color c = tierColors[tierIndex];
+            c.a = 0.6f;
+            previewFillImage.color = c;
+        }
     }
 
     private IEnumerator AnimateFillRoutine(int level, int startXP, int endXP, int targetXP, float delay)
@@ -164,7 +164,7 @@ public class XPProgressBar : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
             if (fillImage != null) fillImage.fillAmount = Mathf.SmoothStep(from, to, t);
-            if (previewFillImage != null) previewFillImage.fillAmount = Mathf.SmoothStep(from, to, t); // При анимации двигаем и превью тоже
+            if (previewFillImage != null) previewFillImage.fillAmount = Mathf.SmoothStep(from, to, t);
             yield return null;
         }
         if (fillImage != null) fillImage.fillAmount = to;

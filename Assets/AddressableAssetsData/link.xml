@@ -1,0 +1,294 @@
+<linker>
+  <assembly fullname="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="AdTriggerHelper" preserve="all" />
+    <type fullname="AnimationService" preserve="all" />
+    <type fullname="AppGlobalStatsUI" preserve="all" />
+    <type fullname="AutoMoveService" preserve="all" />
+    <type fullname="BackgroundColorManager" preserve="all" />
+    <type fullname="BasicAppGlobalStatsUI" preserve="all" />
+    <type fullname="BasicStatisticsUI" preserve="all" />
+    <type fullname="ButtonHoverTooltip" preserve="all" />
+    <type fullname="CardAnimationController" preserve="all" />
+    <type fullname="CardAppearanceUI" preserve="all" />
+    <type fullname="CardBackSelectionUI" preserve="all" />
+    <type fullname="CardController" preserve="all" />
+    <type fullname="CardData" preserve="all" />
+    <type fullname="CardDragShadow" preserve="all" />
+    <type fullname="CardFactory" preserve="all" />
+    <type fullname="CardHoverEffect" preserve="all" />
+    <type fullname="CardShadowController" preserve="all" />
+    <type fullname="CardSpriteDatabase" preserve="all" />
+    <type fullname="DailyQuestsPanelUI" preserve="all" />
+    <type fullname="DeckManager" preserve="all" />
+    <type fullname="DeckSelectionUI" preserve="all" />
+    <type fullname="DefeatManager" preserve="all" />
+    <type fullname="DragManager" preserve="all" />
+    <type fullname="DynamicLeaderboardController" preserve="all" />
+    <type fullname="FoundationPile" preserve="all" />
+    <type fullname="FreeCellAutoMove" preserve="all" />
+    <type fullname="FreeCellCardController" preserve="all" />
+    <type fullname="FreeCellDeckManager" preserve="all" />
+    <type fullname="FreeCellHintSolver" preserve="all" />
+    <type fullname="FreeCellIntroController" preserve="all" />
+    <type fullname="FreeCellModeManager" preserve="all" />
+    <type fullname="FreeCellPile" preserve="all" />
+    <type fullname="FreeCellPileManager" preserve="all" />
+    <type fullname="FreeCellScoreManager" preserve="all" />
+    <type fullname="FreeCellTableauPile" preserve="all" />
+    <type fullname="FreeCellTutorialManager" preserve="all" />
+    <type fullname="GameIconTooltip" preserve="all" />
+    <type fullname="GameInfoTooltip" preserve="all" />
+    <type fullname="GameIntroController" preserve="all" />
+    <type fullname="GameLayoutManager" preserve="all" />
+    <type fullname="GameUIController" preserve="all" />
+    <type fullname="GridShrinkToFit" preserve="all" />
+    <type fullname="HistorySlotHover" preserve="all" />
+    <type fullname="InGameQuestNotification" preserve="all" />
+    <type fullname="KlondikeModeManager" preserve="all" />
+    <type fullname="KlondikeScoreManager" preserve="all" />
+    <type fullname="KlondikeTutorialManager" preserve="all" />
+    <type fullname="LevelUpNotification" preserve="all" />
+    <type fullname="LocalizedText" preserve="all" />
+    <type fullname="LongPressHoldTrigger" preserve="all" />
+    <type fullname="MenuController" preserve="all" />
+    <type fullname="MenuExitController" preserve="all" />
+    <type fullname="MenuIntroController" preserve="all" />
+    <type fullname="MenuLevelController" preserve="all" />
+    <type fullname="MontanaAnimationService" preserve="all" />
+    <type fullname="MontanaAutoMoveService" preserve="all" />
+    <type fullname="MontanaCardController" preserve="all" />
+    <type fullname="MontanaDeckManager" preserve="all" />
+    <type fullname="MontanaHintSolver" preserve="all" />
+    <type fullname="MontanaIntroController" preserve="all" />
+    <type fullname="MontanaModeManager" preserve="all" />
+    <type fullname="MontanaPileManager" preserve="all" />
+    <type fullname="MontanaScoreManager" preserve="all" />
+    <type fullname="MontanaSlot" preserve="all" />
+    <type fullname="MontanaTutorialManager" preserve="all" />
+    <type fullname="MonteCarloAnimationManager" preserve="all" />
+    <type fullname="MonteCarloAnimationService" preserve="all" />
+    <type fullname="MonteCarloCardController" preserve="all" />
+    <type fullname="MonteCarloDataLogger" preserve="all" />
+    <type fullname="MonteCarloDeckManager" preserve="all" />
+    <type fullname="MonteCarloHintSolver" preserve="all" />
+    <type fullname="MonteCarloIntroController" preserve="all" />
+    <type fullname="MonteCarloModeManager" preserve="all" />
+    <type fullname="MonteCarloPileManager" preserve="all" />
+    <type fullname="MonteCarloScoreManager" preserve="all" />
+    <type fullname="MonteCarloTutorialManager" preserve="all" />
+    <type fullname="OctagonAnimationService" preserve="all" />
+    <type fullname="OctagonAutoMoveService" preserve="all" />
+    <type fullname="OctagonCardController" preserve="all" />
+    <type fullname="OctagonDeckManager" preserve="all" />
+    <type fullname="OctagonFoundationPile" preserve="all" />
+    <type fullname="OctagonHintSolver" preserve="all" />
+    <type fullname="OctagonIntroController" preserve="all" />
+    <type fullname="OctagonModeManager" preserve="all" />
+    <type fullname="OctagonPileManager" preserve="all" />
+    <type fullname="OctagonStockPile" preserve="all" />
+    <type fullname="OctagonTableauGroup" preserve="all" />
+    <type fullname="OctagonTableauSlot" preserve="all" />
+    <type fullname="OctagonTutorialManager" preserve="all" />
+    <type fullname="OctagonWastePile" preserve="all" />
+    <type fullname="PileManager" preserve="all" />
+    <type fullname="PlayerProfilePanel" preserve="all" />
+    <type fullname="PyramidAnimationManager" preserve="all" />
+    <type fullname="PyramidCardController" preserve="all" />
+    <type fullname="PyramidDeckManager" preserve="all" />
+    <type fullname="PyramidHelpPanelController" preserve="all" />
+    <type fullname="PyramidHintSolver" preserve="all" />
+    <type fullname="PyramidIntroController" preserve="all" />
+    <type fullname="PyramidModeManager" preserve="all" />
+    <type fullname="PyramidPileManager" preserve="all" />
+    <type fullname="PyramidScoreManager" preserve="all" />
+    <type fullname="PyramidShadowController" preserve="all" />
+    <type fullname="PyramidStockPile" preserve="all" />
+    <type fullname="PyramidTableauSlot" preserve="all" />
+    <type fullname="PyramidTutorialManager" preserve="all" />
+    <type fullname="PyramidWastePile" preserve="all" />
+    <type fullname="QuestButtonDateUI" preserve="all" />
+    <type fullname="QuestNotificationToggle" preserve="all" />
+    <type fullname="QuestUIItem" preserve="all" />
+    <type fullname="RedDotButtonUI" preserve="all" />
+    <type fullname="ResponsiveBackground" preserve="all" />
+    <type fullname="RewardCardUI" preserve="all" />
+    <type fullname="RewardDistributionPanelUI" preserve="all" />
+    <type fullname="SceneExitAnimator" preserve="all" />
+    <type fullname="SettingsPanelAnimator" preserve="all" />
+    <type fullname="ShopManager" preserve="all" />
+    <type fullname="SpiderCardController" preserve="all" />
+    <type fullname="SpiderDeckManager" preserve="all" />
+    <type fullname="SpiderDefeatManager" preserve="all" />
+    <type fullname="SpiderEffectsService" preserve="all" />
+    <type fullname="SpiderFoundationPile" preserve="all" />
+    <type fullname="SpiderIntroController" preserve="all" />
+    <type fullname="SpiderLevelGenerator" preserve="all" />
+    <type fullname="SpiderModeManager" preserve="all" />
+    <type fullname="SpiderPileManager" preserve="all" />
+    <type fullname="SpiderScoreManager" preserve="all" />
+    <type fullname="SpiderStockPile" preserve="all" />
+    <type fullname="SpiderTableauPile" preserve="all" />
+    <type fullname="SpiderTutorialManager" preserve="all" />
+    <type fullname="StatisticsUI" preserve="all" />
+    <type fullname="StockPile" preserve="all" />
+    <type fullname="SultanAnimationService" preserve="all" />
+    <type fullname="SultanAutoMoveService" preserve="all" />
+    <type fullname="SultanCardController" preserve="all" />
+    <type fullname="SultanCenterPile" preserve="all" />
+    <type fullname="SultanDeckManager" preserve="all" />
+    <type fullname="SultanFoundationPile" preserve="all" />
+    <type fullname="SultanHintSolver" preserve="all" />
+    <type fullname="SultanIntroController" preserve="all" />
+    <type fullname="SultanModeManager" preserve="all" />
+    <type fullname="SultanPileManager" preserve="all" />
+    <type fullname="SultanReserveSlot" preserve="all" />
+    <type fullname="SultanScoreManager" preserve="all" />
+    <type fullname="SultanStockPile" preserve="all" />
+    <type fullname="SultanTutorialManager" preserve="all" />
+    <type fullname="SultanWastePile" preserve="all" />
+    <type fullname="TableauPile" preserve="all" />
+    <type fullname="TitleSelectionPanel" preserve="all" />
+    <type fullname="TriPeaksAnimationService" preserve="all" />
+    <type fullname="TriPeaksCardController" preserve="all" />
+    <type fullname="TriPeaksCardShadow" preserve="all" />
+    <type fullname="TriPeaksHintSolver" preserve="all" />
+    <type fullname="TriPeaksIntroController" preserve="all" />
+    <type fullname="TriPeaksModeManager" preserve="all" />
+    <type fullname="TriPeaksPileManager" preserve="all" />
+    <type fullname="TriPeaksScoreManager" preserve="all" />
+    <type fullname="TriPeaksStockPile" preserve="all" />
+    <type fullname="TriPeaksStockShadow" preserve="all" />
+    <type fullname="TriPeaksTableauPile" preserve="all" />
+    <type fullname="TriPeaksTutorialManager" preserve="all" />
+    <type fullname="TriPeaksWastePile" preserve="all" />
+    <type fullname="TutorialOrientationEnforcer" preserve="all" />
+    <type fullname="UndoManager" preserve="all" />
+    <type fullname="WastePile" preserve="all" />
+    <type fullname="XPProgressBar" preserve="all" />
+    <type fullname="YG.GetPlayerYG" preserve="all" />
+    <type fullname="YG.ImageLoadYG" preserve="all" />
+    <type fullname="YG.LBPlayerDataYG" preserve="all" />
+    <type fullname="YG.LeaderboardYG" preserve="all" />
+    <type fullname="YG.PurchaseYG" preserve="all" />
+    <type fullname="YukonAnimationService" preserve="all" />
+    <type fullname="YukonCardController" preserve="all" />
+    <type fullname="YukonDeckManager" preserve="all" />
+    <type fullname="YukonHintSolver" preserve="all" />
+    <type fullname="YukonIntroController" preserve="all" />
+    <type fullname="YukonModeManager" preserve="all" />
+    <type fullname="YukonPileManager" preserve="all" />
+    <type fullname="YukonScoreManager" preserve="all" />
+    <type fullname="YukonTableauPile" preserve="all" />
+    <type fullname="YukonTutorialManager" preserve="all" />
+    <type fullname="BackgroundColorManager/BackgroundUIGroup" preserve="nothing" serialized="true" />
+    <type fullname="CardAnimationController/CardEntry" preserve="nothing" serialized="true" />
+    <type fullname="CardModel" preserve="nothing" serialized="true" />
+    <type fullname="CardSpriteDatabase/Entry" preserve="nothing" serialized="true" />
+    <type fullname="CategoryTab" preserve="nothing" serialized="true" />
+    <type fullname="DailyQuestsPanelUI/GameIconMapping" preserve="nothing" serialized="true" />
+    <type fullname="GameBarData" preserve="nothing" serialized="true" />
+    <type fullname="GameIndicatorColorMapping" preserve="nothing" serialized="true" />
+    <type fullname="MenuController/CustomizationUIGroup" preserve="nothing" serialized="true" />
+    <type fullname="MenuController/GameDefinition" preserve="nothing" serialized="true" />
+    <type fullname="MenuController/GlobalSettingsUIGroup" preserve="nothing" serialized="true" />
+    <type fullname="MenuController/ResponsiveButtonDef" preserve="nothing" serialized="true" />
+    <type fullname="MenuController/SettingsUIGroup" preserve="nothing" serialized="true" />
+    <type fullname="MenuController/SimpleResponsiveDef" preserve="nothing" serialized="true" />
+    <type fullname="MenuController/StatsUIGroup" preserve="nothing" serialized="true" />
+    <type fullname="ShopManager/ShopUIGroup" preserve="nothing" serialized="true" />
+    <type fullname="YG.LBPlayerDataYG/TextLegasy" preserve="nothing" serialized="true" />
+    <type fullname="YG.LBPlayerDataYG/TextMP" preserve="nothing" serialized="true" />
+    <type fullname="YG.PurchaseYG/TextLegasy" preserve="nothing" serialized="true" />
+    <type fullname="YG.PurchaseYG/TextMP" preserve="nothing" serialized="true" />
+    <type fullname="GameLayoutManager/SlotElement" preserve="nothing" serialized="true" />
+    <type fullname="GameLayoutManager/UIElement" preserve="nothing" serialized="true" />
+    <type fullname="GameUIController/GameUIGroup" preserve="nothing" serialized="true" />
+    <type fullname="TutorialStep" preserve="nothing" serialized="true" />
+  </assembly>
+  <assembly fullname="Unity.Addressables, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" preserve="all">
+    <type fullname="UnityEngine.AddressableAssets.Addressables" preserve="all" />
+  </assembly>
+  <assembly fullname="Unity.RenderPipelines.Universal.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.Rendering.Universal.Light2D" preserve="all" />
+    <type fullname="UnityEngine.Rendering.Universal.UniversalAdditionalCameraData" preserve="all" />
+    <type fullname="UnityEngine.Rendering.Universal.TemporalAA/Settings" preserve="nothing" serialized="true" />
+  </assembly>
+  <assembly fullname="Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" preserve="all">
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.AssetBundleProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.AtlasSpriteProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.InstanceProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.LegacyResourcesProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.SceneProvider" preserve="all" />
+  </assembly>
+  <assembly fullname="Unity.TextMeshPro, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="TMPro.TextMeshProUGUI" preserve="all" />
+    <type fullname="TMPro.TMP_FontAsset" preserve="all" />
+    <type fullname="TMPro.FaceInfo_Legacy" preserve="nothing" serialized="true" />
+    <type fullname="TMPro.FontAssetCreationSettings" preserve="nothing" serialized="true" />
+    <type fullname="TMPro.KerningTable" preserve="nothing" serialized="true" />
+    <type fullname="TMPro.TMP_Character" preserve="nothing" serialized="true" />
+    <type fullname="TMPro.TMP_FontFeatureTable" preserve="nothing" serialized="true" />
+    <type fullname="TMPro.TMP_FontWeightPair" preserve="nothing" serialized="true" />
+    <type fullname="TMPro.VertexGradient" preserve="nothing" serialized="true" />
+  </assembly>
+  <assembly fullname="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.AudioClip" preserve="all" />
+    <type fullname="UnityEngine.AudioListener" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.Camera" preserve="all" />
+    <type fullname="UnityEngine.GameObject" preserve="all" />
+    <type fullname="UnityEngine.LightmapSettings" preserve="all" />
+    <type fullname="UnityEngine.Material" preserve="all" />
+    <type fullname="UnityEngine.Object" preserve="all" />
+    <type fullname="UnityEngine.RectTransform" preserve="all" />
+    <type fullname="UnityEngine.RenderSettings" preserve="all" />
+    <type fullname="UnityEngine.Shader" preserve="all" />
+    <type fullname="UnityEngine.Sprite" preserve="all" />
+    <type fullname="UnityEngine.Texture2D" preserve="all" />
+    <type fullname="UnityEngine.Transform" preserve="all" />
+    <type fullname="UnityEngine.U2D.SpriteAtlas" preserve="all" />
+    <type fullname="UnityEngine.Events.ArgumentCache" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.Events.PersistentCallGroup" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.Events.PersistentListenerMode" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.Events.UnityEvent" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.RectOffset" preserve="nothing" serialized="true" />
+  </assembly>
+  <assembly fullname="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.EventSystems.EventSystem" preserve="all" />
+    <type fullname="UnityEngine.EventSystems.StandaloneInputModule" preserve="all" />
+    <type fullname="UnityEngine.UI.AspectRatioFitter" preserve="all" />
+    <type fullname="UnityEngine.UI.Button" preserve="all" />
+    <type fullname="UnityEngine.UI.CanvasScaler" preserve="all" />
+    <type fullname="UnityEngine.UI.ContentSizeFitter" preserve="all" />
+    <type fullname="UnityEngine.UI.GraphicRaycaster" preserve="all" />
+    <type fullname="UnityEngine.UI.GridLayoutGroup" preserve="all" />
+    <type fullname="UnityEngine.UI.HorizontalLayoutGroup" preserve="all" />
+    <type fullname="UnityEngine.UI.Image" preserve="all" />
+    <type fullname="UnityEngine.UI.LayoutElement" preserve="all" />
+    <type fullname="UnityEngine.UI.RawImage" preserve="all" />
+    <type fullname="UnityEngine.UI.RectMask2D" preserve="all" />
+    <type fullname="UnityEngine.UI.ScrollRect" preserve="all" />
+    <type fullname="UnityEngine.UI.Shadow" preserve="all" />
+    <type fullname="UnityEngine.UI.VerticalLayoutGroup" preserve="all" />
+    <type fullname="UnityEngine.UI.AnimationTriggers" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.UI.Button/ButtonClickedEvent" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.UI.ColorBlock" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.UI.MaskableGraphic/CullStateChangedEvent" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.UI.Navigation" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.UI.ScrollRect/ScrollRectEvent" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.UI.SpriteState" preserve="nothing" serialized="true" />
+  </assembly>
+  <assembly fullname="UnityEngine.UIModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.Canvas" preserve="all" />
+    <type fullname="UnityEngine.CanvasGroup" preserve="all" />
+    <type fullname="UnityEngine.CanvasRenderer" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.TextCoreFontEngineModule">
+    <type fullname="UnityEngine.TextCore.FaceInfo" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.TextCore.Glyph" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.TextCore.GlyphMetrics" preserve="nothing" serialized="true" />
+    <type fullname="UnityEngine.TextCore.GlyphRect" preserve="nothing" serialized="true" />
+  </assembly>
+</linker>

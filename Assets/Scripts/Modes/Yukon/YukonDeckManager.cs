@@ -36,9 +36,13 @@ public class YukonDeckManager : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+        // Защита от случайного клика по меню в первые секунды
+        if (Time.timeSinceLevelLoad > 0.3f)
         {
-            isSkippingIntro = true;
+            if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+            {
+                isSkippingIntro = true;
+            }
         }
     }
 
@@ -292,24 +296,17 @@ public class YukonDeckManager : MonoBehaviour
 
     private YukonCardController CreateCard(CardModel model)
     {
-        var newCard = Instantiate(cardPrefab, modeManager.RootCanvas.transform, false);
-        newCard.name = $"Card_{model.suit}_{model.rank}";
-        newCard.cardModel = model;
-        newCard.CardmodeManager = modeManager;
-        newCard.canvas = modeManager.RootCanvas;
+        // 1. ИСПОЛЬЗУЕМ ФАБРИКУ! Это автоматически добавит карту в реестр для адаптивного изменения размеров
+        CardController baseCard = cardFactory.CreateCard(model, modeManager.RootCanvas.transform, Vector2.zero);
 
-        var data = newCard.GetComponent<CardData>();
-        if (data != null && cardFactory.spriteDb != null)
+        // 2. Приводим базовую карту к нужному контроллеру Юкона
+        YukonCardController newCard = baseCard as YukonCardController;
+        if (newCard == null)
         {
-            // ИСПРАВЛЕНИЕ 1: Используем GetSprite(), чтобы работали Русские Буквы!
-            Sprite face = cardFactory.spriteDb.GetSprite(model.suit, model.rank);
-
-            // ИСПРАВЛЕНИЕ 2: Запрашиваем АКТУАЛЬНУЮ рубашку, а не дефолтную!
-            data.backSprite = cardFactory.spriteDb.GetCurrentBackSprite();
-
-            data.SetModel(model, face);
+            Debug.LogError("[YukonDeckManager] Префаб в CardFactory не является YukonCardController!");
         }
 
+        newCard.CardmodeManager = modeManager;
         allCards.Add(newCard);
         return newCard;
     }

@@ -1,6 +1,8 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,7 +21,16 @@ public class GameUIController : MonoBehaviour
         public GameObject newGameSettingsPanel;
         public GameObject exitConfirmationPanel;
         public GameObject newGameConfirmationPanel;
-
+        // --- пїЅпїЅпїЅпїЅпїЅ: UI пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ---
+        [Header("Hint UI")]
+        public Button hintButton;
+        public GameObject deadEndPanel;
+        public Button closeDeadEndButton;
+        public TMP_Text hintCountText; // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, "3")
+        public GameObject hintAdIcon;  // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ 0)
+        public GameObject hintLoadingPanel;
+        public TMP_Text hintLoadingText;
+        // ---------------------------
         [Header("Win Panel Stats")]
         public TMP_Text winDifficultyText;
         public TMP_Text winScoreText;
@@ -88,7 +99,7 @@ public class GameUIController : MonoBehaviour
         public Button newGameSettingsMontanaHardBtn;
         public TMP_Text newGameXPPreviewText;
     }
-    // --- МОСТЫ ДЛЯ ОБРАТНОЙ СОВМЕСТИМОСТИ СО СТАРЫМИ РЕЖИМАМИ ---
+    // --- пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ---
     public GameObject winPanel => ActiveUI.winPanel;
     public GameObject defeatPanel => ActiveUI.defeatPanel;
     public GameObject basicStatisticsPanel => ActiveUI.basicStatisticsPanel;
@@ -113,14 +124,14 @@ public class GameUIController : MonoBehaviour
     public GameUIGroup landscapeUI;
     public GameUIGroup portraitUI;
 
-    // Свойство для получения активного UI в зависимости от ориентации
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ UI пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     private GameUIGroup ActiveUI => (GameLayoutManager.Instance != null && GameLayoutManager.Instance.IsPortrait) ? portraitUI : landscapeUI;
 
     [Header("Defeat Panel Config")]
-    [Tooltip("Значение Right из инспектора, когда картинки НЕТ")]
+    [Tooltip("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Right пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ")]
     public float textPaddingNormal = 16.35f;
 
-    [Tooltip("Значение Right из инспектора, когда картинка ЕСТЬ")]
+    [Tooltip("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Right пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ")]
     public float textPaddingWithAd = 55.51f;
 
     [Header("Win/Defeat Controls (Visuals)")]
@@ -128,7 +139,7 @@ public class GameUIController : MonoBehaviour
     public Color btnNormalColor = new Color32(154, 95, 64, 255);    // Brown
     public Color textSelectedColor = new Color32(36, 20, 12, 255);
     public Color textNormalColor = new Color32(192, 192, 192, 255);
-    public Color buttonDisabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f); // Цвет заблокированной кнопки Паука
+    public Color buttonDisabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f); // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 
     public string xpPreviewLocKey = "xp_reward_preview"; // "You will get {0} XP"
 
@@ -166,14 +177,15 @@ public class GameUIController : MonoBehaviour
         if (StatisticsManager.Instance != null)
             StatisticsManager.Instance.OnLevelUp += HandleLevelUp;
 
-        // [NEW] Запоминаем начальную ориентацию при старте
+        // [NEW] пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
         if (GameLayoutManager.Instance != null)
             lastIsPortrait = GameLayoutManager.Instance.IsPortrait;
+        ResetHints();
     }
 
     private void Update()
     {
-        // [NEW] Отслеживаем поворот экрана и меняем панели
+        // [NEW] пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
         if (GameLayoutManager.Instance != null)
         {
             bool currentIsPortrait = GameLayoutManager.Instance.IsPortrait;
@@ -223,19 +235,249 @@ public class GameUIController : MonoBehaviour
     private void OnEnable()
     {
         AdManager.OnRewardEarned += HandleRewardEarned;
-    }
 
+        // --- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ---
+        if (landscapeUI.hintButton != null)
+        {
+            landscapeUI.hintButton.onClick.RemoveListener(OnHintClicked);
+            landscapeUI.hintButton.onClick.AddListener(OnHintClicked);
+        }
+        // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+        if (portraitUI.hintButton != null && portraitUI.hintButton != landscapeUI.hintButton)
+        {
+            portraitUI.hintButton.onClick.RemoveListener(OnHintClicked);
+            portraitUI.hintButton.onClick.AddListener(OnHintClicked);
+        }
+
+        if (landscapeUI.closeDeadEndButton != null)
+        {
+            landscapeUI.closeDeadEndButton.onClick.RemoveListener(CloseDeadEndPanel);
+            landscapeUI.closeDeadEndButton.onClick.AddListener(CloseDeadEndPanel);
+        }
+        if (portraitUI.closeDeadEndButton != null && portraitUI.closeDeadEndButton != landscapeUI.closeDeadEndButton)
+        {
+            portraitUI.closeDeadEndButton.onClick.RemoveListener(CloseDeadEndPanel);
+            portraitUI.closeDeadEndButton.onClick.AddListener(CloseDeadEndPanel);
+        }
+    }
     private void OnDisable()
     {
         AdManager.OnRewardEarned -= HandleRewardEarned;
+
+        // --- пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ---
+        if (landscapeUI.hintButton != null) landscapeUI.hintButton.onClick.RemoveListener(OnHintClicked);
+        if (portraitUI.hintButton != null) portraitUI.hintButton.onClick.RemoveListener(OnHintClicked);
+
+        if (landscapeUI.closeDeadEndButton != null) landscapeUI.closeDeadEndButton.onClick.RemoveListener(CloseDeadEndPanel);
+        if (portraitUI.closeDeadEndButton != null) portraitUI.closeDeadEndButton.onClick.RemoveListener(CloseDeadEndPanel);
+    }
+    // --- пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ---
+    public void OnHintClicked()
+    {
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+        if (GameSettings.IsTutorialMode) return;
+
+        PlayClickSound();
+
+        bool isPremium = false;
+        if (StatisticsManager.Instance != null) isPremium = StatisticsManager.Instance.IsUserPremium;
+
+        if (!isPremium && remainingHints <= 0)
+        {
+            if (AdManager.Instance != null) AdManager.Instance.ShowRewarded("hint_reward");
+            return;
+        }
+
+        if (activeGameMode == null || !activeGameMode.IsInputAllowed) return;
+
+        activeGameMode.RequestHint(
+            onWaitStart: () => {
+                GameUIGroup ui = ActiveUI;
+                if (ui.hintLoadingPanel != null)
+                {
+                    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+                    ui.hintLoadingPanel.SetActive(true);
+                    StartLoadingAnimation(ui.hintLoadingText);
+                }
+            },
+            onHintResult: (moveMade) => {
+                GameUIGroup ui = ActiveUI;
+                if (ui.hintLoadingPanel != null)
+                {
+                    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+                    ui.hintLoadingPanel.SetActive(false);
+                    StopLoadingAnimation();
+                }
+
+                if (moveMade)
+                {
+                    if (!isPremium)
+                    {
+                        remainingHints--;
+                        UpdateHintVisuals();
+                    }
+                }
+                else
+                {
+                    ShowDeadEndPanel();
+                }
+            }
+        );
+    }
+    private Coroutine deadEndCoroutine;
+    private void ShowDeadEndPanel()
+    {
+        GameUIGroup ui = ActiveUI;
+        if (ui.deadEndPanel != null)
+        {
+            if (deadEndCoroutine != null) StopCoroutine(deadEndCoroutine);
+            deadEndCoroutine = StartCoroutine(AutoCloseDeadEndRoutine(ui.deadEndPanel));
+        }
     }
 
+    private IEnumerator AutoCloseDeadEndRoutine(GameObject panel)
+    {
+        TogglePanelAnimated(panel, true);
+
+        yield return new WaitForSeconds(1.0f); // пїЅпїЅпїЅпїЅ 1 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+
+        TogglePanelAnimated(panel, false);
+        deadEndCoroutine = null;
+    }
+
+    public void CloseDeadEndPanel()
+    {
+        PlayClickSound();
+        if (deadEndCoroutine != null) StopCoroutine(deadEndCoroutine);
+
+        if (ActiveUI.deadEndPanel != null)
+        {
+            TogglePanelAnimated(ActiveUI.deadEndPanel, false);
+        }
+    }
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+    private int remainingHints = 3;
     private void HandleRewardEarned(string rewardId)
     {
         if (rewardId == "undo_one") ExecuteUndoOne();
         else if (rewardId == "undo_all") ExecuteUndoAll();
+        else if (rewardId == "hint_reward")
+        {
+            AddRewardedHints(2);
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+            OnHintClicked();
+        }
+    }
+    private void AddRewardedHints(int amount)
+    {
+        remainingHints += amount;
+        UpdateHintVisuals();
     }
 
+    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+    public void ResetHints()
+    {
+        remainingHints = 3;
+        UpdateHintVisuals();
+    }
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ / пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ / пїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+    public void UpdateHintVisuals()
+    {
+        bool isPremium = false;
+        if (StatisticsManager.Instance != null) isPremium = StatisticsManager.Instance.IsUserPremium;
+
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+        bool isPortrait = GameLayoutManager.Instance != null && GameLayoutManager.Instance.IsPortrait;
+
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+        UpdateHintVisualsForGroup(landscapeUI, isPremium, !isPortrait);
+        UpdateHintVisualsForGroup(portraitUI, isPremium, isPortrait);
+    }
+
+    private void UpdateHintVisualsForGroup(GameUIGroup ui, bool isPremium, bool isCurrentOrientation)
+    {
+        // пїЅпїЅпїЅпїЅпїЅпїЅ "if (ui.hintButton == null) return;", пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅпїЅпїЅ 
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ!
+
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ), пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+        if (ui.hintButton != null)
+        {
+            ui.hintButton.interactable = !GameSettings.IsTutorialMode;
+        }
+
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+        if (!isCurrentOrientation)
+        {
+            if (ui.hintCountText != null) ui.hintCountText.gameObject.SetActive(false);
+            if (ui.hintAdIcon != null) ui.hintAdIcon.SetActive(false);
+            return;
+        }
+
+        if (isPremium)
+        {
+            // пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+            if (ui.hintCountText != null) ui.hintCountText.gameObject.SetActive(false);
+            if (ui.hintAdIcon != null) ui.hintAdIcon.SetActive(false);
+        }
+        else
+        {
+            if (remainingHints > 0)
+            {
+                if (ui.hintCountText != null)
+                {
+                    ui.hintCountText.gameObject.SetActive(true);
+                    ui.hintCountText.text = remainingHints.ToString();
+                }
+                if (ui.hintAdIcon != null) ui.hintAdIcon.SetActive(false);
+            }
+            else
+            {
+                if (ui.hintCountText != null) ui.hintCountText.gameObject.SetActive(false);
+                if (ui.hintAdIcon != null) ui.hintAdIcon.SetActive(true);
+            }
+        }
+    }
+    private Coroutine loadingTextCoroutine;
+
+    private void StartLoadingAnimation(TMP_Text textComponent)
+    {
+        if (textComponent == null) return;
+        if (loadingTextCoroutine != null) StopCoroutine(loadingTextCoroutine);
+        loadingTextCoroutine = StartCoroutine(LoadingTextRoutine(textComponent));
+    }
+
+    private void StopLoadingAnimation()
+    {
+        if (loadingTextCoroutine != null)
+        {
+            StopCoroutine(loadingTextCoroutine);
+            loadingTextCoroutine = null;
+        }
+    }
+
+    private IEnumerator LoadingTextRoutine(TMP_Text textComponent)
+    {
+        // 1. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ) пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+        string baseText = "пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ";
+        if (LocalizationManager.instance != null && LocalizationManager.instance.IsReady())
+        {
+            string loc = LocalizationManager.instance.GetLocalizedValue("HintLoadingText");
+            if (!string.IsNullOrEmpty(loc)) baseText = loc;
+        }
+
+        // 2. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅ 0 пїЅпїЅ 3)
+        int dotCount = 0;
+        while (true)
+        {
+            textComponent.text = baseText + new string('.', dotCount);
+
+            dotCount++;
+            if (dotCount > 3) dotCount = 0;
+
+            // пїЅпїЅпїЅпїЅ 0.4 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+            yield return new WaitForSecondsRealtime(0.4f);
+        }
+    }
     private void RegisterAndHidePanel(GameObject panel)
     {
         if (panel == null) return;
@@ -308,7 +550,7 @@ public class GameUIController : MonoBehaviour
             TogglePanelAnimated(ui.defeatPanel, true);
             if (activeGameMode != null) activeGameMode.IsInputAllowed = false;
 
-            // --- ИСПРАВЛЕНИЕ: Вырываем карту из рук игрока и возвращаем на место ---
+            // --- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ ---
             var dragMgr = FindObjectOfType<DragManager>();
             if (dragMgr != null) dragMgr.ForceSnapBackLastDrop();
             // -----------------------------------------------------------------------
@@ -413,7 +655,7 @@ public class GameUIController : MonoBehaviour
     public void OnSettingsMonteCarloClicked(int mode) { PlayClickSound(); GameSettings.MonteCarlo4Ways = (mode == 1); UpdateSettingsVisuals(); }
     public void OnSettingsMontanaClicked(int mode) { PlayClickSound(); GameSettings.MontanaHard = (mode == 1); UpdateSettingsVisuals(); }
 
-    // --- ОБРАБОТЧИКИ КНОПОК ДЛЯ НАСТРОЕК НОВОЙ ИГРЫ ---
+    // --- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ ---
     public void OnNewGameSettingsSuitClicked(int count) { PlayClickSound(); GameSettings.SpiderSuitCount = count; ValidateSpiderConstraints(count, landscapeUI.newGameSettingsDiffButtons); ValidateSpiderConstraints(count, portraitUI.newGameSettingsDiffButtons); UpdateNewGameSettingsVisuals(); }
     public void OnNewGameSettingsRoundsClicked(int index) { PlayClickSound(); GameSettings.RoundsCount = index + 1; UpdateNewGameSettingsVisuals(); }
     public void OnNewGameSettingsYukonClicked(int mode) { PlayClickSound(); GameSettings.YukonRussian = (mode == 1); UpdateNewGameSettingsVisuals(); }
@@ -453,7 +695,7 @@ public class GameUIController : MonoBehaviour
         if (tmp) tmp.color = isSelected ? textSelectedColor : textNormalColor;
     }
 
-    // --- КНОПКИ В ПАНЕЛИ ПОБЕДЫ ---
+    // --- пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ ---
 
     private void SetupControlPanel(GameUIGroup ui)
     {
@@ -590,10 +832,10 @@ public class GameUIController : MonoBehaviour
 
     private IEnumerator ExitMenuSequenceWithAnimation(GameUIGroup ui)
     {
-        // Скрываем панель настроек
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         if (ui.settingsPanel != null && ui.settingsPanel.activeSelf) TogglePanelAnimated(ui.settingsPanel, false);
 
-        // ---> ДОБАВЛЕНО: Скрываем обе панели статистики <---
+        // ---> пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ <---
         if (ui.basicStatisticsPanel != null && ui.basicStatisticsPanel.activeSelf) TogglePanelAnimated(ui.basicStatisticsPanel, false);
         if (ui.premiumStatisticsPanel != null && ui.premiumStatisticsPanel.activeSelf) TogglePanelAnimated(ui.premiumStatisticsPanel, false);
 
@@ -637,11 +879,31 @@ public class GameUIController : MonoBehaviour
         {
             if (activeGameMode != null) activeGameMode.IsInputAllowed = false;
             AbortActiveGameAnimations();
-            exitAnimator.PlayExitSequence(() => SceneManager.LoadScene("MenuScene"));
+            exitAnimator.PlayExitSequence(() => LoadSceneAddressable("MenuScene"));
         }
         else
         {
-            SceneManager.LoadScene("MenuScene");
+            LoadSceneAddressable("MenuScene");
+        }
+    }
+
+    // MenuScene Рё СЃС†РµРЅС‹ РїР°СЃСЊСЏРЅСЃРѕРІ С‚РµРїРµСЂСЊ РіСЂСѓР·СЏС‚СЃСЏ С‚РѕР»СЊРєРѕ С‡РµСЂРµР· Addressables (СѓР±СЂР°РЅС‹ РёР·
+    // Build Settings), РїРѕСЌС‚РѕРјСѓ РєР»Р°СЃСЃРёС‡РµСЃРєРёР№ SceneManager.LoadScene(РёРјСЏ) РІ Р±РёР»РґРµ РЅРµ РЅР°С…РѕРґРёС‚ РёС…
+    // РїРѕ РёРЅРґРµРєСЃСѓ Рё РїР°РґР°РµС‚ СЃ "Scene ... has not been added to the build settings" вЂ” РІ Editor
+    // СЌС‚Рѕ СЂР°Р±РѕС‚Р°РµС‚, РїРѕС‚РѕРјСѓ С‡С‚Рѕ С‚Р°Рј SceneManager РјРѕР¶РµС‚ РґРѕСЃС‚Р°С‚СЊ СЃС†РµРЅСѓ РїСЂСЏРјРѕ РёР· AssetDatabase.
+    private void LoadSceneAddressable(string sceneName)
+    {
+        StartCoroutine(LoadSceneAddressableRoutine(sceneName));
+    }
+
+    private IEnumerator LoadSceneAddressableRoutine(string sceneName)
+    {
+        var handle = Addressables.LoadSceneAsync(sceneName, LoadSceneMode.Single);
+        yield return handle;
+
+        if (handle.Status != AsyncOperationStatus.Succeeded)
+        {
+            Debug.LogError($"[GameUIController] РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃС†РµРЅСѓ '{sceneName}' С‡РµСЂРµР· Addressables. РџСЂРѕРІРµСЂСЊ, С‡С‚Рѕ Сѓ РЅРµС‘ РЅР°Р·РЅР°С‡РµРЅ Р°РґСЂРµСЃ '{sceneName}' Рё С‡С‚Рѕ РѕРЅР° РµСЃС‚СЊ РІ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµР№ РіСЂСѓРїРїРµ.");
         }
     }
 
@@ -718,7 +980,7 @@ public class GameUIController : MonoBehaviour
         if (ui.settingsPanel != null && ui.settingsPanel.activeSelf) TogglePanelAnimated(ui.settingsPanel, false);
         if (ui.newGameSettingsPanel != null && ui.newGameSettingsPanel.activeSelf) TogglePanelAnimated(ui.newGameSettingsPanel, false);
 
-        // ---> ДОБАВЛЕНО: Скрываем обе панели статистики <---
+        // ---> пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ <---
         if (ui.basicStatisticsPanel != null && ui.basicStatisticsPanel.activeSelf) TogglePanelAnimated(ui.basicStatisticsPanel, false);
         if (ui.premiumStatisticsPanel != null && ui.premiumStatisticsPanel.activeSelf) TogglePanelAnimated(ui.premiumStatisticsPanel, false);
 
@@ -744,7 +1006,7 @@ public class GameUIController : MonoBehaviour
             while (!cardsFallen) yield return null;
             activeGameMode.RestartGame();
         }
-        else SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        else LoadSceneAddressable(SceneManager.GetActiveScene().name);
     }
     public void OnNewGameStartClicked()
     {
@@ -912,7 +1174,7 @@ public class GameUIController : MonoBehaviour
             string diffKey = GameSettings.IsTutorialMode ? "tutorial" : $"Diff{GameSettings.CurrentDifficulty}";
             if (LocalizationManager.instance != null && LocalizationManager.instance.IsReady())
                 ui.winDifficultyText.text = LocalizationManager.instance.GetLocalizedValue(diffKey);
-            else ui.winDifficultyText.text = GameSettings.IsTutorialMode ? "Обучение" : GameSettings.CurrentDifficulty.ToString();
+            else ui.winDifficultyText.text = GameSettings.IsTutorialMode ? "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ" : GameSettings.CurrentDifficulty.ToString();
         }
 
         bool isNewScoreRecord = false, isNewMovesRecord = false, isNewTimeRecord = false;
@@ -966,7 +1228,7 @@ public class GameUIController : MonoBehaviour
     private string GetRecordText(string baseValue, bool isRecord)
     {
         if (!isRecord) return baseValue;
-        string recordWord = "Новый рекорд!";
+        string recordWord = "пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ!";
         if (LocalizationManager.instance != null && LocalizationManager.instance.IsReady())
         {
             string loc = LocalizationManager.instance.GetLocalizedValue("NewRecord");
@@ -1218,7 +1480,7 @@ public class GameUIController : MonoBehaviour
         source.volume = baseVolume;
         source.pitch = basePitch;
     }
-    // [NEW] Метод, который перекидывает видимость всех панелей при повороте
+    // [NEW] пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     private void HandleOrientationChange(bool isPortrait)
     {
         GameUIGroup oldUI = isPortrait ? landscapeUI : portraitUI;
@@ -1233,12 +1495,12 @@ public class GameUIController : MonoBehaviour
         SwapPanel(oldUI.exitConfirmationPanel, newUI.exitConfirmationPanel);
         SwapPanel(oldUI.newGameConfirmationPanel, newUI.newGameConfirmationPanel);
 
-        // Синхронизируем карту победы, если она активна
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         if (oldUI.winCardRect != null && newUI.winCardRect != null)
         {
             bool cardActive = oldUI.winCardRect.gameObject.activeSelf;
 
-            // Выключаем эффект на старой карте перед её скрытием
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             var oldHover = oldUI.winCardRect.GetComponent<CardHoverEffect>();
             if (oldHover != null) oldHover.SetSelectedMode(false);
 
@@ -1249,14 +1511,18 @@ public class GameUIController : MonoBehaviour
                 newUI.winCardRect.gameObject.SetActive(true);
                 newUI.winCardRect.anchoredPosition = winCardDefaultPos;
 
-                // Включаем эффект левитации на новой карте
+                // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
                 var newHover = newUI.winCardRect.GetComponent<CardHoverEffect>();
                 if (newHover != null) newHover.SetSelectedMode(true);
             }
         }
+
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, 
+        // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ <-> пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+        UpdateHintVisuals();
     }
 
-    // [NEW] Вспомогательный метод: выключает старую панель и мгновенно ставит новую в центр
+    // [NEW] пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ
     private void SwapPanel(GameObject oldPanel, GameObject newPanel)
     {
         if (oldPanel != null && oldPanel.activeSelf)
@@ -1318,11 +1584,26 @@ public class GameUIController : MonoBehaviour
 
         if (activeGameMode != null) activeGameMode.IsInputAllowed = true;
 
-        if (undoManager != null && undoManager.undoAllButton != null && undoManager.undoAllButton.interactable) undoManager.undoAllButton.onClick.Invoke();
+        if (undoManager != null && undoManager.undoAllButton != null)
+        {
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+            var holdTrigger = undoManager.undoAllButton.GetComponent<LongPressHoldTrigger>();
+            if (holdTrigger != null)
+            {
+                // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+                holdTrigger.onLongPress?.Invoke();
+            }
+            else
+            {
+                // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅ)
+                undoManager.undoAllButton.onClick?.Invoke();
+            }
+        }
         else if (activeGameMode != null)
         {
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ UndoManager (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ)
             var type = activeGameMode.GetType();
-            var method = type.GetMethod("OnUndoAllAction");
+            var method = type.GetMethod("OnUndoAllAction") ?? type.GetMethod("RestartCurrentDeal");
             if (method != null) method.Invoke(activeGameMode, null);
         }
     }

@@ -5,21 +5,28 @@ using System.Collections;
 
 public class PyramidHelpPanelController : MonoBehaviour
 {
-    [Header("UI References")]
+    [Header("UI References (Landscape / Primary)")]
     public GameObject helpPanel;
     public Button toggleButton;
     public Button closeButton;
     public Button backgroundCloseButton;
     public TextMeshProUGUI pairsText;
 
+    [Header("UI References (Portrait)")]
+    public GameObject portraitHelpPanel;
+    public Button portraitToggleButton;
+    public Button portraitCloseButton;
+    public Button portraitBackgroundCloseButton;
+    public TextMeshProUGUI portraitPairsText;
+
     [Header("Animation Settings")]
     public float fadeDuration = 0.2f;
 
-    private CanvasGroup panelCanvasGroup;
+    private CanvasGroup landscapeCG;
+    private CanvasGroup portraitCG;
     private bool isPanelShowing = false;
     private Coroutine fadeCoroutine;
-    
-    // Ссылка на контроллер UI
+
     private GameUIController gameUI;
 
     private readonly string englishText =
@@ -42,31 +49,51 @@ public class PyramidHelpPanelController : MonoBehaviour
 
     private void Awake()
     {
-        if (helpPanel != null) panelCanvasGroup = helpPanel.GetComponent<CanvasGroup>();
-        
+        if (helpPanel != null)
+            landscapeCG = helpPanel.GetComponent<CanvasGroup>() ?? helpPanel.AddComponent<CanvasGroup>();
+
+        if (portraitHelpPanel != null)
+            portraitCG = portraitHelpPanel.GetComponent<CanvasGroup>() ?? portraitHelpPanel.AddComponent<CanvasGroup>();
+
         if (toggleButton != null) toggleButton.onClick.AddListener(TogglePanel);
         if (closeButton != null) closeButton.onClick.AddListener(HidePanel);
         if (backgroundCloseButton != null) backgroundCloseButton.onClick.AddListener(HidePanel);
 
+        if (portraitToggleButton != null) portraitToggleButton.onClick.AddListener(TogglePanel);
+        if (portraitCloseButton != null) portraitCloseButton.onClick.AddListener(HidePanel);
+        if (portraitBackgroundCloseButton != null) portraitBackgroundCloseButton.onClick.AddListener(HidePanel);
+
         if (helpPanel != null) helpPanel.SetActive(false);
+        if (portraitHelpPanel != null) portraitHelpPanel.SetActive(false);
     }
 
     private void Update()
     {
-        // Проверяем каждую секунду, не открыл ли игрок поверх какое-то меню
         if (isPanelShowing)
         {
             if (IsAnySystemMenuOpen())
             {
-                InstantHide(); // Мгновенно закрываем подсказку, чтобы не мешала
+                InstantHide();
+                return;
+            }
+
+            // --- СИНХРОНИЗАЦИЯ ПРИ ПОВОРОТЕ ЭКРАНА ---
+            bool isPortrait = Screen.height > Screen.width;
+            if (isPortrait)
+            {
+                if (helpPanel != null && helpPanel.activeSelf) helpPanel.SetActive(false);
+                if (portraitHelpPanel != null && !portraitHelpPanel.activeSelf) portraitHelpPanel.SetActive(true);
+            }
+            else
+            {
+                if (portraitHelpPanel != null && portraitHelpPanel.activeSelf) portraitHelpPanel.SetActive(false);
+                if (helpPanel != null && !helpPanel.activeSelf) helpPanel.SetActive(true);
             }
         }
     }
 
-    // Ищет контроллер и проверяет состояние ВСЕХ глобальных панелей
     private bool IsAnySystemMenuOpen()
     {
-        // Динамический поиск гарантирует, что ссылка не потеряется при старте
         if (gameUI == null) gameUI = FindObjectOfType<GameUIController>();
         if (gameUI == null) return false;
 
@@ -85,74 +112,97 @@ public class PyramidHelpPanelController : MonoBehaviour
 
     public void ShowPanel()
     {
-        if (helpPanel == null || isPanelShowing) return;
-        
-        // Блокируем кнопку открытия, если поверх уже висит меню паузы/выхода
+        if (isPanelShowing) return;
         if (IsAnySystemMenuOpen()) return;
 
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
 
         UpdateTextLocalization();
         isPanelShowing = true;
-        helpPanel.SetActive(true);
+
+        // --- ОТКРЫВАЕМ ТОЛЬКО НУЖНУЮ ПАНЕЛЬ ---
+        bool isPortrait = Screen.height > Screen.width;
+        if (isPortrait)
+        {
+            if (portraitHelpPanel != null) portraitHelpPanel.SetActive(true);
+            if (helpPanel != null) helpPanel.SetActive(false);
+        }
+        else
+        {
+            if (helpPanel != null) helpPanel.SetActive(true);
+            if (portraitHelpPanel != null) portraitHelpPanel.SetActive(false);
+        }
 
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
         fadeCoroutine = StartCoroutine(FadeRoutine(1f));
     }
 
-    // Плавное закрытие (когда игрок сам закрывает подсказку кнопкой)
     public void HidePanel()
     {
-        if (helpPanel == null || !isPanelShowing) return;
+        if (!isPanelShowing) return;
 
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("UI_Click");
 
         isPanelShowing = false;
 
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
-        fadeCoroutine = StartCoroutine(FadeRoutine(0f, () => helpPanel.SetActive(false)));
+        fadeCoroutine = StartCoroutine(FadeRoutine(0f, () =>
+        {
+            if (helpPanel != null) helpPanel.SetActive(false);
+            if (portraitHelpPanel != null) portraitHelpPanel.SetActive(false);
+        }));
     }
 
-    // Резкое закрытие (срабатывает, когда игрок нажимает на глобальные кнопки интерфейса)
     private void InstantHide()
     {
-        if (helpPanel == null || !isPanelShowing) return;
-        
+        if (!isPanelShowing) return;
+
         isPanelShowing = false;
         if (fadeCoroutine != null) StopCoroutine(fadeCoroutine);
-        
-        if (panelCanvasGroup != null) panelCanvasGroup.alpha = 0f;
-        helpPanel.SetActive(false);
+
+        if (landscapeCG != null) landscapeCG.alpha = 0f;
+        if (portraitCG != null) portraitCG.alpha = 0f;
+
+        if (helpPanel != null) helpPanel.SetActive(false);
+        if (portraitHelpPanel != null) portraitHelpPanel.SetActive(false);
     }
 
     private void UpdateTextLocalization()
     {
-        if (pairsText != null)
-        {
-            bool isRussian = PlayerPrefs.GetInt("UseRussianSymbols", 0) == 1;
-            pairsText.text = isRussian ? russianText : englishText;
-        }
+        bool isRussian = PlayerPrefs.GetInt("UseRussianSymbols", 0) == 1;
+        string textToSet = isRussian ? russianText : englishText;
+
+        if (pairsText != null) pairsText.text = textToSet;
+        if (portraitPairsText != null) portraitPairsText.text = textToSet;
     }
 
     private IEnumerator FadeRoutine(float targetAlpha, System.Action onComplete = null)
     {
-        if (panelCanvasGroup == null)
-        {
-            onComplete?.Invoke();
-            yield break;
-        }
+        float startAlpha = 0f;
+        bool isPortrait = Screen.height > Screen.width;
 
-        float startAlpha = panelCanvasGroup.alpha;
+        if (isPortrait && portraitCG != null) startAlpha = portraitCG.alpha;
+        else if (!isPortrait && landscapeCG != null) startAlpha = landscapeCG.alpha;
+        else if (landscapeCG != null) startAlpha = landscapeCG.alpha;
+        else if (portraitCG != null) startAlpha = portraitCG.alpha;
+
         float elapsed = 0f;
 
         while (elapsed < fadeDuration)
         {
-            elapsed += Time.unscaledDeltaTime; // Работает даже при Time.timeScale = 0
-            panelCanvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, elapsed / fadeDuration);
+            elapsed += Time.unscaledDeltaTime;
+            float currentAlpha = Mathf.Lerp(startAlpha, targetAlpha, elapsed / fadeDuration);
+
+            // Синхронно обновляем прозрачность для обеих, чтобы не было скачков при повороте
+            if (landscapeCG != null) landscapeCG.alpha = currentAlpha;
+            if (portraitCG != null) portraitCG.alpha = currentAlpha;
+
             yield return null;
         }
 
-        panelCanvasGroup.alpha = targetAlpha;
+        if (landscapeCG != null) landscapeCG.alpha = targetAlpha;
+        if (portraitCG != null) portraitCG.alpha = targetAlpha;
+
         onComplete?.Invoke();
     }
 }

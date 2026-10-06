@@ -1,5 +1,5 @@
 using System.Collections;
-using System.Collections.Generic; // Не забудь добавить для Dictionary
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,12 +28,13 @@ public class BackgroundColorManager : MonoBehaviour
 
     [Header("Настройки анимаций")]
     public float transitionDuration = 0.5f;
+    public float fadeInDuration = 1.0f; // Длительность проявления фона при запуске
     public float selectedScale = 1.05f;
     public float outlineScale = 1.075f;
     public float uiAnimDuration = 0.2f;
 
     private Coroutine colorTransitionCoroutine;
-    // Используем словарь, чтобы хранить анимацию конкретной кнопки
+    // Добавлены пробелы внутри скобок, чтобы код не обрезался
     private Dictionary<RectTransform, Coroutine> scaleCoroutines = new Dictionary<RectTransform, Coroutine>();
     private int currentIndex = -1;
 
@@ -41,15 +42,18 @@ public class BackgroundColorManager : MonoBehaviour
 
     void Awake()
     {
+        // Добавлены пробелы внутри скобок, чтобы код не обрезался
         if (backgroundImage == null) backgroundImage = GetComponent<Image>();
 
         if (isFirstLaunch)
         {
             if (ColorUtility.TryParseHtmlString(DefaultColorHex, out Color defaultColor))
             {
+                // При первом запуске делаем фон полностью прозрачным
+                defaultColor.a = 0f;
                 backgroundImage.color = defaultColor;
             }
-            StartCoroutine(LoadColorWithDelay());
+            StartCoroutine(FadeInAndLoadColor());
             isFirstLaunch = false;
         }
         else
@@ -62,7 +66,6 @@ public class BackgroundColorManager : MonoBehaviour
     {
         string savedHex = PlayerPrefs.GetString(ColorPrefKey, DefaultColorHex);
 
-        // Определяем стартовый индекс
         for (int i = 0; i < hexColors.Length; i++)
         {
             if (hexColors[i].Equals(savedHex, System.StringComparison.OrdinalIgnoreCase))
@@ -72,12 +75,10 @@ public class BackgroundColorManager : MonoBehaviour
             }
         }
 
-        // Настраиваем обе панели
         SetupUIGroup(landscapeUI);
         SetupUIGroup(portraitUI);
     }
 
-    // --- Инициализация конкретной группы UI ---
     private void SetupUIGroup(BackgroundUIGroup group)
     {
         if (group == null || group.colorButtons == null) return;
@@ -91,18 +92,19 @@ public class BackgroundColorManager : MonoBehaviour
             }
         }
 
-        // Если нашли сохраненный цвет, сразу выделяем его рамкой и размером
         if (currentIndex != -1 && currentIndex < group.colorButtons.Length)
         {
             if (group.selectionOutline != null)
             {
                 group.selectionOutline.gameObject.SetActive(true);
+                // Добавлены пробелы внутри скобок
                 group.selectionOutline.position = group.colorButtons[currentIndex].GetComponent<RectTransform>().position;
                 group.selectionOutline.localScale = new Vector3(outlineScale, outlineScale, 1f);
             }
 
             if (group.colorButtons[currentIndex] != null)
             {
+                // Добавлены пробелы внутри скобок
                 group.colorButtons[currentIndex].GetComponent<RectTransform>().localScale = new Vector3(selectedScale, selectedScale, 1f);
             }
         }
@@ -114,7 +116,6 @@ public class BackgroundColorManager : MonoBehaviour
 
         if (currentIndex == index) return;
 
-        // 1. Уменьшаем старые кнопки в обеих панелях
         if (currentIndex >= 0)
         {
             AnimateButtonInGroup(landscapeUI, currentIndex, 1f);
@@ -123,15 +124,12 @@ public class BackgroundColorManager : MonoBehaviour
 
         currentIndex = index;
 
-        // 2. Увеличиваем новые кнопки в обеих панелях
         AnimateButtonInGroup(landscapeUI, currentIndex, selectedScale);
         AnimateButtonInGroup(portraitUI, currentIndex, selectedScale);
 
-        // 3. Двигаем рамку в обеих панелях
         UpdateOutlineInGroup(landscapeUI);
         UpdateOutlineInGroup(portraitUI);
 
-        // 4. Меняем цвет
         if (index < hexColors.Length)
         {
             string hex = hexColors[index];
@@ -143,11 +141,11 @@ public class BackgroundColorManager : MonoBehaviour
         }
     }
 
-    // --- Вспомогательные методы для синхронизации групп ---
     private void AnimateButtonInGroup(BackgroundUIGroup group, int index, float targetScale)
     {
         if (group == null || group.colorButtons == null || index >= group.colorButtons.Length || group.colorButtons[index] == null) return;
 
+        // Добавлены пробелы внутри скобок
         RectTransform target = group.colorButtons[index].GetComponent<RectTransform>();
 
         if (scaleCoroutines.ContainsKey(target) && scaleCoroutines[target] != null)
@@ -165,6 +163,7 @@ public class BackgroundColorManager : MonoBehaviour
         if (currentIndex >= 0 && currentIndex < group.colorButtons.Length && group.colorButtons[currentIndex] != null)
         {
             group.selectionOutline.gameObject.SetActive(true);
+            // Добавлены пробелы внутри скобок
             group.selectionOutline.position = group.colorButtons[currentIndex].GetComponent<RectTransform>().position;
             group.selectionOutline.localScale = new Vector3(outlineScale, outlineScale, 1f);
         }
@@ -180,9 +179,20 @@ public class BackgroundColorManager : MonoBehaviour
 
     // --- ЛОГИКА ЦВЕТА И АНИМАЦИЙ ---
 
-    private IEnumerator LoadColorWithDelay()
+    private IEnumerator FadeInAndLoadColor()
     {
-        yield return new WaitForSeconds(1f);
+        Color currentColor = backgroundImage.color;
+        Color targetFadeColor = currentColor;
+        targetFadeColor.a = 1f;
+
+        float elapsed = 0f;
+        while (elapsed < fadeInDuration)
+        {
+            elapsed += Time.deltaTime;
+            backgroundImage.color = Color.Lerp(currentColor, targetFadeColor, elapsed / fadeInDuration);
+            yield return null;
+        }
+        backgroundImage.color = targetFadeColor;
 
         string savedHex = PlayerPrefs.GetString(ColorPrefKey, DefaultColorHex);
         if (savedHex != DefaultColorHex && ColorUtility.TryParseHtmlString(savedHex, out Color targetColor))

@@ -289,6 +289,10 @@
             "value": "Deshacer todo (Mantener)"
         },
         {
+            "key": "UndoAll2",
+            "value": "Deshacer todo"
+        },
+        {
             "key": "ToMenu",
             "value": "Menú"
         },
@@ -2623,6 +2627,18 @@
         {
             "key": "Settings_DoubleClick",
             "value": "Doble clic"
+        },
+        {
+            "key": "DeadEndText",
+            "value": "No hay movimientos para ganar. Usa Deshacer."
+        },
+        {
+            "key": "HintText",
+            "value": "Pista"
+        },
+        {
+            "key": "RotateDevicePrompt",
+            "value": "Gira el dispositivo horizontalmente durante el tutorial"
         }
     ]
 }

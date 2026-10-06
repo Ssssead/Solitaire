@@ -21,6 +21,16 @@ public class CardAnimationController : MonoBehaviour
         [HideInInspector] public Button buttonComp;
     }
 
+    // Состояние одной карты на время перехода ориентации.
+    private struct CardTransitionState
+    {
+        public Vector2 startAnchored;
+        public Vector2 startSize;
+        public Vector2 targetSize;
+        public Vector3 startScale;
+        public bool needSizeAnim;
+    }
+
     [Header("Configuration")]
     public List<CardEntry> allCards;
 
@@ -51,9 +61,18 @@ public class CardAnimationController : MonoBehaviour
     private GameType? selectedGame = null;
     private Coroutine orientationRoutine;
 
+    // Переиспользуемые буферы вместо new List/Dictionary на каждый клик.
+    // activeAnimsBuffer общий для SelectCardRoutine и ResetGridRoutine — они никогда не выполняются
+    // одновременно, так как оба вызывают StopAllCoroutines() перед стартом.
+    private readonly List<Coroutine> activeAnimsBuffer = new List<Coroutine>();
+    private readonly Dictionary<CardEntry, CardTransitionState> transitionStates = new Dictionary<CardEntry, CardTransitionState>();
+
     private void Awake()
     {
         isPortrait = Screen.width < Screen.height;
+
+        // Вызов Canvas.ForceUpdateCanvases() здесь можно удалить, 
+        // так как в Awake он бесполезен для неинициализированных LayoutGroup.
 
         foreach (var card in allCards)
         {
@@ -106,23 +125,43 @@ public class CardAnimationController : MonoBehaviour
                 if (startingTarget != null)
                 {
                     card.rect.SetParent(startingTarget, true);
+                    // ВАЖНО: Временно привязываем карточку к краям родителя (Stretch).
+                    // Это позволит CanvasScaler и встроенным LayoutGroup правильно рассчитать её размер на 1-м кадре.
                     SetAsStretchChild(card.rect);
                 }
 
-                card.rect.localScale = isPortrait ? portraitGridScale : originalScale;
                 card.rect.localRotation = originalRot;
             }
         }
     }
-
-    private void Start()
+    private void SetAsStretchChild(RectTransform rt)
     {
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+    }
+
+    private IEnumerator Start()
+    {
+        // Ждем один кадр, чтобы Unity завершил все просчеты интерфейса
+        yield return null;
+        Canvas.ForceUpdateCanvases();
+
         foreach (var card in allCards)
         {
             if (card.rect != null)
             {
                 card.hoverEffect = card.rect.GetComponent<CardHoverEffect>();
                 card.buttonComp = card.rect.GetComponent<Button>();
+
+
+                // МЫ УДАЛИЛИ ОТСЮДА ВЫЗОВ SetAsStretchChild(card.rect);
+                // Карты уже привязаны к слотам в Awake(), а MenuIntroController
+                // уже спрятал их за экран. Если дергать якоря здесь, анимация сломается.
+
+                // Применяем масштаб
+                card.rect.localScale = isPortrait ? portraitGridScale : card.initialScale;
             }
         }
     }
@@ -158,51 +197,64 @@ public class CardAnimationController : MonoBehaviour
         }
     }
 
+    // Переводит мировую позицию произвольного RectTransform в anchoredPosition ТЕКУЩЕГО родителя карты,
+    // не становясь при этом его ребёнком. Используется только для вычисления цели анимации —
+    // сам родитель карты (card.rect.parent) при этом не меняется.
+    private Vector2 WorldPositionToLocalAnchored(RectTransform card, Vector3 worldPos)
+    {
+        Vector3 savedPos = card.position;
+        card.position = worldPos;
+        Vector2 result = card.anchoredPosition;
+        card.position = savedPos;
+        return result;
+    }
+
     private void HandleOrientationChange()
     {
         if (orientationRoutine != null) StopCoroutine(orientationRoutine);
         orientationRoutine = StartCoroutine(TransitionOrientationRoutine());
     }
 
+    // Смена ориентации остаётся единственным местом, где карта реально меняет родителя —
+    // это редкое событие (поворот экрана), а не горячий путь клика, поэтому трогать не стали.
     private IEnumerator TransitionOrientationRoutine()
     {
-        // 1. ЖЕЛЕЗОБЕТОННАЯ БЛОКИРОВКА: Сбрасываем все ховеры ДО ТОГО, как считать координаты!
         SetAllHovers(false);
-
-        // 2. Ждем 1 кадр и обновляем Canvas (чтобы карточки физически вернулись на место)
         yield return null;
         Canvas.ForceUpdateCanvases();
-
         float elapsed = 0f;
-
-        Dictionary<CardEntry, Vector3> startPositions = new Dictionary<CardEntry, Vector3>();
-        Dictionary<CardEntry, Vector2> startSizes = new Dictionary<CardEntry, Vector2>();
-        Dictionary<CardEntry, Vector3> startScales = new Dictionary<CardEntry, Vector3>();
-        Dictionary<CardEntry, RectTransform> targets = new Dictionary<CardEntry, RectTransform>();
-
+        transitionStates.Clear();
         int unselectedSlotIndex = 0;
 
         foreach (var card in allCards)
         {
             RectTransform targetParent = GetTargetParentForCard(card, ref unselectedSlotIndex);
-            targets[card] = targetParent;
+            if (targetParent == null) continue;
 
-            if (targetParent != null)
+            Vector3 startWorldPos = card.rect.position;
+            card.rect.SetParent(targetParent, false);
+
+            // ИСПОЛЬЗУЕМ SetAsStretchChild ВМЕСТО SetAsFixedCenterAnchor
+            SetAsStretchChild(card.rect);
+
+            card.rect.position = startWorldPos;
+            Vector2 startAnchored = card.rect.anchoredPosition;
+            Vector2 startSize = card.rect.sizeDelta;
+
+            // Целевой размер теперь всегда равен размеру родителя (0, 0), так как карточка растянута (offset)
+            Vector2 targetSize = Vector2.zero;
+
+            Vector3 startScale = card.rect.localScale;
+
+            transitionStates[card] = new CardTransitionState
             {
-                // Запоминаем мировую позицию ДО смены родителя (она теперь 100% без искажений от мышки)
-                startPositions[card] = card.rect.position;
-
-                card.rect.SetParent(targetParent, true);
-
-                SetAsFixedCenterAnchor(card.rect, card.rect.rect.size);
-
-                // ЗАПОМИНАЕМ ЛОКАЛЬНЫЕ ДАННЫЕ ПОСЛЕ СМЕНЫ РОДИТЕЛЯ
-                startSizes[card] = card.rect.sizeDelta;
-                startScales[card] = card.rect.localScale;
-
-                // Жестко возвращаем мировую позицию
-                card.rect.position = startPositions[card];
-            }
+                startAnchored = startAnchored,
+                startSize = startSize,
+                targetSize = targetSize,
+                startScale = startScale,
+                // Анимация размера нужна, если текущий offsetDelta не равен нулю
+                needSizeAnim = (startSize - targetSize).sqrMagnitude > 0.01f
+            };
         }
 
         while (elapsed < animationDuration)
@@ -213,30 +265,30 @@ public class CardAnimationController : MonoBehaviour
 
             foreach (var card in allCards)
             {
-                RectTransform targetParent = targets[card];
-                if (targetParent != null)
+                if (!transitionStates.TryGetValue(card, out var state)) continue;
+                RectTransform rt = card.rect;
+
+                rt.anchoredPosition = Vector2.LerpUnclamped(state.startAnchored, Vector2.zero, curveT);
+
+                if (state.needSizeAnim)
                 {
-                    card.rect.position = Vector3.LerpUnclamped(startPositions[card], targetParent.position, curveT);
-
-                    Vector2 targetSize = (currentMode == MenuMode.Grid) ? targetParent.rect.size : GetHomeSize(card);
-                    card.rect.sizeDelta = Vector2.LerpUnclamped(startSizes[card], targetSize, curveT);
-
-                    Vector3 targetScale = GetTargetScaleForCard(card);
-                    card.rect.localScale = Vector3.LerpUnclamped(startScales[card], targetScale, curveT);
+                    // Анимируем sizeDelta (который теперь представляет offset) к нулю
+                    rt.sizeDelta = Vector2.LerpUnclamped(state.startSize, state.targetSize, curveT);
                 }
+
+                Vector3 targetScale = GetTargetScaleForCard(card);
+                rt.localScale = Vector3.LerpUnclamped(state.startScale, targetScale, curveT);
             }
             yield return null;
         }
 
         foreach (var card in allCards)
         {
-            if (currentMode == MenuMode.Grid) SetAsStretchChild(card.rect);
-            else SetAsFixedCenterAnchor(card.rect, GetHomeSize(card));
-
+            // В конце анимации гарантируем, что карточка идеально растянута по родителю
+            SetAsStretchChild(card.rect);
             RefreshCardVisuals(card.rect);
         }
 
-        // 3. ВОЗВРАЩАЕМ ХОВЕРЫ: Перелет закончен, можно снова водить мышкой
         SetAllHovers(true);
     }
 
@@ -280,7 +332,8 @@ public class CardAnimationController : MonoBehaviour
     private IEnumerator SelectCardRoutine(GameType selectedType)
     {
         int bottomSlotIndex = 0;
-        List<Coroutine> activeAnims = new List<Coroutine>();
+
+        activeAnimsBuffer.Clear();
         CardEntry selectedCardEntry = null;
 
         RectTransform currentPreview = isPortrait ? portraitPreviewAnchor : landscapePreviewAnchor;
@@ -296,8 +349,10 @@ public class CardAnimationController : MonoBehaviour
         {
             if (card.rect == null) continue;
 
-            Vector3 startPos = card.rect.position;
-            Vector2 startSize = card.rect.rect.size;
+            // Никакого SetParent и никакой смены якорей здесь больше нет: родитель карты
+            // не менялся с Awake (или с последнего поворота экрана), поэтому текущее
+            // anchoredPosition уже корректно в системе координат этого родителя.
+            Vector2 startAnchored = card.rect.anchoredPosition;
             Quaternion startRot = card.rect.localRotation;
             Vector3 startScale = card.rect.localScale;
 
@@ -325,18 +380,17 @@ public class CardAnimationController : MonoBehaviour
 
             if (targetSlot != null)
             {
-                card.rect.SetParent(targetSlot, true);
+                // Слот используется только как источник координат — читаем его мировую позицию
+                // и конвертируем в anchoredPosition текущего (неизменного) родителя карты.
+                Vector2 destAnchored = WorldPositionToLocalAnchored(card.rect, targetSlot.position);
 
-                SetAsFixedCenterAnchor(card.rect, startSize);
-                card.rect.position = startPos;
-
-                activeAnims.Add(StartCoroutine(AnimateToSlot(
-                    card, targetSlot, startPos, startScale, destScale, startRot, destRot, startSize
+                activeAnimsBuffer.Add(StartCoroutine(AnimateToSlot(
+                    card, startAnchored, destAnchored, startScale, destScale, startRot, destRot
                 )));
             }
         }
 
-        foreach (var c in activeAnims) yield return c;
+        foreach (var c in activeAnimsBuffer) yield return c;
         foreach (var card in allCards) RefreshCardVisuals(card.rect);
         SetAllHovers(true);
 
@@ -347,32 +401,30 @@ public class CardAnimationController : MonoBehaviour
         }
     }
 
-    private IEnumerator AnimateToSlot(CardEntry card, RectTransform destSlot, Vector3 startPos, Vector3 startScale, Vector3 destScale, Quaternion startRot, Quaternion destRot, Vector2 startSize)
+    private IEnumerator AnimateToSlot(CardEntry card, Vector2 startAnchored, Vector2 destAnchored, Vector3 startScale, Vector3 destScale, Quaternion startRot, Quaternion destRot)
     {
         float elapsed = 0f;
         RectTransform target = card.rect;
 
-        Vector2 correctSize = GetHomeSize(card);
-
+        // sizeDelta здесь больше не анимируется вообще: она равна GetHomeSize(card) с момента
+        // Awake и не меняется ни при выборе карты, ни при возврате в сетку — весь визуальный
+        // масштаб (превью крупнее, нижний ряд мельче) даёт только localScale.
         while (elapsed < animationDuration)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / animationDuration;
             float curveT = motionCurve.Evaluate(t);
 
-            target.position = Vector3.Lerp(startPos, destSlot.position, curveT);
+            target.anchoredPosition = Vector2.Lerp(startAnchored, destAnchored, curveT);
             target.localScale = Vector3.Lerp(startScale, destScale, curveT);
             target.localRotation = Quaternion.Lerp(startRot, destRot, curveT);
-
-            target.sizeDelta = Vector2.Lerp(startSize, correctSize, curveT);
 
             yield return null;
         }
 
-        target.position = destSlot.position;
+        target.anchoredPosition = destAnchored;
         target.localScale = destScale;
         target.localRotation = destRot;
-        target.sizeDelta = correctSize;
     }
 
     public void ResetGrid()
@@ -396,41 +448,40 @@ public class CardAnimationController : MonoBehaviour
 
     private IEnumerator ResetGridRoutine()
     {
-        List<Coroutine> activeAnims = new List<Coroutine>();
+        activeAnimsBuffer.Clear();
 
         foreach (var card in allCards)
         {
             if (card.rect != null)
             {
-                Vector3 startPos = card.rect.position;
+                Vector2 startAnchored = card.rect.anchoredPosition;
                 Vector3 startScale = card.rect.localScale;
                 Quaternion startRot = card.rect.localRotation;
-                Vector2 startSize = card.rect.rect.size;
 
                 RectTransform targetHome = isPortrait ? card.portraitHome : card.landscapeHome;
 
-                card.rect.SetParent(targetHome, true);
-                SetAsFixedCenterAnchor(card.rect, startSize);
-                card.rect.position = startPos;
+                Vector2 destAnchored = targetHome != null
+                    ? WorldPositionToLocalAnchored(card.rect, targetHome.position)
+                    : Vector2.zero;
 
                 float randomZ = Random.Range(-randomRotationRange, randomRotationRange);
                 Quaternion randomRot = Quaternion.Euler(0, 0, randomZ);
 
                 Vector3 destScale = isPortrait ? portraitGridScale : card.initialScale;
 
-                activeAnims.Add(StartCoroutine(AnimateHome(
-                    card, targetHome, startPos, startScale, destScale, startRot, randomRot, startSize
+                activeAnimsBuffer.Add(StartCoroutine(AnimateHome(
+                    card, startAnchored, destAnchored, startScale, destScale, startRot, randomRot
                 )));
             }
         }
 
-        foreach (var c in activeAnims) yield return c;
+        foreach (var c in activeAnimsBuffer) yield return c;
         foreach (var card in allCards) RefreshCardVisuals(card.rect);
         RefreshAllCards();
         SetAllHovers(true);
     }
 
-    private IEnumerator AnimateHome(CardEntry card, RectTransform destSlot, Vector3 startPos, Vector3 startScale, Vector3 destScale, Quaternion startRot, Quaternion destRot, Vector2 startSize)
+    private IEnumerator AnimateHome(CardEntry card, Vector2 startAnchored, Vector2 destAnchored, Vector3 startScale, Vector3 destScale, Quaternion startRot, Quaternion destRot)
     {
         float elapsed = 0f;
         RectTransform target = card.rect;
@@ -441,36 +492,21 @@ public class CardAnimationController : MonoBehaviour
             float t = elapsed / animationDuration;
             float curveT = motionCurve.Evaluate(t);
 
-            target.position = Vector3.Lerp(startPos, destSlot.position, curveT);
+            target.anchoredPosition = Vector2.Lerp(startAnchored, destAnchored, curveT);
             target.localScale = Vector3.Lerp(startScale, destScale, curveT);
             target.localRotation = Quaternion.Lerp(startRot, destRot, curveT);
-
-            target.sizeDelta = Vector2.Lerp(startSize, destSlot.rect.size, curveT);
 
             yield return null;
         }
 
-        target.position = destSlot.position;
+        target.anchoredPosition = destAnchored;
         target.localScale = destScale;
         target.localRotation = destRot;
 
+        // ВАЖНО: Возвращаем привязку по краям после окончания анимации
         SetAsStretchChild(target);
     }
 
-    private void SetAsStretchChild(RectTransform rt)
-    {
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
-    }
-
-    private void SetAsFixedCenterAnchor(RectTransform rt, Vector2 currentAbsoluteSize)
-    {
-        rt.anchorMin = new Vector2(0.5f, 0.5f);
-        rt.anchorMax = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta = currentAbsoluteSize;
-    }
 
     private void SetAllHovers(bool state)
     {
@@ -500,14 +536,7 @@ public class CardAnimationController : MonoBehaviour
 
     public void RefreshCardVisuals(RectTransform card)
     {
-        if (card == null) return;
-        LayoutRebuilder.ForceRebuildLayoutImmediate(card);
-
-        var texts = card.GetComponentsInChildren<TMP_Text>();
-        foreach (var t in texts)
-        {
-            t.SetAllDirty();
-            t.ForceMeshUpdate();
-        }
+        // ОСТАВЛЯЕМ ПУСТЫМ! Unity сам перестраивает UI в конце кадра.
+        // Вызов ForceRebuildLayoutImmediate и ForceMeshUpdate здесь убивает FPS.
     }
 }

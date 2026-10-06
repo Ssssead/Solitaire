@@ -3,12 +3,7 @@ using UnityEngine;
 
 public class SultanPileManager : PileManager
 {
-    // --- ИСПРАВЛЕНИЕ: Переименовали mode в _mode, чтобы не конфликтовать с базовым классом ---
     private SultanModeManager _mode;
-
-    [Header("Sultan Specific Parents")]
-    public Transform centerSlotTransform;
-    public Transform reserveSlotsParent;
 
     public SultanCenterPile CenterPile { get; private set; }
     public List<SultanReserveSlot> Reserves { get; private set; } = new List<SultanReserveSlot>();
@@ -18,7 +13,7 @@ public class SultanPileManager : PileManager
 
     public void Initialize(SultanModeManager m)
     {
-        _mode = m; // Используем новое имя
+        _mode = m;
     }
 
     public void CreatePiles()
@@ -26,49 +21,36 @@ public class SultanPileManager : PileManager
         Reserves.Clear();
         Foundations.Clear();
 
-        // 1. Центр
-        if (centerSlotTransform != null)
+        // 1. Ищем Центр
+        CenterPile = FindObjectOfType<SultanCenterPile>();
+        if (CenterPile != null) CenterPile.Initialize(_mode, CenterPile.transform as RectTransform);
+
+        // 2. Ищем Резервы (глобальный поиск спасает от потери слотов при повороте)
+        var allReserves = FindObjectsOfType<SultanReserveSlot>();
+        var sortedReserves = new List<SultanReserveSlot>(allReserves);
+        sortedReserves.Sort((a, b) => a.name.CompareTo(b.name));
+        foreach (var r in sortedReserves)
         {
-            CenterPile = centerSlotTransform.gameObject.GetComponent<SultanCenterPile>() ?? centerSlotTransform.gameObject.AddComponent<SultanCenterPile>();
-            CenterPile.Initialize(_mode, centerSlotTransform as RectTransform);
+            r.Initialize(_mode, r.transform as RectTransform);
+            Reserves.Add(r);
         }
 
-        // 2. Резервы
-        if (reserveSlotsParent != null)
+        // 3. Ищем Дома
+        var allFoundations = FindObjectsOfType<SultanFoundationPile>();
+        var sortedFounds = new List<SultanFoundationPile>(allFoundations);
+        sortedFounds.Sort((a, b) => a.name.CompareTo(b.name));
+        foreach (var f in sortedFounds)
         {
-            for (int i = 0; i < reserveSlotsParent.childCount; i++)
-            {
-                Transform slot = reserveSlotsParent.GetChild(i);
-                var reserve = slot.GetComponent<SultanReserveSlot>() ?? slot.gameObject.AddComponent<SultanReserveSlot>();
-                reserve.Initialize(_mode, slot as RectTransform);
-                Reserves.Add(reserve);
-            }
-        }
-
-        // 3. Дома 
-        if (foundationSlotsParent != null)
-        {
-            for (int i = 0; i < foundationSlotsParent.childCount; i++)
-            {
-                Transform slot = foundationSlotsParent.GetChild(i);
-                var foundation = slot.GetComponent<SultanFoundationPile>() ?? slot.gameObject.AddComponent<SultanFoundationPile>();
-                foundation.Initialize(_mode, slot as RectTransform);
-                Foundations.Add(foundation);
-            }
+            f.Initialize(_mode, f.transform as RectTransform);
+            Foundations.Add(f);
         }
 
         // 4. Stock & Waste
-        if (stockSlotTransform != null)
-        {
-            StockPile = stockSlotTransform.GetComponent<SultanStockPile>() ?? stockSlotTransform.gameObject.AddComponent<SultanStockPile>();
-            StockPile.Initialize(_mode, stockSlotTransform as RectTransform);
-        }
+        StockPile = FindObjectOfType<SultanStockPile>();
+        if (StockPile != null) StockPile.Initialize(_mode, StockPile.transform as RectTransform);
 
-        if (wasteSlotTransform != null)
-        {
-            WastePile = wasteSlotTransform.GetComponent<SultanWastePile>() ?? wasteSlotTransform.gameObject.AddComponent<SultanWastePile>();
-            WastePile.Initialize(_mode, wasteSlotTransform as RectTransform);
-        }
+        WastePile = FindObjectOfType<SultanWastePile>();
+        if (WastePile != null) WastePile.Initialize(_mode, WastePile.transform as RectTransform);
     }
 
     public override List<ICardContainer> GetAllContainers()
@@ -82,17 +64,6 @@ public class SultanPileManager : PileManager
         if (WastePile != null) list.Add(WastePile);
 
         return list;
-    }
-
-    public List<Transform> GetAllContainerTransforms()
-    {
-        var transforms = new List<Transform>();
-        if (CenterPile != null) transforms.Add(CenterPile.transform);
-        foreach (var r in Reserves) transforms.Add(r.transform);
-        foreach (var f in Foundations) transforms.Add(f.transform);
-        if (StockPile != null) transforms.Add(StockPile.transform);
-        if (WastePile != null) transforms.Add(WastePile.transform);
-        return transforms;
     }
 
     public void ClearAllPiles()

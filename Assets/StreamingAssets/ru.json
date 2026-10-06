@@ -289,6 +289,10 @@
             "value": "Отменить все ходы (Зажать)"
         },
         {
+            "key": "UndoAll2",
+            "value": "Отменить все ходы"
+        },
+        {
             "key": "ToMenu",
             "value": "В меню"
         },
@@ -3176,6 +3180,22 @@
         {
             "key": "Settings_DoubleClick",
             "value": "Двойной клик"
+        },
+        {
+            "key": "DeadEndText",
+            "value": "Нет ходов для победы. Используйте отмену."
+        },
+        {
+            "key": "HintText",
+            "value": "Подсказка"
+        },
+        {
+            "key": "HintLoadingText",
+            "value": "Ищу победный ход"
+        },
+        {
+            "key": "RotateDevicePrompt",
+            "value": "Поверните устройство горизонтально на время обучения"
         }
     ]
 }

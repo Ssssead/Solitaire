@@ -108,6 +108,9 @@ public class SultanAutoMoveService : MonoBehaviour
     // Анимация отрицания (тряска), перенесенная из Klondike
     private IEnumerator ShakeCardRoutine(CardController card)
     {
+        // <--- ДОБАВЛЕНО: Динамическая амплитуда тряски (15% от ширины карты) --->
+        float dynamicAmplitude = card.rectTransform.rect.width * 0.15f;
+
         // <--- ПОДГОТОВКА ЗВУКА --->
         AudioSource scrapeSource = null;
         float originalVolume = 1f;
@@ -129,7 +132,8 @@ public class SultanAutoMoveService : MonoBehaviour
         {
             elapsed += Time.unscaledDeltaTime;
 
-            float phase = Mathf.Sin(elapsed * 40f) * (1f - elapsed / shakeDuration);
+            // <--- ИСПРАВЛЕНИЕ: Убрали лишний Sin из фазы затухания --->
+            float phase = 1f - (elapsed / shakeDuration);
 
             // <--- ДИНАМИЧЕСКАЯ ГРОМКОСТЬ ОТ СКОРОСТИ --->
             if (scrapeSource != null && scrapeSource.isPlaying)
@@ -141,13 +145,14 @@ public class SultanAutoMoveService : MonoBehaviour
                 float dynamicVolume = Mathf.Lerp(0.1f, 1f, speedMultiplier);
 
                 // Плавно глушим общий звук к самому концу анимации
-                float generalFade = 1f - (elapsed / shakeDuration);
+                float generalFade = phase;
 
                 // Применяем финальную громкость
                 scrapeSource.volume = originalVolume * dynamicVolume * generalFade;
             }
 
-            float offsetX = Mathf.Sin(elapsed * 60f) * shakeAmplitude * phase;
+            // <--- ИЗМЕНЕНО: Используем dynamicAmplitude вместо жесткого значения --->
+            float offsetX = Mathf.Sin(elapsed * 60f) * dynamicAmplitude * phase;
             card.rectTransform.anchoredPosition = startPos + new Vector3(offsetX, 0f, 0f);
 
             yield return null;

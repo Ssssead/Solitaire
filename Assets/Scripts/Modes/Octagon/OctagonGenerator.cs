@@ -1,4 +1,4 @@
-using System;
+п»їusing System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,11 +11,12 @@ public class OctagonGenerator : BaseGenerator
 
     [Header("Optimization")]
     [Range(1, 16)]
-    public float frameBudgetMs = 8.0f; // Лимит времени на кадр, чтобы игра не фризила
+    public float frameBudgetMs = 8.0f; // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
     public override IEnumerator GenerateDeal(Difficulty difficulty, int param, Action<Deal, DealMetrics> onComplete)
     {
         Deal validDeal = null;
+        bool lastResultSolved = false;
         int attempts = 0;
         Stopwatch sw = new Stopwatch();
 
@@ -28,10 +29,10 @@ public class OctagonGenerator : BaseGenerator
             if (sw.ElapsedMilliseconds > frameBudgetMs) { yield return null; sw.Restart(); }
             else if (!sw.IsRunning) sw.Start();
 
-            // 1. Создаем случайный расклад 
+            // 1. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
             Deal candidate = CreateRandomOctagonDeal();
 
-            // 2. Тестируем Солвером
+            // 2. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             OctagonSolver.ExtendedSolverResult result = new OctagonSolver.ExtendedSolverResult();
             yield return StartCoroutine(OctagonSolver.SolveAsync(candidate, frameBudgetMs, result));
 
@@ -39,20 +40,28 @@ public class OctagonGenerator : BaseGenerator
 
             if (result.IsSolved)
             {
-                // ПРОСТО БЕРЕМ ПЕРВЫЙ РЕШАЕМЫЙ РАСКЛАД
                 UnityEngine.Debug.Log($"<color=green>[OctagonGen] SUCCESS! Found solvable deal. Attempts: {attempts}.</color>");
                 validDeal = candidate;
+                lastResultSolved = true;
             }
 
-            // Защита от бесконечного цикла на всякий случай
-            if (attempts >= 50)
+            // BUG FIX: this used to silently ship the last candidate as-is after 50
+            // failed attempts, WITHOUT it ever being proven solvable, while still
+            // reporting DealMetrics.Solved = true unconditionally below - so a player
+            // could receive a genuinely unsolvable deal that claimed to be solvable.
+            // Raised the safety-valve threshold a lot (now that MAX_DEPTH/MAX_STATES in
+            // OctagonSolver were themselves the reason many truly-solvable deals were
+            // failing to be proven, most attempts should now succeed well before this
+            // fires) and made the eventual fallback loud and honest about what happened.
+            if (attempts >= 300)
             {
-                UnityEngine.Debug.LogWarning("[OctagonGen] Reached 50 attempts. Yielding last candidate to prevent freeze.");
+                UnityEngine.Debug.LogError($"[OctagonGen] Reached {attempts} attempts without a solver-proven deal. Shipping the last candidate UNVALIDATED to avoid freezing generation - it may not actually be solvable. Investigate solver limits/heuristic if this happens often.");
                 validDeal = candidate;
+                lastResultSolved = false;
             }
         }
 
-        DealMetrics metrics = new DealMetrics { Solved = true };
+        DealMetrics metrics = new DealMetrics { Solved = lastResultSolved };
         onComplete?.Invoke(validDeal, metrics);
     }
 
@@ -60,7 +69,7 @@ public class OctagonGenerator : BaseGenerator
     {
         List<CardModel> deck = new List<CardModel>();
 
-        // Собираем 2 полные колоды (104 карты)
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 2 пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (104 пїЅпїЅпїЅпїЅпїЅ)
         for (int i = 0; i < 2; i++)
         {
             foreach (Suit s in Enum.GetValues(typeof(Suit)))
@@ -69,14 +78,14 @@ public class OctagonGenerator : BaseGenerator
             }
         }
 
-        // Извлекаем 8 тузов (они автоматически раздаются в Дом)
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 8 пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ)
         for (int i = 0; i < 8; i++)
         {
             var ace = deck.First(c => c.rank == 1);
             deck.Remove(ace);
         }
 
-        // Перемешиваем оставшиеся 96 карт
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 96 пїЅпїЅпїЅпїЅ
         Shuffle(deck);
 
         Deal deal = new Deal();
@@ -84,13 +93,13 @@ public class OctagonGenerator : BaseGenerator
 
         int cardIndex = 0;
 
-        // Раздаем 20 карт на стол (4 группы по 5 слотов)
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ 20 пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ (4 пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ 5 пїЅпїЅпїЅпїЅпїЅпїЅ)
         for (int g = 0; g < 4; g++)
         {
             List<CardInstance> groupCards = new List<CardInstance>();
             for (int s = 0; s < 5; s++)
             {
-                // В Восьмиугольнике все карты на столе открыты
+                // пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                 groupCards.Add(new CardInstance(deck[cardIndex++], true));
             }
             deal.tableau.Add(groupCards);
@@ -98,7 +107,7 @@ public class OctagonGenerator : BaseGenerator
 
         deal.stock = new Stack<CardInstance>();
 
-        // Оставшиеся 76 карт кидаем в колоду (рубашкой вверх)
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 76 пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)
         for (int i = cardIndex; i < deck.Count; i++)
         {
             deal.stock.Push(new CardInstance(deck[i], false));

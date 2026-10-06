@@ -36,9 +36,12 @@ public class SultanDeckManager : MonoBehaviour
 
     private void Update()
     {
-        if (isDealing && (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)))
+        if (Time.timeSinceLevelLoad > 0.3f)
         {
-            isSkippingIntro = true;
+            if (isDealing && (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)))
+            {
+                isSkippingIntro = true;
+            }
         }
     }
 

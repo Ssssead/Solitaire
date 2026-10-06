@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Decks_Premium
+  m_EditorClassIdentifier: 
+  m_GroupName: Decks_Premium
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 6114d4435a3c5e24698904da8659de30
+  m_SerializeEntries:
+  - m_GUID: b9d8c2ea941bb4342a3fd092b0e81a87
+    m_Address: Assets/Cards/Cards3.spriteatlasv2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Decks_Premium
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e01aa7d07bb83c842a2f8a6786628834
+    m_Address: Assets/Cards/Cards2.spriteatlasv2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Decks_Premium
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 356bbdf424232f54fa85e0a8a9305728, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 6a72d8bac8ee0f34489897ccbac3ced3, type: 2}
+    - {fileID: 11400000, guid: 1998e4b9c2c63d04a833133937a74fdc, type: 2}

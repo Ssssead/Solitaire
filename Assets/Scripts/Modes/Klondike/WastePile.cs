@@ -5,7 +5,7 @@ using UnityEngine.Serialization;
 
 public class WastePile : MonoBehaviour, ICardContainer
 {
-    private List<CardController> cards = new List<CardController>();
+    public List<CardController> cards = new List<CardController>();
     private KlondikeModeManager manager;
     private RectTransform rect;
 

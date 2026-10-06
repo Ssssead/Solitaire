@@ -19,12 +19,17 @@ public class SpiderDeckManager : MonoBehaviour
     public bool isSkippingIntro = false;
     public bool isDealing = false;
     private List<CardController> deckCards = new List<CardController>();
+    private float dealStartTime = 0f;
 
     private void Update()
     {
-        if (isDealing && (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)))
+        // Игнорируем клики в первые 0.3 секунды раздачи (защита от прокликивания UI кнопки)
+        if (isDealing && Time.unscaledTime - dealStartTime > 0.3f)
         {
-            isSkippingIntro = true;
+            if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+            {
+                isSkippingIntro = true;
+            }
         }
     }
     public void CreateAndDeal(int suitsCount, Difficulty difficulty)
@@ -89,6 +94,7 @@ public class SpiderDeckManager : MonoBehaviour
 
     public IEnumerator PlayIntroDeckArrival(float duration)
     {
+        dealStartTime = Time.unscaledTime; // <--- ДОБАВИТЬ ЭТО
         isSkippingIntro = false;
         isDealing = true; // Открываем возможность пропуска
         modeManager.IsInputAllowed = false;
@@ -169,6 +175,8 @@ public class SpiderDeckManager : MonoBehaviour
         int dealtCount = 0;
         int[] cardsPerCol = { 6, 6, 6, 6, 5, 5, 5, 5, 5, 5 };
 
+        float flyDuration = 0.25f; // Время полета одной карты
+
         for (int row = 0; row < 6; row++)
         {
             for (int col = 0; col < 10; col++)
@@ -180,11 +188,11 @@ public class SpiderDeckManager : MonoBehaviour
                 var targetPile = pileManager.TableauPiles[col];
                 bool faceUp = (row == cardsPerCol[col] - 1);
 
-                MoveCardToPile(card, targetPile, faceUp, recordUndo: false);
+                // Запускаем полет карты в DragLayer
+                StartCoroutine(AnimateCardFromStockToPile(card, targetPile, faceUp, flyDuration));
 
                 if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Deal");
 
-                // Заменили yield return new WaitForSeconds(0.02f);
                 float wait2 = 0f;
                 while (wait2 < 0.02f)
                 {
@@ -195,18 +203,17 @@ public class SpiderDeckManager : MonoBehaviour
             }
         }
 
-        // Заменили yield return new WaitForSeconds(0.4f);
+        // Ждем, пока приземлится самая последняя карта
         float wait3 = 0f;
-        while (wait3 < 0.4f)
+        while (wait3 < flyDuration + 0.1f)
         {
             float speed = isSkippingIntro ? 15f : 1f;
             wait3 += Time.deltaTime * speed;
             yield return null;
         }
 
-        // Открываем ввод - это позволит слотам принять наши отступы
         modeManager.IsInputAllowed = true;
-        isDealing = false; // Раздача полностью окончена
+        isDealing = false;
 
         if (modeManager != null)
         {
@@ -352,12 +359,12 @@ public class SpiderDeckManager : MonoBehaviour
     private IEnumerator DealRowRoutine(List<CardController> cardsToDeal)
     {
         modeManager.IsInputAllowed = false;
+        dealStartTime = Time.unscaledTime; // Сброс защиты скипа
+        isSkippingIntro = false;
         string batchID = System.Guid.NewGuid().ToString();
 
         if (undoManager != null)
         {
-            // --- ИЗМЕНЕНИЕ 2: Записываем ходы от 0-го слота к 9-му. 
-            // При отмене они будут возвращаться с 9-го по 0-й, что идеально восстановит иерархию (SiblingIndex) ---
             for (int i = 0; i < 10; i++)
             {
                 var card = cardsToDeal[i];
@@ -376,20 +383,35 @@ public class SpiderDeckManager : MonoBehaviour
             }
         }
 
+        float flyDuration = 0.25f;
+
         for (int i = 0; i < 10; i++)
         {
             var card = cardsToDeal[i];
             var pile = pileManager.TableauPiles[i];
 
-            MoveCardToPile(card, pile, true, recordUndo: false, groupID: batchID);
+            // Полет из колоды в слот (поверх остальных)
+            StartCoroutine(AnimateCardFromStockToPile(card, pile, true, flyDuration));
 
-            // <--- ЗВУК: ШЕЛЕСТ ДОПОЛНИТЕЛЬНОЙ РАЗДАЧИ --->
             if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Deal");
 
-            yield return new WaitForSeconds(0.05f);
+            float wait = 0f;
+            while (wait < 0.05f)
+            {
+                float speed = isSkippingIntro ? 15f : 1f;
+                wait += Time.deltaTime * speed;
+                yield return null;
+            }
         }
 
-        yield return new WaitForSeconds(0.4f);
+        // Ждем приземления всех 10 карт
+        float finalWait = 0f;
+        while (finalWait < flyDuration + 0.1f)
+        {
+            float speed = isSkippingIntro ? 15f : 1f;
+            finalWait += Time.deltaTime * speed;
+            yield return null;
+        }
 
         modeManager.IsInputAllowed = true;
 
@@ -398,6 +420,74 @@ public class SpiderDeckManager : MonoBehaviour
             modeManager.CheckGameState();
             modeManager.UpdateTableauLayouts();
         }
+    }
+    private IEnumerator AnimateCardFromStockToPile(CardController card, SpiderTableauPile targetPile, bool faceUp, float duration)
+    {
+        // 1. Вычисляем конечную точку ДО физического переноса в стопку
+        Vector2 targetAnchored = targetPile.GetDropAnchoredPosition(card);
+        Vector3 targetWorld = Vector3.zero;
+
+        if (modeManager.AnimationService != null)
+        {
+            targetWorld = modeManager.AnimationService.AnchoredToWorldPosition(targetPile.transform as RectTransform, targetAnchored);
+        }
+        else
+        {
+            GameObject tmp = new GameObject("tmp");
+            tmp.transform.SetParent(targetPile.transform, false);
+            tmp.AddComponent<RectTransform>().anchoredPosition = targetAnchored;
+            Canvas.ForceUpdateCanvases();
+            targetWorld = tmp.transform.position;
+            Destroy(tmp);
+        }
+
+        // 2. Логически добавляем карту, чтобы следующая летящая сюда же карта считала отступ с учетом этой
+        targetPile.cards.Add(card);
+        targetPile.faceUp.Add(faceUp);
+
+        // 3. Вырываем карту в DragLayer для визуального полета поверх всех рядов
+        if (modeManager.dragLayer != null)
+        {
+            card.transform.SetParent(modeManager.dragLayer, true);
+            card.transform.SetAsLastSibling();
+        }
+
+        if (card.canvasGroup != null) card.canvasGroup.blocksRaycasts = false;
+
+        var cardData = card.GetComponent<CardData>();
+        if (cardData != null && faceUp)
+        {
+            cardData.SetFaceUp(true, animate: true);
+        }
+
+        // 4. Плавный полет
+        Vector3 startPos = card.transform.position;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float speed = isSkippingIntro ? 15f : 1f;
+            elapsed += Time.deltaTime * speed;
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+
+            card.transform.position = Vector3.Lerp(startPos, targetWorld, t);
+            yield return null;
+        }
+
+        card.transform.position = targetWorld;
+
+        // 5. Посадка в целевой слот
+        card.transform.SetParent(targetPile.transform, true);
+        card.rectTransform.anchoredPosition = targetAnchored;
+        card.transform.SetAsLastSibling();
+
+        if (card.canvasGroup != null)
+        {
+            card.canvasGroup.blocksRaycasts = true;
+            card.canvasGroup.interactable = true;
+        }
+
+        targetPile.ForceRecalculateLayout();
     }
 
     private void MoveCardToPile(CardController card, SpiderTableauPile targetPile, bool faceUp, bool recordUndo, string groupID = null)

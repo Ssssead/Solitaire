@@ -33,10 +33,15 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
     public Transform foundationSlotsParent;
     private bool wasUndoing = false;
 
-    [Header("UI & HUD")]
+    [Header("UI & HUD - Landscape")]
     public TMP_Text movesText;
     public TMP_Text scoreText;
     public TMP_Text timeText;
+
+    [Header("UI & HUD - Portrait")]
+    public TMP_Text portraitMovesText;
+    public TMP_Text portraitScoreText;
+    public TMP_Text portraitTimeText;
 
     [Tooltip("Кнопка авто-сбора открытых карт (Auto Collect)")]
     public Button autoWinButton;
@@ -45,7 +50,11 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
 
     [HideInInspector] public List<YukonTableauPile> tableaus = new List<YukonTableauPile>();
     [HideInInspector] public List<FoundationPile> foundations = new List<FoundationPile>();
-
+    [Header("Hint System")]
+    public YukonHintSolver hintSolver;
+    private Coroutine backgroundSolverCoroutine = null;
+    private List<YukonHintMove> cachedHintPath = null;
+    private bool isExecutingHint = false;
     // --- ИСПРАВЛЕНИЕ БАГА UNDO: Теперь привязываем переворот к летящей карте ---
     private Dictionary<CardController, int> pendingAutoFlips = new Dictionary<CardController, int>();
 
@@ -144,6 +153,8 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
         {
             StatisticsManager.Instance.OnGameAbandoned();
         }
+        // ДОБАВИТЬ ЭТУ СТРОКУ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
     }
 
     public void InitializeMode()
@@ -151,18 +162,17 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
         currentDifficulty = GameSettings.CurrentDifficulty;
         CurrentVariant = GameSettings.YukonRussian ? YukonVariant.Russian : YukonVariant.Classic;
 
+        // --- ИСПРАВЛЕНИЕ: Ищем стопки глобально на сцене, чтобы они не терялись при смене якорей ---
         tableaus.Clear();
-        if (tableauSlotsParent)
-        {
-            tableaus.AddRange(tableauSlotsParent.GetComponentsInChildren<YukonTableauPile>());
-            tableaus.Sort((a, b) => a.name.CompareTo(b.name));
-        }
+        var allTabs = FindObjectsOfType<YukonTableauPile>();
+        tableaus.AddRange(allTabs);
+        tableaus.Sort((a, b) => a.name.CompareTo(b.name));
 
         foundations.Clear();
-        if (foundationSlotsParent)
-        {
-            foundations.AddRange(foundationSlotsParent.GetComponentsInChildren<FoundationPile>());
-        }
+        var allFounds = FindObjectsOfType<FoundationPile>();
+        foundations.AddRange(allFounds);
+        foundations.Sort((a, b) => a.name.CompareTo(b.name));
+        // -------------------------------------------------------------------------------------------
 
         StartNewGame();
     }
@@ -174,6 +184,8 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
         {
             StatisticsManager.Instance.OnGameAbandoned();
         }
+        // ДОБАВИТЬ ЭТУ СТРОКУ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
 
         // 2. ЗАТЕМ сообщаем трекеру настройки нового матча
         // CurrentVariant.ToString() автоматически выдаст "Classic" или "Russian"
@@ -185,7 +197,8 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
         hasGameStarted = false;
         gameTimer = 0f;
         isTimerRunning = false;
-
+        if (hintSolver != null) hintSolver.CancelSearch();
+        cachedHintPath = null;
         if (scoreManager) scoreManager.ResetScore();
         if (undoManager) undoManager.ResetHistory();
 
@@ -262,6 +275,7 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
             isRestarting = false;
             IsInputAllowed = true;
             UpdateFullUI();
+            StartBackgroundSolver();
         }
     }
 
@@ -271,6 +285,8 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
         {
             StatisticsManager.Instance.OnGameAbandoned();
         }
+        // ДОБАВИТЬ ЭТУ СТРОКУ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
 
         currentDifficulty = GameSettings.CurrentDifficulty;
         CurrentVariant = GameSettings.YukonRussian ? YukonVariant.Russian : YukonVariant.Classic;
@@ -326,10 +342,12 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
                 string variant = GameSettings.GetCurrentVariantString(GameType.Yukon);
                 StatisticsManager.Instance.OnGameStarted("Yukon", currentDifficulty, variant);
             }
+            SimpleMetricsTracker.Instance?.TrackLevelStart(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
         }
 
         if (StatisticsManager.Instance != null)
             StatisticsManager.Instance.RegisterMove();
+        if (!isExecutingHint) StartBackgroundSolver();
     }
 
     private void OnAutoCollectClicked()
@@ -474,37 +492,31 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
         yield return new WaitForSeconds(0.3f);
         IsInputAllowed = true;
         CheckGameState();
+        if (!isExecutingHint) StartBackgroundSolver();
     }
 
     private void UpdateFullUI()
     {
-        if (movesText != null)
-        {
-            if (!hasGameStarted)
-            {
-                movesText.text = "0";
-            }
-            else if (!hasWonGame && StatisticsManager.Instance != null)
-            {
-                movesText.text = StatisticsManager.Instance.GetCurrentMoves().ToString();
-            }
-        }
+        string mText = "0";
+        if (hasGameStarted && !hasWonGame && StatisticsManager.Instance != null)
+            mText = StatisticsManager.Instance.GetCurrentMoves().ToString();
 
-        if (scoreText != null)
-            scoreText.text = (!hasGameStarted) ? "0" : $"{(scoreManager != null ? scoreManager.CurrentScore : 0)}";
+        if (movesText != null) movesText.text = mText;
+        if (portraitMovesText != null) portraitMovesText.text = mText;
+
+        string sText = (!hasGameStarted) ? "0" : $"{(scoreManager != null ? scoreManager.CurrentScore : 0)}";
+        if (scoreText != null) scoreText.text = sText;
+        if (portraitScoreText != null) portraitScoreText.text = sText;
 
         if (!hasGameStarted) UpdateTimeUI();
     }
-
     private void UpdateTimeUI()
     {
-        if (timeText != null)
-        {
-            int totalSeconds = Mathf.FloorToInt(gameTimer);
-            int minutes = totalSeconds / 60;
-            int seconds = totalSeconds % 60;
-            timeText.text = string.Format("{0}:{1:00}", minutes, seconds);
-        }
+        int totalSeconds = Mathf.FloorToInt(gameTimer);
+        string tText = string.Format("{0}:{1:00}", totalSeconds / 60, totalSeconds % 60);
+
+        if (timeText != null) timeText.text = tText;
+        if (portraitTimeText != null) portraitTimeText.text = tText;
     }
 
     private void ForceGlobalLayoutSync()
@@ -841,29 +853,15 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
 
         int sequenceCount = sequence.Count;
         bool isTabToTab = (source is YukonTableauPile && target is YukonTableauPile);
-        bool isToFoundation = (target is FoundationPile);
-        bool completedFoundation = (leadCard.cardModel.rank == 13 && isToFoundation);
 
-        // 1. Сохраняем стейт для Undo
-        List<Transform> prevParents = new List<Transform>();
-        List<Vector3> prevPositions = new List<Vector3>();
-        List<int> prevSibs = new List<int>();
-
-        foreach (var c in sequence)
-        {
-            prevParents.Add(c.transform.parent);
-            prevPositions.Add(c.transform.localPosition);
-            prevSibs.Add(c.transform.GetSiblingIndex());
-        }
-
-        // 2. Логически изымаем из источника
+        // Логически изымаем из источника
         if (source is YukonTableauPile tab)
         {
             int idx = tab.IndexOfCard(leadCard);
             if (idx != -1) tab.RemoveSequenceFrom(idx);
         }
 
-        // 3. Запуск полета и бронирование
+        // Запуск полета
         if (target is FoundationPile found)
         {
             found.ReserveCard(leadCard);
@@ -872,15 +870,20 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
                 yLeadCard.SetSourceForAutoMove(source);
                 yLeadCard.transform.SetParent(dragLayer, true);
                 yLeadCard.transform.SetAsLastSibling();
-                yLeadCard.AnimateToTarget(found, found.transform.position); // Родная анимация в Дом
+
+                // ИСПРАВЛЕНИЕ 2: Если летим в Дом, прерываем выполнение метода здесь.
+                // Приземление карты автоматически вызовет OnCardDroppedToContainer,
+                // который сам идеально засчитает очки, Undo, Квесты и проверит Победу.
+                yLeadCard.AnimateToTarget(found, found.transform.position);
             }
+            return;
         }
         else if (target is YukonTableauPile targetTab)
         {
             StartCoroutine(AnimateSequenceAutoMove(sequence, targetTab));
         }
 
-        // 4. Очки, Трекер квестов и Запись Undo (полностью зеркалит ручной дроп)
+        // Код ниже выполнится ТОЛЬКО для перемещений между столбцами (TabToTab)
         YukonScoreManager yScore = scoreManager as YukonScoreManager;
         yScore?.BeginMove();
 
@@ -893,15 +896,27 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
             {
                 SequenceCount = sequenceCount,
                 IsTabToTab = isTabToTab,
-                IsToFoundation = isToFoundation,
-                CompletedFoundation = completedFoundation,
+                IsToFoundation = false,
+                CompletedFoundation = false,
                 CardRank = leadCard.cardModel.rank
             });
+
+            // Сохраняем стейт для Undo
+            List<Transform> prevParents = new List<Transform>();
+            List<Vector3> prevPositions = new List<Vector3>();
+            List<int> prevSibs = new List<int>();
+
+            foreach (var c in sequence)
+            {
+                prevParents.Add(c.transform.parent);
+                prevPositions.Add(c.transform.localPosition);
+                prevSibs.Add(c.transform.GetSiblingIndex());
+            }
 
             undoManager.RecordMove(sequence, source, target, prevParents, prevPositions, prevSibs);
         }
 
-        // 5. Авто-открытие верхней карты, если мы оголили скрытую
+        // Авто-открытие верхней карты
         if (source is YukonTableauPile sourceTab)
         {
             int emptyBefore = tableaus.Count(t => t.cards.Count == 0);
@@ -924,9 +939,6 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
         }
 
         RegisterMoveAndStartIfNeeded();
-
-        if (target is FoundationPile) yScore?.AddReward(yScore.foundationReward);
-
         yScore?.CommitMove();
 
         Invoke(nameof(CheckGameState), 0.3f);
@@ -1127,17 +1139,19 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
 
             if (undoManager != null) undoManager.ClearAndLock();
 
+            // ИСПРАВЛЕНИЕ 3: Вызываем панель победы даже если статистика почему-то отключена в редакторе
+            int finalMoves = 0;
             if (StatisticsManager.Instance != null)
             {
-                int finalMoves = StatisticsManager.Instance.GetCurrentMoves();
-
-                if (movesText != null) movesText.text = finalMoves.ToString();
-
+                finalMoves = StatisticsManager.Instance.GetCurrentMoves();
                 int finalScore = scoreManager != null ? scoreManager.CurrentScore : 0;
-
                 StatisticsManager.Instance.OnGameWon(finalScore);
-                if (gameUI != null) gameUI.OnGameWon(finalMoves);
             }
+
+            SimpleMetricsTracker.Instance?.TrackLevelWin(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
+
+            if (movesText != null) movesText.text = finalMoves.ToString();
+            if (gameUI != null) gameUI.OnGameWon(finalMoves);
         }
     }
 
@@ -1158,4 +1172,129 @@ public class YukonModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICar
     public void OnCardLongPressed(CardController c) { }
     public void OnKeyboardPick(CardController c) { }
     public void OnStockClicked() { }
+    public void StartBackgroundSolver()
+    {
+        if (backgroundSolverCoroutine != null) StopCoroutine(backgroundSolverCoroutine);
+        if (hintSolver != null) hintSolver.CancelSearch();
+        cachedHintPath = null;
+        backgroundSolverCoroutine = StartCoroutine(BackgroundSolverRoutine());
+    }
+
+    private IEnumerator BackgroundSolverRoutine()
+    {
+        while ((dragLayer != null && dragLayer.childCount > 0)) yield return null;
+        yield return new WaitForSeconds(0.1f);
+
+        if (hasWonGame) yield break;
+
+        bool solverFinished = false;
+        if (hintSolver == null) hintSolver = gameObject.AddComponent<YukonHintSolver>();
+
+        int variantParam = CurrentVariant == YukonVariant.Russian ? 1 : 0;
+        hintSolver.FindPath(tableaus, foundations, variantParam, path => {
+            cachedHintPath = path;
+            solverFinished = true;
+        });
+
+        while (!solverFinished) yield return null;
+        backgroundSolverCoroutine = null;
+    }
+
+    public void RequestHint(System.Action onWaitStart, System.Action<bool> onHintResult)
+    {
+        if (hasWonGame || !IsInputAllowed) { onHintResult?.Invoke(false); return; }
+        StartCoroutine(HintRoutine(onWaitStart, onHintResult));
+    }
+
+    private IEnumerator HintRoutine(System.Action onWaitStart, System.Action<bool> onResult)
+    {
+        IsInputAllowed = false;
+
+        if (cachedHintPath == null && backgroundSolverCoroutine == null) StartBackgroundSolver();
+
+        if (backgroundSolverCoroutine != null)
+        {
+            onWaitStart?.Invoke();
+            while (backgroundSolverCoroutine != null) yield return null;
+        }
+
+        if (cachedHintPath != null && cachedHintPath.Count > 0)
+        {
+            var nextMove = cachedHintPath[0];
+            cachedHintPath.RemoveAt(0);
+
+            isExecutingHint = true;
+            ExecuteHintMove(nextMove);
+            onResult?.Invoke(true);
+        }
+        else
+        {
+            IsInputAllowed = true;
+            onResult?.Invoke(false);
+        }
+    }
+
+    private void ExecuteHintMove(YukonHintMove cmd)
+    {
+        var tab = tableaus[cmd.FromIndex];
+        int startIdx = tab.cards.Count - cmd.SequenceLength;
+        List<CardController> sequence = tab.cards.GetRange(startIdx, cmd.SequenceLength);
+
+        ICardContainer source = tab;
+        ICardContainer target = null;
+
+        if (cmd.Type == YukonHintMove.MoveType.ToFoundation)
+        {
+            // ИСПРАВЛЕНИЕ 1: Ищем правильный Дом через правила игры, а не по слепому индексу
+            foreach (var f in foundations)
+            {
+                if (f.CanAccept(sequence[0]))
+                {
+                    target = f;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            target = tableaus[cmd.ToIndex];
+        }
+
+        if (target != null)
+        {
+            ExecuteProgrammaticSequenceMove(sequence, source, target);
+            StartCoroutine(WaitAndUnlockAfterHint(sequence));
+        }
+        else
+        {
+            UnlockAfterHint();
+        }
+    }
+
+    private IEnumerator WaitAndUnlockAfterHint(List<CardController> sequence)
+    {
+        yield return null;
+        while (true)
+        {
+            bool isAnimating = (dragLayer != null && dragLayer.childCount > 0);
+            if (!isAnimating) break;
+            yield return null;
+        }
+        yield return new WaitForSeconds(0.1f);
+
+        UnlockAfterHint();
+    }
+
+    private void UnlockAfterHint()
+    {
+        isExecutingHint = false;
+        IsInputAllowed = true;
+
+        if (cachedHintPath == null || cachedHintPath.Count == 0)
+        {
+            StartBackgroundSolver();
+        }
+
+        CheckGameState();
+    }
 }

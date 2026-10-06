@@ -1,4 +1,4 @@
-using System;
+п»їusing System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -20,10 +20,16 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
     [SerializeField] private Button undoButton;
     [SerializeField] private Button undoAllButton;
 
-    [Header("UI & HUD")]
+    // --- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ ---
+    [Header("UI & HUD - Landscape")]
     public TMP_Text movesText;
     public TMP_Text timeText;
     public TMP_Text scoreText;
+
+    [Header("UI & HUD - Portrait")]
+    public TMP_Text portraitMovesText;
+    public TMP_Text portraitTimeText;
+    public TMP_Text portraitScoreText;
 
     [Header("Setup")]
     [SerializeField] private RectTransform dragLayer;
@@ -33,7 +39,7 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
     [SerializeField] private int maxRecycles = 2;
     private int recyclesUsed = 0;
     private bool _isGameFinished = false;
-    private bool _isGameWon = false; // НОВОЕ: Отдельно отслеживаем реальную победу
+    private bool _isGameWon = false;
     public Difficulty CurrentDifficulty => GameSettings.CurrentDifficulty;
     public GameType GameType => GameType.Octagon;
 
@@ -48,14 +54,20 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
     private bool isTimerRunning = false;
     private bool hasGameStarted = false;
 
-    // --- СИСТЕМА ОЧКОВ ---
     private int currentScore = 0;
     private int foundationCombo = 0;
     private Stack<int> scoreHistory = new Stack<int>();
     private Coroutine defeatRoutine;
 
-    // Свойства
-    public int CurrentScore => currentScore; // Публичный доступ на случай, если понадобится другим скриптам
+    // --- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ---
+    private int _lastScreenWidth;
+    private int _lastScreenHeight;
+    [Header("Hint System")]
+    public OctagonHintSolver hintSolver;
+    private Coroutine backgroundSolverCoroutine = null;
+    private List<OctagonHintMove> cachedHintPath = null;
+    [HideInInspector] public bool isExecutingHint = false;
+    public int CurrentScore => currentScore;
     public RectTransform DragLayer => dragLayer;
     public AnimationService AnimationService => null;
     public OctagonAnimationService OctagonAnim => animationService;
@@ -66,7 +78,7 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
     public StockDealMode StockDealMode => StockDealMode.Draw1;
     public bool IsInputAllowed { get; set; } = false;
     public string GameName => "Octagon";
-    // ---> СТРУКТУРА ДЛЯ ОТМЕНЫ ХОДОВ В ОКТАГОНЕ <---
+
     private struct OctagonQuestUndoRecord
     {
         public bool IsToFoundation;
@@ -75,8 +87,12 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         public int CardRank;
     }
     private Stack<OctagonQuestUndoRecord> questUndoStack = new Stack<OctagonQuestUndoRecord>();
+
     private void Start()
     {
+        _lastScreenWidth = Screen.width;
+        _lastScreenHeight = Screen.height;
+
         if (deckManager == null) deckManager = GetComponent<OctagonDeckManager>();
         if (pileManager == null) pileManager = GetComponent<OctagonPileManager>();
         if (introController == null) introController = GetComponent<OctagonIntroController>();
@@ -90,31 +106,28 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         if (undoButton) undoButton.onClick.AddListener(OnUndoAction);
         if (undoAllButton) LongPressHoldTrigger.SubscribeToButton(undoAllButton, OnUndoAllAction);
 
-        // --- НОВОЕ: Защита от багов UI ---
         FixGameUIReferences();
         StartCoroutine(InterceptDefeatUndoButton());
 
         StartNewGame();
     }
+
     private void FixGameUIReferences()
     {
         if (gameUI == null) return;
-        // Насильно инжектим текущий режим в GameUIController, чтобы предотвратить NRE
         var field = gameUI.GetType().GetField("activeGameMode", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         if (field != null) field.SetValue(gameUI, this);
     }
 
     private IEnumerator InterceptDefeatUndoButton()
     {
-        yield return new WaitForSeconds(0.5f); // Даем UI время на инициализацию
+        yield return new WaitForSeconds(0.5f);
         if (gameUI != null && gameUI.defeatPanel != null)
         {
             Button[] buttons = gameUI.defeatPanel.GetComponentsInChildren<Button>(true);
             foreach (Button b in buttons)
             {
                 bool isUndo = false;
-
-                // Способ 1: Проверяем, привязан ли багованный метод в Инспекторе Unity
                 for (int i = 0; i < b.onClick.GetPersistentEventCount(); i++)
                 {
                     if (b.onClick.GetPersistentMethodName(i) == "OnUndoOneClicked")
@@ -123,15 +136,11 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
                         break;
                     }
                 }
-
-                // Способ 2: Ищем по названию кнопки
                 if (!isUndo && b.gameObject.name.IndexOf("undo", StringComparison.OrdinalIgnoreCase) >= 0) isUndo = true;
 
                 if (isUndo)
                 {
-                    // Удаляем стандартный багованный вызов GameUIController
                     b.onClick.RemoveAllListeners();
-                    // Добавляем наш безопасный вызов Восьмиугольника
                     b.onClick.AddListener(() =>
                     {
                         gameUI.defeatPanel.SetActive(false);
@@ -144,12 +153,18 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
 
     public void StartNewGame()
     {
+        // ---> пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ <---
+        if (hintSolver != null) hintSolver.CancelSearch();
+        cachedHintPath = null;
+        isExecutingHint = false;
+
         if (hasGameStarted && !_isGameWon && StatisticsManager.Instance != null)
         {
             StatisticsManager.Instance.OnGameAbandoned();
         }
+        // Р”РћР‘РђР’РРўР¬ Р­РўРЈ РЎРўР РћРљРЈ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
 
-        // 2. ЗАТЕМ сообщаем трекеру настройки (У Восьмигранника всегда Standard)
         GameQuestTracker.Instance?.StartMatch("Octagon", GameSettings.CurrentDifficulty, "Standard");
 
         if (defeatRoutine != null)
@@ -178,7 +193,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
 
         Deal dealToPlay = null;
 
-        // ВАЖНО: Как в Косынке! Мы не делаем return, а записываем расклад в переменную.
         if (GameSettings.IsTutorialMode && tutorialManager != null)
         {
             dealToPlay = tutorialManager.GenerateTutorialDeal();
@@ -188,7 +202,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
             dealToPlay = DealCacheSystem.Instance.GetDeal(GameType.Octagon, CurrentDifficulty, 0);
         }
 
-        // Запускаем интро. Оно проявит слоты и затем само вызовет deckManager.ApplyDeal(dealToPlay)
         StartCoroutine(IntroSequenceRoutine(dealToPlay));
     }
 
@@ -221,8 +234,19 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
 
     private void Update()
     {
-        if (undoButton) undoButton.interactable = undoStack.Count > 0 && !isUndoing;
-        if (undoAllButton) undoAllButton.interactable = undoStack.Count > 0 && !isUndoing;
+        // --- пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ ---
+        if (Screen.width != _lastScreenWidth || Screen.height != _lastScreenHeight)
+        {
+            _lastScreenWidth = Screen.width;
+            _lastScreenHeight = Screen.height;
+            StartCoroutine(DelayedLayoutFixRoutine());
+        }
+
+        if (!GameSettings.IsTutorialMode || tutorialManager == null || !tutorialManager.IsTutorialActive)
+        {
+            if (undoButton) undoButton.interactable = undoStack.Count > 0 && !isUndoing;
+            if (undoAllButton) undoAllButton.interactable = undoStack.Count > 0 && !isUndoing;
+        }
 
         if (isTimerRunning && !_isGameFinished)
         {
@@ -231,47 +255,80 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         }
     }
 
+    private IEnumerator DelayedLayoutFixRoutine()
+    {
+        // пїЅпїЅпїЅпїЅ 3 пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ GameLayoutManager пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+        yield return null;
+        yield return null;
+        yield return new WaitForEndOfFrame();
+
+        Canvas.ForceUpdateCanvases();
+
+        // 1. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+        var factory = FindObjectOfType<CardFactory>();
+        if (factory != null)
+        {
+            factory.UpdateAllCardsSize();
+        }
+
+        // 2. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅ) пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+        if (pileManager != null)
+        {
+            if (pileManager.StockPile != null)
+            {
+                for (int i = 0; i < pileManager.StockPile.transform.childCount; i++)
+                {
+                    Transform t = pileManager.StockPile.transform.GetChild(i);
+                    t.localPosition = new Vector3(i * pileManager.StockPile.offsetX, i * pileManager.StockPile.offsetY, 0f);
+                }
+            }
+            if (pileManager.WastePile != null)
+            {
+                for (int i = 0; i < pileManager.WastePile.transform.childCount; i++)
+                {
+                    Transform t = pileManager.WastePile.transform.GetChild(i);
+                    t.localPosition = new Vector3(i * pileManager.WastePile.offsetX, i * pileManager.WastePile.offsetY, 0f);
+                }
+            }
+        }
+    }
+
     private void UpdateTimeUI()
     {
-        if (timeText != null)
-        {
-            int totalSeconds = Mathf.FloorToInt(gameTimer);
-            int minutes = totalSeconds / 60;
-            int seconds = totalSeconds % 60;
-            timeText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
-        }
+        int totalSeconds = Mathf.FloorToInt(gameTimer);
+        string tText = string.Format("{0:00}:{1:00}", totalSeconds / 60, totalSeconds % 60);
+
+        if (timeText != null) timeText.text = tText;
+        if (portraitTimeText != null) portraitTimeText.text = tText;
     }
 
     private void UpdateFullUI()
     {
-        if (movesText != null)
-        {
-            if (!hasGameStarted || StatisticsManager.Instance == null) movesText.text = "0";
-            else movesText.text = StatisticsManager.Instance.GetCurrentMoves().ToString();
-        }
+        string mText = "0";
+        if (hasGameStarted && StatisticsManager.Instance != null)
+            mText = StatisticsManager.Instance.GetCurrentMoves().ToString();
+
+        if (movesText != null) movesText.text = mText;
+        if (portraitMovesText != null) portraitMovesText.text = mText;
+
         if (!GameSettings.IsTutorialMode || tutorialManager == null || !tutorialManager.IsTutorialActive)
         {
-            if (undoButton != null)
-                undoButton.interactable = (undoStack != null && undoStack.Count > 0);
+            if (undoButton != null) undoButton.interactable = (undoStack != null && undoStack.Count > 0);
+            if (undoAllButton != null) undoAllButton.interactable = (undoStack != null && undoStack.Count > 0);
+        }
 
-            if (undoAllButton != null)
-                undoAllButton.interactable = (undoStack != null && undoStack.Count > 0);
-        }
-        if (scoreText != null)
-        {
-            scoreText.text = currentScore.ToString();
-        }
+        string sText = currentScore.ToString();
+        if (scoreText != null) scoreText.text = sText;
+        if (portraitScoreText != null) portraitScoreText.text = sText;
 
         UpdateTimeUI();
     }
 
     public void RegisterMoveAndStartIfNeeded()
     {
-        if (!IsInputAllowed) return;
+        if (!IsInputAllowed && !isExecutingHint) return;
 
-        // ---> ДОБАВИТЬ ЭТО <---
         GameQuestTracker.Instance?.RecordMove();
-        // ----------------------
 
         if (!hasGameStarted)
         {
@@ -280,9 +337,10 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
 
             if (StatisticsManager.Instance != null)
             {
-                // Записываем актуальную сложность в статистику
                 StatisticsManager.Instance.OnGameStarted(GameName, CurrentDifficulty, "Classic");
             }
+            // Р”РћР‘РђР’РРўР¬ Р­РўРЈ РЎРўР РћРљРЈ:
+            SimpleMetricsTracker.Instance?.TrackLevelStart(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
         }
 
         if (StatisticsManager.Instance != null)
@@ -305,21 +363,17 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         foundationCombo = 0;
     }
 
-    // --- ACTIONS ---
-
     public void OnStockClicked()
     {
-        if (!IsInputAllowed || _isGameFinished || isUndoing) return;
+        if ((!IsInputAllowed && !isExecutingHint) || _isGameFinished || isUndoing) return;
 
-        // ---> ДОБАВИТЬ ЭТО <---
         GameQuestTracker.Instance?.RecordStockDraw();
-        // ----------------------
 
         if (pileManager.StockPile.CardCount == 0)
         {
             if (recyclesUsed >= maxRecycles)
             {
-                CheckGameState(); // Передаем ответственность за проверку на тупик общему методу
+                CheckGameState();
                 return;
             }
         }
@@ -351,14 +405,12 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
     {
         if (!IsInputAllowed || _isGameFinished || isUndoing) return;
 
-        // Читаем глобальную настройку: 1 = Двойной клик
         if (GameSettings.AutoMoveClickMode == 1)
         {
             ProcessAutoMove(card);
         }
     }
 
-    // Вспомогательный метод, объединяющий логику авто-переноса для обоих типов клика
     private void ProcessAutoMove(CardController card)
     {
         var data = card.GetComponent<CardData>();
@@ -397,7 +449,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
             }
         }
 
-        // Трясем карту, если она свободная, но места для нее нет
         StartCoroutine(animationService.AnimateShake(card));
     }
 
@@ -433,7 +484,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
 
         CheckRevealCardUnder(source, record, card);
 
-        // ---> УЛЬТРА-НАДЕЖНЫЙ ТРЕКИНГ КВЕСТОВ ДЛЯ РУЧНОГО ХОДА <---
         if (!GameSettings.IsTutorialMode)
         {
             bool isFromCorner = source is OctagonTableauSlot || source is OctagonTableauGroup;
@@ -459,12 +509,10 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
                 if (slot.Group.IsEmpty()) GameQuestTracker.Instance?.SendEvent(QuestActionType.ClearTableauColumn, 1);
             }
         }
-        // --------------------------------------------------------
 
         StartCoroutine(CheckRefillAndFinalizeMove(record, savedScore));
     }
 
-    // --- ВСПОМОГАТЕЛЬНЫЙ МЕТОД ДЛЯ СИНХРОНИЗАЦИИ ЗВУКА С АНИМАЦИЕЙ ---
     private IEnumerator PlayDelayedSound(string soundName, float delay)
     {
         yield return new WaitForSeconds(delay);
@@ -526,7 +574,11 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         undoStack.Push(currentRecord);
         IsInputAllowed = true;
 
-        CheckGameState(); // Автоматически проверит победу или тупик
+        CheckGameState();
+
+        // ---> пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ <---
+        isExecutingHint = false;
+        StartBackgroundSolver();
     }
 
     private IEnumerator RefillGroupRoutine(OctagonTableauGroup group, OctagonMoveRecord record)
@@ -534,7 +586,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         List<(CardController card, ICardContainer source)> moveList = new List<(CardController, ICardContainer)>();
         int needed = 5;
 
-        // Сбор карт из Stock
         while (moveList.Count < needed && pileManager.StockPile.CardCount > 0)
         {
             var c = pileManager.StockPile.PopTopCard();
@@ -542,7 +593,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
             else break;
         }
 
-        // Добор из Waste, если в Stock не хватило
         while (moveList.Count < needed && pileManager.WastePile.CardCount > 0)
         {
             var c = pileManager.WastePile.PopBottomCard();
@@ -570,7 +620,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
 
                 record.AddMove(card, source, targetSlot, wasFaceUpInSource);
 
-                // --- ЗВУК 1: Вылет карты при заполнении слота ---
                 if (AudioManager.Instance != null)
                 {
                     AudioManager.Instance.PlaySound("Card_Flip");
@@ -582,7 +631,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
                     {
                         targetSlot.AcceptCard(card);
 
-                        // --- ЗВУК 2: Приземление карты в слот ---
                         if (AudioManager.Instance != null)
                         {
                             AudioManager.Instance.PlaySound("Card_Drop_Success");
@@ -593,7 +641,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
                     }
                 ));
 
-                // Задержка между вылетами карт (чтобы звуки не сливались в один)
                 yield return new WaitForSeconds(0.1f);
             }
         }
@@ -605,8 +652,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
     {
         if (isUndoing || undoStack.Count == 0) return;
 
-        // --- ВОСКРЕШЕНИЕ ПОСЛЕ ПОРАЖЕНИЯ ---
-        // Если GameUIController вызвал отмену из панели поражения, снимаем внутренние блокировки
         if (_isGameFinished)
         {
             _isGameFinished = false;
@@ -614,19 +659,15 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         }
         else if (!IsInputAllowed)
         {
-            // Обычная защита от кликов во время полета карт
             return;
         }
 
-        // --- ЗВУК: Нажатие кнопки отмены ---
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlaySound("UI_Back");
         }
 
-        // ---> ДОБАВИТЬ ЭТО <---
         GameQuestTracker.Instance?.RecordUndoUsed();
-        // ----------------------
 
         RegisterMoveAndStartIfNeeded();
         StartCoroutine(UndoAnimatedRoutine());
@@ -636,7 +677,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
     {
         if (isUndoing || undoStack.Count == 0) return;
 
-        // --- НОВОЕ: ВОСКРЕШЕНИЕ ПОСЛЕ ПОРАЖЕНИЯ ---
         if (_isGameFinished)
         {
             _isGameFinished = false;
@@ -653,9 +693,7 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
             AudioManager.Instance.PlaySound("Card_Whoosh_Out");
         }
 
-        // ---> ДОБАВИТЬ ЭТО <---
         GameQuestTracker.Instance?.RecordUndoUsed();
-        // ----------------------
 
         RegisterMoveAndStartIfNeeded();
 
@@ -676,6 +714,9 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         isUndoing = false;
         IsInputAllowed = true;
         UpdateFullUI();
+
+        // ---> пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ <---
+        StartBackgroundSolver();
     }
 
     private void PerformImmediateUndo(OctagonMoveRecord record)
@@ -698,12 +739,11 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         {
             var move = record.SubMoves[i];
             CardController card = move.Card;
-            ICardContainer targetContainer = move.Source; // КУДА летит карта (возврат)
-            ICardContainer currentContainer = card.GetComponentInParent<ICardContainer>(); // ОТКУДА улетает
+            ICardContainer targetContainer = move.Source;
+            ICardContainer currentContainer = card.GetComponentInParent<ICardContainer>();
 
             if (targetContainer == null || card == null) continue;
 
-            // ---> АНТИ-ЧИТ ДЛЯ ДОМОВ И СТОЛБЦОВ <---
             if (currentContainer is OctagonFoundationPile)
             {
                 GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, -1);
@@ -721,7 +761,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
 
             if (targetContainer is OctagonTableauSlot tsAntiCheat && tsAntiCheat.Group != null && tsAntiCheat.Group.IsEmpty())
                 GameQuestTracker.Instance?.SendEvent(QuestActionType.ClearTableauColumn, -1);
-            // ---------------------------------------
 
             bool targetFaceUp = move.WasFaceUp;
             if (targetContainer is OctagonStockPile) targetFaceUp = false;
@@ -795,7 +834,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
 
             if (targetContainer == null || card == null) continue;
 
-            // ---> АНТИ-ЧИТ ДЛЯ ДОМОВ И СТОЛБЦОВ <---
             if (currentContainer is OctagonFoundationPile)
             {
                 GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, -1);
@@ -813,7 +851,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
 
             if (targetContainer is OctagonTableauSlot ts && ts.Group != null && ts.Group.IsEmpty())
                 GameQuestTracker.Instance?.SendEvent(QuestActionType.ClearTableauColumn, -1);
-            // ---------------------------------------
 
             bool targetFaceUp = move.WasFaceUp;
             if (targetContainer is OctagonStockPile) targetFaceUp = false;
@@ -872,13 +909,15 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
 
         IsInputAllowed = true;
         isUndoing = false;
+
+        // ---> пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ <---
+        StartBackgroundSolver();
     }
 
     private IEnumerator AnimateStockToWaste(int savedScore)
     {
         IsInputAllowed = false;
 
-        // --- ЗВУК: Листание одиночной карты ---
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlaySound("Card_Flip");
@@ -914,6 +953,10 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
             ));
         }
         IsInputAllowed = true;
+
+        // ---> пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ <---
+        isExecutingHint = false;
+        StartBackgroundSolver();
     }
 
     private IEnumerator AnimateRecycle(int savedScore)
@@ -936,7 +979,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
             );
             virtualStockCount++;
 
-            // --- ЗВУК: Рецикл колоды (звук проигрывается для каждой летящей карты) ---
             if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.PlaySound("Card_Flip");
@@ -957,17 +999,17 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
 
         IsInputAllowed = true;
         CheckGameState();
+
+        // ---> пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ <---
+        isExecutingHint = false;
+        StartBackgroundSolver();
     }
 
     private IEnumerator AnimateAutoMove(CardController card, ICardContainer target, int savedScore)
     {
-        // 1. СНАЧАЛА регистрируем ход, пока IsInputAllowed еще = true!
         RegisterMoveAndStartIfNeeded();
-
-        // 2. Теперь блокируем ввод на время анимации
         IsInputAllowed = false;
 
-        // Надежно фиксируем источник
         ICardContainer source = card.GetComponentInParent<ICardContainer>();
         if (source == null && card is OctagonCardController octCard) source = octCard.SourceContainer;
 
@@ -986,7 +1028,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
             () =>
             {
                 target.AcceptCard(card);
-                // ВНИМАНИЕ: Строка RegisterMoveAndStartIfNeeded() убрана отсюда, так как она уже вызвана выше
 
                 if (target is OctagonFoundationPile)
                 {
@@ -999,7 +1040,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
                     ResetFoundationCombo();
                 }
 
-                // ---> ТРЕКИНГ КВЕСТОВ ПРИ АВТО-ХОДЕ (ДВОЙНОЙ КЛИК) <---
                 if (!GameSettings.IsTutorialMode)
                 {
                     bool isFromCorner = source is OctagonTableauSlot || source is OctagonTableauGroup;
@@ -1022,7 +1062,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
                         if (slot.Group.IsEmpty()) GameQuestTracker.Instance?.SendEvent(QuestActionType.ClearTableauColumn, 1);
                     }
                 }
-                // --------------------------------------------------------
 
                 StartCoroutine(CheckRefillAndFinalizeMove(record, savedScore));
             }
@@ -1066,9 +1105,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
     private Rect GetWorldRect(RectTransform rt) { Vector3[] c = new Vector3[4]; rt.GetWorldCorners(c); return new Rect(c[0].x, c[0].y, Mathf.Abs(c[2].x - c[0].x), Mathf.Abs(c[2].y - c[0].y)); }
     private float GetIntersectionArea(Rect r1, Rect r2) { float w = Mathf.Min(r1.xMax, r2.xMax) - Mathf.Max(r1.xMin, r2.xMin); float h = Mathf.Min(r1.yMax, r2.yMax) - Mathf.Max(r1.yMin, r2.yMin); return (w > 0 && h > 0) ? w * h : 0f; }
 
-    // ==========================================
-    // ИСПРАВЛЕННЫЙ МЕТОД ЗАВЕРШЕНИЯ ИГРЫ
-    // ==========================================
     public void CheckGameState()
     {
         if (_isGameFinished) return;
@@ -1082,16 +1118,14 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         if (k == 8)
         {
             _isGameFinished = true;
-            _isGameWon = true; // Фиксируем, что это именно победа
+            _isGameWon = true;
             isTimerRunning = false;
-            undoStack.Clear(); // Блокируем отмену ходов после победы
+            undoStack.Clear();
 
             int finalMoves = 0;
             if (GameSettings.IsTutorialMode && tutorialManager != null)
             {
-                // Если у вас есть система локализации, достаньте строку "OctagonTutorialEnd". 
-                // Если её нет под рукой, можно передать обычную строку:
-                string victoryText = "<color=#FCA311>Поздравляем!</color> Вы успешно прошли обучение и собрали пасьянс Восьмиугольник!";
+                string victoryText = "<color=#FCA311>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!</color> пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!";
                 tutorialManager.ShowVictoryStep(victoryText);
             }
             if (StatisticsManager.Instance != null)
@@ -1099,12 +1133,12 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
                 finalMoves = StatisticsManager.Instance.GetCurrentMoves();
                 StatisticsManager.Instance.OnGameWon(currentScore);
             }
+            // Р”РћР‘РђР’РРўР¬ Р­РўРЈ РЎРўР РћРљРЈ:
+            SimpleMetricsTracker.Instance?.TrackLevelWin(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
 
             if (gameUI)
             {
                 gameUI.OnGameWon(finalMoves);
-
-                // --- ГЛАВНЫЙ ФИКС: Принудительно передаем наши очки в панель ---
                 if (gameUI.winScoreText != null)
                 {
                     gameUI.winScoreText.text = currentScore.ToString();
@@ -1113,24 +1147,20 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
             return;
         }
 
-        // Запускаем отложенную проверку поражения
         if (defeatRoutine != null) StopCoroutine(defeatRoutine);
         defeatRoutine = StartCoroutine(ShowDefeatRoutine());
     }
+
     private IEnumerator ShowDefeatRoutine()
     {
-        // --- ГЛАВНЫЙ ФИКС ТАЙМИНГА ---
-        // Сначала ждем, пока все карты долетят и управление вернется игроку
         while (!IsInputAllowed || isUndoing || (dragLayer != null && dragLayer.childCount > 0))
         {
             yield return null;
         }
 
-        // Только ПОСЛЕ завершения всех анимаций отсчитываем 1.5 секунды
         yield return new WaitForSeconds(1.5f);
         if (_isGameFinished) yield break;
 
-        // На всякий случай проверяем, не нажал ли игрок на какую-то другую кнопку за эти 1.5 секунды
         if (!IsInputAllowed || isUndoing) yield break;
 
         if (!HasAnyValidMove() && gameUI != null)
@@ -1139,29 +1169,18 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
             isTimerRunning = false;
             IsInputAllowed = false;
 
-            // МЫ УБРАЛИ OnGameAbandoned() отсюда, чтобы статистика не сбрасывалась!
-            // Игра считается покинутой, только если игрок выйдет в меню или нажмет "Новая игра".
-
-            // Вызываем стандартную логику UI для показа панели поражения
             gameUI.OnGameLost();
         }
 
         defeatRoutine = null;
     }
 
-    // ==========================================
-    // ИСПРАВЛЕННЫЙ СКАНЕР ВСЕХ ДОСТУПНЫХ ХОДОВ
-    // ==========================================
     private bool HasAnyValidMove()
     {
-        // 1. Если карта прямо сейчас летит/перетаскивается
         if (dragLayer != null && dragLayer.childCount > 0) return true;
-
-        // 2. Если есть карты в колоде или доступны перелистывания
         if (pileManager.StockPile.CardCount > 0) return true;
         if (pileManager.WastePile.CardCount > 0 && recyclesUsed < maxRecycles) return true;
 
-        // 3. Проверяем верхнюю карту сброса
         var topWaste = pileManager.WastePile.GetTopCard();
         if (topWaste != null)
         {
@@ -1177,10 +1196,8 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
             }
         }
 
-        // 4. Проверяем верхние карты на столе
         foreach (var group in pileManager.TableauGroups)
         {
-            // Считаем общее количество карт во всей группе
             int totalCardsInGroup = 0;
             foreach (var s in group.Slots) totalCardsInGroup += s.transform.childCount;
 
@@ -1192,23 +1209,17 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
                 var topData = topCard.GetComponent<CardData>();
                 if (topData == null || !topData.IsFaceUp()) continue;
 
-                // А. Может ли верхняя карта уйти прямо в Дом? (Это абсолютный прогресс)
                 foreach (var f in pileManager.FoundationPiles)
                 {
                     if (f.CanAccept(topCard)) return true;
                 }
 
-                // Б. Может ли перелечь на другой слот стола?
                 bool isProgressiveMove = false;
 
-                // --- НОВОЕ ПРАВИЛО: Авто-заполнение ---
-                // Если это ПОСЛЕДНЯЯ карта в группе, и у нас есть резерв в сбросе или колоде, 
-                // то ее перенос освободит группу и вызовет заполнение новыми картами!
                 if (totalCardsInGroup == 1 && (pileManager.WastePile.CardCount > 0 || pileManager.StockPile.CardCount > 0))
                 {
                     isProgressiveMove = true;
                 }
-                // --- СТАРОЕ ПРАВИЛО: Поиск нужной карты снизу ---
                 else if (slot.transform.childCount > 1)
                 {
                     for (int i = slot.transform.childCount - 2; i >= 0; i--)
@@ -1219,7 +1230,7 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
 
                         if (!underData.IsFaceUp())
                         {
-                            isProgressiveMove = true; // Нашли закрытую карту
+                            isProgressiveMove = true;
                             break;
                         }
                         else
@@ -1228,7 +1239,7 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
                             {
                                 if (f.CanAccept(underCard))
                                 {
-                                    isProgressiveMove = true; // Нашли карту для Дома
+                                    isProgressiveMove = true;
                                     break;
                                 }
                             }
@@ -1237,7 +1248,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
                     }
                 }
 
-                // Если перемещение имеет смысл — ищем, КУДА можно положить верхнюю карту
                 if (isProgressiveMove)
                 {
                     foreach (var targetGroup in pileManager.TableauGroups)
@@ -1245,28 +1255,27 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
                         foreach (var targetSlot in targetGroup.Slots)
                         {
                             if (slot == targetSlot) continue;
-                            if (targetSlot.CanAccept(topCard)) return true; // Нашли полезный ход!
+                            if (targetSlot.CanAccept(topCard)) return true;
                         }
                     }
                 }
             }
         }
-
-        // Если ни один ход не ведет к прогрессу — это 100% тупик!
         return false;
     }
+
     private void OnDestroy()
     {
-        // ИЗМЕНЕНО: !_isGameFinished заменено на !_isGameWon
         if (hasGameStarted && !_isGameWon && StatisticsManager.Instance != null)
         {
             StatisticsManager.Instance.OnGameAbandoned();
         }
+        // Р”РћР‘РђР’РРўР¬ Р­РўРЈ РЎРўР РћРљРЈ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
     }
 
     public bool OnDropToBoard(CardController c, Vector2 p)
     {
-        // Запускаем звук с задержкой 0.2с, чтобы он совпал с концом анимации возврата
         StartCoroutine(PlayDelayedSound("Card_Drop_Fail", 0.2f));
         return false;
     }
@@ -1274,6 +1283,11 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
     public void OnUndoActionDummy() { }
     public void RestartGame()
     {
+        // ---> пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ <---
+        if (hintSolver != null) hintSolver.CancelSearch();
+        cachedHintPath = null;
+        isExecutingHint = false;
+
         isRestarting = true;
         StopAllCoroutines();
         StartNewGame();
@@ -1286,20 +1300,17 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
         bool fromWasteToFoundation = false;
         bool fromTableauToFoundation = false;
 
-        // 1. Карта попала в ДОМ
         if (container is OctagonFoundationPile)
         {
             isToFoundation = true;
             GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, 1);
             GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, 1, card.cardModel.rank.ToString());
 
-            // Задание: "Центральное снабжение"
             if (source is OctagonWastePile)
             {
                 fromWasteToFoundation = true;
                 GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveFromWasteToFoundation, 1);
             }
-            // Задание: "Раскрытие углов"
             else if (source is OctagonTableauSlot)
             {
                 fromTableauToFoundation = true;
@@ -1307,7 +1318,6 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
             }
         }
 
-        // 2. ОТКАТ, если игрок вытащил карту из Дома руками
         if (source is OctagonFoundationPile && container != source)
         {
             GameQuestTracker.Instance?.RecordCardRemovedFromFoundation(card.cardModel.rank);
@@ -1327,10 +1337,8 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
     {
         if (!IsInputAllowed || _isGameFinished || isUndoing) return;
 
-        // На мобильных устройствах и планшетах авто-перенос срабатывает по одинарному клику
-        if(GameSettings.AutoMoveClickMode == 0)
+        if (GameSettings.AutoMoveClickMode == 0)
         {
-            // Защита от микро-свайпов: если палец сдвинулся, возвращаем карту на место
             var octCard = card as OctagonCardController;
             if (octCard != null && octCard.transform.parent == dragLayer)
             {
@@ -1348,4 +1356,167 @@ public class OctagonModeManager : MonoBehaviour, ICardGameMode, IModeManager, IC
     public void OnCardDoubleClicked(CardController c, bool b) { OnCardDoubleClicked(c); }
     public void OnCardLongPressed(CardController c) { }
     public void OnKeyboardPick(CardController c) { }
+    public void StartBackgroundSolver()
+    {
+        if (backgroundSolverCoroutine != null) StopCoroutine(backgroundSolverCoroutine);
+        if (hintSolver != null) hintSolver.CancelSearch();
+        cachedHintPath = null;
+        backgroundSolverCoroutine = StartCoroutine(BackgroundSolverRoutine());
+    }
+
+    private IEnumerator BackgroundSolverRoutine()
+    {
+        while ((dragLayer != null && dragLayer.childCount > 0) || !IsInputAllowed)
+            yield return null;
+
+        yield return new WaitForSeconds(0.1f);
+
+        if (_isGameWon || _isGameFinished) yield break;
+
+        bool solverFinished = false;
+        if (hintSolver == null) hintSolver = gameObject.AddComponent<OctagonHintSolver>();
+
+        int recycles = 0;
+        var field = GetType().GetField("recyclesUsed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (field != null) recycles = (int)field.GetValue(this);
+
+        hintSolver.FindPath(pileManager, recycles, path => {
+            cachedHintPath = path;
+            solverFinished = true;
+        });
+
+        while (!solverFinished) yield return null;
+        backgroundSolverCoroutine = null;
+    }
+
+    public void RequestHint(System.Action onWaitStart, System.Action<bool> onHintResult)
+    {
+        if (isExecutingHint) return;
+        if (_isGameWon || _isGameFinished || !IsInputAllowed) { onHintResult?.Invoke(false); return; }
+        StartCoroutine(HintRoutine(onWaitStart, onHintResult));
+    }
+
+    private IEnumerator HintRoutine(System.Action onWaitStart, System.Action<bool> onResult)
+    {
+        // FIX (deadlock): start the background solver BEFORE disabling input, not after.
+        // BackgroundSolverRoutine's own guard ("while (... || !IsInputAllowed) yield return null;")
+        // waits for IsInputAllowed to be true before it ever calls hintSolver.FindPath(...).
+        // The old order set IsInputAllowed = false FIRST, so that guard waited forever for
+        // input to be re-enabled - which only happens after backgroundSolverCoroutine finishes.
+        // Two coroutines waiting on each other = deadlock: FindPath() was never called at all,
+        // hence zero HintSolver logs and zero errors, while the hint panel hung forever.
+        // RequestHint() already guarantees IsInputAllowed == true at this point, so it is safe
+        // to kick off the solver first and only then block input for the duration of the wait.
+        if (cachedHintPath == null && backgroundSolverCoroutine == null) StartBackgroundSolver();
+
+        IsInputAllowed = false;
+
+        if (backgroundSolverCoroutine != null)
+        {
+            onWaitStart?.Invoke();
+            while (backgroundSolverCoroutine != null) yield return null;
+        }
+
+        if (cachedHintPath != null && cachedHintPath.Count > 0)
+        {
+            var nextMove = cachedHintPath[0];
+            cachedHintPath.Clear(); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+
+            isExecutingHint = true;
+            ExecuteHintMove(nextMove);
+
+            onResult?.Invoke(true);
+        }
+        else
+        {
+            IsInputAllowed = true;
+            onResult?.Invoke(false);
+        }
+    }
+
+    private void ExecuteHintMove(OctagonHintMove cmd)
+    {
+        if (cmd.Type == OctagonHintMove.MoveType.StockDraw || cmd.Type == OctagonHintMove.MoveType.Recycle)
+        {
+            OnStockClicked();
+            return;
+        }
+
+        CardController card = null;
+        ICardContainer source = null;
+        ICardContainer target = null;
+
+        if (cmd.Type == OctagonHintMove.MoveType.WasteToTableau || cmd.Type == OctagonHintMove.MoveType.WasteToFoundation)
+        {
+            source = pileManager.WastePile;
+            card = pileManager.WastePile.GetTopCard();
+        }
+        else
+        {
+            int gIdx = cmd.From / 5;
+            int sIdx = cmd.From % 5;
+            source = pileManager.TableauGroups[gIdx].Slots[sIdx];
+            card = ((OctagonTableauSlot)source).GetTopCard();
+        }
+
+        if (cmd.Type == OctagonHintMove.MoveType.Foundation || cmd.Type == OctagonHintMove.MoveType.WasteToFoundation)
+        {
+            target = pileManager.FoundationPiles[cmd.TargetFoundation];
+        }
+        else
+        {
+            int gIdx = cmd.To / 5;
+            int sIdx = cmd.To % 5;
+            target = pileManager.TableauGroups[gIdx].Slots[sIdx];
+        }
+
+        // DIAGNOSTIC: log exactly what the hint tried to do and why it did/didn't apply.
+        // If this keeps rejecting the very first move of the solver's path over and over
+        // (same path recomputed again and again), the printed suit/rank values below will
+        // show directly whether card/source/target came back null, or whether CanAccept()
+        // is failing because the target foundation's current suit doesn't match the card -
+        // which would point at a mismatch between OctagonHintSolver's suit-to-foundation-index
+        // assumption (GetFoundationIndex: suitBase = suit * 2) and how FoundationPiles are
+        // actually ordered/assigned in this scene.
+        bool canAccept = card != null && target != null && target.CanAccept(card);
+        string cardDesc = card != null ? $"{card.cardModel.suit} {card.cardModel.rank}" : "NULL";
+        string targetTopDesc = "n/a";
+        var targetFoundation = target as OctagonFoundationPile;
+        if (targetFoundation != null)
+        {
+            var t = targetFoundation.GetTopCard();
+            targetTopDesc = t != null ? $"{t.cardModel.suit} {t.cardModel.rank}" : "empty";
+        }
+        Debug.Log($"[HintExec] cmd={cmd.Type} From={cmd.From} To={cmd.To} TargetFoundation={cmd.TargetFoundation} | card={cardDesc} | source={(source == null ? "NULL" : "ok")} | target={(target == null ? "NULL" : "ok")} | targetTop={targetTopDesc} | CanAccept={canAccept}");
+
+        if (card != null && source != null && target != null && canAccept)
+        {
+            StartCoroutine(AnimateHintMove(card, source, target));
+        }
+        else
+        {
+            Debug.LogWarning($"[HintExec] \u0425\u043e\u0434 \u041e\u0422\u041a\u041b\u041e\u041d\u0401\u041d, \u043f\u0435\u0440\u0435\u0437\u0430\u043f\u0443\u0441\u043a\u0430\u044e \u043f\u043e\u0438\u0441\u043a. cmd={cmd.Type} From={cmd.From} To={cmd.To} TargetFoundation={cmd.TargetFoundation}");
+            isExecutingHint = false;
+            IsInputAllowed = true;
+            StartBackgroundSolver();
+        }
+    }
+
+    private IEnumerator AnimateHintMove(CardController card, ICardContainer source, ICardContainer target)
+    {
+        card.transform.SetParent(dragLayer, true);
+        card.transform.SetAsLastSibling();
+
+        Vector3 targetLocalPos = target.GetDropAnchoredPosition(card);
+
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Whoosh_Out");
+
+        yield return StartCoroutine(animationService.AnimateMoveCard(
+            card, target.Transform, targetLocalPos, 0.2f, true, null));
+
+        target.AcceptCard(card);
+
+        // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ CheckGameState
+        OnCardDroppedToContainer(card, target);
+    }
 }

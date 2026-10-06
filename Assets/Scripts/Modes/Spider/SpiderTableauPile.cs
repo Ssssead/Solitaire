@@ -395,4 +395,8 @@ public class SpiderTableauPile : TableauPile
         cards.Clear();
         faceUp.Clear();
     }
+    public override void ForceRebuildLayout()
+    {
+        ForceRecalculateLayout();
+    }
 }

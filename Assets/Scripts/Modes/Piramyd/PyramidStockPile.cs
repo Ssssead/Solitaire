@@ -11,7 +11,10 @@ public class PyramidStockPile : MonoBehaviour
 
     public bool IsEmpty => cards.Count == 0;
     public int Count => cards.Count;
-
+    public List<CardController> GetCards()
+    {
+        return cards;
+    }
     public void Add(CardController c)
     {
         c.transform.SetParent(transform);

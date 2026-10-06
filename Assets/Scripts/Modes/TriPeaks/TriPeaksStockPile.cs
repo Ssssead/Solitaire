@@ -11,7 +11,12 @@ public class TriPeaksStockPile : MonoBehaviour, ICardContainer
     public float Gap = 5f; // Убедитесь в инспекторе, что тут НЕ 0 (например, 5 или 10)
     public int Count => _cards.Count;
     public bool IsEmpty => _cards.Count == 0;
-
+    // ---> ДОБАВЬТЕ ЭТОТ МЕТОД <---
+    public List<CardController> GetCards()
+    {
+        return _cards;
+    }
+    // -----------------------------
     public void AddCard(CardController card)
     {
         if (!_cards.Contains(card))

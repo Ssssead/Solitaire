@@ -508,7 +508,25 @@ public class AutoMoveService : MonoBehaviour
         // -------------------------------------------------------
         return true;
     }
+    /// <summary>
+    /// Выполняет конкретный ход, полученный от солвера.
+    /// Возвращает true, если ход успешно запущен.
+    /// </summary>
+    public bool ExecuteHintMove(CardController card, ICardContainer targetContainer)
+    {
+        var sourceInfo = FindCardSource(card);
+        if (sourceInfo.sourceType == SourceType.Unknown) return false;
 
+        if (targetContainer is FoundationPile foundation)
+        {
+            return ExecuteMoveToFoundation(card, sourceInfo, foundation);
+        }
+        else if (targetContainer is TableauPile tableau)
+        {
+            return ExecuteMoveToTableau(card, sourceInfo, tableau);
+        }
+        return false;
+    }
 
     #endregion
 
@@ -750,18 +768,21 @@ public class AutoMoveService : MonoBehaviour
     {
         if (sequence == null || sequence.Count == 0) yield break;
 
+        // <--- ДОБАВЛЕНО: Динамическая амплитуда тряски --->
+        // Вычисляем силу тряски как 15% от ширины самой карты. 
+        // Теперь при любом разрешении и ориентации экрана тряска будет пропорциональной!
+        float dynamicAmplitude = sequence[0].rectTransform.rect.width * 0.15f;
+
         // <--- ПОДГОТОВКА ЗВУКА --->
         AudioSource scrapeSource = null;
         float originalVolume = 1f;
 
         if (AudioManager.Instance != null)
         {
-            // Здесь впишите название вашего длинного звука трения
             scrapeSource = AudioManager.Instance.PlaySound("Card_Shake");
-
             if (scrapeSource != null)
             {
-                originalVolume = scrapeSource.volume; // Запоминаем дефолтную громкость из настроек
+                originalVolume = scrapeSource.volume;
             }
         }
 
@@ -782,21 +803,16 @@ public class AutoMoveService : MonoBehaviour
         while (elapsed < shakeDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            float phase = Mathf.Sin(elapsed * 40f) * (1f - elapsed / shakeDuration);
+
+            // Здесь мы убрали умножение на старый shakeAmplitude, оставив только фазу затухания
+            float phase = 1f - (elapsed / shakeDuration);
 
             // <--- ДИНАМИЧЕСКАЯ ГРОМКОСТЬ ОТ СКОРОСТИ --->
             if (scrapeSource != null && scrapeSource.isPlaying)
             {
-                // Abs(Cos) дает пульсацию от 0 до 1 синхронно с движением карты
                 float speedMultiplier = Mathf.Abs(Mathf.Cos(elapsed * 60f));
-
-                // Не уводим звук в абсолютный ноль (0.1f), чтобы не было "рваного" обрыва
                 float dynamicVolume = Mathf.Lerp(0.1f, 1f, speedMultiplier);
-
-                // Плавно глушим общий звук к самому концу анимации
-                float generalFade = 1f - (elapsed / shakeDuration);
-
-                // Применяем финальную громкость
+                float generalFade = phase;
                 scrapeSource.volume = originalVolume * dynamicVolume * generalFade;
             }
 
@@ -806,8 +822,10 @@ public class AutoMoveService : MonoBehaviour
                 if (card == null) continue;
 
                 Vector3 start = startPositions[i];
-                // Движение карты (Синус)
-                float offsetX = Mathf.Sin(elapsed * 60f + i) * shakeAmplitude * phase;
+
+                // <--- ИЗМЕНЕНО: Используем dynamicAmplitude вместо жесткого значения --->
+                float offsetX = Mathf.Sin(elapsed * 60f + i) * dynamicAmplitude * phase;
+
                 card.rectTransform.anchoredPosition = start + new Vector3(offsetX, 0f, 0f);
             }
 
@@ -826,8 +844,8 @@ public class AutoMoveService : MonoBehaviour
         // <--- ОСТАНОВКА И СБРОС ЗВУКА --->
         if (scrapeSource != null)
         {
-            scrapeSource.Stop(); // Жестко рубим длинный хвост файла
-            scrapeSource.volume = originalVolume; // ВАЖНО: возвращаем громкость, иначе пул сломается!
+            scrapeSource.Stop();
+            scrapeSource.volume = originalVolume;
         }
     }
 

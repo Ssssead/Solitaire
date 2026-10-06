@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using UnityEngine.EventSystems;
 
 [System.Serializable]
-public struct GameIndicatorMapping
+public struct GameIndicatorColorMapping
 {
     public GameType gameType;
-    public Sprite sprite;
+    public Color color;
 }
 
 [System.Serializable]
@@ -54,15 +54,14 @@ public class AppGlobalStatsUI : MonoBehaviour
     public TMP_Text currentStreakText;
     public TMP_Text bestStreakText;
 
-    // ---> НОВЫЙ БЛОК: СТАТИСТИКА ПО КВЕСТАМ (7 ЗНАЧЕНИЙ) <---
     [Header("Quest Statistics (7 Values)")]
-    public TMP_Text questStreakCurrentText;       // Заданий подряд (текущий)
-    public TMP_Text questStreakBestText;          // Заданий подряд (рекорд)
-    public TMP_Text dayStreakCurrentText;         // Дней подряд (текущий)
-    public TMP_Text dayStreakBestText;            // Дней подряд (рекорд)
-    public TMP_Text perfectDaysTotalUiText;       // Всего идеальных дней (6/6)
-    public TMP_Text perfectDaysStreakCurrentText; // Идеальных дней подряд (текущий)
-    public TMP_Text perfectDaysStreakBestText;    // Идеальных дней подряд (рекорд)
+    public TMP_Text questStreakCurrentText;
+    public TMP_Text questStreakBestText;
+    public TMP_Text dayStreakCurrentText;
+    public TMP_Text dayStreakBestText;
+    public TMP_Text perfectDaysTotalUiText;
+    public TMP_Text perfectDaysStreakCurrentText;
+    public TMP_Text perfectDaysStreakBestText;
 
     [Header("History (Last 10 Games)")]
     public Image[] historySlots;
@@ -70,7 +69,8 @@ public class AppGlobalStatsUI : MonoBehaviour
     public Sprite lossIcon;
     public Sprite emptyIcon;
     public Image[] historyIndicators;
-    public GameIndicatorMapping[] gameIndicators;
+
+    public GameIndicatorColorMapping[] gameIndicatorColors;
 
     [Header("--- Progress Bar Settings ---")]
     public float hoverTransitionSpeed = 12f;
@@ -84,7 +84,6 @@ public class AppGlobalStatsUI : MonoBehaviour
     private void Start()
     {
         if (closeButton) closeButton.onClick.AddListener(OnCloseClicked);
-
         InitializeHoverTriggers();
     }
 
@@ -95,7 +94,6 @@ public class AppGlobalStatsUI : MonoBehaviour
 
     private void Update()
     {
-        // Плавное изменение цвета полосок
         float lerpStep = hoverTransitionSpeed * Time.deltaTime;
         foreach (var data in gameBarItems)
         {
@@ -105,7 +103,6 @@ public class AppGlobalStatsUI : MonoBehaviour
             }
         }
 
-        // Тултип следует за мышкой
         if (barTooltipPanel != null && barTooltipPanel.activeSelf)
         {
             Vector2 mousePos = Input.mousePosition;
@@ -138,20 +135,24 @@ public class AppGlobalStatsUI : MonoBehaviour
         FillLevelAndXP(globalData);
         FillCrossGameRecords();
         FillStreaks(globalData);
-        FillQuestStats(); // <--- ВЫЗОВ НОВОГО МЕТОДА
+        FillQuestStats();
         UpdateHistorySlots(globalData.history);
 
         FillProgressBar();
     }
 
-    // --- ЛОГИКА ПРОГРЕСС-БАРА И НАВЕДЕНИЯ ---
-
     private void InitializeHoverTriggers()
     {
         foreach (var data in gameBarItems)
         {
+            // === ИЗМЕНЕНИЕ: Автоматически красим серый спрайт прогресс-бара ===
             if (data.barImage != null)
             {
+                if (TryGetIndicatorColor(data.gameType, out Color gameColor))
+                {
+                    data.barImage.color = gameColor; // Присваиваем цвет из массива gameIndicatorColors
+                }
+
                 data.originalBarColor = data.barImage.color;
                 data.targetBarColor = data.originalBarColor;
             }
@@ -264,8 +265,6 @@ public class AppGlobalStatsUI : MonoBehaviour
         barTooltipPanel.SetActive(true);
     }
 
-    // --- ОСТАЛЬНЫЕ МЕТОДЫ ---
-
     private void FillBasicAndDetailedStats(StatData data)
     {
         if (gamesPlayedText) gamesPlayedText.text = data.gamesStarted.ToString();
@@ -288,22 +287,18 @@ public class AppGlobalStatsUI : MonoBehaviour
         if (bestStreakText) bestStreakText.text = data.bestStreak.ToString();
     }
 
-    // НОВЫЙ МЕТОД: Заполнение 7 параметров квестов
     private void FillQuestStats()
     {
         if (QuestManager.Instance == null || QuestManager.Instance.saveData == null) return;
 
         var qData = QuestManager.Instance.saveData;
 
-        // 1. Заданий подряд
         if (questStreakCurrentText) questStreakCurrentText.text = qData.questsInARowCurrent.ToString();
         if (questStreakBestText) questStreakBestText.text = qData.questsInARowBest.ToString();
 
-        // 2. Дней подряд
         if (dayStreakCurrentText) dayStreakCurrentText.text = qData.minorStreakCurrent.ToString();
         if (dayStreakBestText) dayStreakBestText.text = qData.minorStreakBest.ToString();
 
-        // 3. Идеальные дни (6/6)
         if (perfectDaysTotalUiText) perfectDaysTotalUiText.text = qData.perfectDaysTotal.ToString();
         if (perfectDaysStreakCurrentText) perfectDaysStreakCurrentText.text = qData.perfectDaysStreakCurrent.ToString();
         if (perfectDaysStreakBestText) perfectDaysStreakBestText.text = qData.perfectDaysStreakBest.ToString();
@@ -452,11 +447,10 @@ public class AppGlobalStatsUI : MonoBehaviour
 
                 if (historyIndicators != null && i < historyIndicators.Length && historyIndicators[i] != null)
                 {
-                    Sprite gameSprite = GetIndicatorSprite(entry.gameName);
-                    if (gameSprite != null)
+                    if (System.Enum.TryParse(entry.gameName, out GameType type) && TryGetIndicatorColor(type, out Color gameColor))
                     {
                         historyIndicators[i].gameObject.SetActive(true);
-                        historyIndicators[i].sprite = gameSprite;
+                        historyIndicators[i].color = gameColor;
                     }
                     else
                     {
@@ -478,16 +472,18 @@ public class AppGlobalStatsUI : MonoBehaviour
         }
     }
 
-    private Sprite GetIndicatorSprite(string gameName)
+    private bool TryGetIndicatorColor(GameType type, out Color outColor)
     {
-        if (System.Enum.TryParse(gameName, out GameType type))
+        outColor = Color.white;
+        foreach (var mapping in gameIndicatorColors)
         {
-            foreach (var mapping in gameIndicators)
+            if (mapping.gameType == type)
             {
-                if (mapping.gameType == type) return mapping.sprite;
+                outColor = mapping.color;
+                return true;
             }
         }
-        return null;
+        return false;
     }
 
     private string FormatTimeLocalized(float timeInSeconds)

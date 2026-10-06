@@ -11,30 +11,12 @@ public class KlondikeRandomGenerator : BaseGenerator
 
     [Header("Generation Strategy")]
     public int maxMutationsPerCandidate = 5;
-    public bool calibrationMode = true;
-    public Difficulty targetDifficulty;
 
     [Header("Optimization")]
     [Range(1, 16)]
     public float frameBudgetMs = 8.0f; // Бюджет времени на кадр
 
     private int minScore, maxScore;
-
-    // --- АВТОЗАПУСК (ДЛЯ ТЕСТОВ) ---
-    private void Start()
-    {
-        if (calibrationMode)
-        {
-            // Для теста можно менять 1 на 3
-            int testParam = 1;
-            UnityEngine.Debug.Log($"[SmartGen] Starting Infinite Grinder for {targetDifficulty} (Draw {testParam})...");
-
-            StartCoroutine(GenerateDeal(targetDifficulty, testParam, (deal, metrics) =>
-            {
-                UnityEngine.Debug.Log("<color=yellow>[SmartGen] DONE! Deal generated.</color>");
-            }));
-        }
-    }
 
     // --- ГЛАВНАЯ КОРУТИНА ---
     public override IEnumerator GenerateDeal(Difficulty difficulty, int param, Action<Deal, DealMetrics> onComplete)
@@ -46,15 +28,31 @@ public class KlondikeRandomGenerator : BaseGenerator
         int totalAttempts = 0;
         bool found = false;
 
-        Stopwatch frameWatch = new Stopwatch();
+        // Переводим бюджет времени из миллисекунд в секунды для Time.realtimeSinceStartup
+        float frameBudgetSec = frameBudgetMs / 1000f;
+
+        // Фиксируем время старта текущего кадра
+        float frameStartTime = Time.realtimeSinceStartup;
 
         while (!found)
         {
+            // [НОВОЕ] Если идет UI-анимация меню, просто ждем и не нагружаем CPU
+            if (DealCacheSystem.Instance != null && DealCacheSystem.Instance.IsPausedForUI)
+            {
+                yield return null;
+                frameStartTime = Time.realtimeSinceStartup; // Сбрасываем таймер, чтобы избежать ложного срабатывания
+                continue;
+            }
+
             totalAttempts++;
 
-            // Проверка времени перед созданием
-            if (frameWatch.ElapsedMilliseconds > frameBudgetMs) { yield return null; frameWatch.Restart(); }
-            else if (!frameWatch.IsRunning) frameWatch.Start();
+            // Проверка времени перед созданием базы
+            if (Time.realtimeSinceStartup - frameStartTime > frameBudgetSec)
+            {
+                yield return null;
+                // После yield мы находимся в НОВОМ кадре, поэтому обновляем точку отсчета
+                frameStartTime = Time.realtimeSinceStartup;
+            }
 
             // 1. Создаем базу (Архитектурный подход)
             Deal candidate = CreateSmartDeal(difficulty);
@@ -63,17 +61,20 @@ public class KlondikeRandomGenerator : BaseGenerator
             for (int m = 0; m <= maxMutationsPerCandidate; m++)
             {
                 // Проверка времени перед тяжелым солвером
-                if (frameWatch.ElapsedMilliseconds > frameBudgetMs) { yield return null; frameWatch.Restart(); }
-
-                float timeLeft = frameBudgetMs - frameWatch.ElapsedMilliseconds;
-                if (timeLeft <= 0) { yield return null; frameWatch.Restart(); timeLeft = frameBudgetMs; }
+                if (Time.realtimeSinceStartup - frameStartTime > frameBudgetSec)
+                {
+                    yield return null;
+                    frameStartTime = Time.realtimeSinceStartup;
+                }
 
                 KlondikeSolver.ExtendedSolverResult result = new KlondikeSolver.ExtendedSolverResult();
 
                 // Запускаем Солвер (он учитывает param для правил перекладки)
                 yield return StartCoroutine(KlondikeSolver.SolveAsync(candidate, param, frameBudgetMs, result));
 
-                frameWatch.Restart();
+                // ВАЖНО: Корутина Солвера делала паузы (yield) внутри себя. 
+                // Когда мы вернулись сюда, мы уже 100% в новом кадре. Сбрасываем таймер!
+                frameStartTime = Time.realtimeSinceStartup;
 
                 if (result.IsSolved)
                 {
@@ -103,7 +104,12 @@ public class KlondikeRandomGenerator : BaseGenerator
             if (found) break;
 
             // Пауза каждые 5 попыток полного цикла, даже если бюджет есть (для GC и стабильности)
-            if (totalAttempts % 5 == 0) yield return null;
+            if (totalAttempts % 5 == 0)
+            {
+                yield return null;
+                // Сбрасываем таймер после принудительной паузы
+                frameStartTime = Time.realtimeSinceStartup;
+            }
         }
 
         onComplete?.Invoke(validDeal, null);

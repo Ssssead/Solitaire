@@ -1,20 +1,22 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using System.Collections;
 using System;
 
+[RequireComponent(typeof(CanvasGroup))] // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ CanvasGroup, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ
 public class SettingsPanelAnimator : MonoBehaviour
 {
     [Header("Animation Durations")]
-    public float landscapeDuration = 0.4f; // Должно совпадать с длительностью полета карт
-    public float portraitDuration = 0.4f; // В вертикальном быстрее
+    public float landscapeDuration = 0.4f;
+    public float portraitDuration = 0.4f;
     public AnimationCurve motionCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-    [Header("Off-Screen Offsets (Смещение влево)")]
+    [Header("Off-Screen Offsets (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)")]
     public float landscapeXOffset = -1500f;
-    public float portraitXOffset = -2500f; // В вертикальном улетает дальше
+    public float portraitXOffset = -2500f;
 
     private RectTransform rectTransform;
-    private Vector2 onScreenPos; // Позиция "В центре"
+    private CanvasGroup canvasGroup; // пїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ CanvasGroup
+    private Vector2 onScreenPos;
     private Vector2 landscapeOffScreenPos;
     private Vector2 portraitOffScreenPos;
 
@@ -24,26 +26,33 @@ public class SettingsPanelAnimator : MonoBehaviour
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
+        canvasGroup = GetComponent<CanvasGroup>(); // пїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
-        // Запоминаем ту позицию, где панель стоит в редакторе (это будет конечная точка "Открыто")
+        // пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+        SetPanelVisible(false);
+
         onScreenPos = rectTransform.anchoredPosition;
-
-        // Фиксируем точки вылета за экран
         landscapeOffScreenPos = new Vector2(landscapeXOffset, onScreenPos.y);
         portraitOffScreenPos = new Vector2(portraitXOffset, onScreenPos.y);
     }
 
-    // Вспомогательные методы для получения текущих параметров в зависимости от ориентации
     private bool IsPortrait() => Screen.width < Screen.height;
     private float CurrentDuration => IsPortrait() ? portraitDuration : landscapeDuration;
     private Vector2 CurrentOffScreenPos => IsPortrait() ? portraitOffScreenPos : landscapeOffScreenPos;
 
-    /// <summary>
-    /// Просто открыть панель (выезд слева)
-    /// </summary>
+    // пїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ SetActive
+    private void SetPanelVisible(bool isVisible)
+    {
+        if (canvasGroup == null) return;
+        canvasGroup.alpha = isVisible ? 1f : 0f;
+        canvasGroup.interactable = isVisible;
+        canvasGroup.blocksRaycasts = isVisible;
+    }
+
     public void AnimateOpen()
     {
-        gameObject.SetActive(true);
+        gameObject.SetActive(true); // <--- пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+        SetPanelVisible(true);
         isPanelOpen = true;
 
         if (currentRoutine != null) StopCoroutine(currentRoutine);
@@ -51,14 +60,10 @@ public class SettingsPanelAnimator : MonoBehaviour
         float duration = CurrentDuration;
         Vector2 offScreenPos = CurrentOffScreenPos;
 
-        // Ставим в позицию "за кадром" и запускаем анимацию "в кадр"
         rectTransform.anchoredPosition = offScreenPos;
         currentRoutine = StartCoroutine(MoveRoutine(offScreenPos, onScreenPos, duration));
     }
 
-    /// <summary>
-    /// Закрыть панель (уезд влево)
-    /// </summary>
     public void AnimateClose()
     {
         isPanelOpen = false;
@@ -67,25 +72,21 @@ public class SettingsPanelAnimator : MonoBehaviour
         float duration = CurrentDuration;
         Vector2 offScreenPos = CurrentOffScreenPos;
 
-        // Едем из текущей позиции "за кадр"
         currentRoutine = StartCoroutine(MoveRoutine(rectTransform.anchoredPosition, offScreenPos, duration, () =>
         {
-            gameObject.SetActive(false); // Выключаем объект после анимации
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ CanvasGroup
+            SetPanelVisible(false);
         }));
     }
 
-    /// <summary>
-    /// СМЕНА ИГРЫ: Уехать влево -> Обновить данные -> Выехать слева
-    /// </summary>
-    /// <param name="onUpdateContent">Метод обновления UI (название игры, кнопки)</param>
     public void AnimateSwitch(Action onUpdateContent)
     {
-        gameObject.SetActive(true);
+        gameObject.SetActive(true); // <--- пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+        SetPanelVisible(true);
         isPanelOpen = true;
 
         if (currentRoutine != null) StopCoroutine(currentRoutine);
 
-        // Делим текущее время: 50% на выезд, 50% на въезд.
         float halfDuration = CurrentDuration / 2f;
         Vector2 offScreenPos = CurrentOffScreenPos;
 
@@ -94,13 +95,8 @@ public class SettingsPanelAnimator : MonoBehaviour
 
     private IEnumerator SwitchRoutine(float halfDuration, Vector2 offScreenPos, Action onUpdateContent)
     {
-        // 1. Уезжаем влево
         yield return MoveRoutine(rectTransform.anchoredPosition, offScreenPos, halfDuration);
-
-        // 2. Пока мы за кадром — обновляем текст/кнопки
         onUpdateContent?.Invoke();
-
-        // 3. Выезжаем обратно (слева направо)
         yield return MoveRoutine(offScreenPos, onScreenPos, halfDuration);
     }
 
@@ -111,11 +107,8 @@ public class SettingsPanelAnimator : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = elapsed / time;
-
-            // Кривая плавности
             float curveT = motionCurve.Evaluate(t);
-
-            rectTransform.anchoredPosition = Vector2.Lerp(start, end, curveT);
+            rectTransform.anchoredPosition = Vector2.LerpUnclamped(start, end, curveT); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: LerpUnclamped пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             yield return null;
         }
         rectTransform.anchoredPosition = end;
@@ -123,4 +116,15 @@ public class SettingsPanelAnimator : MonoBehaviour
     }
 
     public bool IsOpen() => isPanelOpen;
+
+    // РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РїСЂРё СЃРјРµРЅРµ РѕСЂРёРµРЅС‚Р°С†РёРё: РїР°РЅРµР»СЊ РЅСѓР¶РЅРѕ СЃРєСЂС‹С‚СЊ РњР“РќРћР’Р•РќРќРћ (РѕРЅР° РІСЃС‘ СЂР°РІРЅРѕ
+    // С‚СѓС‚ Р¶Рµ РѕС‚РєСЂРѕРµС‚СЃСЏ Р·Р°РЅРѕРІРѕ РІ РґСЂСѓРіРѕР№ РѕСЂРёРµРЅС‚Р°С†РёРё С‡РµСЂРµР· AnimateOpen), РЅРѕ Р±РµР· СЌС‚РѕРіРѕ РјРµС‚РѕРґР°
+    // isPanelOpen РѕСЃС‚Р°РІР°Р»СЃСЏ Р±С‹ true РЅР°РІСЃРµРіРґР° РЅР° С‚РѕР№ СЃС‚РѕСЂРѕРЅРµ, РєРѕС‚РѕСЂСѓСЋ РІС‹РєР»СЋС‡РёР»Рё raw SetActive(false),
+    // Рё СЃР»РµРґСѓСЋС‰РёР№ IsSettingsPanelOpen() РѕС€РёР±РѕС‡РЅРѕ СЂРµС€Р°Р» Р±С‹, С‡С‚Рѕ РЅР°СЃС‚СЂРѕР№РєРё РµС‰С‘ РѕС‚РєСЂС‹С‚С‹.
+    public void ForceClose()
+    {
+        if (currentRoutine != null) StopCoroutine(currentRoutine);
+        isPanelOpen = false;
+        SetPanelVisible(false);
+    }
 }

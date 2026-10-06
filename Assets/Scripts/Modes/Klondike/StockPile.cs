@@ -13,7 +13,7 @@ using static KlondikeModeManager;
 [RequireComponent(typeof(RectTransform))]
 public class StockPile : MonoBehaviour, ICardContainer, IPointerClickHandler
 {
-    private List<CardController> cards = new List<CardController>();
+    public List<CardController> cards = new List<CardController>();
     private KlondikeModeManager manager;
     private RectTransform rect;
     private AnimationService animationService;

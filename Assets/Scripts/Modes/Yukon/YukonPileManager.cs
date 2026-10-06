@@ -13,33 +13,23 @@ public class YukonPileManager : PileManager
 
     public void InitializeYukon(YukonModeManager modeManager)
     {
-        // 1. Собираем стопки со сцены
+        // Ищем глобально
         yukonTableaus.Clear();
-        if (yukonSlotsParent != null)
-        {
-            yukonTableaus.AddRange(yukonSlotsParent.GetComponentsInChildren<YukonTableauPile>());
-        }
-
-        // Сортируем
+        var allTabs = FindObjectsOfType<YukonTableauPile>();
+        yukonTableaus.AddRange(allTabs);
         yukonTableaus.Sort((a, b) => (a as MonoBehaviour).name.CompareTo((b as MonoBehaviour).name));
 
-        // 2. --- ИСПРАВЛЕНИЕ ОШИБКИ LIST CONVERSION ---
-        // Используем .Cast<TableauPile>().ToList() для корректного преобразования типов
         List<TableauPile> baseTableauList = yukonTableaus.Cast<TableauPile>().ToList();
-
         SetPrivateList("tableau", baseTableauList);
 
-        // 3. Регистрируем Foundations
         var allFounds = FindObjectsOfType<FoundationPile>();
         var sortedFounds = new List<FoundationPile>(allFounds);
         sortedFounds.Sort((a, b) => a.name.CompareTo(b.name));
 
         SetPrivateList("foundations", sortedFounds);
 
-        // Инициализация стопок
         foreach (var f in sortedFounds) f.Initialize(null, null);
 
-        // Обнуляем stock и waste
         SetPrivateField("stockPile", null);
         SetPrivateField("wastePile", null);
     }

@@ -321,7 +321,9 @@ public class LocalizationManager : MonoBehaviour
 
     private IEnumerator ChunkedUpdateAllLocalizedTextCoroutine()
     {
-        var all = UnityEngine.Object.FindObjectsOfType<LocalizedText>(true);
+        // Заменяем true на false, чтобы игнорировать скрытые UI панели при старте
+        var all = UnityEngine.Object.FindObjectsOfType<LocalizedText>(false);
+
         int total = all.Length;
         int idx = 0;
         while (idx < total)

@@ -61,7 +61,7 @@ public class SceneExitAnimator : MonoBehaviour
             if (introController != null)
             {
                 foreach (var el in introController.GetTopUIElements())
-                    if (el != null) StartCoroutine(AnimateUIElement(el, el.anchoredPosition, el.anchoredPosition + new Vector2(0, 300f), 0.4f));
+                    if (el != null) StartCoroutine(AnimateUIElement(el, el.anchoredPosition, el.anchoredPosition + new Vector2(0, 400f), 0.4f));
 
                 foreach (var el in introController.GetBottomUIElements())
                     if (el != null) StartCoroutine(AnimateUIElement(el, el.anchoredPosition, el.anchoredPosition + new Vector2(0, -300f), 0.4f));

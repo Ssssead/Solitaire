@@ -1,4 +1,4 @@
-using System;
+п»їusing System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +7,15 @@ using System.Diagnostics;
 
 public static class OctagonSolver
 {
-    private const int MAX_DEPTH = 500;
-    private const int MAX_STATES = 25000;
+    // Was 500 / 25000. Same bug as in OctagonHintSolver: a full from-scratch solve
+    // of this variant (76-card stock + 20 tableau cards, all must eventually pass
+    // through waste/tableau to a foundation) easily needs 600-900+ moves. With the
+    // active-slots restriction, branching per node is very low (~1-1.2), so going
+    // deeper costs almost nothing in node count - but the old MAX_DEPTH=500 silently
+    // truncated the search before it could ever reach a real winning path, so many
+    // ACTUALLY solvable deals were being reported as unsolved here at generation time.
+    private const int MAX_DEPTH = 2000;
+    private const int MAX_STATES = 60000;
 
     public struct Card { public byte rank; public byte suit; }
 
@@ -38,7 +45,6 @@ public static class OctagonSolver
     {
         public InternalDeal State;
         public int Depth;
-        // --- ДОБАВЛЕНО: Для восстановления пути ---
         public SearchNode Parent;
         public MoveCommand Move;
 
@@ -105,7 +111,6 @@ public static class OctagonSolver
         public bool IsSolved;
         public int Moves;
         public int StatesVisited;
-        // --- ДОБАВЛЕНО: Полный путь решения ---
         public string SolutionPath;
     }
 
@@ -115,7 +120,6 @@ public static class OctagonSolver
         var openSet = new PriorityQueue<SearchNode>();
         var closedSet = new HashSet<ulong>();
 
-        // Корневая нода не имеет родителя
         openSet.Enqueue(new SearchNode(internalRoot, 0), 0);
 
         int statesVisited = 0;
@@ -155,7 +159,6 @@ public static class OctagonSolver
                 int hCost = CalculateHeuristic(nextState);
                 int fCost = current.Depth + 1 + hCost;
 
-                // Передаем current как родителя, и move как действие
                 openSet.Enqueue(new SearchNode(nextState, current.Depth + 1, current, move), fCost);
             }
         }
@@ -164,7 +167,6 @@ public static class OctagonSolver
         resultOut.IsSolved = (winningNode != null);
         resultOut.Moves = winningNode != null ? winningNode.Depth : 0;
 
-        // --- ДОБАВЛЕНО: Восстановление пути решения ---
         if (winningNode != null)
         {
             List<string> path = new List<string>();
@@ -174,7 +176,6 @@ public static class OctagonSolver
             {
                 string mStr = curr.Move.Type.ToString();
 
-                // Форматируем ход для читаемости в логах
                 if (curr.Move.Type == MoveType.Foundation)
                     mStr += $"(From:{(curr.Move.From == -1 ? "W" : $"T{curr.Move.From}")}->F{curr.Move.TargetFoundation})";
                 else if (curr.Move.Type == MoveType.TableauToTableau)
@@ -186,7 +187,7 @@ public static class OctagonSolver
                 curr = curr.Parent;
             }
 
-            path.Reverse(); // Переворачиваем, чтобы путь шел от старта к финишу
+            path.Reverse();
             resultOut.SolutionPath = string.Join("|", path);
         }
     }
@@ -196,30 +197,42 @@ public static class OctagonSolver
         List<MoveCommand> moves = new List<MoveCommand>();
         List<MoveCommand> foundationMoves = new List<MoveCommand>();
 
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ 4 пїЅпїЅпїЅпїЅпїЅ)
+        List<int> activeSlots = new List<int>();
+        for (int g = 0; g < 4; g++)
+        {
+            for (int s = 0; s < 5; s++)
+            {
+                if (d.tableau[g * 5 + s].Count > 0)
+                {
+                    activeSlots.Add(g * 5 + s);
+                    break;
+                }
+            }
+        }
+
         if (d.waste.Count > 0)
         {
             int fIdx = GetFoundationIndex(d, d.waste.Last());
             if (fIdx != -1) foundationMoves.Add(new MoveCommand { Type = MoveType.Foundation, From = -1, TargetFoundation = fIdx });
         }
-        for (int i = 0; i < 20; i++)
+
+        // пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+        foreach (int from in activeSlots)
         {
-            if (d.tableau[i].Count > 0)
-            {
-                int fIdx = GetFoundationIndex(d, d.tableau[i].Last());
-                if (fIdx != -1) foundationMoves.Add(new MoveCommand { Type = MoveType.Foundation, From = i, TargetFoundation = fIdx });
-            }
+            int fIdx = GetFoundationIndex(d, d.tableau[from].Last());
+            if (fIdx != -1) foundationMoves.Add(new MoveCommand { Type = MoveType.Foundation, From = from, TargetFoundation = fIdx });
         }
         if (foundationMoves.Count > 0) return foundationMoves;
 
-        for (int from = 0; from < 20; from++)
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ -> пїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+        foreach (int from in activeSlots)
         {
-            if (d.tableau[from].Count == 0) continue;
             Card movingCard = d.tableau[from].Last();
 
-            for (int to = 0; to < 20; to++)
+            foreach (int to in activeSlots)
             {
                 if (from == to) continue;
-                if (d.tableau[to].Count == 0) continue;
 
                 Card targetCard = d.tableau[to].Last();
 
@@ -238,12 +251,12 @@ public static class OctagonSolver
             }
         }
 
+        // пїЅпїЅпїЅпїЅпїЅ -> пїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
         if (d.waste.Count > 0)
         {
             Card movingCard = d.waste.Last();
-            for (int to = 0; to < 20; to++)
+            foreach (int to in activeSlots)
             {
-                if (d.tableau[to].Count == 0) continue;
                 Card targetCard = d.tableau[to].Last();
                 if (targetCard.rank == movingCard.rank + 1) moves.Add(new MoveCommand { Type = MoveType.WasteToTableau, To = to });
             }

@@ -8,6 +8,8 @@ public interface ICardGameMode
     void CheckGameState();
     void OnUndoAction();
     void OnStockClicked(); // Для клика по колоде
+    void RequestHint(System.Action onWaitStart, System.Action<bool> onHintResult);
+
 
     // Свойства (Все с Большой Буквы!)
     RectTransform DragLayer { get; }

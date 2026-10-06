@@ -289,6 +289,10 @@
             "value": "Tüm hamleleri geri al (Basılı tut)"
         },
         {
+            "key": "UndoAll2",
+            "value": "Tüm hamleleri geri al"
+        },
+        {
             "key": "ToMenu",
             "value": "Menü"
         },
@@ -2623,6 +2627,18 @@
         {
             "key": "Settings_DoubleClick",
             "value": "Çift tık"
+        },
+        {
+            "key": "DeadEndText",
+            "value": "Kazanacak hamle kalmadı. Geri Al'ı kullanın."
+        },
+        {
+            "key": "HintText",
+            "value": "İpucu"
+        },
+        {
+            "key": "RotateDevicePrompt",
+            "value": "Eğitim süresince cihazınızı yatay çevirin"
         }
     ]
 }

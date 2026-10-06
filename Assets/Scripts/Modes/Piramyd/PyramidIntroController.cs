@@ -3,11 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+[DefaultExecutionOrder(-50)] // Запускается до GameLayoutManager, чтобы скрыть объекты без моргания
 public class PyramidIntroController : MonoBehaviour, IIntroController
 {
     [Header("References")]
     public PyramidModeManager modeManager;
-    public RectTransform topPanel;
+
+    // --- ИЗМЕНЕНИЕ 1: Разделяем панели на две ---
+    public RectTransform landscapeTopPanel;
+    public RectTransform portraitTopPanel;
+
     public List<RectTransform> bottomButtons;
 
     [Header("Animation Settings")]
@@ -16,38 +21,56 @@ public class PyramidIntroController : MonoBehaviour, IIntroController
     public float buttonStaggerDelay = 0.05f;
     public float slotsFadeDuration = 0.5f;
 
-    private Vector2 topPanelStartPos;
-    private Vector2 topPanelHiddenPos;
+    // --- ИЗМЕНЕНИЕ 2: Двойные позиции ---
+    private Vector2 landscapeTopStartPos, landscapeTopHiddenPos;
+    private Vector2 portraitTopStartPos, portraitTopHiddenPos;
     private List<Vector2> buttonsStartPos = new List<Vector2>();
     private List<Vector2> buttonsHiddenPos = new List<Vector2>();
 
+    private bool positionsSaved = false;
     private bool isSkipping = false;
+    public bool forceInstantSkip = false;
     public bool IsSkipping => isSkipping;
 
     private void Awake()
     {
         if (modeManager == null) modeManager = GetComponent<PyramidModeManager>();
-        Canvas.ForceUpdateCanvases();
-        SaveInitialPositions();
-        PrepareIntro(false);
+
+        // Мгновенно скрываем UI элементы через прозрачность (чтобы избежать 1-кадрового мелькания)
+        SetUIVisible(false);
+
+        // Мгновенно скрываем слоты в первый же кадр
+        SetSlotsAlpha(0f);
     }
 
     private void Update()
     {
-        // Ускорение по клику или тапу
-        if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+        // Ускорение по клику или тапу с защитой времени старта сцены
+        if (Time.timeSinceLevelLoad > 0.3f)
         {
-            isSkipping = true;
+            if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
+            {
+                isSkipping = true;
+            }
         }
     }
 
     private void SaveInitialPositions()
     {
-        if (topPanel != null)
+        if (positionsSaved) return;
+        Canvas.ForceUpdateCanvases();
+
+        if (landscapeTopPanel != null)
         {
-            topPanelStartPos = topPanel.anchoredPosition;
-            topPanelHiddenPos = topPanelStartPos + new Vector2(0, 300f);
+            landscapeTopStartPos = landscapeTopPanel.anchoredPosition;
+            landscapeTopHiddenPos = landscapeTopStartPos + new Vector2(0, 300f);
         }
+        if (portraitTopPanel != null)
+        {
+            portraitTopStartPos = portraitTopPanel.anchoredPosition;
+            portraitTopHiddenPos = portraitTopStartPos + new Vector2(0, 300f);
+        }
+
         buttonsStartPos.Clear();
         buttonsHiddenPos.Clear();
         foreach (var btn in bottomButtons)
@@ -58,15 +81,21 @@ public class PyramidIntroController : MonoBehaviour, IIntroController
                 buttonsHiddenPos.Add(btn.anchoredPosition + new Vector2(0, -300f));
             }
         }
+        positionsSaved = true;
     }
+
     public void UpdateSavedPositions()
     {
-        SaveInitialPositions();
+        // При повороте экрана просто отменяем анимации (якоря остаются верными)
+        forceInstantSkip = true;
+        isSkipping = true;
     }
+
     public List<RectTransform> GetTopUIElements()
     {
         var list = new List<RectTransform>();
-        if (topPanel != null) list.Add(topPanel);
+        if (landscapeTopPanel != null) list.Add(landscapeTopPanel);
+        if (portraitTopPanel != null) list.Add(portraitTopPanel);
         return list;
     }
 
@@ -78,28 +107,46 @@ public class PyramidIntroController : MonoBehaviour, IIntroController
     public void PrepareIntro(bool isRestart)
     {
         isSkipping = false;
+        forceInstantSkip = false;
+
+        if (!positionsSaved) SaveInitialPositions();
+
         if (!isRestart)
         {
-            SetSlotsAlpha(0f); // Прячем слоты
-            if (topPanel != null) topPanel.anchoredPosition = topPanelHiddenPos;
+            SetSlotsAlpha(0f);
+            SetUIVisible(false);
+
+            if (landscapeTopPanel != null) landscapeTopPanel.anchoredPosition = landscapeTopHiddenPos;
+            if (portraitTopPanel != null) portraitTopPanel.anchoredPosition = portraitTopHiddenPos;
+
             for (int i = 0; i < bottomButtons.Count; i++)
-                if (bottomButtons[i] != null) bottomButtons[i].anchoredPosition = buttonsHiddenPos[i];
+                if (bottomButtons[i] != null && i < buttonsHiddenPos.Count)
+                    bottomButtons[i].anchoredPosition = buttonsHiddenPos[i];
+        }
+        else
+        {
+            SetUIVisible(true);
+            SetSlotsAlpha(1f);
         }
     }
 
     public IEnumerator PlayIntroSequence()
     {
+        isSkipping = false;
+        forceInstantSkip = false;
+
         yield return StartCoroutine(SkippableWait(startDelay));
 
-        // <--- ЗВУК: ПАНЕЛЬ ВЫЕЗЖАЕТ НА ЭКРАН --->
-        if (AudioManager.Instance != null)
+        if (AudioManager.Instance != null && !forceInstantSkip)
             AudioManager.Instance.PlaySound("Panel_Slide_In");
 
         // 1. Выезд UI
-        if (topPanel != null) StartCoroutine(AnimateUIElement(topPanel, topPanelHiddenPos, topPanelStartPos, uiSlideDuration));
+        if (landscapeTopPanel != null) StartCoroutine(AnimateUIElement(landscapeTopPanel, landscapeTopHiddenPos, landscapeTopStartPos, uiSlideDuration));
+        if (portraitTopPanel != null) StartCoroutine(AnimateUIElement(portraitTopPanel, portraitTopHiddenPos, portraitTopStartPos, uiSlideDuration));
+
         for (int i = 0; i < bottomButtons.Count; i++)
         {
-            if (bottomButtons[i] != null)
+            if (bottomButtons[i] != null && i < buttonsStartPos.Count)
             {
                 StartCoroutine(AnimateUIElement(bottomButtons[i], buttonsHiddenPos[i], buttonsStartPos[i], uiSlideDuration));
                 yield return StartCoroutine(SkippableWait(buttonStaggerDelay));
@@ -115,6 +162,7 @@ public class PyramidIntroController : MonoBehaviour, IIntroController
         float elapsed = 0f;
         while (elapsed < duration)
         {
+            if (forceInstantSkip) break;
             float speed = isSkipping ? 15f : 1f;
             elapsed += Time.deltaTime * speed;
             yield return null;
@@ -123,45 +171,86 @@ public class PyramidIntroController : MonoBehaviour, IIntroController
 
     private IEnumerator AnimateUIElement(RectTransform target, Vector2 from, Vector2 to, float duration)
     {
+        var cg = target.GetComponent<CanvasGroup>();
+        if (cg == null) cg = target.gameObject.AddComponent<CanvasGroup>();
+
         float elapsed = 0f;
         AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         while (elapsed < duration)
         {
+            if (forceInstantSkip) break;
             float speed = isSkipping ? 15f : 1f;
             elapsed += Time.deltaTime * speed;
             float t = Mathf.Clamp01(elapsed / duration);
-            if (target != null) target.anchoredPosition = Vector2.Lerp(from, to, curve.Evaluate(t));
+
+            if (target != null) target.anchoredPosition = Vector2.LerpUnclamped(from, to, curve.Evaluate(t));
+            if (cg != null) cg.alpha = Mathf.Lerp(0f, 1f, curve.Evaluate(t));
+
             yield return null;
         }
-        if (target != null) target.anchoredPosition = to;
 
-        // <--- ЗВУК: ЭЛЕМЕНТ ИНТЕРФЕЙСА ПРИЗЕМЛИЛСЯ --->
-        if (AudioManager.Instance != null)
+        if (target != null && !forceInstantSkip) target.anchoredPosition = to;
+        if (cg != null && !forceInstantSkip) cg.alpha = 1f;
+
+        if (AudioManager.Instance != null && !forceInstantSkip)
             AudioManager.Instance.PlaySound("UI_Drop");
+    }
+
+    private void SetUIVisible(bool visible)
+    {
+        float alpha = visible ? 1f : 0f;
+
+        foreach (var el in GetTopUIElements())
+        {
+            if (el != null)
+            {
+                var cg = el.GetComponent<CanvasGroup>();
+                if (cg == null) cg = el.gameObject.AddComponent<CanvasGroup>();
+                cg.alpha = alpha;
+            }
+        }
+
+        foreach (var el in GetBottomUIElements())
+        {
+            if (el != null)
+            {
+                var cg = el.GetComponent<CanvasGroup>();
+                if (cg == null) cg = el.gameObject.AddComponent<CanvasGroup>();
+                cg.alpha = alpha;
+            }
+        }
     }
 
     // Собираем все картинки-подложки слотов, чтобы плавно проявить их
     private List<Image> GetSlotImages()
     {
         List<Image> images = new List<Image>();
-        if (modeManager.pileManager != null)
-        {
-            foreach (var slot in modeManager.pileManager.TableauSlots)
-            {
-                if (slot != null)
-                {
-                    var img = slot.GetComponent<Image>();
-                    if (img != null) images.Add(img);
-                }
-            }
-        }
+
         if (modeManager.deckManager != null)
         {
-            if (modeManager.deckManager.stockRoot) { var img = modeManager.deckManager.stockRoot.GetComponent<Image>(); if (img) images.Add(img); }
-            if (modeManager.deckManager.wasteRoot) { var img = modeManager.deckManager.wasteRoot.GetComponent<Image>(); if (img) images.Add(img); }
-            if (modeManager.deckManager.leftFoundation) { var img = modeManager.deckManager.leftFoundation.GetComponent<Image>(); if (img) images.Add(img); }
-            if (modeManager.deckManager.rightFoundation) { var img = modeManager.deckManager.rightFoundation.GetComponent<Image>(); if (img) images.Add(img); }
+            // Берем только Сток, Сброс и Фундаменты (Дома)
+            if (modeManager.deckManager.stockRoot)
+            {
+                var img = modeManager.deckManager.stockRoot.GetComponent<Image>();
+                if (img) images.Add(img);
+            }
+            if (modeManager.deckManager.wasteRoot)
+            {
+                var img = modeManager.deckManager.wasteRoot.GetComponent<Image>();
+                if (img) images.Add(img);
+            }
+            if (modeManager.deckManager.leftFoundation)
+            {
+                var img = modeManager.deckManager.leftFoundation.GetComponent<Image>();
+                if (img) images.Add(img);
+            }
+            if (modeManager.deckManager.rightFoundation)
+            {
+                var img = modeManager.deckManager.rightFoundation.GetComponent<Image>();
+                if (img) images.Add(img);
+            }
         }
+
         return images;
     }
 
@@ -170,6 +259,7 @@ public class PyramidIntroController : MonoBehaviour, IIntroController
         var images = GetSlotImages();
         foreach (var img in images)
         {
+            if (img == null) continue;
             Color c = img.color;
             c.a = alpha;
             img.color = c;
@@ -182,11 +272,14 @@ public class PyramidIntroController : MonoBehaviour, IIntroController
         var images = GetSlotImages();
         while (elapsed < duration)
         {
+            if (forceInstantSkip) break;
             float speed = isSkipping ? 15f : 1f;
             elapsed += Time.deltaTime * speed;
             float t = Mathf.Clamp01(elapsed / duration);
+
             foreach (var img in images)
             {
+                if (img == null) continue;
                 Color c = img.color;
                 c.a = t;
                 img.color = c;
@@ -195,6 +288,7 @@ public class PyramidIntroController : MonoBehaviour, IIntroController
         }
         foreach (var img in images)
         {
+            if (img == null) continue;
             Color c = img.color;
             c.a = 1f;
             img.color = c;

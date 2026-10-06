@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Deck_Standard
+  m_EditorClassIdentifier: 
+  m_GroupName: Deck_Standard
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 9bf1887e70c6649439f31f32d60532fc
+  m_SerializeEntries:
+  - m_GUID: 7a6882ea60253014d875f7c025aa4086
+    m_Address: Assets/Cards/Cards1.spriteatlasv2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Deck_Standard
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 356bbdf424232f54fa85e0a8a9305728, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 237ed383e9cad2c4c8b1e59d5be09bd9, type: 2}
+    - {fileID: 11400000, guid: dd9934b864346a8478553f36bc288ba3, type: 2}

@@ -23,10 +23,16 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
     public RectTransform dragLayer;
     public float tableauVerticalGap = 35f;
 
-    [Header("UI & HUD")]
+    [Header("UI & HUD - Landscape")]
     public TMP_Text movesText;
     public TMP_Text scoreText;
     public TMP_Text timeText;
+
+    [Header("UI & HUD - Portrait")]
+    public TMP_Text portraitMovesText;
+    public TMP_Text portraitScoreText;
+    public TMP_Text portraitTimeText;
+
     public SpiderIntroController introController;
     [HideInInspector] public bool isRestarting = false;
 
@@ -89,6 +95,8 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
         {
             StatisticsManager.Instance.OnGameAbandoned();
         }
+        // ДОБАВИТЬ ЭТУ СТРОКУ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
 
         // 2. ЗАТЕМ сообщаем трекеру настройки НОВОГО матча ДО раздачи карт
         int suits = GameSettings.SpiderSuitCount;
@@ -148,11 +156,14 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
 
     public void OnMoveMade()
     {
-        if (_isGameEnded || !IsInputAllowed) return;
+        if (_isGameEnded) return;
 
-        // ---> ДОБАВИТЬ ЭТО: Считаем ход, если это не просто сдача ряда из колоды <---
+        // --- ИСПРАВЛЕНИЕ: Разрешаем OnMoveMade, если это ручной ход (IsInputAllowed) 
+        // ИЛИ если это работает автоматическая подсказка (isExecutingHint) ---
+        if (!IsInputAllowed && !isExecutingHint) return;
+
+        // Считаем ход, если это не просто сдача ряда из колоды
         if (!_isStockDrawFlag) GameQuestTracker.Instance?.RecordMove();
-        // ----------------------------------------------------------------------------
 
         if (!_hasGameStarted)
         {
@@ -165,13 +176,19 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
                 string variant = GameSettings.GetCurrentVariantString(GameType.Spider);
                 StatisticsManager.Instance.OnGameStarted("Spider", diff, variant);
             }
+            SimpleMetricsTracker.Instance?.TrackLevelStart(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
         }
 
         if (_scoreManager) _scoreManager.ApplyPenalty();
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
 
-        // Никакой телеметрии здесь больше нет, она вся в OnDropToBoard!
         UpdateFullUI();
+
+        // Запускаем перерасчет нового пути только для ручных ходов
+        if (!isExecutingHint && _hasGameStarted && !_isGameEnded)
+        {
+            StartBackgroundSolver();
+        }
     }
 
     public void OnStockClicked()
@@ -202,20 +219,17 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
     {
         if (!_hasGameStarted || _isGameEnded || !IsInputAllowed) return;
 
-        // --- ИЗМЕНЕНИЕ: Проверка туториала перед отменой ---
         if (tutorialManager != null && tutorialManager.IsTutorialActive)
         {
             if (!tutorialManager.IsActionAllowed(TutorialActionType.Undo))
             {
-                // Если сейчас не шаг 4, просто выходим и не даем отменить
                 return;
             }
             tutorialManager.AdvanceStep();
         }
-        // ---------------------------------------------------
 
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.RegisterMove();
-       
+
         IsInputAllowed = true;
 
         if (_defeatManager != null) _defeatManager.OnUndo();
@@ -223,24 +237,23 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
         {
             _scoreManager.ApplyPenalty();
         }
+
+        // Отмена хода меняет стол — ранее посчитанный путь подсказки (и любой ещё
+        // выполняющийся её расчёт) для нового состояния уже не актуален.
+        // Сбрасываем кэш и запускаем пересчёт заново, как это делает OnMoveMade().
+        StartBackgroundSolver();
+
         StopCoroutine("DelayedTableauUpdate");
         StartCoroutine("DelayedTableauUpdate");
 
-        // <--- НОВОЕ: ЗВУКИ ОТМЕНЫ КАК В КЛОНДАЙКЕ --->
         if (AudioManager.Instance != null)
         {
-            // Звук нажатия кнопки
             AudioManager.Instance.PlaySound("UI_Back");
-
-            // Звук улетающей карты
             AudioManager.Instance.PlaySound("Card_Whoosh_Out");
-
-            // Запускаем корутину для звука приземления ровно через 0.25 сек (время анимации отмены)
             StartCoroutine(DelayedUndoDropSound(0.25f));
         }
 
         UpdateFullUI();
-
     }
     // <--- НОВОЕ: Корутина для звука приземления отмененной карты --->
     private IEnumerator DelayedUndoDropSound(float delay)
@@ -425,32 +438,37 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
 
     private void UpdateFullUI()
     {
-        if (movesText != null)
+        // 1. Ходы
+        string movesStr = "0";
+        if (_hasGameStarted && StatisticsManager.Instance != null)
         {
-            if (!_hasGameStarted) movesText.text = "0";
-            else if (StatisticsManager.Instance != null)
-                movesText.text = $"{StatisticsManager.Instance.GetCurrentMoves()}";
-            else movesText.text = "0";
+            movesStr = $"{StatisticsManager.Instance.GetCurrentMoves()}";
         }
 
-        if (scoreText != null)
-        {
-            int score = _scoreManager != null ? _scoreManager.CurrentScore : 0;
-            scoreText.text = $"{score}";
-        }
+        if (movesText != null) movesText.text = movesStr;
+        if (portraitMovesText != null) portraitMovesText.text = movesStr;
 
+        // 2. Очки
+        string scoreStr = "0";
+        int score = _scoreManager != null ? _scoreManager.CurrentScore : 0;
+        scoreStr = $"{score}";
+
+        if (scoreText != null) scoreText.text = scoreStr;
+        if (portraitScoreText != null) portraitScoreText.text = scoreStr;
+
+        // 3. Время
         UpdateTimeUI();
     }
 
     private void UpdateTimeUI()
     {
-        if (timeText != null)
-        {
-            int totalSeconds = Mathf.FloorToInt(gameTimer);
-            int minutes = totalSeconds / 60;
-            int seconds = totalSeconds % 60;
-            timeText.text = string.Format("{0}:{1:00}", minutes, seconds);
-        }
+        int totalSeconds = Mathf.FloorToInt(gameTimer);
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        string timeStr = string.Format("{0}:{1:00}", minutes, seconds);
+
+        if (timeText != null) timeText.text = timeStr;
+        if (portraitTimeText != null) portraitTimeText.text = timeStr;
     }
 
     private void OnDestroy()
@@ -460,6 +478,8 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
             if (StatisticsManager.Instance != null)
                 StatisticsManager.Instance.OnGameAbandoned();
         }
+        // ДОБАВИТЬ ЭТУ СТРОКУ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
     }
 
     private IEnumerator VictoryRoutine()
@@ -487,7 +507,7 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
 
         if (gameUI != null)
             gameUI.OnGameWon(finalMoves);
-       
+        SimpleMetricsTracker.Instance?.TrackLevelWin(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
     }
 
     private void SyncPileManager()
@@ -785,11 +805,12 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
         target.ForceRecalculateLayout();
         source.ForceRecalculateLayout();
 
-        OnMoveMade();
-
-        // Проверяем, не собралась ли масть после нашего хода
+        // Сначала проверяем/запускаем автосборку завершённой масти —
+        // чтобы ActiveFoundationAnimations был выставлен ДО StartBackgroundSolver().
         var checkMethod = typeof(SpiderTableauPile).GetMethod("CheckSuit", BindingFlags.NonPublic | BindingFlags.Instance);
         if (checkMethod != null) checkMethod.Invoke(target, null);
+
+        OnMoveMade();
 
         CheckGameState();
     }
@@ -803,6 +824,8 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
             if (StatisticsManager.Instance != null)
                 StatisticsManager.Instance.OnGameAbandoned();
         }
+        // ДОБАВИТЬ ЭТУ СТРОКУ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
 
         _isGameEnded = false;
         _hasGameStarted = false;
@@ -868,5 +891,214 @@ public class SpiderModeManager : MonoBehaviour, ICardGameMode, ICardClickReceive
 
         UpdateTableauLayouts();
         UpdateFullUI();
+        StartBackgroundSolver();
     }
+    #region Hint System
+
+    private List<SpiderHintSolver.MoveCommand> cachedHintPath = null;
+    private Coroutine backgroundSolverCoroutine = null;
+    private bool isExecutingHint = false;
+
+    public void StartBackgroundSolver()
+    {
+        if (backgroundSolverCoroutine != null) StopCoroutine(backgroundSolverCoroutine);
+        cachedHintPath = null;
+        backgroundSolverCoroutine = StartCoroutine(BackgroundSolverRoutine());
+    }
+
+    private IEnumerator BackgroundSolverRoutine()
+    {
+        // Ждём, пока уляжется ЛЮБАЯ анимация, способная временно исказить состояние стола:
+        // перетаскивание карт (dragLayer) и автосборку завершённой масти в фундамент
+        // (ActiveFoundationAnimations — собранная K..A ещё физически лежит в колонке
+        // до 0.5с после начала анимации). Иначе солвер может снять "грязный" снимок
+        // стола и ложно решить, что ходов нет.
+        while (true)
+        {
+            while ((dragLayer != null && dragLayer.childCount > 0) || ActiveFoundationAnimations > 0)
+            {
+                yield return null;
+            }
+
+            yield return new WaitForSeconds(0.1f);
+
+            // За время ожидания могла запуститься новая анимация (например, CheckSuit
+            // сработал уже после того как мы прошли первую проверку) — перепроверяем.
+            if ((dragLayer != null && dragLayer.childCount > 0) || ActiveFoundationAnimations > 0)
+            {
+                continue;
+            }
+
+            break;
+        }
+
+        if (_isGameEnded)
+        {
+            backgroundSolverCoroutine = null;
+            yield break;
+        }
+
+        Deal currentDeal = GetCurrentDealState();
+
+        int suitsCount = GameSettings.SpiderSuitCount;
+        if (suitsCount == 0) suitsCount = 1;
+
+        yield return StartCoroutine(SpiderHintSolver.GetHintPathAsync(currentDeal, suitsCount, 15f, (path) => {
+            cachedHintPath = path;
+        }));
+
+        backgroundSolverCoroutine = null;
+    }
+
+    public void RequestHint(System.Action onWaitStart, System.Action<bool> onHintResult)
+    {
+        if (!IsInputAllowed) return;
+        StartCoroutine(HintRoutine(onWaitStart, onHintResult));
+    }
+
+    private IEnumerator HintRoutine(System.Action onWaitStart, System.Action<bool> onResult)
+    {
+        IsInputAllowed = false;
+
+        if (cachedHintPath == null && backgroundSolverCoroutine == null)
+            backgroundSolverCoroutine = StartCoroutine(BackgroundSolverRoutine());
+
+        // Если солвер еще думает, показываем панель ожидания
+        if (backgroundSolverCoroutine != null)
+        {
+            onWaitStart?.Invoke();
+            while (backgroundSolverCoroutine != null) yield return null;
+        }
+
+        if (cachedHintPath != null && cachedHintPath.Count > 0)
+        {
+            var nextMove = cachedHintPath[0];
+            cachedHintPath.RemoveAt(0);
+
+            isExecutingHint = true;
+            bool moveOk = ExecuteSolverMove(nextMove);
+
+            if (!moveOk)
+            {
+                // Путь оказался невалиден для текущего стола — пересчитываем с нуля
+                isExecutingHint = false;
+                IsInputAllowed = true;
+                StartBackgroundSolver();
+                onResult?.Invoke(false);
+                yield break;
+            }
+
+            // Ждём завершения анимации перемещения или раздачи
+            if (dragLayer != null)
+            {
+                while (dragLayer.childCount > 0) yield return null;
+            }
+
+            // Ждём и завершения автосборки завершённой масти в фундамент, если ход
+            // подсказки её вызвал — иначе снимок стола для следующей подсказки
+            // может быть снят раньше, чем колонка реально освободится.
+            while (ActiveFoundationAnimations > 0)
+            {
+                yield return null;
+            }
+
+            // Флаг снимаем только теперь: OnMoveMade (вызываемый в конце полёта карт
+            // внутри AnimateSequenceAutoMove) успевает отработать с isExecutingHint = true
+            // и не запускает лишний StartBackgroundSolver() поверх ещё не выполненного пути.
+            isExecutingHint = false;
+
+            IsInputAllowed = true;
+            onResult?.Invoke(true);
+        }
+        else
+        {
+            IsInputAllowed = true;
+            onResult?.Invoke(false);
+        }
+    }
+
+    private Deal GetCurrentDealState()
+    {
+        Deal d = new Deal();
+        for (int i = 0; i < 10; i++) d.tableau.Add(new List<CardInstance>());
+
+        for (int i = 0; i < 10; i++)
+        {
+            foreach (var cardCtrl in pileManager.TableauPiles[i].cards)
+            {
+                var cardData = cardCtrl.GetComponent<CardData>();
+                d.tableau[i].Add(new CardInstance(cardData.model, cardData.IsFaceUp()));
+            }
+        }
+        if (pileManager.StockPile != null)
+        {
+            foreach (var cardCtrl in pileManager.StockPile.cards)
+            {
+                var cardData = cardCtrl.GetComponent<CardData>();
+                d.stock.Push(new CardInstance(cardData.model, false));
+            }
+        }
+        return d;
+    }
+
+    private bool ExecuteSolverMove(SpiderHintSolver.MoveCommand move)
+    {
+        if (move.Type == SpiderHintSolver.MoveType.StockDraw)
+        {
+            // TryDealRow()/OnStockClicked() сами проверяют IsInputAllowed,
+            // а он сейчас выключен HintRoutine на время выполнения хода подсказки.
+            // Снимаем блокировку ровно на время синхронного вызова (yield тут нет,
+            // поэтому реальный пользовательский клик в этот момент вклиниться не может).
+            bool wasAllowed = IsInputAllowed;
+            IsInputAllowed = true;
+            deckManager.TryDealRow();
+            IsInputAllowed = wasAllowed;
+            return true;
+        }
+
+        if (move.Type == SpiderHintSolver.MoveType.MoveColumn)
+        {
+            var source = pileManager.TableauPiles[move.From];
+            var target = pileManager.TableauPiles[move.To];
+
+            // Защита: если реальное состояние стола разошлось с тем, что предполагал
+            // солвер (например, в столбце физически меньше карт, чем нужно для хода),
+            // не пытаемся выполнить заведомо некорректный ход.
+            if (source.cards.Count < move.Count)
+            {
+                cachedHintPath = null;
+                return false;
+            }
+
+            List<CardController> sequence = new List<CardController>();
+            for (int i = source.cards.Count - move.Count; i < source.cards.Count; i++)
+            {
+                sequence.Add(source.cards[i]);
+            }
+
+            // Финальная проверка по правилам паука: ранг верхней карты цели
+            // должен быть на 1 больше ранга переносимой карты.
+            var movingCard = sequence[0].cardModel;
+            if (target.cards.Count > 0)
+            {
+                var targetTop = target.cards[target.cards.Count - 1].cardModel;
+                if (targetTop.rank != movingCard.rank + 1)
+                {
+                    cachedHintPath = null;
+                    return false;
+                }
+            }
+
+            var method = typeof(SpiderModeManager).GetMethod("ExecuteProgrammaticSequenceMove", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (method != null)
+            {
+                method.Invoke(this, new object[] { sequence, source, target });
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    #endregion
 }

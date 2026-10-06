@@ -5,9 +5,6 @@ public class MontanaPileManager : PileManager
 {
     private MontanaModeManager _mode;
 
-    [Header("Montana Specific")]
-    public Transform gridSlotsParent; // GridLayoutGroup на 56 ячеек (14 колонок)
-
     public List<MontanaSlot> Slots { get; private set; } = new List<MontanaSlot>();
 
     public void Initialize(MontanaModeManager m)
@@ -19,27 +16,36 @@ public class MontanaPileManager : PileManager
     {
         Slots.Clear();
 
-        // Инициализируем 56 ячеек сетки
-        for (int i = 0; i < gridSlotsParent.childCount; i++)
+        // --- ИСПРАВЛЕНИЕ: Берем слоты напрямую из GameLayoutManager ---
+        // Это гарантирует, что мы вешаем логику контейнера именно на тот объект, 
+        // который прыгает между горизонтальным и вертикальным интерфейсом.
+        if (GameLayoutManager.Instance != null && GameLayoutManager.Instance.slots.Count >= 56)
         {
-            if (i >= 56) break;
+            for (int i = 0; i < 56; i++)
+            {
+                int r = i % 4;
+                int c = i / 4;
 
-            int r = i % 4; // 4 - количество рядов
-            int c = i / 4;
+                Transform slotTf = GameLayoutManager.Instance.slots[i].targetSlot;
+                if (slotTf != null)
+                {
+                    var slot = slotTf.GetComponent<MontanaSlot>();
+                    if (slot == null) slot = slotTf.gameObject.AddComponent<MontanaSlot>();
 
-            Transform slotTf = gridSlotsParent.GetChild(i);
-            var slot = slotTf.GetComponent<MontanaSlot>() ?? slotTf.gameObject.AddComponent<MontanaSlot>();
-            slot.Initialize(_mode, r, c);
-            Slots.Add(slot);
+                    slot.Initialize(_mode, r, c);
+                    Slots.Add(slot);
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError("[MontanaPileManager] ОШИБКА: GameLayoutManager не найден или в нем меньше 56 слотов!");
         }
     }
 
     public MontanaSlot GetSlot(int row, int col)
     {
-        // Новая математика для нумерации по столбцам (сверху-вниз)
-        // 4 - это количество рядов
         int index = col * 4 + row;
-
         if (index >= 0 && index < Slots.Count) return Slots[index];
         return null;
     }

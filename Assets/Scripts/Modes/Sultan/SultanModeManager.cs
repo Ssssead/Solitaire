@@ -13,12 +13,15 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
 
     [Header("UI & HUD")]
     public GameUIController gameUI;
-    [Tooltip("Текст для отображения количества ходов")]
+    [Header("UI & HUD - Landscape")]
     public TMP_Text movesText;
-    [Tooltip("Текст для отображения времени")]
-    public TMP_Text timeText;
-    [Tooltip("Текст для отображения очков")]
     public TMP_Text scoreText;
+    public TMP_Text timeText;
+
+    [Header("UI & HUD - Portrait")]
+    public TMP_Text portraitMovesText;
+    public TMP_Text portraitScoreText;
+    public TMP_Text portraitTimeText;
 
     [Header("Services")]
     public SultanPileManager pileManager;
@@ -30,7 +33,11 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
     public SultanScoreManager scoreManager;
     public SultanTutorialManager tutorialManager;
     public SultanIntroController introController; // ⚡ ДОБАВЛЕНО: Ссылка на аниматор появления
-
+    [Header("Hint System")]
+    public SultanHintSolver hintSolver;
+    private Coroutine backgroundSolverCoroutine = null;
+    private List<SultanHintMove> cachedHintPath = null;
+    [HideInInspector] public bool isExecutingHint = false;
     public bool IsInputAllowed { get; set; } = true;
     public GameType GameType => GameType.Sultan;
     public Difficulty SelectedDifficulty => GameSettings.CurrentDifficulty;
@@ -246,6 +253,8 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
             {
                 StatisticsManager.Instance.OnGameAbandoned();
             }
+            // ДОБАВИТЬ ЭТУ СТРОКУ:
+            SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
         }
 
         // ⚡ ДОБАВЛЕНО: Сброс флага туториала при закрытии игры
@@ -275,6 +284,8 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
         {
             StatisticsManager.Instance.OnGameAbandoned();
         }
+        // ДОБАВИТЬ ЭТУ СТРОКУ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
 
         // 2. ЗАТЕМ сообщаем трекеру настройки (У Султана всегда Standard)
         GameQuestTracker.Instance?.StartMatch("Sultan", GameSettings.CurrentDifficulty, "Standard");
@@ -296,7 +307,8 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
 
         gameTimer = 0f;
         isTimerRunning = false;
-
+        if (hintSolver != null) hintSolver.CancelSearch();
+        cachedHintPath = null;
         // ВАЖНО: Очистка до развилки!
         pileManager.ClearAllPiles();
         pileManager.CreatePiles();
@@ -395,6 +407,8 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
                 StatisticsManager.Instance.OnGameWon(finalScore);
                 if (gameUI != null) gameUI.OnGameWon(finalMoves);
             }
+
+            SimpleMetricsTracker.Instance?.TrackLevelWin(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
             return;
         }
 
@@ -458,11 +472,10 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
 
     public void RegisterMoveAndStartIfNeeded()
     {
-        if (!IsInputAllowed) return;
+        // ИСПРАВЛЕНИЕ 2: Разрешаем старт таймера и учет хода для подсказки
+        if (!IsInputAllowed && !isExecutingHint) return;
 
-        // ---> ДОБАВИТЬ ЭТО <---
         GameQuestTracker.Instance?.RecordMove();
-        // ----------------------
 
         if (!hasGameStarted)
         {
@@ -475,6 +488,8 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
                 string variant = GameSettings.GetCurrentVariantString(GameType.Sultan);
                 StatisticsManager.Instance.OnGameStarted("Sultan", currentDiff, variant);
             }
+
+            SimpleMetricsTracker.Instance?.TrackLevelStart(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
         }
 
         if (StatisticsManager.Instance != null)
@@ -484,20 +499,26 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
 
         UpdateFullUI();
         CheckGameState();
+        if (!isExecutingHint) StartBackgroundSolver();
     }
 
     private void UpdateFullUI()
     {
-        if (movesText != null)
+        string mText = "0";
+        if (hasGameStarted && StatisticsManager.Instance != null)
         {
-            movesText.text = (!hasGameStarted) ? "0" : (StatisticsManager.Instance != null ? StatisticsManager.Instance.GetCurrentMoves().ToString() : "0");
+            mText = StatisticsManager.Instance.GetCurrentMoves().ToString();
         }
+        if (movesText != null) movesText.text = mText;
+        if (portraitMovesText != null) portraitMovesText.text = mText;
 
-        if (scoreText != null)
+        string sText = "0";
+        if (hasGameStarted && scoreManager != null)
         {
-            int score = scoreManager != null ? scoreManager.CurrentScore : 0;
-            scoreText.text = (!hasGameStarted) ? "0" : score.ToString();
+            sText = scoreManager.CurrentScore.ToString();
         }
+        if (scoreText != null) scoreText.text = sText;
+        if (portraitScoreText != null) portraitScoreText.text = sText;
 
         if (!hasGameStarted)
         {
@@ -507,13 +528,11 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
 
     private void UpdateTimeUI()
     {
-        if (timeText != null)
-        {
-            int totalSeconds = Mathf.FloorToInt(gameTimer);
-            int minutes = totalSeconds / 60;
-            int seconds = totalSeconds % 60;
-            timeText.text = string.Format("{0}:{1:00}", minutes, seconds);
-        }
+        int totalSeconds = Mathf.FloorToInt(gameTimer);
+        string tText = string.Format("{0}:{1:00}", totalSeconds / 60, totalSeconds % 60);
+
+        if (timeText != null) timeText.text = tText;
+        if (portraitTimeText != null) portraitTimeText.text = tText;
     }
 
     public ICardContainer FindNearestContainer(CardController card, Vector2 anchoredPosition, float maxDistance)
@@ -566,7 +585,8 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
 
     public void OnStockClicked()
     {
-        if (!IsInputAllowed) return;
+        // ИСПРАВЛЕНИЕ 1: Разрешаем вызов метода, если ход совершает подсказка
+        if (!IsInputAllowed && !isExecutingHint) return;
 
         if (tutorialManager != null && tutorialManager.IsTutorialActive)
         {
@@ -577,9 +597,7 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
             }
         }
 
-        // ---> ДОБАВИТЬ ЭТО <---
         GameQuestTracker.Instance?.RecordStockDraw();
-        // ----------------------
 
         RegisterMoveAndStartIfNeeded();
         if (StatisticsManager.Instance != null) StatisticsManager.Instance.StartTimerIfNotStarted();
@@ -680,33 +698,26 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
     }
     public void TrackSultanQuest(CardController card, ICardContainer source, ICardContainer container)
     {
-        // ---> АБСОЛЮТНАЯ ЗАЩИТА ОТ ИНТРО И АНИМАЦИЙ <---
-        // Если игрок не может кликать (идет раздача, интро или туториал) — глушим квесты!
-        if (!IsInputAllowed || GameSettings.IsTutorialMode) return;
+        // ИСПРАВЛЕНИЕ 3: Разрешаем учет квестов во время хода подсказки
+        if ((!IsInputAllowed && !isExecutingHint) || GameSettings.IsTutorialMode) return;
 
         bool isToFoundation = false;
         bool completedFoundation = false;
         bool fromWasteToFoundation = false;
         bool fromReserve = false;
 
-        // 1. Карту переместили в стопку основания (Дом)
         if (container is SultanFoundationPile)
         {
             isToFoundation = true;
             GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveCardsToFoundation, 1);
-
-            // ---> ДОБАВЛЕНО: Отправляем ранг карты для заданий на Тузов, Двоек, Королей и Дам <---
             GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveSpecificRanks, 1, card.cardModel.rank.ToString());
-            // ---------------------------------------------------------------------------------------
 
-            // ЗАДАНИЕ "ГАРЕМ": В Султане стопка полностью собрана на Даме (ранг 12)
             if (card.cardModel.rank == 12)
             {
                 completedFoundation = true;
                 GameQuestTracker.Instance?.SendEvent(QuestActionType.CompleteFoundationPile, 1);
             }
 
-            // ЗАДАНИЕ "ПРЯМАЯ ПОСТАВКА": Перенос из сброса напрямую в Дом
             if (source is SultanWastePile)
             {
                 fromWasteToFoundation = true;
@@ -714,14 +725,12 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
             }
         }
 
-        // 2. ЗАДАНИЕ "СВИТА": Использовали карту из боковой резервной ячейки
         if (source is SultanReserveSlot)
         {
             fromReserve = true;
             GameQuestTracker.Instance?.SendEvent(QuestActionType.ClearTableauColumn, 1);
         }
 
-        // 3. Откат ручного перемещения из Дома обратно на стол (игрок сам перетащил карту назад)
         if (source is SultanFoundationPile)
         {
             GameQuestTracker.Instance?.RecordCardRemovedFromFoundation(card.cardModel.rank);
@@ -729,7 +738,6 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
             if (container is SultanWastePile) GameQuestTracker.Instance?.SendEvent(QuestActionType.MoveFromWasteToFoundation, -1);
         }
 
-        // Всегда сохраняем запись в стек отмен для поддержания точной синхронности со стеком ходов
         questUndoStack.Push(new SultanQuestUndoRecord
         {
             IsToFoundation = isToFoundation,
@@ -865,6 +873,7 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
 
         UpdateFullUI();
         CheckGameState();
+        if (!isExecutingHint) StartBackgroundSolver();
     }
 
     private void SetupUndoSounds()
@@ -961,10 +970,208 @@ public class SultanModeManager : MonoBehaviour, IModeManager, ICardGameMode, ICa
     public void OnKeyboardPick(CardController card) { }
     public void RestartGame()
     {
+        if (hintSolver != null) hintSolver.CancelSearch();
+        cachedHintPath = null;
         isRestarting = true;
         StopAllCoroutines();
         StartNewGame();
     }
 
     public bool IsMatchInProgress() => hasGameStarted;
+    public void StartBackgroundSolver()
+    {
+        if (backgroundSolverCoroutine != null) StopCoroutine(backgroundSolverCoroutine);
+        if (hintSolver != null) hintSolver.CancelSearch();
+        cachedHintPath = null;
+        backgroundSolverCoroutine = StartCoroutine(BackgroundSolverRoutine());
+    }
+
+    private IEnumerator BackgroundSolverRoutine()
+    {
+        while (dragLayer != null && dragLayer.childCount > 0) yield return null;
+        yield return new WaitForSeconds(0.1f);
+
+        if (hasWonGame) yield break;
+
+        bool solverFinished = false;
+        if (hintSolver == null) hintSolver = gameObject.AddComponent<SultanHintSolver>();
+
+        int recycles = 0;
+        var field = deckManager.GetType().GetField("currentRecycles", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (field != null) recycles = (int)field.GetValue(deckManager);
+
+        hintSolver.FindPath(pileManager, recycles, deckManager.maxRecycles, path => {
+            cachedHintPath = path;
+            solverFinished = true;
+        });
+
+        while (!solverFinished) yield return null;
+        backgroundSolverCoroutine = null;
+    }
+
+    public void RequestHint(System.Action onWaitStart, System.Action<bool> onHintResult)
+    {
+        // 1. ЗАЩИТА ОТ СПАМА: Если подсказка уже в процессе выполнения, 
+        // мы молча игнорируем новые клики. Мы НЕ возвращаем false, 
+        // чтобы не спровоцировать ложное появление панели "Нет ходов".
+        if (isExecutingHint) return;
+
+        if (hasWonGame || !IsInputAllowed) { onHintResult?.Invoke(false); return; }
+        StartCoroutine(HintRoutine(onWaitStart, onHintResult));
+    }
+
+    private IEnumerator HintRoutine(System.Action onWaitStart, System.Action<bool> onResult)
+    {
+        IsInputAllowed = false;
+
+        if (cachedHintPath == null && backgroundSolverCoroutine == null) StartBackgroundSolver();
+
+        if (backgroundSolverCoroutine != null)
+        {
+            onWaitStart?.Invoke();
+            while (backgroundSolverCoroutine != null) yield return null;
+        }
+
+        if (cachedHintPath != null && cachedHintPath.Count > 0)
+        {
+            var nextMove = cachedHintPath[0];
+            cachedHintPath.Clear(); // Очистка кэша от эффекта бабочки
+
+            isExecutingHint = true;
+            ExecuteHintMove(nextMove);
+
+            onResult?.Invoke(true);
+        }
+        else
+        {
+            IsInputAllowed = true;
+            onResult?.Invoke(false);
+        }
+    }
+
+    private void ExecuteHintMove(SultanHintMove cmd)
+    {
+        if (cmd.Type == SultanHintMove.MoveType.DrawStock || cmd.Type == SultanHintMove.MoveType.Recycle)
+        {
+            OnStockClicked();
+            StartCoroutine(WaitAndUnlockAfterHint());
+            return;
+        }
+
+        CardController card = null;
+        ICardContainer source = null;
+        ICardContainer target = null;
+
+        if (cmd.Type == SultanHintMove.MoveType.WasteToFoundation || cmd.Type == SultanHintMove.MoveType.WasteToReserve)
+        {
+            source = pileManager.WastePile;
+            var cards = source.Transform.GetComponentsInChildren<CardController>();
+            if (cards.Length > 0) card = cards[cards.Length - 1];
+        }
+        else if (cmd.Type == SultanHintMove.MoveType.ReserveToFoundation)
+        {
+            source = pileManager.Reserves[cmd.FromIndex];
+            var cards = source.Transform.GetComponentsInChildren<CardController>();
+            if (cards.Length > 0) card = cards[cards.Length - 1];
+        }
+
+        if (cmd.Type == SultanHintMove.MoveType.WasteToFoundation || cmd.Type == SultanHintMove.MoveType.ReserveToFoundation)
+            target = pileManager.Foundations[cmd.ToIndex];
+        else if (cmd.Type == SultanHintMove.MoveType.WasteToReserve)
+            target = pileManager.Reserves[cmd.ToIndex];
+
+        if (card != null && source != null && target != null)
+        {
+            // ЖЕСТКАЯ ЗАЩИТА: Проверяем ход по физическим правилам игры
+            if (!target.CanAccept(card))
+            {
+                Debug.LogWarning("[HintDebug] Защита сработала: Солвер попытался сделать незаконный ход!");
+                UnlockAfterHint();
+                return;
+            }
+
+            var sultanCard = card.GetComponent<SultanCardController>();
+            if (sultanCard != null) sultanCard.CaptureStateForUndo();
+
+            StartCoroutine(AnimateHintMove(card, source, target));
+        }
+        else
+        {
+            UnlockAfterHint();
+        }
+    }
+
+    private IEnumerator AnimateHintMove(CardController card, ICardContainer source, ICardContainer target)
+    {
+        var sultanCard = card.GetComponent<SultanCardController>();
+        if (sultanCard != null) sultanCard.SetAnimating(true);
+
+        if (AudioManager.Instance != null)
+        {
+            AudioSource whoosh = AudioManager.Instance.PlaySound("Card_Whoosh_Out");
+            if (whoosh != null) whoosh.pitch = 1.3f;
+        }
+
+        card.transform.SetParent(dragLayer, true);
+        card.transform.SetAsLastSibling();
+
+        Vector3 startPos = card.transform.position;
+        float duration = 0.2f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            card.transform.position = Vector3.Lerp(startPos, target.Transform.position, elapsed / duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        target.AcceptCard(card);
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySound("Card_Drop_Success");
+            if (target is SultanFoundationPile) AudioManager.Instance.PlaySound("Card_Foundation_Success");
+        }
+
+        if (sultanCard != null) sultanCard.SetAnimating(false);
+
+        // Этот метод сам начислит очки, квесты и Undo
+        OnCardDroppedToContainer(card, target);
+
+        StartCoroutine(WaitAndUnlockAfterHint());
+    }
+
+    private IEnumerator WaitAndUnlockAfterHint()
+    {
+        yield return null;
+        while (true)
+        {
+            // 2. ЖЕСТКАЯ БЛОКИРОВКА ВВОДА:
+            // Другие скрипты (например, SultanAnimationService) могут попытаться 
+            // разблокировать стол (IsInputAllowed = true) в конце своей анимации.
+            // Мы принудительно удерживаем блокировку, пока подсказка полностью не завершит свои дела.
+            IsInputAllowed = false;
+
+            bool isAnimating = (dragLayer != null && dragLayer.childCount > 0);
+            if (!isAnimating) break;
+            yield return null;
+        }
+
+        // Удерживаем защиту еще 0.1 секунды для обновления системных массивов
+        IsInputAllowed = false;
+        yield return new WaitForSeconds(0.1f);
+
+        UnlockAfterHint();
+    }
+
+    private void UnlockAfterHint()
+    {
+        isExecutingHint = false;
+        IsInputAllowed = true;
+
+        if (cachedHintPath == null || cachedHintPath.Count == 0) StartBackgroundSolver();
+
+        CheckGameState();
+    }
 }

@@ -260,6 +260,9 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
         if (hasGameStarted && !hasWonGame && StatisticsManager.Instance != null)
             StatisticsManager.Instance.OnGameAbandoned();
 
+        // ДОБАВИТЬ ЭТУ СТРОКУ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
+
         string variant = (GameSettings.KlondikeDrawCount == 3) ? "Draw3" : "Draw1";
         GameQuestTracker.Instance?.StartMatch("Klondike", GameSettings.CurrentDifficulty, variant);
 
@@ -275,7 +278,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
         if (scoreManager != null) scoreManager.ResetScore();
         if (undoManager != null && undoManager.GetType().GetMethod("ResetHistory") != null)
             undoManager.GetType().GetMethod("ResetHistory").Invoke(undoManager, null);
-
+        if (gameUI != null) gameUI.ResetHints();
         UpdateFullUI();
         pileManager.ClearAllPiles();
 
@@ -332,6 +335,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
             isRestarting = false;
             IsInputAllowed = true;
             UpdateFullUI();
+            StartBackgroundSolver();
         }
     }
 
@@ -341,20 +345,20 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
         {
             if (StatisticsManager.Instance != null)
                 StatisticsManager.Instance.OnGameAbandoned();
+
+            // ДОБАВИТЬ ЭТУ СТРОКУ:
+            SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
         }
     }
 
     public void RegisterMoveAndStartIfNeeded()
     {
-        // [FIX] Защита от ложных срабатываний:
-        // Если ввод заблокирован (идет анимация раздачи или авто-сбор),
-        // мы игнорируем системные перемещения карт и не считаем их за ход.
         if (!IsInputAllowed) return;
         GameQuestTracker.Instance?.RecordMove();
         if (!hasGameStarted)
         {
             hasGameStarted = true;
-            isTimerRunning = true; // Запускаем таймер при первом реальном ходе
+            isTimerRunning = true;
 
             if (StatisticsManager.Instance != null)
             {
@@ -362,13 +366,20 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
                 string variant = GameSettings.GetCurrentVariantString(GameType.Klondike);
                 StatisticsManager.Instance.OnGameStarted(GameName, diff, variant);
             }
+            SimpleMetricsTracker.Instance?.TrackLevelStart(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
         }
 
         if (StatisticsManager.Instance != null)
             StatisticsManager.Instance.RegisterMove();
 
-        UpdateFullUI(); // Обновляем все текстовые поля
+        UpdateFullUI();
         CheckGameState();
+
+        // Запускаем фоновый поиск пути, если это был ручной ход игрока
+        if (!isExecutingHint && hasGameStarted && !hasWonGame)
+        {
+            StartBackgroundSolver();
+        }
     }
 
     // [NEW] Единый метод обновления интерфейса
@@ -707,6 +718,244 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
     }
 
     #endregion
+    #region Hint System
+
+    private List<KlondikeHintSolver.HintMoveCommand> cachedHintPath = null;
+    private Coroutine backgroundSolverCoroutine = null;
+    private bool isExecutingHint = false;
+
+    // Вызывается автоматически после любого ручного хода игрока (сброс кэша)
+    public void StartBackgroundSolver()
+    {
+        if (backgroundSolverCoroutine != null) StopCoroutine(backgroundSolverCoroutine);
+        cachedHintPath = null;
+        backgroundSolverCoroutine = StartCoroutine(BackgroundSolverRoutine());
+    }
+
+    private IEnumerator BackgroundSolverRoutine()
+    {
+        // 1. ОЖИДАНИЕ АНИМАЦИЙ: Ждем, пока летящие карты в слое DragLayer приземлятся
+        if (dragLayer != null)
+        {
+            while (dragLayer.childCount > 0)
+            {
+                yield return null;
+            }
+        }
+
+        // Даем компонентам Unity еще 0.1 сек на то, чтобы записать карты в логические списки
+        yield return new WaitForSeconds(0.1f);
+
+        if (hasWonGame)
+        {
+            backgroundSolverCoroutine = null;
+            yield break;
+        }
+
+        Deal currentDeal = GetCurrentDealState();
+
+        // Считаем все карты на доске. Если их не 52 (сбой анимации), откладываем поиск
+        int totalCards = currentDeal.stock.Count + currentDeal.waste.Count;
+        for (int i = 0; i < 7; i++) totalCards += currentDeal.tableau[i].Count;
+        for (int i = 0; i < 4; i++) totalCards += currentDeal.foundations[i].Count;
+
+        if (totalCards != 52)
+        {
+            backgroundSolverCoroutine = null;
+            yield break;
+        }
+
+        int drawParam = (stockDealMode == StockDealMode.Draw3) ? 3 : 1;
+
+        yield return StartCoroutine(KlondikeHintSolver.GetHintPathAsync(currentDeal, drawParam, 12f, (path) => {
+            cachedHintPath = path;
+        }));
+
+        backgroundSolverCoroutine = null;
+    }
+
+    public void RequestHint(System.Action onWaitStart, System.Action<bool> onHintResult)
+    {
+        if (!IsInputAllowed) return;
+        StartCoroutine(HintRoutine(onWaitStart, onHintResult));
+    }
+
+    private IEnumerator HintRoutine(System.Action onWaitStart, System.Action<bool> onResult)
+    {
+        IsInputAllowed = false;
+
+        if (cachedHintPath == null && backgroundSolverCoroutine == null)
+        {
+            backgroundSolverCoroutine = StartCoroutine(BackgroundSolverRoutine());
+        }
+
+        if (backgroundSolverCoroutine != null)
+        {
+            onWaitStart?.Invoke();
+            while (backgroundSolverCoroutine != null) yield return null;
+        }
+
+        IsInputAllowed = true;
+
+        if (cachedHintPath != null && cachedHintPath.Count > 0)
+        {
+            var nextMove = cachedHintPath[0];
+            cachedHintPath.RemoveAt(0);
+
+            isExecutingHint = true;
+            ExecuteSolverMove(nextMove);
+            isExecutingHint = false;
+
+            onResult?.Invoke(true);
+        }
+        else
+        {
+            onResult?.Invoke(false);
+        }
+    }
+
+    private Deal GetCurrentDealState()
+    {
+        Deal d = new Deal();
+
+        // Читаем напрямую из логических списков (cards), чтобы анимации полета нам не мешали
+        for (int i = 0; i < 7; i++)
+        {
+            foreach (var cardCtrl in pileManager.Tableau[i].cards)
+            {
+                var cardData = cardCtrl.GetComponent<CardData>();
+                d.tableau[i].Add(new CardInstance(cardData.model, cardData.IsFaceUp()));
+            }
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            foreach (var cardCtrl in pileManager.Foundations[i].cards)
+            {
+                var cardData = cardCtrl.GetComponent<CardData>();
+                d.foundations[i].Add(cardData.model);
+            }
+        }
+        if (pileManager.StockPile != null)
+        {
+            foreach (var cardCtrl in pileManager.StockPile.cards)
+            {
+                d.stock.Push(new CardInstance(cardCtrl.cardModel, false));
+            }
+        }
+        if (pileManager.WastePile != null)
+        {
+            foreach (var cardCtrl in pileManager.WastePile.cards)
+            {
+                d.waste.Add(new CardInstance(cardCtrl.cardModel, true));
+            }
+        }
+        return d;
+    }
+
+    private void ExecuteSolverMove(KlondikeHintSolver.HintMoveCommand move)
+    {
+        if (move.Type == KlondikeHintSolver.HintMoveType.StockDraw || move.Type == KlondikeHintSolver.HintMoveType.RecycleWaste)
+        {
+            bool isStockEmpty = pileManager.StockPile.IsEmpty();
+            bool isWasteHasCards = !pileManager.WastePile.IsEmpty();
+            bool isRecycle = (isStockEmpty && isWasteHasCards);
+
+            deckManager.DrawFromStock();
+
+            if (scoreManager != null)
+            {
+                if (isRecycle) scoreManager.OnCardMove(pileManager.WastePile, pileManager.StockPile);
+                else scoreManager.OnCardMove(pileManager.StockPile, pileManager.WastePile);
+            }
+
+            // === ФИКС ДЛЯ ПАНЕЛИ ПОРАЖЕНИЯ ===
+            if (deckManager != null) deckManager.OnProductiveMoveMade();
+
+            RegisterMoveAndStartIfNeeded();
+            CheckGameState();
+            return;
+        }
+
+        CardController targetCard = null;
+        ICardContainer targetContainer = null;
+        ICardContainer sourceContainer = null;
+
+        if (move.Type == KlondikeHintSolver.HintMoveType.Foundation)
+        {
+            if (move.FromIdx == -1)
+            {
+                targetCard = GetTopCard(pileManager.WastePile);
+                sourceContainer = pileManager.WastePile;
+            }
+            else
+            {
+                targetCard = GetCardFromTableau(move.FromIdx, 1);
+                sourceContainer = pileManager.Tableau[move.FromIdx];
+            }
+            if (targetCard != null)
+            {
+                targetContainer = pileManager.Foundations[move.ToIdx];
+            }
+        }
+        else if (move.Type == KlondikeHintSolver.HintMoveType.MoveTableau || move.Type == KlondikeHintSolver.HintMoveType.RevealTableau)
+        {
+            targetCard = GetCardFromTableau(move.FromIdx, move.Count);
+            sourceContainer = pileManager.Tableau[move.FromIdx];
+            targetContainer = pileManager.Tableau[move.ToIdx];
+        }
+        else if (move.Type == KlondikeHintSolver.HintMoveType.WasteToTableau)
+        {
+            targetCard = GetTopCard(pileManager.WastePile);
+            sourceContainer = pileManager.WastePile;
+            targetContainer = pileManager.Tableau[move.ToIdx];
+        }
+        else if (move.Type == KlondikeHintSolver.HintMoveType.FoundationToTableau)
+        {
+            targetCard = GetTopCard(pileManager.Foundations[move.FromIdx]);
+            sourceContainer = pileManager.Foundations[move.FromIdx];
+            targetContainer = pileManager.Tableau[move.ToIdx];
+        }
+
+        if (targetCard != null && targetContainer != null && sourceContainer != null)
+        {
+            bool success = autoMoveService.ExecuteHintMove(targetCard, targetContainer);
+            if (success)
+            {
+                if (scoreManager != null)
+                {
+                    scoreManager.OnCardMove(sourceContainer, targetContainer);
+                }
+
+                // === ФИКС ДЛЯ ПАНЕЛИ ПОРАЖЕНИЯ ===
+                if (deckManager != null) deckManager.OnProductiveMoveMade();
+
+                RegisterMoveAndStartIfNeeded();
+                CheckGameState();
+            }
+        }
+    }
+
+    private CardController GetTopCard(ICardContainer container)
+    {
+        if (container is TableauPile t) return t.cards.Count > 0 ? t.cards[t.cards.Count - 1] : null;
+        if (container is WastePile w) return w.cards.Count > 0 ? w.cards[w.cards.Count - 1] : null;
+        if (container is FoundationPile f) return f.cards.Count > 0 ? f.cards[f.cards.Count - 1] : null;
+        if (container is StockPile s) return s.cards.Count > 0 ? s.cards[s.cards.Count - 1] : null;
+        return null;
+    }
+
+    private CardController GetCardFromTableau(int col, int count)
+    {
+        var tableau = pileManager.Tableau[col];
+        if (tableau.cards.Count >= count)
+        {
+            return tableau.cards[tableau.cards.Count - count];
+        }
+        return null;
+    }
+
+    #endregion
+
 
     #region Public API
 
@@ -774,6 +1023,9 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
         if (hasGameStarted && !hasWonGame && StatisticsManager.Instance != null)
             StatisticsManager.Instance.OnGameAbandoned();
 
+        // ДОБАВИТЬ ЭТУ СТРОКУ:
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
+
         // 2. ЗАТЕМ сообщаем трекеру настройки нового матча
         string variant = (GameSettings.KlondikeDrawCount == 3) ? "Draw3" : "Draw1";
         GameQuestTracker.Instance?.StartMatch("Klondike", GameSettings.CurrentDifficulty, variant);
@@ -791,7 +1043,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
         if (defeatManager != null) defeatManager.ResetManager();
         if (scoreManager != null) scoreManager.ResetScore();
         if (undoManager != null) undoManager.ResetHistory();
-
+        if (gameUI != null) gameUI.ResetHints();
         UpdateFullUI();
 
         // 3. Очистка стола
@@ -849,6 +1101,7 @@ public class KlondikeModeManager : MonoBehaviour, IModeManager, ICardGameMode, I
                 StatisticsManager.Instance.OnGameWon(finalScore);
                 if (gameUI != null) gameUI.OnGameWon(finalMoves);
             }
+            SimpleMetricsTracker.Instance?.TrackLevelWin(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
             return;
         }
 

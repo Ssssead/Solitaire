@@ -54,7 +54,7 @@ public class StatisticsManager : MonoBehaviour
     private void OnEnable()
     {
 
-        
+
 
         // Подписываемся на успешные покупки ВСЕГДА, так как этот менеджер живет на всех сценах
         YG2.onPurchaseSuccess += HandlePurchaseSuccess;
@@ -63,7 +63,7 @@ public class StatisticsManager : MonoBehaviour
     private void OnDisable()
     {
 
-        
+
 
         YG2.onPurchaseSuccess -= HandlePurchaseSuccess;
     }
@@ -102,7 +102,7 @@ public class StatisticsManager : MonoBehaviour
         // Загрузка в редакторе (через локальный файл JSON)
         LoadStatsLocal();
 
-       
+
     }
 
     public void OnGameStarted(string gameName, Difficulty difficulty, string variant)
@@ -187,8 +187,8 @@ public class StatisticsManager : MonoBehaviour
             gType = GameType.Klondike; // Фолбэк на случай ошибки
         }
 
-        string gameGlobalKey = $"{gameName}_Global"; 
-        string appGlobalKey = "Global";              
+        string gameGlobalKey = $"{gameName}_Global";
+        string appGlobalKey = "Global";
 
         // Получаем текущие данные ДО их обновления, чтобы сравнить с новым результатом
         StatData modeData = stats.GetData(currentGameKey);
@@ -259,7 +259,7 @@ public class StatisticsManager : MonoBehaviour
         }
 
 
-       
+
 
 
         currentMoves = 0;
@@ -332,7 +332,7 @@ public class StatisticsManager : MonoBehaviour
                 if (stats.MigrateOldKeys())
                 {
                     Log("Migrated old keys. Saving changes...");
-                    SaveStats(); 
+                    SaveStats();
                 }
 
                 stats.BuildLookup();
@@ -378,7 +378,7 @@ public class StatisticsManager : MonoBehaviour
 
             stats.BuildLookup();
             Log("Cloud stats loaded successfully.");
-           
+
         }
         catch (System.Exception e)
         {
@@ -423,8 +423,8 @@ public class StatisticsManager : MonoBehaviour
         StatData appGlobal = stats.GetData("Global");
 
         appGlobal.questsCompleted++;
-        appGlobal.questStreak = currentQuestStreak;       
-        appGlobal.questDayStreak = currentDayStreak;      
+        appGlobal.questStreak = currentQuestStreak;
+        appGlobal.questDayStreak = currentDayStreak;
 
         if (xpReward > 0)
         {
@@ -460,7 +460,7 @@ public class StatisticsManager : MonoBehaviour
 
         return 0f;
     }
-    
+
     public void GrantPremium()
     {
         IsUserPremium = true;

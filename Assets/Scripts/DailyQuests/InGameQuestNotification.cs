@@ -42,18 +42,17 @@ public class InGameQuestNotification : MonoBehaviour
     public Sprite hardSprite;
 
     private Vector2 baseVisiblePosition;
-    private Vector2 baseHiddenPosition;
+    private float hideOffset = 400f;
 
     private Dictionary<string, PendingNotification> pendingNotifications = new Dictionary<string, PendingNotification>();
     private Queue<PendingNotification> displayQueue = new Queue<PendingNotification>();
 
-    // ---> НОВОЕ: Отслеживаем "живые" панели на экране <---
     private Dictionary<string, ActivePanelState> activePanels = new Dictionary<string, ActivePanelState>();
 
     private bool isDisplaying = false;
     private List<bool> occupiedSlots = new List<bool>();
     public static InGameQuestNotification Instance { get; private set; }
-    private int _cancelToken = 0; // Токен для мгновенной отмены анимаций
+    private int _cancelToken = 0;
 
     private class PendingNotification
     {
@@ -63,7 +62,6 @@ public class InGameQuestNotification : MonoBehaviour
         public float Timer;
     }
 
-    // ---> НОВОЕ: Состояние для панели, которая сейчас на экране <---
     private class ActivePanelState
     {
         public int TargetProgress;
@@ -72,19 +70,19 @@ public class InGameQuestNotification : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this; // <--- Записываем ссылку при старте
+        Instance = this;
 
         if (panelRect != null)
         {
             baseVisiblePosition = panelRect.anchoredPosition;
-            baseHiddenPosition = new Vector2(baseVisiblePosition.x - 400f, baseVisiblePosition.y);
-            panelRect.anchoredPosition = baseHiddenPosition;
+            panelRect.anchoredPosition = new Vector2(baseVisiblePosition.x - hideOffset, baseVisiblePosition.y);
             panelRect.gameObject.SetActive(false);
         }
     }
+
     public void ForceCloseAll()
     {
-        _cancelToken++; // Меняем токен (все текущие панели поймут, что им пора улетать)
+        _cancelToken++;
         displayQueue.Clear();
         pendingNotifications.Clear();
     }
@@ -126,20 +124,17 @@ public class InGameQuestNotification : MonoBehaviour
         }
     }
 
-    // ---> ИЗМЕНЕНО: Умное распределение новых очков <---
     private void HandleQuestProgress(QuestInstance quest, int oldProg, int newProg)
     {
         if (PlayerPrefs.GetInt("QuestNotificationsEnabled", 1) == 0) return;
 
-        // 1. Панель УЖЕ на экране? Просто обновляем ей цель!
         if (activePanels.TryGetValue(quest.questId, out var activeState))
         {
             activeState.TargetProgress = newProg;
             activeState.IsCompleted = quest.isCompleted;
-            return; // Выходим, не создавая дубликатов!
+            return;
         }
 
-        // 2. Панель стоит в очереди на выезд? Обновляем цель прямо в очереди!
         foreach (var item in displayQueue)
         {
             if (item.Quest.questId == quest.questId)
@@ -150,7 +145,6 @@ public class InGameQuestNotification : MonoBehaviour
             }
         }
 
-        // 3. Иначе запускаем стандартный таймер группировки (Debounce)
         if (pendingNotifications.TryGetValue(quest.questId, out var pending))
         {
             pending.NewProgress = newProg;
@@ -171,11 +165,11 @@ public class InGameQuestNotification : MonoBehaviour
     private IEnumerator ProcessDisplayQueue()
     {
         isDisplaying = true;
-        int myToken = _cancelToken; // Запоминаем токен очереди
+        int myToken = _cancelToken;
 
         while (displayQueue.Count > 0)
         {
-            if (myToken != _cancelToken) break; // Если нажали "В меню", прерываем очередь выездов
+            if (myToken != _cancelToken) break;
 
             var data = displayQueue.Dequeue();
             StartCoroutine(SpawnAndAnimatePanel(data));
@@ -213,17 +207,15 @@ public class InGameQuestNotification : MonoBehaviour
         return null;
     }
 
-    // Хелпер для мгновенного обновления визуала
     private void UpdatePanelVisuals(Image fillImage, TMP_Text textComp, float currentProgress, int targetValue)
     {
         if (fillImage != null) fillImage.fillAmount = currentProgress / targetValue;
         if (textComp != null) textComp.text = $"{Mathf.RoundToInt(currentProgress)}/{targetValue}";
     }
 
-    // ---> ИЗМЕНЕНО: Корутина превращена в "Бесконечный цикл" (State Machine) <---
     private IEnumerator SpawnAndAnimatePanel(PendingNotification data)
     {
-        int myToken = _cancelToken; // <--- Запоминаем токен при рождении панели
+        int myToken = _cancelToken;
 
         int slot = GetFreeSlot();
         GameObject clone = Instantiate(panelRect.gameObject, panelRect.parent);
@@ -235,6 +227,10 @@ public class InGameQuestNotification : MonoBehaviour
         RectTransform cRect = clone.GetComponent<RectTransform>();
         CanvasGroup cGroup = clone.GetComponent<CanvasGroup>();
         if (cGroup == null && canvasGroup != null) cGroup = clone.AddComponent<CanvasGroup>();
+
+        bool isPortrait = Screen.height > Screen.width;
+        float currentScale = isPortrait ? 2f : 1f;
+        cRect.localScale = new Vector3(currentScale, currentScale, 1f);
 
         TMP_Text cTitle = GetEquivalent(titleText, clone);
         Image cFill = GetEquivalent(progressBarFill, clone);
@@ -275,25 +271,28 @@ public class InGameQuestNotification : MonoBehaviour
         float currentVisualProgress = data.OldProgress;
         UpdatePanelVisuals(cFill, cProgText, currentVisualProgress, data.Quest.targetValue);
 
-        Vector2 targetVisible = new Vector2(baseVisiblePosition.x, baseVisiblePosition.y - (verticalSpacing * slot));
-        Vector2 targetHidden = new Vector2(baseHiddenPosition.x, targetVisible.y);
+        // ---> ИЗМЕНЕНИЕ: Компенсируем Pivot, чтобы левый край не уезжал за экран <---
+        float pivotOffsetX = cRect.rect.width * cRect.pivot.x * (currentScale - 1f);
 
-        // Если уже отменили до старта - уничтожаем
+        Vector2 targetVisible = new Vector2(baseVisiblePosition.x + pivotOffsetX, baseVisiblePosition.y - (verticalSpacing * currentScale * slot));
+        Vector2 targetHidden = new Vector2(targetVisible.x - (hideOffset * currentScale), targetVisible.y);
+        // -------------------------------------------------------------------------
+
         if (myToken != _cancelToken) { FreeSlot(slot); Destroy(clone); yield break; }
 
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Panel_Slide_In");
-        yield return SlideTo(cRect, cGroup, targetHidden, targetVisible, slideDuration);
+
+        // Передаем флаг isShowing = true, чтобы скрипт не полагался на сломанные координаты для прозрачности
+        yield return SlideTo(cRect, cGroup, targetHidden, targetVisible, slideDuration, true);
 
         if (fillDelay > 0f) yield return new WaitForSeconds(fillDelay);
 
         bool hasPulsed = false;
 
-        // БЕСКОНЕЧНЫЙ ЦИКЛ ЖИЗНИ ПАНЕЛИ
         while (true)
         {
-            if (myToken != _cancelToken) break; // <--- ПРЕРЫВАНИЕ
+            if (myToken != _cancelToken) break;
 
-            // 1. ФАЗА ЗАПОЛНЕНИЯ
             if (currentVisualProgress < state.TargetProgress)
             {
                 float startFillVal = currentVisualProgress;
@@ -310,7 +309,7 @@ public class InGameQuestNotification : MonoBehaviour
                 float elapsed = 0f;
                 while (elapsed < fillDuration)
                 {
-                    if (myToken != _cancelToken) break; // <--- ПРЕРЫВАНИЕ
+                    if (myToken != _cancelToken) break;
                     elapsed += Time.deltaTime;
                     float t = elapsed / fillDuration;
                     float easeT = t * t * t;
@@ -330,7 +329,7 @@ public class InGameQuestNotification : MonoBehaviour
 
                 if (state.IsCompleted && currentVisualProgress >= data.Quest.targetValue && !hasPulsed)
                 {
-                    if (myToken == _cancelToken) // <--- ПРЕРЫВАНИЕ
+                    if (myToken == _cancelToken)
                     {
                         hasPulsed = true;
                         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Level_Up");
@@ -339,42 +338,40 @@ public class InGameQuestNotification : MonoBehaviour
                 }
             }
 
-            if (myToken != _cancelToken) break; // <--- ПРЕРЫВАНИЕ
+            if (myToken != _cancelToken) break;
 
-            // 2. ФАЗА ОЖИДАНИЯ
             float currentShowTimer = showDuration;
             while (currentShowTimer > 0)
             {
-                if (myToken != _cancelToken) break; // <--- ПРЕРЫВАНИЕ
+                if (myToken != _cancelToken) break;
                 if (currentVisualProgress < state.TargetProgress) break;
 
                 currentShowTimer -= Time.deltaTime;
                 yield return null;
             }
 
-            // 3. ПРОВЕРКА НА ВЫХОД
             if (myToken != _cancelToken || (currentVisualProgress >= state.TargetProgress && currentShowTimer <= 0f))
             {
                 break;
             }
         }
 
-        // Если нажали "В меню", код мгновенно прыгнет сюда и панель быстро улетит обратно!
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Panel_Slide_Out");
-        yield return SlideTo(cRect, cGroup, targetVisible, targetHidden, slideDuration);
+
+        // Передаем флаг isShowing = false
+        yield return SlideTo(cRect, cGroup, targetVisible, targetHidden, slideDuration, false);
 
         activePanels.Remove(data.Quest.questId);
         FreeSlot(slot);
         Destroy(clone);
     }
 
-    // --- АНИМАЦИИ (остались без изменений) ---
-    private IEnumerator SlideTo(RectTransform rt, CanvasGroup cg, Vector2 startPos, Vector2 targetPos, float duration)
+    private IEnumerator SlideTo(RectTransform rt, CanvasGroup cg, Vector2 startPos, Vector2 targetPos, float duration, bool isShowing)
     {
         if (rt == null) yield break;
 
-        float startAlpha = cg != null ? cg.alpha : 1f;
-        float targetAlpha = (targetPos.x == baseVisiblePosition.x) ? 1f : 0f;
+        float startAlpha = cg != null ? cg.alpha : (isShowing ? 0f : 1f);
+        float targetAlpha = isShowing ? 1f : 0f;
 
         float elapsed = 0f;
         while (elapsed < duration)
@@ -396,7 +393,7 @@ public class InGameQuestNotification : MonoBehaviour
     {
         if (rt == null) yield break;
 
-        Vector3 startScale = Vector3.one;
+        Vector3 startScale = rt.localScale;
         Quaternion startRot = Quaternion.identity;
 
         if (progText != null) progText.color = new Color32(255, 187, 0, 255);

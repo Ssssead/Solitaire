@@ -27,12 +27,14 @@ public class SpiderStockPile : TableauPile, IPointerClickHandler
     private void RefreshCardsFromHierarchy()
     {
         cards.Clear();
+        faceUp.Clear(); // <--- ДОБАВЛЕНО: Очищаем список faceUp
         foreach (Transform child in transform)
         {
             var c = child.GetComponent<CardController>();
             if (c != null)
             {
                 cards.Add(c);
+                faceUp.Add(false); // <--- ДОБАВЛЕНО: Добавляем состояние (в стоке все закрыты)
 
                 // Гарантируем, что карты в колоде закрыты
                 var data = c.GetComponent<CardData>();
@@ -42,6 +44,12 @@ public class SpiderStockPile : TableauPile, IPointerClickHandler
                 }
             }
         }
+        ForceRecalculateLayout();
+    }
+
+    // <--- ДОБАВЛЕНО: Перехватываем команду от GameLayoutManager --->
+    public override void ForceRebuildLayout()
+    {
         ForceRecalculateLayout();
     }
 

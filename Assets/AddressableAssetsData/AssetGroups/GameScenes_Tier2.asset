@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: GameScenes_Tier2
+  m_EditorClassIdentifier: 
+  m_GroupName: GameScenes_Tier2
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 8acfd74ca67f01d47a2a3c349c615547
+  m_SerializeEntries:
+  - m_GUID: d606a029d478d5e40a9771e9c080de23
+    m_Address: TriPeaksScene
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - GameScenes_Tier2
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f3de95e3fde63a648987aaf83c2459ae
+    m_Address: PyramidScene
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - GameScenes_Tier2
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: faaea65b37119e84595148b17a591c8f
+    m_Address: YukonScene
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - GameScenes_Tier2
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 356bbdf424232f54fa85e0a8a9305728, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: cba782bb56f25474b8685405162abed7, type: 2}
+    - {fileID: 11400000, guid: 03026ce8a5b75f143826d684b9c88709, type: 2}

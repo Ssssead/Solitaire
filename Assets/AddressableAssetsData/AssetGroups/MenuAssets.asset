@@ -1,0 +1,192 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: MenuAssets
+  m_EditorClassIdentifier: 
+  m_GroupName: MenuAssets
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 0251ca19c7fca1841bea4c968847475c
+  m_SerializeEntries:
+  - m_GUID: 01e57c25c4ef69d4d90f8e7df93c5dd7
+    m_Address: Assets/Assets/Sounds/Audio_Card_Deal.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0e6d106eb5266b54f8cb161fd8482fde
+    m_Address: Assets/Assets/Sounds/Card_Error.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 11ccece4bf8562e439fd8d8dc7d3f158
+    m_Address: Assets/Assets/Sounds/CardHoverEffect.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1b51548f671bd584387ca5b3eb9909d6
+    m_Address: Assets/Assets/Sounds/Level_Up.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 33fd5947090061544a657eb1c4315624
+    m_Address: Assets/Assets/Sounds/Card_Whoosh_Out.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 34e2faa7ca14c814789ba4becc04c129
+    m_Address: Assets/Assets/Sounds/XP_Gain.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 36714734fe379ed4eba68d9ac518a2c6
+    m_Address: Assets/Assets/Sounds/Win_Sound.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 483b6ce6a2242a34a932d7152a496db6
+    m_Address: Assets/Assets/Sounds/dragon-studio-whoosh-effect-382717.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 55dad9ac291c5b343a3cc3a3b32ba4a6
+    m_Address: Assets/Assets/Sounds/Card_Flip.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 59cb67f6053f6b04bbc26e1a8c6893cd
+    m_Address: Assets/Assets/Sounds/Card_Select.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b3f7405fc88cef479c4ccfc4b836e94
+    m_Address: Assets/Assets/Sounds/CardShake.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 74bcdae863429234498ff3545713386a
+    m_Address: Assets/Assets/Sounds/Audio_Wood_Drop.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7791bf756ff244e40ab28e1128403cd7
+    m_Address: Assets/Assets/Sounds/UI_Click.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 891a34887b201e949a80138cd27d5a88
+    m_Address: Assets/Assets/Sounds/BG_Switch.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 94eb76042fe8cec4a96f78b95e9bf3c0
+    m_Address: Assets/Assets/Sounds/StartCardDrop.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9e34e7f6b01f7d54b87d402e1131f019
+    m_Address: Assets/Assets/Sounds/Card_Foundation_Success.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a7da532fe71eda34883a54d72b7c8fb8
+    m_Address: Assets/Ithaca-Medium SDF.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: afda9182864700c469986461bf36d312
+    m_Address: Assets/Assets/ProgressBars.spriteatlasv2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cdeb84520b78b9b4f8ea1ab28315a3bf
+    m_Address: Assets/Assets/Sounds/Loss_Sound.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d62a0ca47121c2146b30e1e3793af526
+    m_Address: Assets/Assets/Sounds/freesound_community-backwards-whoosh-6317.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d8fc0629e17d7fb4282952e4c65258cc
+    m_Address: Assets/Assets/Sounds/ksjsbwuil-whoosh-8-513925.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dcf8c2c64bcbbca4e9746b5109d25c1c
+    m_Address: Assets/Assets/Sounds/UI_Back.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df7686edfe8944241a63eb2aa9cc244d
+    m_Address: Assets/Assets/BG.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e681d7b60fb91d94480ad7406d55b953
+    m_Address: Assets/Assets/UI.spriteatlasv2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e91e43f86c12a134ca0868b03e5f302f
+    m_Address: MenuScene
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec0ff312dee139b4692792abf61885c1
+    m_Address: Assets/Assets/Sounds/Panel_Slide_In.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f8f05d18e022aaa41ac8a5847106d1e2
+    m_Address: Assets/Assets/Sounds/CardsDropExit.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fb7dbf7d19cd9fa4eaba5c8be3abcc05
+    m_Address: Assets/Assets/Sounds/Audio_Card_Deal2.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MenuAssets
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 356bbdf424232f54fa85e0a8a9305728, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 8d5f0aac7f414ed4b89cfdd7b9a3230a, type: 2}
+    - {fileID: 11400000, guid: 9528a31ec17a9fc4d9455f32368a8618, type: 2}

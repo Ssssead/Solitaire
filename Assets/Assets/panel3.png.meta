@@ -49,7 +49,7 @@ TextureImporter:
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
-  spriteBorder: {x: 136, y: 141, z: 136, w: 140}
+  spriteBorder: {x: 200, y: 141, z: 198, w: 140}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -97,7 +97,7 @@ TextureImporter:
     buildTarget: WebGL
     maxTextureSize: 2048
     resizeAlgorithm: 0
-    textureFormat: 29
+    textureFormat: 4
     textureCompression: 1
     compressionQuality: 75
     crunchedCompression: 0

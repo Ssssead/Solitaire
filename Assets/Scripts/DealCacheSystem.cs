@@ -56,8 +56,8 @@ public class DealCacheSystem : MonoBehaviour
     private CacheKey currentActiveKey;
     private bool dealWasPlayed = false;
     private bool cloudDataReceived = false;
-
-    private void Awake()
+    public bool IsPausedForUI { get; set; } = false;
+    private IEnumerator Start()
     {
         if (Instance == null)
         {
@@ -67,7 +67,19 @@ public class DealCacheSystem : MonoBehaviour
             InitializeCacheConfigs();
             RegisterGenerators();
 
-            LoadAllLocalCacheFiles();
+            // Ждем один кадр перед тяжелым чтением файлов
+            yield return null;
+
+            dealCache.Clear();
+            foreach (GameType type in System.Enum.GetValues(typeof(GameType)))
+            {
+                string path = GetFilePathForGame(type);
+                if (File.Exists(path))
+                {
+                    LoadFileIntoCache(path, type);
+                    yield return null; // Читаем по одному файлу за кадр
+                }
+            }
 
             if (IsCacheEmpty())
             {
@@ -77,8 +89,6 @@ public class DealCacheSystem : MonoBehaviour
 
             IsReady = true;
             CheckBufferHealth();
-
-            
         }
         else Destroy(gameObject);
     }
@@ -242,7 +252,7 @@ public class DealCacheSystem : MonoBehaviour
         CheckBufferHealth();
     }
 
-   
+
 
     private void DeserializeAndUnpack(string data)
     {
@@ -492,15 +502,15 @@ public class DealCacheSystem : MonoBehaviour
             return; // Пропускаем этот кадр, даем системе прийти в себя
         }
 
+        if (!isGenerating && generationQueue.Count > 0 && !IsPausedForUI)
+            // --- ВАШ СТАРЫЙ КОД НИЖЕ ---
 
-        // --- ВАШ СТАРЫЙ КОД НИЖЕ ---
-
-        // 1. Фоமைப்பு генерация
-        if (!isGenerating && generationQueue.Count > 0)
-        {
-            var key = generationQueue.Dequeue();
-            StartCoroutine(GenerateInBackground(key));
-        }
+            // 1. Фоமைப்பு генерация
+            if (!isGenerating && generationQueue.Count > 0)
+            {
+                var key = generationQueue.Dequeue();
+                StartCoroutine(GenerateInBackground(key));
+            }
 
         // 2. Автосохранение (Пакетная запись)
         if (isDirty && Time.realtimeSinceStartup - lastSaveTime > saveCooldown)

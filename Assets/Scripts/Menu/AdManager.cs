@@ -90,19 +90,19 @@ public class AdManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Вызов рекламы за вознаграждение (Отмена хода, Отмена всех ходов)
+    /// Вызов рекламы за вознаграждение (Отмена хода, Отмена всех ходов, Подсказки)
     /// </summary>
-    public void ShowRewarded(string id) // В YG2 параметр стал string!
+    public void ShowRewarded(string id)
     {
-        // Если реклама отключена ИЛИ действует льготный период
-        if (AreAdsDisabled() || freeRewardTimer > 0)
+        // Если реклама отключена ИЛИ (действует льготный период И это НЕ подсказка)
+        if (AreAdsDisabled() || (freeRewardTimer > 0 && id != "hint_reward"))
         {
             Debug.Log($"[AdManager] Выдача бесплатной награды {id}");
             GrantReward(id); // Выдаем награду мгновенно!
         }
         else
         {
-            // Показываем видеорекламу
+            // Показываем видеорекламу (для подсказок она будет показываться всегда, игнорируя таймер)
             YG2.RewardedAdvShow(id);
         }
     }
@@ -128,7 +128,7 @@ public class AdManager : MonoBehaviour
     private void OnYandexRewardGranted(string id)
     {
         // Игрок честно посмотрел рекламу.
-        // 1. Запускаем льготный период
+        // 1. Запускаем льготный период (награды типа Отмены будут бесплатны 60 секунд)
         freeRewardTimer = freeRewardDuration;
 
         // 2. Выдаем саму награду
@@ -146,14 +146,18 @@ public class AdManager : MonoBehaviour
     /// <summary>
     /// Для UI: Метод, чтобы знать, нужно ли показывать значок телевизора на кнопках
     /// </summary>
-    public bool IsRewardFree()
+    public bool IsRewardFree(string id = "")
     {
         // Если куплено отключение рекламы или премиум — действие БЕСПЛАТНО всегда
         if (AreAdsDisabled()) return true;
 
+        // Подсказки никогда не бывают бесплатными по таймеру
+        if (id == "hint_reward") return false;
+
         // Иначе проверяем обычный таймер льготного периода
         return freeRewardTimer > 0;
     }
+
     // --- УПРАВЛЕНИЕ STICKY БАННЕРОМ ---
     public void UpdateStickyAd()
     {

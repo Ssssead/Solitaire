@@ -24,10 +24,15 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public Button undoButton;
     public Button undoAllButton;
 
-    [Header("HUD")]
+    [Header("HUD - Landscape")]
     public TMP_Text movesText;
     public TMP_Text scoreText;
     public TMP_Text timeText;
+
+    [Header("HUD - Portrait")]
+    public TMP_Text portraitMovesText;
+    public TMP_Text portraitScoreText;
+    public TMP_Text portraitTimeText;
 
     [Header("Animation Settings")]
     public float dealFlyDuration = 0.25f;
@@ -38,7 +43,11 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public float flipWaitDelay = 0.3f;
     public float undoMoveDuration = 0.2f;
     public float undoAllMoveDuration = 0.08f;
-
+    [Header("Hint System")]
+    public TriPeaksHintSolver hintSolver;
+    private Coroutine backgroundSolverCoroutine = null;
+    private List<TriPeaksHintMove> cachedHintPath = null;
+    private bool isExecutingHint = false;
     private Difficulty currentDifficulty = Difficulty.Easy;
     private int currentRound = 1;
     private int totalRounds = 1;
@@ -128,27 +137,33 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
     private void UpdateFullUI()
     {
-        if (movesText != null)
-        {
-            if (!_hasGameStarted) movesText.text = "0";
-            else if (StatisticsManager.Instance != null) movesText.text = StatisticsManager.Instance.GetCurrentMoves().ToString();
-            else movesText.text = "0";
-        }
-        if (scoreText != null)
-        {
-            if (!_hasGameStarted) scoreText.text = "0";
-            else scoreText.text = $"{scoreManager?.CurrentScore ?? 0}";
-        }
+        // Ходы
+        string mText = "0";
+        if (_hasGameStarted && StatisticsManager.Instance != null)
+            mText = StatisticsManager.Instance.GetCurrentMoves().ToString();
+
+        if (movesText != null) movesText.text = mText;
+        if (portraitMovesText != null) portraitMovesText.text = mText;
+
+        // Очки
+        string sText = "0";
+        if (_hasGameStarted && scoreManager != null)
+            sText = $"{scoreManager.CurrentScore}";
+
+        if (scoreText != null) scoreText.text = sText;
+        if (portraitScoreText != null) portraitScoreText.text = sText;
+
+        // Время
         if (!_hasGameStarted) UpdateTimeUI();
     }
 
     private void UpdateTimeUI()
     {
-        if (timeText != null)
-        {
-            int totalSeconds = Mathf.FloorToInt(gameTimer);
-            timeText.text = string.Format("{0}:{1:00}", totalSeconds / 60, totalSeconds % 60);
-        }
+        int totalSeconds = Mathf.FloorToInt(gameTimer);
+        string tText = string.Format("{0}:{1:00}", totalSeconds / 60, totalSeconds % 60);
+
+        if (timeText != null) timeText.text = tText;
+        if (portraitTimeText != null) portraitTimeText.text = tText;
     }
 
     private void RegisterActivity()
@@ -161,6 +176,7 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
                 string variant = GameSettings.GetCurrentVariantString(GameType.TriPeaks);
                 StatisticsManager.Instance.OnGameStarted("TriPeaks", GameSettings.CurrentDifficulty, variant);
             }
+            SimpleMetricsTracker.Instance?.TrackLevelStart(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
         }
 
         isTimerRunning = true;
@@ -172,6 +188,7 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     {
         if (_hasGameStarted && !_isGameWon)
             if (StatisticsManager.Instance != null) StatisticsManager.Instance.OnGameAbandoned();
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
     }
 
     public void InitializeMode()
@@ -200,6 +217,8 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
             {
                 StatisticsManager.Instance.OnGameAbandoned();
             }
+            // ДОБАВИТЬ ЭТУ СТРОКУ:
+            SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
 
             // 2. Инициализируем трекер
             string variant = GameSettings.GetCurrentVariantString(GameType.TriPeaks) ?? "None";
@@ -218,7 +237,7 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         _isSetupRunning = false;
         _isUndoing = false;
         _undoStack.Clear();
-
+        if (hintSolver != null) hintSolver.CancelSearch();
         UpdateFullUI();
 
         if (pileManager != null) pileManager.ClearAll();
@@ -361,7 +380,7 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
         _isSetupRunning = false;
         _isInputAllowed = true;
-
+        StartBackgroundSolver();
         // Запуск таймера при старте или переходе на новый раунд
         if (_hasGameStarted)
         {
@@ -480,6 +499,7 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         CheckGameState();
 
         yield return moveRoutine;
+        if (!isExecutingHint) StartBackgroundSolver();
     }
 
     private IEnumerator MoveToWasteRoutine(CardController card, ICardContainer source, ICardContainer target)
@@ -560,6 +580,7 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
         CheckGameState();
 
         yield return moveRoutine;
+        if (!isExecutingHint) StartBackgroundSolver();
     }
 
     private IEnumerator UpdateTableauFacesRoutine(TriPeaksMoveRecord record)
@@ -682,6 +703,7 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
         CardController top = pileManager.Waste.TopCard;
         if (top != null) _logicTopCardModel = top.cardModel;
+        StartBackgroundSolver();
     }
 
     private void ApplyUndoLogic(TriPeaksMoveRecord record)
@@ -787,6 +809,7 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
 
         CardController top = pileManager.Waste.TopCard;
         if (top != null) _logicTopCardModel = top.cardModel;
+        StartBackgroundSolver();
     }
     
 
@@ -893,7 +916,7 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
                     Debug.LogWarning("[TriPeaks] Ignored stats error: " + e.Message);
                 }
             }
-
+            SimpleMetricsTracker.Instance?.TrackLevelWin(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
             // ---> ДОБАВИТЬ ЭТОТ БЛОК <---
             if (GameQuestTracker.Instance != null && pileManager != null)
             {
@@ -912,4 +935,86 @@ public class TriPeaksModeManager : MonoBehaviour, IModeManager, ICardGameMode
     public void OnCardDroppedToContainer(CardController c, ICardContainer t) { }
     public void OnKeyboardPick(CardController c) { }
     public void OnCardDoubleClicked(CardController c) { OnCardClicked(c); }
+    public void StartBackgroundSolver()
+    {
+        if (backgroundSolverCoroutine != null) StopCoroutine(backgroundSolverCoroutine);
+        if (hintSolver != null) hintSolver.CancelSearch();
+        cachedHintPath = null;
+        backgroundSolverCoroutine = StartCoroutine(BackgroundSolverRoutine());
+    }
+
+    private IEnumerator BackgroundSolverRoutine()
+    {
+        while ((dragLayer != null && dragLayer.childCount > 0) || _isSetupRunning)
+            yield return null;
+
+        yield return new WaitForSeconds(0.1f);
+
+        if (_isGameWon || _isGameEnded) yield break;
+
+        bool solverFinished = false;
+        if (hintSolver == null) hintSolver = gameObject.AddComponent<TriPeaksHintSolver>();
+
+        // ИСПРАВЛЕНИЕ: Передаем _logicTopCardModel.rank вместо самой модели
+        hintSolver.FindPath(pileManager, _logicTopCardModel.rank, path => {
+            cachedHintPath = path;
+            solverFinished = true;
+        });
+
+        while (!solverFinished) yield return null;
+        backgroundSolverCoroutine = null;
+    }
+
+    public void RequestHint(System.Action onWaitStart, System.Action<bool> onHintResult)
+    {
+        if (_isGameWon || _isGameEnded || !IsInputAllowed) { onHintResult?.Invoke(false); return; }
+        StartCoroutine(HintRoutine(onWaitStart, onHintResult));
+    }
+
+    private IEnumerator HintRoutine(System.Action onWaitStart, System.Action<bool> onResult)
+    {
+        IsInputAllowed = false;
+
+        if (cachedHintPath == null && backgroundSolverCoroutine == null) StartBackgroundSolver();
+
+        if (backgroundSolverCoroutine != null)
+        {
+            onWaitStart?.Invoke();
+            while (backgroundSolverCoroutine != null) yield return null;
+        }
+
+        if (cachedHintPath != null && cachedHintPath.Count > 0)
+        {
+            var nextMove = cachedHintPath[0];
+            cachedHintPath.RemoveAt(0);
+
+            isExecutingHint = true;
+            IsInputAllowed = true;
+
+            // Симулируем клик пользователя
+            if (nextMove.Type == TriPeaksHintMove.MoveType.DrawStock)
+            {
+                OnStockClicked();
+            }
+            else
+            {
+                var card = pileManager.TableauPiles[nextMove.TableauIndex].CurrentCard;
+                if (card != null) OnCardClicked(card);
+            }
+
+            // Ждем завершения анимации
+            while (!IsInputAllowed) yield return null;
+
+            isExecutingHint = false;
+
+            if (cachedHintPath == null || cachedHintPath.Count == 0) StartBackgroundSolver();
+
+            onResult?.Invoke(true);
+        }
+        else
+        {
+            IsInputAllowed = true;
+            onResult?.Invoke(false); // Вызовет панель тупика
+        }
+    }
 }

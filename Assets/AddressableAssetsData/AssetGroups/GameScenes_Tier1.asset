@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: GameScenes_Tier1
+  m_EditorClassIdentifier: 
+  m_GroupName: GameScenes_Tier1
+  m_Data:
+    m_SerializedData: []
+  m_GUID: f7e712742aa7f8841b6f8f4767f470d1
+  m_SerializeEntries:
+  - m_GUID: 1d44b1e6da6886f42a9d439f3c78ba85
+    m_Address: KlondikeScene
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - GameScenes_Tier1
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c334b20429ab6e34f8453d05cc3646c4
+    m_Address: SpiderScene
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - GameScenes_Tier1
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e24e2403372bbe74e9f8d5e4f3426ba5
+    m_Address: FreeCellScene
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - GameScenes_Tier1
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 356bbdf424232f54fa85e0a8a9305728, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 15b0d3be1bc21ae489dc4836be9d6658, type: 2}
+    - {fileID: 11400000, guid: 5df521e4e88e92440bad0ddcc2d6d2ab, type: 2}

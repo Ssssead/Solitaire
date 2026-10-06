@@ -14,13 +14,16 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
 
     [Header("UI & HUD")]
     public GameUIController gameUI;
-    [Tooltip("Текст для отображения количества ходов")]
+    [Header("UI & HUD - Landscape")]
     public TMP_Text movesText;
-    [Tooltip("Текст для отображения времени")]
     public TMP_Text timeText;
-    [Tooltip("Текст для отображения очков")]
     public TMP_Text scoreText;
-    [Tooltip("Текст ТОЛЬКО для числа оставшихся пересдач")]
+    
+    [Header("UI & HUD - Portrait")]
+    public TMP_Text portraitMovesText;
+    public TMP_Text portraitTimeText;
+    public TMP_Text portraitScoreText;
+    
     public TMP_Text reshufflesText;
 
     [Header("Settings")]
@@ -35,7 +38,9 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
     public MontanaAutoMoveService autoMoveService;
     public MontanaScoreManager scoreManager;
     public MontanaTutorialManager tutorialManager;
-
+    [Header("Hint System")]
+    public MontanaHintSolver hintSolver;
+    [HideInInspector] public bool isExecutingHint = false;
     [HideInInspector] public MontanaPuzzleManager puzzleManager;
 
     // --- ICardGameMode Свойства ---
@@ -110,7 +115,10 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
         if (hasGameStarted && !hasWonGame && StatisticsManager.Instance != null)
         {
             StatisticsManager.Instance.OnGameAbandoned();
+
         }
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
+
     }
 
     public void StartNewGame()
@@ -121,6 +129,8 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
         {
             StatisticsManager.Instance.OnGameAbandoned();
         }
+
+        SimpleMetricsTracker.Instance?.TrackLevelQuit(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
 
         // 2. ЗАТЕМ сообщаем трекеру настройки
         string variant = IsHardMode ? "Hard" : "Standard";
@@ -162,11 +172,10 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
 
     public void RegisterMoveAndStartIfNeeded()
     {
-        if (!IsInputAllowed) return;
+        // ИСПРАВЛЕНИЕ: Разрешаем ход подсказке
+        if (!IsInputAllowed && !isExecutingHint) return;
 
-        // ---> ДОБАВИТЬ ЭТО <---
         GameQuestTracker.Instance?.RecordMove();
-        // ----------------------
 
         if (!hasGameStarted)
         {
@@ -177,6 +186,8 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
                 string variant = GameSettings.GetCurrentVariantString(GameType.Montana);
                 StatisticsManager.Instance.OnGameStarted("Montana", diff, variant);
             }
+            // ДОБАВИТЬ ЭТУ СТРОКУ:
+            SimpleMetricsTracker.Instance?.TrackLevelStart(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
         }
 
         if (StatisticsManager.Instance != null)
@@ -214,6 +225,8 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
                 StatisticsManager.Instance.OnGameWon(finalScore);
                 if (gameUI != null) gameUI.OnGameWon(finalMoves);
             }
+            // ДОБАВИТЬ ЭТУ СТРОКУ:
+            SimpleMetricsTracker.Instance?.TrackLevelWin(GameName, GameSettings.CurrentDifficulty.ToString().ToLower());
             return;
         }
 
@@ -410,37 +423,29 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
 
     public void PerformReshuffle()
     {
-        // === ЖЕСТКИЙ ПЕРЕХВАТ ДЛЯ ТУТОРИАЛА ===
         if (GameSettings.IsTutorialMode)
         {
-            // Если ссылка в инспекторе слетела, находим скрипт принудительно
-            if (tutorialManager == null)
-                tutorialManager = GetComponent<MontanaTutorialManager>();
-
+            if (tutorialManager == null) tutorialManager = GetComponent<MontanaTutorialManager>();
             if (tutorialManager != null && tutorialManager.isActiveAndEnabled)
             {
-                // Запускаем обучающую пересдачу и БЛОКИРУЕМ удаление карт!
                 tutorialManager.OnTutorialReshuffleClicked();
                 return;
             }
         }
-        // ======================================
 
-        if (!IsInputAllowed || CurrentReshufflesLeft <= 0) return;
+        // ИСПРАВЛЕНИЕ: Разрешаем подсказке активировать пересдачу
+        if ((!IsInputAllowed && !isExecutingHint) || CurrentReshufflesLeft <= 0) return;
 
-        // ---> ДОБАВИТЬ ЭТО: Считаем пересдачу как обращение к колоде (для комбо) <---
         GameQuestTracker.Instance?.RecordStockDraw();
         GameQuestTracker.Instance?.ResetCombo();
-        // ----------------------------------------------------------------------------
 
         StopReshufflePulse();
         RegisterMoveAndStartIfNeeded();
 
         CurrentReshufflesLeft--;
-
         UpdateUndoButton();
-
         UpdateFullUI();
+
         StartCoroutine(deckManager.ReshuffleRoutine());
     }
 
@@ -997,25 +1002,28 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
 
     private void UpdateFullUI()
     {
-        if (scoreText != null)
-            scoreText.text = scoreManager.CurrentScore.ToString();
+        string sText = scoreManager.CurrentScore.ToString();
+        if (scoreText != null) scoreText.text = sText;
+        if (portraitScoreText != null) portraitScoreText.text = sText;
 
-        if (movesText != null)
-            movesText.text = (!hasGameStarted) ? "0" : (StatisticsManager.Instance != null ? StatisticsManager.Instance.GetCurrentMoves().ToString() : "0");
+        string mText = (!hasGameStarted) ? "0" : (StatisticsManager.Instance != null ? StatisticsManager.Instance.GetCurrentMoves().ToString() : "0");
+        if (movesText != null) movesText.text = mText;
+        if (portraitMovesText != null) portraitMovesText.text = mText;
 
-        if (reshufflesText != null)
-            reshufflesText.text = CurrentReshufflesLeft.ToString();
+        string rText = CurrentReshufflesLeft.ToString();
+        if (reshufflesText != null) reshufflesText.text = rText;
+       
 
         UpdateTimeUI();
     }
 
     private void UpdateTimeUI()
     {
-        if (timeText != null)
-        {
-            int t = Mathf.FloorToInt(gameTimer);
-            timeText.text = string.Format("{0}:{1:00}", t / 60, t % 60);
-        }
+        int t = Mathf.FloorToInt(gameTimer);
+        string tText = string.Format("{0}:{1:00}", t / 60, t % 60);
+
+        if (timeText != null) timeText.text = tText;
+        if (portraitTimeText != null) portraitTimeText.text = tText;
     }
 
     private Rect GetWorldRect(RectTransform rt)
@@ -1075,6 +1083,95 @@ public class MontanaModeManager : MonoBehaviour, IModeManager, ICardGameMode, IC
         return true;
     }
     #endregion
+    public void RequestHint(System.Action onWaitStart, System.Action<bool> onHintResult)
+    {
+        if (isExecutingHint || isUndoing || (!IsInputAllowed && !isExecutingHint) || isDefeatPending || hasWonGame)
+        {
+            onHintResult?.Invoke(false);
+            return;
+        }
+        StartCoroutine(HintRoutine(onWaitStart, onHintResult));
+    }
+
+    private IEnumerator HintRoutine(System.Action onWaitStart, System.Action<bool> onResult)
+    {
+        onWaitStart?.Invoke();
+        IsInputAllowed = false;
+        isExecutingHint = true;
+
+        if (hintSolver == null) hintSolver = gameObject.AddComponent<MontanaHintSolver>();
+
+        MontanaHintMove? foundMove = null;
+        yield return StartCoroutine(hintSolver.FindPathRoutine(this, move => foundMove = move));
+
+        if (foundMove.HasValue)
+        {
+            var move = foundMove.Value;
+            if (move.IsReshuffle)
+            {
+                // ИСПРАВЛЕНИЕ: Сначала снимаем все блокировки подсказки, 
+                // чтобы PerformReshuffle прошел свою внутреннюю проверку безопасности!
+                isExecutingHint = false;
+                IsInputAllowed = true;
+
+                PerformReshuffle();
+                onResult?.Invoke(true);
+            }
+            else
+            {
+                // Запускаем перелет карты
+                yield return StartCoroutine(ExecuteHintMoveRoutine(move));
+                isExecutingHint = false;
+                IsInputAllowed = true;
+
+                // Проверяем, не открыла ли эта подсказка путь к поражению/победе
+                CheckGameState();
+                onResult?.Invoke(true);
+            }
+        }
+        else
+        {
+            isExecutingHint = false;
+            IsInputAllowed = true;
+            onResult?.Invoke(false);
+        }
+    }
+
+    private IEnumerator ExecuteHintMoveRoutine(MontanaHintMove move)
+    {
+        var mCard = move.Card.GetComponent<MontanaCardController>();
+        if (mCard != null) mCard.CaptureStateForUndo();
+        if (move.SourceSlot != null) move.SourceSlot.RemoveCard(move.Card);
+
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Whoosh_Out");
+
+        move.Card.transform.SetParent(DragLayer, true);
+        move.Card.transform.SetAsLastSibling();
+
+        Vector3 startPos = move.Card.transform.position;
+        Vector3 endPos = move.TargetSlot.Transform.position;
+
+        float duration = 0.2f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            float easedT = t * t * (3f - 2f * t);
+            move.Card.transform.position = Vector3.Lerp(startPos, endPos, easedT);
+            yield return null;
+        }
+
+        move.Card.transform.position = endPos;
+
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySound("Card_Drop_Success");
+
+        move.TargetSlot.AcceptCard(move.Card);
+
+        // Этот метод сам начислит очки, квесты, обновит замочки и проверит победу
+        OnCardDroppedToContainer(move.Card, move.TargetSlot);
+    }
 }
 
 public class MontanaMoveRecord

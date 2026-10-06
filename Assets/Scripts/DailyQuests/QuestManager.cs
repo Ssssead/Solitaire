@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -29,35 +30,53 @@ public class QuestManager : MonoBehaviour
     private Dictionary<string, int> lastNotifiedProgress = new Dictionary<string, int>();
     private bool cloudDataReceived = false;
 
-    // ==========================================
-    // СТРУКТУРА 1-В-1 КАК В STATISTICS MANAGER
-    // ==========================================
 
-    private void Awake()
+    private IEnumerator Start()
     {
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            Initialize();
+
+            SelectedDateKey = GetMoscowTime().Date.ToString("yyyy-MM-dd");
+            LoadDataLocal();
+
+            SyncServerTime();
+            yield return StartCoroutine(InitializeForTodayRoutine());
         }
         else
         {
             Destroy(gameObject);
         }
     }
-
-
-    private void Initialize()
+    private IEnumerator InitializeForTodayRoutine()
     {
-        SelectedDateKey = GetMoscowTime().Date.ToString("yyyy-MM-dd");
+        DateTime today = GetMoscowTime().Date;
+        bool archiveChanged = false;
 
-        // Грузим локальные данные для мгновенного старта (офлайн/редактор/PlayerPrefs)
-        LoadDataLocal();
+        // Разбиваем генерацию последних 5 дней на несколько кадров
+        for (int i = 4; i >= 0; i--)
+        {
+            DateTime targetDate = today.AddDays(-i);
+            string dateKey = targetDate.ToString("yyyy-MM-dd");
+            var record = saveData.archive.Find(r => r.dateKey == dateKey);
 
-        // Реальные облачные данные придут асинхронно через onGetSDKData.
-        // Синхронный вызов LoadDataCloud() здесь УБРАН - YG2.saves пока пуст.
+            if (record == null)
+            {
+                saveData.archive.Add(GenerateQuestsForDate(targetDate));
+                archiveChanged = true;
+                yield return null; // Отдаем кадр браузеру, предотвращая зависание
+            }
+        }
+
+        EvaluateStreaks(today);
+        CleanUpArchive(today);
+
+        foreach (var record in saveData.archive) RestoreTemplates(record);
+
+        if (archiveChanged) SaveData();
     }
+
 
     private void LoadDataLocal()
     {
